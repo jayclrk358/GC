@@ -10,7 +10,7 @@ export const SERVER_PROTOCOLS = {
     steam: false,
   },
   source: {
-    label: 'Source / Steam query (A2S)',
+    label: 'Other Steam game (A2S query)',
     gamedig: 'protocol-valve',
     defaultPort: 27015,
     steam: true,
@@ -21,11 +21,10 @@ export const SERVER_PROTOCOLS = {
   gmod: { label: "Garry's Mod", gamedig: 'garrysmod', defaultPort: 27015, steam: true },
   tf2: { label: 'Team Fortress 2', gamedig: 'teamfortress2', defaultPort: 27015, steam: true },
   valheim: { label: 'Valheim', gamedig: 'valheim', defaultPort: 2457, steam: true },
-  fivem: { label: 'FiveM (GTA V)', gamedig: 'fivem', defaultPort: 30120, steam: false },
-  terraria: { label: 'Terraria (TShock)', gamedig: 'terraria', defaultPort: 7777, steam: false },
-  palworld: { label: 'Palworld', gamedig: 'palworld', defaultPort: 8211, steam: false },
-  sevendays: { label: '7 Days to Die', gamedig: '7d2d', defaultPort: 26900, steam: true },
-  dayz: { label: 'DayZ', gamedig: 'dayz', defaultPort: 2302, steam: true },
+  fivem: { label: 'FiveM (GTA V)', gamedig: 'gta5f', defaultPort: 30120, steam: false },
+  terraria: { label: 'Terraria (TShock)', gamedig: 'terrariatshock', defaultPort: 7777, steam: false },
+  sevendays: { label: '7 Days to Die', gamedig: 'sdtd', defaultPort: 26900, steam: true },
+  dayz: { label: 'DayZ', gamedig: 'dayz', defaultPort: 27016, steam: true },
   squad: { label: 'Squad', gamedig: 'squad', defaultPort: 27165, steam: true },
 } as const;
 

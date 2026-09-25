@@ -36,7 +36,7 @@ export const GAMES: {
   { id: 'tf2', name: 'Team Fortress 2', protocol: 'tf2', steamAppId: 440, color: '#b8383b' },
   { id: 'valheim', name: 'Valheim', protocol: 'valheim', steamAppId: 892970, color: '#7f6b4d' },
   { id: 'terraria', name: 'Terraria', protocol: 'terraria', steamAppId: 105600, color: '#3a8f3f' },
-  { id: 'palworld', name: 'Palworld', protocol: 'palworld', steamAppId: 1623730, color: '#3aa0d8' },
+  { id: 'palworld', name: 'Palworld', steamAppId: 1623730, color: '#3aa0d8' },
   {
     id: '7-days-to-die',
     name: '7 Days to Die',

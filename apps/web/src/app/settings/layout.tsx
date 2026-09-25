@@ -4,6 +4,7 @@ import { NavLink } from '@/components/shell/nav-link';
 export default async function SettingsLayout({ children }: { children: React.ReactNode }) {
   const t = await getTranslations('settings');
   const links = [
+    { href: '/settings/profile', label: t('profile') },
     { href: '/settings/accessibility', label: t('accessibility') },
     { href: '/settings/account', label: t('account') },
     { href: '/settings/security', label: t('security') },

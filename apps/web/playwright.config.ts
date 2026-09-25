@@ -8,7 +8,7 @@ export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
   workers: 1,
-  timeout: 60_000,
+  timeout: 90_000,
   expect: { timeout: 10_000 },
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : [['list']],
@@ -34,7 +34,14 @@ export default defineConfig({
       cwd: '../..',
       env,
       reuseExistingServer: !process.env.CI,
-      timeout: 60_000,
+      timeout: 90_000,
+    },
+    {
+      command: 'pnpm --filter @magnox/worker fixtures:servers',
+      url: 'http://127.0.0.1:25591/health',
+      cwd: '../..',
+      reuseExistingServer: !process.env.CI,
+      timeout: 30_000,
     },
     {
       command: 'pnpm --filter @magnox/worker start',
@@ -42,7 +49,7 @@ export default defineConfig({
       cwd: '../..',
       env,
       reuseExistingServer: !process.env.CI,
-      timeout: 60_000,
+      timeout: 90_000,
     },
   ],
 });

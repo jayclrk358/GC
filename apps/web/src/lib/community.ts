@@ -1,0 +1,46 @@
+import 'server-only';
+import { cache } from 'react';
+import { notFound } from 'next/navigation';
+import { eq } from 'drizzle-orm';
+import { db, schema } from '@magnox/db';
+import { getCommunityRow, getMemberContext, isAppError, type MemberContext } from '@magnox/core';
+import { has, normalizeNav, Permission, type NavTab } from '@magnox/shared';
+import { getUser } from './auth';
+
+/** Tabs whose features exist. Later phases add forum, chat, wiki and events. */
+export const AVAILABLE_TABS: ReadonlySet<NavTab> = new Set(['home', 'members', 'servers']);
+
+export const loadCommunity = cache(async (slug: string) => {
+  const user = await getUser();
+  let ctx: MemberContext;
+  try {
+    ctx = await getMemberContext({ slug }, user?.id ?? null);
+  } catch (e) {
+    if (isAppError(e) && e.code === 'not_found') notFound();
+    throw e;
+  }
+  const community = await getCommunityRow(ctx.community.id);
+  const game = community.gameId
+    ? ((await db.query.games.findFirst({ where: eq(schema.games.id, community.gameId) })) ?? null)
+    : null;
+  const nav = normalizeNav(community.nav).filter((n) => n.visible && AVAILABLE_TABS.has(n.tab));
+  const perms = {
+    manage: has(ctx.base, Permission.MANAGE_COMMUNITY),
+    manageRoles: has(ctx.base, Permission.MANAGE_ROLES),
+    manageServers: has(ctx.base, Permission.MANAGE_SERVERS),
+    manageInvites: has(ctx.base, Permission.MANAGE_INVITES),
+    createInvite: ctx.isMember && has(ctx.base, Permission.CREATE_INVITE),
+    viewAudit: has(ctx.base, Permission.VIEW_AUDIT_LOG),
+  };
+  const canOpenSettings = perms.manage || perms.manageRoles || perms.manageServers || perms.manageInvites || perms.viewAudit;
+  return { ctx, community, game, nav, user, perms: { ...perms, settings: canOpenSettings } };
+});
+
+export type LoadedCommunity = Awaited<ReturnType<typeof loadCommunity>>;
+
+/** Load for a settings page and 404 if the viewer can't manage anything. */
+export async function loadCommunityForSettings(slug: string) {
+  const data = await loadCommunity(slug);
+  if (!data.perms.settings) notFound();
+  return data;
+}

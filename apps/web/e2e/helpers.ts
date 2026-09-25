@@ -60,3 +60,30 @@ export async function setScheme(
     [scheme, contrast],
   );
 }
+
+export interface CommunityOpts {
+  name?: string;
+  template?: 'Game server' | 'Clan or guild' | 'Fan hub' | 'Creator community';
+  preset?: string;
+  inviteOnly?: boolean;
+}
+
+/** Create a community through the wizard and return its slug. */
+export async function createCommunity(page: Page, opts: CommunityOpts = {}) {
+  const name = opts.name ?? `E2E ${Date.now().toString(36)}`;
+  await page.goto('/new');
+  await page.getByLabel('Community name').fill(name);
+  await expect(page.getByText('This address is available.')).toBeVisible();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  if (opts.template) await page.getByRole('radio', { name: new RegExp(opts.template) }).click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  if (opts.preset) await page.getByRole('radio', { name: opts.preset }).click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  if (opts.inviteOnly) await page.getByRole('radio', { name: /Invite only/ }).click();
+  await page.getByRole('button', { name: 'Create community' }).click();
+  await page.waitForURL(/\/c\/[a-z0-9-]+\?created=1/);
+  const slug = new URL(page.url()).pathname.split('/')[2]!;
+  return { name, slug };
+}
+
+export const FIXTURE_CTL = 'http://127.0.0.1:25591';

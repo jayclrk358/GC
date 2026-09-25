@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsx watch --clear-screen=false src/index.ts",
     "start": "tsx src/index.ts",
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json",
+    "fixtures:servers": "tsx src/fixtures/fake-servers.ts"
   },
   "dependencies": {
     "@magnox/core": "workspace:*",
@@ -16,5 +17,8 @@
     "drizzle-orm": "^0.45.3",
     "gamedig": "^5.3.3",
     "ioredis": "^5.11.1"
+  },
+  "devDependencies": {
+    "@types/gamedig": "^5.0.3"
   }
 }

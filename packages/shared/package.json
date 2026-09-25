@@ -11,6 +11,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "fractional-indexing": "^4.0.0",
     "uuid": "^14.0.2",
     "zod": "^4.6.5"
   }

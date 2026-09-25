@@ -1,6 +1,5 @@
 import { db, schema, sql } from '../index';
 import { GAMES } from './games';
-import { seedDemo } from './demo';
 
 async function main() {
   for (const g of GAMES) {
@@ -27,7 +26,6 @@ async function main() {
   }
   console.log(`✔ seeded ${GAMES.length} games`);
 
-  if (process.env.SEED_DEMO !== 'false') await seedDemo();
   await sql.end();
 }
 

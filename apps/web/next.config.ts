@@ -15,6 +15,10 @@ const nextConfig: NextConfig = {
   agentRules: false,
   transpilePackages: ['@magnox/shared', '@magnox/core', '@magnox/db', '@magnox/auth'],
   serverExternalPackages: ['sharp', 'postgres', 'ioredis', 'bullmq', 'pino', 'nodemailer'],
+  env: {
+    // Uploads are served from their own origin; the browser needs the base URL too.
+    NEXT_PUBLIC_MEDIA_BASE_URL: process.env.MEDIA_BASE_URL ?? 'http://localhost:3000/media',
+  },
   experimental: {
     serverActions: { bodySizeLimit: '12mb' },
   },

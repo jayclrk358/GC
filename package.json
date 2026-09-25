@@ -10,7 +10,7 @@
     "dev": "concurrently -k -n web,rt,worker -c blue,magenta,yellow \"pnpm --filter @magnox/web dev\" \"pnpm --filter @magnox/realtime dev\" \"pnpm --filter @magnox/worker dev\"",
     "build": "pnpm -r build",
     "start": "concurrently -k -n web,rt,worker \"pnpm --filter @magnox/web start\" \"pnpm --filter @magnox/realtime start\" \"pnpm --filter @magnox/worker start\"",
-    "lint": "eslint . --max-warnings=0",
+    "lint": "eslint . --max-warnings=0 && node scripts/check-i18n.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "pnpm -r typecheck",
@@ -19,7 +19,7 @@
     "test:e2e": "pnpm --filter @magnox/web test:e2e",
     "db:generate": "pnpm --filter @magnox/db generate",
     "db:migrate": "pnpm --filter @magnox/db migrate",
-    "db:seed": "pnpm --filter @magnox/db seed",
+    "db:seed": "pnpm --filter @magnox/db seed && pnpm --filter @magnox/auth seed:demo",
     "db:reset": "pnpm --filter @magnox/db reset"
   },
   "devDependencies": {

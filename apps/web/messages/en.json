@@ -266,5 +266,928 @@
     "revokeOthers": "Sign out all other devices",
     "unknownDevice": "Unknown device",
     "lastActive": "Signed in {date}"
+  },
+  "community": {
+    "join": "Join community",
+    "joined": "Joined",
+    "left": "You left the community.",
+    "leave": "Leave community",
+    "inviteOnly": "Invite only",
+    "applicationsSoon": "Applications required",
+    "welcome": "Welcome to the community!",
+    "details": "Community details",
+    "memberCount": "{count, plural, one {# member} other {{formatted} members}}",
+    "onlineCount": "{count} online",
+    "regions": {
+      "global": "Global",
+      "na-east": "North America (East)",
+      "na-west": "North America (West)",
+      "south-america": "South America",
+      "europe-west": "Europe (West)",
+      "europe-east": "Europe (East)",
+      "uk": "United Kingdom",
+      "middle-east": "Middle East",
+      "africa": "Africa",
+      "asia-east": "East Asia",
+      "asia-southeast": "Southeast Asia",
+      "india": "India",
+      "oceania": "Oceania"
+    },
+    "languages": {
+      "en": "English",
+      "es": "Español",
+      "pt": "Português",
+      "fr": "Français",
+      "de": "Deutsch",
+      "it": "Italiano",
+      "nl": "Nederlands",
+      "pl": "Polski",
+      "ru": "Русский",
+      "uk": "Українська",
+      "tr": "Türkçe",
+      "ar": "العربية",
+      "hi": "हिन्दी",
+      "ja": "日本語",
+      "ko": "한국어",
+      "zh": "中文",
+      "sv": "Svenska",
+      "no": "Norsk",
+      "da": "Dansk",
+      "fi": "Suomi",
+      "cs": "Čeština",
+      "other": "Other"
+    },
+    "visibility": {
+      "public": "Public",
+      "unlisted": "Unlisted",
+      "private": "Private"
+    },
+    "settings": "Community settings",
+    "sections": "{name} sections",
+    "tabs": {
+      "home": "Home",
+      "forum": "Forum",
+      "chat": "Chat",
+      "wiki": "Wiki",
+      "events": "Events",
+      "servers": "Servers",
+      "members": "Members"
+    },
+    "emptyPage": "This page is empty",
+    "emptyPageManage": "Add blocks to build your landing page.",
+    "editPage": "Edit page",
+    "pagination": "Pagination",
+    "previous": "Previous",
+    "next": "Next",
+    "searchMembers": "Search members",
+    "noMembersFound": "No members match your search.",
+    "noMembers": "No members yet.",
+    "owner": "Owner",
+    "roles": "Roles",
+    "created": "Your community is ready!",
+    "customise": "Customise its look and page"
+  },
+  "servers": {
+    "copyAddress": "Copy server address {address}",
+    "copied": "Address copied",
+    "checking": "Checking…",
+    "online": "Online",
+    "offline": "Offline",
+    "verified": "Verified owner",
+    "players": "Players",
+    "map": "Map",
+    "version": "Version",
+    "connect": "Connect",
+    "title": "Servers",
+    "manage": "Manage servers",
+    "none": "No servers yet",
+    "noneManage": "Link a game server to show its live status.",
+    "browserTitle": "Server browser",
+    "browserDescription": "Verified game servers from Magnox communities, sorted by who's online right now.",
+    "browserEmpty": "No verified servers are listed yet."
+  },
+  "invites": {
+    "invite": "Invite",
+    "title": "Invite people",
+    "description": "Anyone with the link can join, even if the community is private.",
+    "expiresAfter": "Expires after",
+    "hours": "{count, plural, one {# hour} other {# hours}}",
+    "days": "{count, plural, one {# day} other {# days}}",
+    "never": "Never",
+    "maxUses": "Max uses",
+    "unlimited": "No limit",
+    "link": "Invite link",
+    "copied": "Copied to clipboard",
+    "copy": "Copy link",
+    "newLink": "Generate another",
+    "generate": "Create invite link",
+    "invalidTitle": "This invite isn't valid",
+    "invalidBody": "It may have expired, been revoked or reached its limit. Ask for a new link.",
+    "invitedBy": "{name} invited you to join",
+    "invitedTo": "You've been invited to join",
+    "memberCount": "{count, plural, one {# member} other {{formatted} members}}",
+    "signUpToJoin": "Sign up to join",
+    "signInToJoin": "I already have an account",
+    "accept": "Accept invite",
+    "manageTitle": "Invites",
+    "manageDescription": "Active invite links for this community.",
+    "code": "Code",
+    "uses": "Uses",
+    "expires": "Expires",
+    "createdBy": "Created by",
+    "revoke": "Revoke",
+    "none": "No active invites.",
+    "noExpiry": "Never"
+  },
+  "explore": {
+    "title": "Explore communities",
+    "description": "Find communities for your favourite games, clans and servers.",
+    "results": "{count, plural, =0 {No communities found} one {# community} other {# communities}}",
+    "noResults": "Nothing matched",
+    "noResultsBody": "Try a different search or remove some filters.",
+    "pagination": "Pagination",
+    "previous": "Previous page",
+    "next": "Next page",
+    "pageOf": "Page {page} of {pages}",
+    "filters": "Filter communities",
+    "search": "Search",
+    "searchPlaceholder": "Name, game or tag",
+    "game": "Game",
+    "any": "Any",
+    "region": "Region",
+    "language": "Language",
+    "sort": "Sort by",
+    "sortDefault": "Best match",
+    "sortPopular": "Most members",
+    "sortNew": "Newest",
+    "apply": "Apply"
+  },
+  "profile": {
+    "communities": "Communities",
+    "noCommunities": "Not a member of any public communities yet.",
+    "owner": "Owner",
+    "details": "Profile details",
+    "joined": "Joined {date}",
+    "favoriteGames": "Favourite games",
+    "settingsTitle": "Profile",
+    "settingsDescription": "How you appear to others on Magnox.",
+    "saved": "Profile saved",
+    "usernameSaved": "Username updated",
+    "username": "Username",
+    "usernameDesc": "Used for @mentions and your profile address. 3–24 letters, numbers, dots or underscores.",
+    "saveUsername": "Save username",
+    "publicProfile": "Your public profile:",
+    "images": "Pictures",
+    "avatar": "Avatar",
+    "banner": "Profile banner",
+    "about": "About you",
+    "bio": "Bio",
+    "bioDesc": "A short introduction (up to 500 characters).",
+    "pronouns": "Pronouns",
+    "location": "Location",
+    "accent": "Accent colour",
+    "accentDesc": "Used for your profile banner when you don't upload one.",
+    "clear": "Clear",
+    "links": "Links",
+    "linksDesc": "Up to 8 links, for example your stream or socials.",
+    "linkLabel": "Link {n} label",
+    "linkUrl": "Link {n} URL",
+    "removeLink": "Remove link {n}",
+    "addLink": "Add link",
+    "favoriteGamesDesc": "Pick up to 10.",
+    "save": "Save profile"
+  },
+  "create": {
+    "welcome": "Welcome to Magnox! Let's set up your first community.",
+    "title": "Create a community",
+    "subtitle": "It takes about a minute. You can change everything later.",
+    "steps": {
+      "basics": "Basics",
+      "template": "Template",
+      "look": "Look",
+      "access": "Access"
+    },
+    "headings": {
+      "basics": "Name your community",
+      "template": "Choose a starting point",
+      "look": "Pick a colour theme",
+      "access": "Who can join?"
+    },
+    "completed": "completed",
+    "progress": "Progress",
+    "errors": {
+      "name": "Enter a name of at least 3 characters.",
+      "slug": "Use 3–32 lowercase letters, numbers or dashes.",
+      "fix": "Please fix the highlighted fields."
+    },
+    "slugTaken": "That address is already taken.",
+    "slugChecking": "Checking availability…",
+    "slugAvailable": "This address is available.",
+    "name": "Community name",
+    "nameHint": "Shown at the top of your community.",
+    "slug": "Address",
+    "slugHint": "The link people will use. Lowercase letters, numbers and dashes.",
+    "tagline": "Tagline",
+    "taglineHint": "One sentence about your community.",
+    "game": "Game",
+    "noGame": "No specific game",
+    "tags": "Tags",
+    "tagsHint": "Up to 8, separated by commas.",
+    "templates": {
+      "server": {
+        "name": "Game server",
+        "description": "Live server status, rules and FAQ up front. Great for Minecraft, Rust, FiveM and similar."
+      },
+      "clan": {
+        "name": "Clan or guild",
+        "description": "Leadership ranks, recruitment and events for competitive or casual teams."
+      },
+      "fanhub": {
+        "name": "Fan hub",
+        "description": "Discussion, guides and news for a game's community."
+      },
+      "creator": {
+        "name": "Creator community",
+        "description": "A home for your audience: streams, supporters and links."
+      }
+    },
+    "lookHint": "Every theme meets WCAG AA contrast in light and dark mode. You can fine-tune colours, fonts and images later.",
+    "presets": {
+      "magnox": "Magnox",
+      "midnight": "Midnight",
+      "forest": "Forest",
+      "ember": "Ember",
+      "ocean": "Ocean",
+      "arcade": "Arcade",
+      "parchment": "Parchment",
+      "mono": "Mono"
+    },
+    "visibility": "Visibility",
+    "visibilityHelp": {
+      "public": "Listed in Explore and search engines.",
+      "unlisted": "Anyone with the link can view it, but it isn't listed.",
+      "private": "Only members can see it. Join by invite."
+    },
+    "joinMode": "Joining",
+    "joinModes": {
+      "open": {
+        "name": "Anyone can join",
+        "description": "One click to become a member."
+      },
+      "invite": {
+        "name": "Invite only",
+        "description": "Members join with an invite link."
+      }
+    },
+    "region": "Region",
+    "language": "Main language",
+    "back": "Back",
+    "create": "Create community",
+    "next": "Continue"
+  },
+  "upload": {
+    "currentImage": "Current {label}",
+    "uploading": "Uploading…",
+    "replace": "Replace",
+    "upload": "Upload image",
+    "remove": "Remove"
+  },
+  "csettings": {
+    "navLabel": "Community settings sections",
+    "saved": "Changes saved",
+    "save": "Save changes",
+    "nav": {
+      "general": "General",
+      "appearance": "Appearance",
+      "page": "Page builder",
+      "navigation": "Navigation",
+      "roles": "Roles & permissions",
+      "members": "Member roles",
+      "invites": "Invites",
+      "servers": "Servers",
+      "audit": "Audit log",
+      "danger": "Danger zone"
+    },
+    "general": {
+      "title": "General",
+      "description": "Your community's name, details and who can join.",
+      "basics": "Basics",
+      "access": "Access",
+      "display": "Display",
+      "nsfw": "Mature content (18+)",
+      "nsfwDesc": "Hidden from Explore for visitors who haven't opted in.",
+      "showMemberCount": "Show member count",
+      "requireAltText": "Require image descriptions",
+      "requireAltTextDesc": "Members must add alt text to images they post.",
+      "welcomeMessage": "Welcome message",
+      "welcomeMessageDesc": "Shown to new members after they join.",
+      "address": "Community address",
+      "addressDesc": "Changing it breaks old links. You can change it 3 times a day.",
+      "changeAddress": "Change address",
+      "slugChanged": "Address changed"
+    },
+    "navigation": {
+      "title": "Navigation",
+      "description": "Choose which tabs appear, rename them and change their order.",
+      "moveUp": "Move {tab} up",
+      "moveDown": "Move {tab} down",
+      "moved": "{tab} moved to position {position} of {total}",
+      "customLabel": "Custom label for {tab}",
+      "show": "Show {tab} tab",
+      "visible": "Visible",
+      "soon": "Coming soon"
+    },
+    "audit": {
+      "title": "Audit log",
+      "description": "Every administrative change in this community.",
+      "empty": "Nothing has been logged yet.",
+      "when": "When",
+      "who": "Who",
+      "what": "Action",
+      "details": "Details",
+      "system": "System"
+    },
+    "danger": {
+      "title": "Danger zone",
+      "description": "Irreversible actions. Proceed with care.",
+      "deleteTitle": "Delete community",
+      "deleteDesc": "The community disappears immediately and its address becomes available. Content is kept for 30 days, then permanently removed.",
+      "confirmLabel": "Type {slug} to confirm",
+      "deleteButton": "Delete this community"
+    }
+  },
+  "theme": {
+    "title": "Appearance",
+    "description": "Colours, fonts and images. Every theme is checked against WCAG AA contrast before it can be saved.",
+    "presets": "Presets",
+    "presetsDesc": "Start from a preset. Your images are kept.",
+    "presetNames": {
+      "magnox": "Magnox",
+      "midnight": "Midnight",
+      "forest": "Forest",
+      "ember": "Ember",
+      "ocean": "Ocean",
+      "arcade": "Arcade",
+      "parchment": "Parchment",
+      "mono": "Mono"
+    },
+    "colorsTitle": "Colours",
+    "colorsDesc": "Set colours for both light and dark mode. Visitors see the mode they prefer.",
+    "schemeTabs": "Colour scheme to edit",
+    "colorsFor": "{scheme} colours",
+    "schemes": {
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "hexFor": "Hex value for {name}",
+    "colors": {
+      "bg": {
+        "label": "Page background",
+        "description": "Behind everything."
+      },
+      "surface": {
+        "label": "Card background",
+        "description": "Panels, cards and the header."
+      },
+      "surface2": {
+        "label": "Subtle background",
+        "description": "Inputs, code and hover states."
+      },
+      "text": {
+        "label": "Main text",
+        "description": "Headings and body text."
+      },
+      "textMuted": {
+        "label": "Secondary text",
+        "description": "Descriptions and metadata."
+      },
+      "primary": {
+        "label": "Primary",
+        "description": "Links, buttons and highlights."
+      },
+      "onPrimary": {
+        "label": "Text on primary",
+        "description": "Text on primary buttons."
+      },
+      "accent": {
+        "label": "Accent",
+        "description": "Decorative highlights."
+      },
+      "border": {
+        "label": "Borders",
+        "description": "Dividers and outlines."
+      },
+      "danger": {
+        "label": "Danger",
+        "description": "Errors and destructive actions."
+      },
+      "success": {
+        "label": "Success",
+        "description": "Online status and confirmations."
+      },
+      "warning": {
+        "label": "Warning",
+        "description": "Cautions and pending states."
+      }
+    },
+    "typeTitle": "Typography & layout",
+    "fontBody": "Body font",
+    "fontHeading": "Heading font",
+    "fonts": {
+      "inter": "Inter",
+      "system": "System default",
+      "atkinson": "Atkinson Hyperlegible",
+      "nunito": "Nunito (rounded)",
+      "space-grotesk": "Space Grotesk",
+      "lora": "Lora (serif)",
+      "jetbrains-mono": "JetBrains Mono"
+    },
+    "radius": "Corner rounding",
+    "radii": {
+      "none": "Square",
+      "sm": "Slight",
+      "md": "Medium",
+      "lg": "Large",
+      "xl": "Extra large"
+    },
+    "defaultScheme": "Default mode",
+    "defaultSchemeDesc": "Used when a visitor hasn't picked light or dark themselves.",
+    "schemeAuto": "Match the visitor's device",
+    "headerStyle": "Header style",
+    "headerBanner": "Banner",
+    "headerCompact": "Compact",
+    "imagesTitle": "Images",
+    "imagesDesc": "Images are resized and stripped of location data automatically.",
+    "icon": "Icon",
+    "banner": "Banner",
+    "bannerFocus": "Banner focus point (vertical)",
+    "background": "Page background image",
+    "backgroundDim": "Background dimming",
+    "backgroundDimDesc": "{value}% — higher keeps text readable.",
+    "sidebar": "Preview and contrast checks",
+    "previewLabel": "{scheme} mode preview",
+    "previewTagline": "A tagline for your community",
+    "previewPrimary": "Join",
+    "previewSecondary": "Browse",
+    "previewCardTitle": "Welcome!",
+    "previewCardBody": "This is how cards and secondary text look.",
+    "previewLink": "A link",
+    "previewOnline": "Online",
+    "previewWarning": "Warning",
+    "previewError": "Error",
+    "previewInput": "Search…",
+    "contrastTitle": "Contrast check",
+    "issuesCount": "{count, plural, one {# colour pair needs more contrast} other {# colour pairs need more contrast}}",
+    "allPass": "All colour pairs meet WCAG AA.",
+    "issue": "{fg} on {bg} is {ratio}:1 (needs {min}:1)",
+    "useColor": "Use {hex}",
+    "fixAll": "Fix all automatically",
+    "ratios": "Contrast ratios",
+    "ratioLabel": "{fg} on {bg}",
+    "save": "Save theme",
+    "reset": "Discard changes",
+    "unsaved": "Unsaved changes",
+    "saveBlocked": "Fix contrast issues before saving.",
+    "saveHint": "Visitors with high contrast or custom fonts turned on will still see their own settings.",
+    "saved": "Theme saved"
+  },
+  "blocks": {
+    "title": "Page builder",
+    "description": "Build your community's landing page from blocks. Drag to reorder, or use the arrow buttons.",
+    "types": {
+      "hero": {
+        "name": "Hero",
+        "description": "Big headline with a call to action."
+      },
+      "about": {
+        "name": "About",
+        "description": "Rich text introduction."
+      },
+      "richText": {
+        "name": "Text",
+        "description": "A free-form rich text section."
+      },
+      "rules": {
+        "name": "Rules",
+        "description": "Numbered list of rules."
+      },
+      "links": {
+        "name": "Links",
+        "description": "Social and website links."
+      },
+      "faq": {
+        "name": "FAQ",
+        "description": "Questions and answers that expand."
+      },
+      "gallery": {
+        "name": "Gallery",
+        "description": "Screenshots and images with descriptions."
+      },
+      "staff": {
+        "name": "Staff",
+        "description": "Members with selected roles."
+      },
+      "discordInvite": {
+        "name": "Discord invite",
+        "description": "Link to your Discord server."
+      },
+      "embed": {
+        "name": "Video",
+        "description": "YouTube video or Twitch channel (loads on click)."
+      },
+      "serverStatus": {
+        "name": "Server status",
+        "description": "Live status of your game servers."
+      },
+      "featuredThreads": {
+        "name": "Latest discussions",
+        "description": "Recent forum threads."
+      },
+      "upcomingEvents": {
+        "name": "Upcoming events",
+        "description": "Your next scheduled events."
+      },
+      "stats": {
+        "name": "Stats",
+        "description": "Members, online and server numbers."
+      }
+    },
+    "add": "Add block",
+    "viewPage": "View page",
+    "reorderHint": "Reorder with the arrow buttons, or focus a drag handle and press Space, the arrow keys, then Space again.",
+    "empty": "No blocks yet",
+    "emptyDesc": "Add a hero and an about block to get started.",
+    "listLabel": "Page blocks",
+    "dragHandle": "Drag to reorder {name}",
+    "hidden": "Hidden",
+    "moveUp": "Move {name} up",
+    "moveDown": "Move {name} down",
+    "visibleToggle": "Show {name} on the page",
+    "visible": "Visible",
+    "edit": "Edit",
+    "deleteBlock": "Delete {name}",
+    "editTitle": "Edit {name} block",
+    "cancel": "Cancel",
+    "save": "Save block",
+    "saved": "Block saved",
+    "delete": "Delete",
+    "deleteTitle": "Delete block?",
+    "deleteConfirm": "“{name}” will be removed from the page.",
+    "added": "{name} block added",
+    "deleted": "{name} block deleted",
+    "dnd": {
+      "instructions": "To reorder, press Space or Enter to pick up a block. Use the up and down arrow keys to move it, then press Space or Enter to drop it, or Escape to cancel.",
+      "start": "Picked up {name}. It is at position {position} of {total}.",
+      "over": "{name} moved to position {position} of {total}.",
+      "end": "{name} dropped at position {position} of {total}.",
+      "cancel": "Moving {name} was cancelled."
+    },
+    "moveItemUp": "Move {item} up",
+    "moveItemDown": "Move {item} down",
+    "remove": "Remove",
+    "addItem": "Add item",
+    "heading": "Heading",
+    "content": "Content",
+    "count": "How many to show",
+    "hero": {
+      "heading": "Headline",
+      "subheading": "Subheading",
+      "ctaLabel": "Button label",
+      "ctaLabelHint": "Leave empty for no button.",
+      "ctaTarget": "Button action",
+      "ctaUrl": "Button link",
+      "targets": {
+        "join": "Join the community",
+        "servers": "Go to servers",
+        "forum": "Go to forum",
+        "chat": "Go to chat",
+        "events": "Go to events",
+        "url": "Open a link"
+      },
+      "align": "Alignment",
+      "alignStart": "Left",
+      "alignCenter": "Centred"
+    },
+    "rules": {
+      "item": "Rule {n}",
+      "title": "Rule",
+      "description": "Explanation"
+    },
+    "links": {
+      "item": "Link {n}",
+      "label": "Label",
+      "url": "URL",
+      "kind": "Type",
+      "kinds": {
+        "website": "Website",
+        "discord": "Discord",
+        "steam": "Steam",
+        "youtube": "YouTube",
+        "twitch": "Twitch",
+        "x": "X (Twitter)",
+        "bluesky": "Bluesky",
+        "reddit": "Reddit",
+        "github": "GitHub",
+        "tiktok": "TikTok",
+        "instagram": "Instagram",
+        "patreon": "Patreon",
+        "store": "Store",
+        "other": "Other"
+      }
+    },
+    "faq": {
+      "item": "Question {n}",
+      "question": "Question",
+      "answer": "Answer"
+    },
+    "gallery": {
+      "layout": "Layout",
+      "grid": "Grid",
+      "masonry": "Masonry",
+      "item": "Image {n}",
+      "image": "Image",
+      "alt": "Image description (alt text)",
+      "altHint": "Describe what the image shows for people who can't see it.",
+      "caption": "Caption"
+    },
+    "staff": {
+      "roles": "Roles to show",
+      "rolesHint": "Leave all unchecked to show every role that's displayed separately."
+    },
+    "discord": {
+      "code": "Invite code",
+      "codeHint": "The part after discord.gg/",
+      "description": "Description"
+    },
+    "embed": {
+      "provider": "Provider",
+      "videoId": "YouTube video ID",
+      "channel": "Twitch channel",
+      "title": "Title",
+      "titleHint": "Describes the video for screen reader users."
+    },
+    "serverStatus": {
+      "servers": "Servers to show",
+      "serversHint": "Leave all unchecked to show every linked server.",
+      "none": "No servers linked yet.",
+      "showPlayers": "Show player counts",
+      "layout": "Layout",
+      "cards": "Cards",
+      "list": "List"
+    },
+    "stats": {
+      "members": "Show member count",
+      "online": "Show online count",
+      "servers": "Show server numbers"
+    }
+  },
+  "editor": {
+    "placeholder": "Write something…",
+    "toolbar": "Formatting for {label}",
+    "bold": "Bold",
+    "italic": "Italic",
+    "strike": "Strikethrough",
+    "code": "Inline code",
+    "spoiler": "Spoiler",
+    "link": "Link",
+    "heading2": "Heading",
+    "heading3": "Subheading",
+    "bulletList": "Bulleted list",
+    "orderedList": "Numbered list",
+    "quote": "Quote",
+    "codeBlock": "Code block",
+    "divider": "Divider",
+    "image": "Insert image",
+    "undo": "Undo",
+    "redo": "Redo",
+    "uploading": "Uploading image…",
+    "linkTitle": "Add link",
+    "linkUrl": "URL",
+    "linkHint": "Leave empty to remove the link.",
+    "linkInvalid": "Links must start with https://, http:// or mailto:",
+    "cancel": "Cancel",
+    "apply": "Apply",
+    "altTitle": "Describe this image",
+    "altDescription": "Alt text is read aloud by screen readers and shown if the image can't load.",
+    "altLabel": "Image description",
+    "altHint": "For example: “Castle build at sunset on the survival server”.",
+    "altRequired": "Please describe the image.",
+    "decorative": "It's decorative",
+    "insertImage": "Insert image"
+  },
+  "roles": {
+    "title": "Roles & permissions",
+    "description": "Roles higher in the list outrank roles below them. You can only manage roles below your own highest role.",
+    "create": "Create role",
+    "newRoleName": "New role",
+    "created": "Role created",
+    "hierarchyHint": "Top of the list = highest rank.",
+    "listLabel": "Roles",
+    "locked": "You can't edit this role",
+    "moveUp": "Move {name} up",
+    "moveDown": "Move {name} down",
+    "moved": "{name} moved to position {position}",
+    "editing": "Edit role: {name}",
+    "cannotEdit": "This role is at or above your highest role, so you can't change it.",
+    "name": "Role name",
+    "color": "Colour",
+    "everyoneHint": "@everyone applies to all members. Permissions here are the baseline for everyone.",
+    "hoist": "Display separately",
+    "hoistDesc": "Show members with this role in their own group in the member list.",
+    "mentionable": "Allow anyone to @mention this role",
+    "mentionableDesc": "Otherwise only members who can mention @everyone can.",
+    "selfAssignable": "Self-assignable",
+    "selfAssignableDesc": "Members can give themselves this role (e.g. game or region roles).",
+    "groups": {
+      "general": "General",
+      "moderation": "Moderation",
+      "administration": "Administration"
+    },
+    "perms": {
+      "VIEW_CHANNEL": {
+        "name": "View channels",
+        "description": "See channels, threads and messages."
+      },
+      "SEND_MESSAGES": {
+        "name": "Send messages",
+        "description": "Post in chat channels."
+      },
+      "CREATE_THREADS": {
+        "name": "Create threads",
+        "description": "Start new forum threads."
+      },
+      "REPLY_IN_THREADS": {
+        "name": "Reply to threads",
+        "description": "Post replies in forum threads."
+      },
+      "ATTACH_FILES": {
+        "name": "Attach files",
+        "description": "Upload images to posts and messages."
+      },
+      "EMBED_LINKS": {
+        "name": "Embed links",
+        "description": "Show link previews."
+      },
+      "ADD_REACTIONS": {
+        "name": "Add reactions",
+        "description": "React with emoji."
+      },
+      "MENTION_EVERYONE": {
+        "name": "Mention @everyone",
+        "description": "Notify every member at once."
+      },
+      "READ_HISTORY": {
+        "name": "Read history",
+        "description": "See earlier messages."
+      },
+      "VOTE": {
+        "name": "Vote",
+        "description": "Up- and down-vote threads where enabled."
+      },
+      "EDIT_WIKI": {
+        "name": "Edit wiki",
+        "description": "Create and edit wiki pages."
+      },
+      "CREATE_INVITE": {
+        "name": "Create invites",
+        "description": "Generate invite links."
+      },
+      "CHANGE_NICKNAME": {
+        "name": "Change nickname",
+        "description": "Set their own nickname in this community."
+      },
+      "RSVP_EVENTS": {
+        "name": "RSVP to events",
+        "description": "Mark themselves as going to events."
+      },
+      "MANAGE_MESSAGES": {
+        "name": "Manage messages",
+        "description": "Delete or pin other people's messages."
+      },
+      "MANAGE_THREADS": {
+        "name": "Manage threads",
+        "description": "Lock, pin, move and delete threads."
+      },
+      "MANAGE_WIKI": {
+        "name": "Manage wiki",
+        "description": "Delete pages and restore revisions."
+      },
+      "MANAGE_EVENTS": {
+        "name": "Manage events",
+        "description": "Create, edit and cancel events."
+      },
+      "KICK_MEMBERS": {
+        "name": "Kick members",
+        "description": "Remove members (they can rejoin)."
+      },
+      "BAN_MEMBERS": {
+        "name": "Ban members",
+        "description": "Remove members and stop them rejoining."
+      },
+      "TIMEOUT_MEMBERS": {
+        "name": "Time out members",
+        "description": "Temporarily stop members from posting."
+      },
+      "VIEW_AUDIT_LOG": {
+        "name": "View audit log",
+        "description": "See the history of administrative changes."
+      },
+      "MANAGE_REPORTS": {
+        "name": "Handle reports",
+        "description": "Review reported content."
+      },
+      "REVIEW_APPLICATIONS": {
+        "name": "Review applications",
+        "description": "Accept or reject join applications."
+      },
+      "MANAGE_NICKNAMES": {
+        "name": "Manage nicknames",
+        "description": "Change other members' nicknames."
+      },
+      "MANAGE_CHANNELS": {
+        "name": "Manage channels",
+        "description": "Create, edit and delete channels."
+      },
+      "MANAGE_ROLES": {
+        "name": "Manage roles",
+        "description": "Create and assign roles below their own."
+      },
+      "MANAGE_COMMUNITY": {
+        "name": "Manage community",
+        "description": "Edit settings, theme and page."
+      },
+      "MANAGE_SERVERS": {
+        "name": "Manage servers",
+        "description": "Link and edit game servers."
+      },
+      "MANAGE_INVITES": {
+        "name": "Manage invites",
+        "description": "See and revoke everyone's invites."
+      },
+      "MANAGE_EMOJI": {
+        "name": "Manage emoji",
+        "description": "Add custom emoji and flairs."
+      },
+      "VIEW_ANALYTICS": {
+        "name": "View analytics",
+        "description": "See community statistics."
+      },
+      "ADMINISTRATOR": {
+        "name": "Administrator",
+        "description": "Every permission, and bypasses channel restrictions. Grant carefully."
+      }
+    },
+    "save": "Save role",
+    "saved": "Role saved",
+    "delete": "Delete role",
+    "deleted": "{name} deleted",
+    "membersTitle": "Member roles",
+    "membersDescription": "Give members roles. You can only assign roles below your own.",
+    "noMembers": "No members found.",
+    "owner": "Owner",
+    "rolesOf": "Roles of {name}",
+    "manageRoles": "Roles",
+    "rolesFor": "Roles for {name}",
+    "adminNotice": "Administrator is on, so this role has every permission below regardless of the individual switches."
+  },
+  "serverSettings": {
+    "title": "Servers",
+    "description": "Link your game servers to show live status. Verify ownership to get a badge and appear in the server browser.",
+    "add": "Add server",
+    "addTitle": "Add a game server",
+    "addDesc": "We'll check it right away. Only public addresses can be queried.",
+    "name": "Display name",
+    "game": "Game / protocol",
+    "host": "Address",
+    "hostHint": "Hostname or public IP, without the port.",
+    "port": "Port",
+    "portHint": "Query port if different from the game port.",
+    "descriptionLabel": "Description",
+    "tags": "Tags",
+    "tagsHint": "Separated by commas.",
+    "region": "Region",
+    "listed": "List in the server browser",
+    "listedDesc": "Verified servers can appear in the public server browser.",
+    "verified": "Verified",
+    "unverified": "Not verified",
+    "unlisted": "Not listed",
+    "verifyTitle": "Verify ownership",
+    "verifyBody": "Add this code anywhere in your server name or MOTD, then press “Check now”:",
+    "verifyAfter": "You can remove the code once the server is verified.",
+    "refresh": "Refresh",
+    "checkNow": "Check now",
+    "refreshQueued": "Checking the server now…",
+    "refreshCached": "Checked less than 30 seconds ago.",
+    "edit": "Edit",
+    "remove": "Remove",
+    "empty": "No servers yet",
+    "emptyDesc": "Add a server to show its live status on your page.",
+    "added": "Server added. Checking it now…",
+    "editTitle": "Edit {name}",
+    "save": "Save server",
+    "saved": "Server saved",
+    "removeTitle": "Remove server?",
+    "removeConfirm": "{name} will be removed from this community.",
+    "cancel": "Cancel"
   }
 }
