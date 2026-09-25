@@ -1,0 +1,325 @@
+/*
+ * Cascade layers, lowest to highest priority:
+ *   mx-tokens     site default design tokens (generated from the default theme)
+ *   mx-community  a community's validated theme tokens
+ *   components / utilities  Tailwind
+ *   mx-prefs      the user's accessibility and display preferences, which always win
+ */
+@layer theme, base, mx-tokens, mx-community, components, utilities, mx-prefs;
+@import 'tailwindcss';
+
+@theme inline {
+  --color-bg: var(--c-bg);
+  --color-surface: var(--c-surface);
+  --color-surface-2: var(--c-surface-2);
+  --color-fg: var(--c-text);
+  --color-muted: var(--c-text-muted);
+  --color-primary: var(--c-primary);
+  --color-on-primary: var(--c-on-primary);
+  --color-accent: var(--c-accent);
+  --color-border: var(--c-border);
+  --color-danger: var(--c-danger);
+  --color-success: var(--c-success);
+  --color-warning: var(--c-warning);
+  --font-sans: var(--mx-font-body);
+  --font-heading: var(--mx-font-heading);
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, monospace;
+  --radius-ui: var(--mx-radius);
+  --radius-ui-sm: calc(var(--mx-radius) * 0.6);
+  --radius-ui-lg: calc(var(--mx-radius) * 1.5);
+}
+
+@layer mx-tokens {
+  :root {
+    --mx-density: 1;
+    --mx-focus: var(--c-primary);
+    --mx-focus-width: 2px;
+    --mx-focus-offset: 2px;
+  }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    background: var(--c-bg);
+    color: var(--c-text);
+    font-family: var(--mx-font-body);
+    line-height: 1.55;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--mx-font-heading);
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  :focus-visible {
+    outline: var(--mx-focus-width) solid var(--mx-focus);
+    outline-offset: var(--mx-focus-offset);
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--c-primary) 30%, transparent);
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+}
+
+@layer components {
+  /* Links inside prose/rich text are always distinguishable without colour. */
+  .prose-mx a {
+    color: var(--c-primary);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+  .prose-mx {
+    overflow-wrap: anywhere;
+  }
+  .prose-mx > * + * {
+    margin-top: 0.75em;
+  }
+  .prose-mx h2 {
+    font-size: 1.35em;
+    font-weight: 700;
+    margin-top: 1.25em;
+  }
+  .prose-mx h3 {
+    font-size: 1.15em;
+    font-weight: 700;
+    margin-top: 1.1em;
+  }
+  .prose-mx h4 {
+    font-weight: 700;
+    margin-top: 1em;
+  }
+  .prose-mx ul {
+    list-style: disc;
+    padding-inline-start: 1.5em;
+  }
+  .prose-mx ol {
+    list-style: decimal;
+    padding-inline-start: 1.5em;
+  }
+  .prose-mx blockquote {
+    border-inline-start: 4px solid var(--c-border);
+    padding-inline-start: 1em;
+    color: var(--c-text-muted);
+  }
+  .prose-mx code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    background: var(--c-surface-2);
+    padding: 0.1em 0.35em;
+    border-radius: 4px;
+  }
+  .prose-mx pre {
+    background: var(--c-surface-2);
+    padding: 0.9em 1em;
+    border-radius: var(--mx-radius);
+    overflow-x: auto;
+  }
+  .prose-mx pre code {
+    background: none;
+    padding: 0;
+  }
+  .prose-mx hr {
+    border-color: var(--c-border);
+  }
+  .prose-mx img {
+    border-radius: var(--mx-radius);
+    max-height: 32rem;
+  }
+
+  .spoiler {
+    background: var(--c-text);
+    color: transparent;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .spoiler[data-revealed='true'] {
+    background: var(--c-surface-2);
+    color: inherit;
+  }
+
+  .skip-link {
+    position: absolute;
+    inset-inline-start: 1rem;
+    top: -10rem;
+    z-index: 100;
+    padding: 0.75rem 1rem;
+    background: var(--c-primary);
+    color: var(--c-on-primary);
+    border-radius: var(--mx-radius);
+    font-weight: 600;
+  }
+  .skip-link:focus {
+    top: 1rem;
+  }
+}
+
+/* ─────────────────────────── User preferences ─────────────────────────── */
+@layer mx-prefs {
+  /* High contrast replaces every colour token, including community themes. */
+  html[data-contrast='high'],
+  html[data-contrast='high'] [data-community-theme],
+  html[data-contrast='high'] [data-theme-preview] {
+    color-scheme: light;
+    --c-bg: #ffffff;
+    --c-surface: #ffffff;
+    --c-surface-2: #f0f0f0;
+    --c-text: #000000;
+    --c-text-muted: #1f1f1f;
+    --c-primary: #0000c8;
+    --c-on-primary: #ffffff;
+    --c-accent: #000000;
+    --c-border: #000000;
+    --c-danger: #9b0000;
+    --c-success: #005200;
+    --c-warning: #5c3500;
+    --mx-focus: #000000;
+    --mx-focus-width: 3px;
+  }
+  html[data-contrast='high'][data-scheme='dark'],
+  html[data-contrast='high'][data-scheme='dark'] [data-community-theme],
+  html[data-contrast='high'][data-scheme='dark'] [data-theme-preview] {
+    color-scheme: dark;
+    --c-bg: #000000;
+    --c-surface: #000000;
+    --c-surface-2: #141414;
+    --c-text: #ffffff;
+    --c-text-muted: #e6e6e6;
+    --c-primary: #ffff00;
+    --c-on-primary: #000000;
+    --c-accent: #00ffff;
+    --c-border: #ffffff;
+    --c-danger: #ff8a8a;
+    --c-success: #7dff7d;
+    --c-warning: #ffd200;
+    --mx-focus: #ffff00;
+  }
+  @media (prefers-color-scheme: dark) {
+    html[data-contrast='high'][data-scheme='system'],
+    html[data-contrast='high'][data-scheme='system'] [data-community-theme],
+    html[data-contrast='high'][data-scheme='system'] [data-theme-preview] {
+      color-scheme: dark;
+      --c-bg: #000000;
+      --c-surface: #000000;
+      --c-surface-2: #141414;
+      --c-text: #ffffff;
+      --c-text-muted: #e6e6e6;
+      --c-primary: #ffff00;
+      --c-on-primary: #000000;
+      --c-accent: #00ffff;
+      --c-border: #ffffff;
+      --c-danger: #ff8a8a;
+      --c-success: #7dff7d;
+      --c-warning: #ffd200;
+      --mx-focus: #ffff00;
+    }
+  }
+  html[data-contrast='high'] img,
+  html[data-contrast='high'] video {
+    filter: none;
+  }
+
+  /* Reading fonts override community font choices. */
+  html[data-font='atkinson'],
+  html[data-font='atkinson'] [data-community-theme] {
+    --mx-font-body: 'Atkinson Hyperlegible', ui-sans-serif, system-ui, sans-serif;
+    --mx-font-heading: 'Atkinson Hyperlegible', ui-sans-serif, system-ui, sans-serif;
+  }
+  html[data-font='opendyslexic'],
+  html[data-font='opendyslexic'] [data-community-theme] {
+    --mx-font-body: 'OpenDyslexic', ui-sans-serif, system-ui, sans-serif;
+    --mx-font-heading: 'OpenDyslexic', ui-sans-serif, system-ui, sans-serif;
+  }
+  html[data-font='system'],
+  html[data-font='system'] [data-community-theme] {
+    --mx-font-body: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --mx-font-heading: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  /* WCAG 1.4.12 text spacing. */
+  html[data-letter-spacing='wide'] body {
+    letter-spacing: 0.05em;
+    word-spacing: 0.1em;
+  }
+  html[data-letter-spacing='wider'] body {
+    letter-spacing: 0.12em;
+    word-spacing: 0.16em;
+  }
+  html[data-line-height='relaxed'] body,
+  html[data-line-height='relaxed'] body :where(p, li, dd, blockquote, span, a, label, td) {
+    line-height: 1.8;
+  }
+  html[data-line-height='loose'] body,
+  html[data-line-height='loose'] body :where(p, li, dd, blockquote, span, a, label, td) {
+    line-height: 2.1;
+  }
+  html[data-line-height='loose'] .prose-mx > * + * {
+    margin-top: 2em;
+  }
+
+  html[data-underline-links='on'] a:not([data-no-underline]) {
+    text-decoration-line: underline;
+    text-underline-offset: 0.15em;
+  }
+
+  html[data-focus='bold'] {
+    --mx-focus-width: 4px;
+    --mx-focus-offset: 3px;
+  }
+  html[data-focus='bold'] :focus-visible {
+    box-shadow: 0 0 0 calc(var(--mx-focus-width) + 3px) var(--c-bg);
+  }
+
+  html[data-density='compact'] {
+    --mx-density: 0.7;
+  }
+  html[data-density='spacious'] {
+    --mx-density: 1.35;
+  }
+
+  html[data-motion='reduce'] *,
+  html[data-motion='reduce'] *::before,
+  html[data-motion='reduce'] *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html[data-motion='system'] *,
+    html[data-motion='system'] *::before,
+    html[data-motion='system'] *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Hide decorative flourishes in simplified layout. */
+  html[data-simplified='on'] [data-decorative] {
+    display: none !important;
+  }
+}

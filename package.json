@@ -1,0 +1,47 @@
+{
+  "name": "magnox",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n web,rt,worker -c blue,magenta,yellow \"pnpm --filter @magnox/web dev\" \"pnpm --filter @magnox/realtime dev\" \"pnpm --filter @magnox/worker dev\"",
+    "build": "pnpm -r build",
+    "start": "concurrently -k -n web,rt,worker \"pnpm --filter @magnox/web start\" \"pnpm --filter @magnox/realtime start\" \"pnpm --filter @magnox/worker start\"",
+    "lint": "eslint . --max-warnings=0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "pnpm -r typecheck",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "pnpm --filter @magnox/web test:e2e",
+    "db:generate": "pnpm --filter @magnox/db generate",
+    "db:migrate": "pnpm --filter @magnox/db migrate",
+    "db:seed": "pnpm --filter @magnox/db seed",
+    "db:reset": "pnpm --filter @magnox/db reset"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@types/node": "^22.15.0",
+    "concurrently": "^10.0.5",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "16.3.6",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^16.4.0",
+    "prettier": "^3.9.9",
+    "prettier-plugin-tailwindcss": "^0.8.1",
+    "tsx": "^4.23.15",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.70.1",
+    "vitest": "^5.0.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp",
+      "unrs-resolver"
+    ]
+  }
+}

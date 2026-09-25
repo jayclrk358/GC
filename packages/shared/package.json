@@ -1,0 +1,17 @@
+{
+  "name": "@magnox/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "uuid": "^14.0.2",
+    "zod": "^4.6.5"
+  }
+}

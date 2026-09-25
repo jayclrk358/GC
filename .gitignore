@@ -1,0 +1,17 @@
+node_modules/
+.next/
+dist/
+coverage/
+*.tsbuildinfo
+.env
+.env.local
+.env.*.local
+!.env.example
+/storage/
+apps/web/test-results/
+apps/web/playwright-report/
+apps/web/e2e/.auth/
+screenshots/
+.DS_Store
+*.log
+next-env.d.ts

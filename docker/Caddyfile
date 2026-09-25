@@ -1,0 +1,26 @@
+# App and realtime share one origin so the session cookie reaches Socket.IO with no CORS setup.
+{$SITE_ADDRESS} {
+	encode zstd gzip
+
+	@socket path /socket.io/*
+	reverse_proxy @socket realtime:3001
+
+	reverse_proxy web:3000
+}
+
+# User uploads are served from a separate, cookie-less origin.
+{$MEDIA_ADDRESS} {
+	header {
+		X-Content-Type-Options nosniff
+		Content-Security-Policy "default-src 'none'; img-src 'self'; sandbox"
+		Cross-Origin-Resource-Policy cross-origin
+		Cache-Control "public, max-age=31536000, immutable"
+		-Server
+	}
+	@allowed path_regexp ^/u/[a-z0-9]{8,40}\.(webp|png|jpg|gif)$
+	handle @allowed {
+		rewrite * /magnox{uri}
+		reverse_proxy minio:9000
+	}
+	respond 404
+}

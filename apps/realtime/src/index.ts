@@ -1,0 +1,100 @@
+import { createServer } from 'node:http';
+import { Server, type Socket } from 'socket.io';
+import { createAdapter } from '@socket.io/redis-adapter';
+import { fromNodeHeaders } from 'better-auth/node';
+import { auth } from '@magnox/auth';
+import { cacheRedis, env, logger, rooms } from '@magnox/core';
+import { authorizeRoom } from './authorize';
+import { registerPresence } from './presence';
+
+const log = logger('realtime');
+const appOrigin = new URL(env().APP_URL).origin;
+
+const httpServer = createServer((req, res) => {
+  if (req.url === '/health') {
+    res.writeHead(200, { 'content-type': 'application/json' });
+    res.end(JSON.stringify({ status: 'ok', connections: io.engine.clientsCount }));
+    return;
+  }
+  res.writeHead(404).end();
+});
+
+const pub = cacheRedis().duplicate();
+const sub = cacheRedis().duplicate();
+
+const io = new Server(httpServer, {
+  serveClient: false,
+  cors: { origin: appOrigin, credentials: true },
+  pingInterval: 20_000,
+  pingTimeout: 20_000,
+  maxHttpBufferSize: 64 * 1024,
+});
+io.adapter(createAdapter(pub, sub));
+
+export interface SocketData {
+  userId: string | null;
+  subscriptions: Set<string>;
+}
+
+io.use(async (socket, next) => {
+  const origin = socket.handshake.headers.origin;
+  if (origin && origin !== appOrigin) {
+    log.warn({ origin }, 'rejected socket from foreign origin');
+    return next(new Error('forbidden'));
+  }
+  try {
+    const session = await auth().api.getSession({
+      headers: fromNodeHeaders(socket.handshake.headers),
+    });
+    socket.data.userId = session?.user.id ?? null;
+  } catch (err) {
+    log.error({ err }, 'session lookup failed');
+    socket.data.userId = null;
+  }
+  socket.data.subscriptions = new Set<string>();
+  next();
+});
+
+const MAX_SUBSCRIPTIONS = 200;
+const ROOM_RE = /^(community|channel|thread|server):[0-9a-f-]{36}$/;
+
+io.on('connection', (socket: Socket) => {
+  const data = socket.data as SocketData;
+  if (data.userId) void socket.join(rooms.user(data.userId));
+
+  socket.on('subscribe', async (room: unknown, ack?: (res: { ok: boolean }) => void) => {
+    const reply = typeof ack === 'function' ? ack : () => {};
+    if (typeof room !== 'string' || !ROOM_RE.test(room)) return reply({ ok: false });
+    if (data.subscriptions.size >= MAX_SUBSCRIPTIONS) return reply({ ok: false });
+    const ok = await authorizeRoom(data.userId, room).catch((err) => {
+      log.error({ err, room }, 'authorize failed');
+      return false;
+    });
+    if (!ok) return reply({ ok: false });
+    await socket.join(room);
+    data.subscriptions.add(room);
+    reply({ ok: true });
+  });
+
+  socket.on('unsubscribe', async (room: unknown) => {
+    if (typeof room !== 'string') return;
+    await socket.leave(room);
+    data.subscriptions.delete(room);
+  });
+
+  registerPresence(io, socket);
+});
+
+const port = env().REALTIME_PORT;
+httpServer.listen(port, () => log.info({ port }, 'realtime listening'));
+
+async function shutdown(signal: string) {
+  log.info({ signal }, 'shutting down');
+  // Tell clients to reconnect elsewhere, then drain.
+  io.emit('server:restarting');
+  io.close();
+  await Promise.allSettled([pub.quit(), sub.quit()]);
+  process.exit(0);
+}
+process.on('SIGTERM', () => void shutdown('SIGTERM'));
+process.on('SIGINT', () => void shutdown('SIGINT'));
