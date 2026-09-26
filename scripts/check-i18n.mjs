@@ -6,8 +6,10 @@
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = new URL('../apps/web/', import.meta.url).pathname;
+// fileURLToPath, not URL.pathname: the latter gives "/C:/..." on Windows.
+const root = fileURLToPath(new URL('../apps/web/', import.meta.url));
 const messages = JSON.parse(readFileSync(join(root, 'messages/en.json'), 'utf8'));
 
 function walk(dir, out = []) {

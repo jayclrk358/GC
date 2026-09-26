@@ -65,6 +65,25 @@ pnpm dev                        # web :3000, realtime :3001, worker (health :300
 Open http://localhost:3000. With `SMTP_URL` empty, emails (verification, password reset) are
 printed to the console.
 
+### On Windows
+
+Use PowerShell. Install [Node.js 22](https://nodejs.org), [Git](https://git-scm.com) and
+[Docker Desktop](https://www.docker.com/products/docker-desktop/) (WSL 2 backend), then:
+
+```powershell
+npm install -g pnpm@10
+Copy-Item .env.example .env
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"   # paste into BETTER_AUTH_SECRET
+pnpm install
+docker compose up -d postgres redis-queue redis-cache mailpit   # start Docker Desktop first
+pnpm db:migrate
+pnpm db:seed
+pnpm dev
+```
+
+If port 5432 is taken, a native Postgres install is running: stop it or change the port mapping
+in `docker-compose.yml` and `DATABASE_URL`.
+
 ### Full stack with Docker
 
 ```bash

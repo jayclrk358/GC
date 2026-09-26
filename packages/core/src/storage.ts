@@ -1,5 +1,6 @@
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
-import { dirname, join, resolve } from 'node:path';
+import { existsSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { env } from './env';
 
@@ -15,19 +16,14 @@ export function assertKey(key: string): void {
   if (!KEY_RE.test(key)) throw new Error('Invalid storage key');
 }
 
+/** The monorepo root (where pnpm-workspace.yaml lives), so every app shares one storage folder. */
 function repoRoot(): string {
-  // apps/web runs with cwd apps/web; worker/realtime with their own dirs. Walk up to the repo.
   let dir = process.cwd();
-  for (let i = 0; i < 4; i++) {
-    if (
-      dir.endsWith('/apps/web') ||
-      dir.endsWith('/apps/worker') ||
-      dir.endsWith('/apps/realtime')
-    ) {
-      return resolve(dir, '../..');
-    }
-    if (dir.match(/\/packages\/[a-z]+$/)) return resolve(dir, '../..');
-    dir = dirname(dir);
+  for (let i = 0; i < 6; i++) {
+    if (existsSync(join(dir, 'pnpm-workspace.yaml'))) return dir;
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
   }
   return process.cwd();
 }
