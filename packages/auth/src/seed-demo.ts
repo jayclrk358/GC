@@ -81,24 +81,44 @@ async function seedContent(
       andFn(eqFn(w.communityId, communityId), eqFn(w.slug, 'rules')),
   });
   if (!hasRules) await seedWiki(communityId, name, a, b);
-  const chatted = await db.query.messages.findFirst({ where: eq(schema.messages.communityId, communityId) });
+  const chatted = await db.query.messages.findFirst({
+    where: eq(schema.messages.communityId, communityId),
+  });
   if (!chatted) await seedChat(name, users, a, b, c);
 }
 
-async function seedChat(name: string, users: { alice: string; bob: string; carol: string }, a: Ctx, b: Ctx, c: Ctx) {
+async function seedChat(
+  name: string,
+  users: { alice: string; bob: string; carol: string },
+  a: Ctx,
+  b: Ctx,
+  c: Ctx,
+) {
   const { channels } = await listVisibleChannels(a, { types: ['text'] });
   const lounge = channels[0];
   if (!lounge) return;
   const hello = await sendMessage(a, lounge.id, {
-    body: docFromText(`Welcome to the ${name} chat! Be kind, have fun, and use threads in the forum for anything long.`),
+    body: docFromText(
+      `Welcome to the ${name} chat! Be kind, have fun, and use threads in the forum for anything long.`,
+    ),
   });
   await setMessagePinned(a, hello.id, true);
-  const q = await sendMessage(b, lounge.id, { body: docFromText('Anyone around for a session tonight?') });
+  const q = await sendMessage(b, lounge.id, {
+    body: docFromText('Anyone around for a session tonight?'),
+  });
   await sendMessage(c, lounge.id, {
-    body: doc(p(text("I'm in! "), { type: 'mention', attrs: { id: users.bob, label: 'bob', kind: 'user' } }, text(' what time works?'))),
+    body: doc(
+      p(
+        text("I'm in! "),
+        { type: 'mention', attrs: { id: users.bob, label: 'bob', kind: 'user' } },
+        text(' what time works?'),
+      ),
+    ),
     replyToId: q.id,
   });
-  await sendMessage(b, lounge.id, { body: docFromText('Around 8pm? I will post in here when I am on.') });
+  await sendMessage(b, lounge.id, {
+    body: docFromText('Around 8pm? I will post in here when I am on.'),
+  });
   await toggleMessageReaction(a, q.id, '👍');
   await toggleMessageReaction(c, q.id, '👍');
   await toggleMessageReaction(a, hello.id, '🎉');

@@ -25,7 +25,11 @@ interface Props {
 function useJson<T>(url: string | null, deps: unknown[] = []) {
   const key = url ? `${url}#${deps.join(',')}` : null;
   // Results are stored with the request they answer, so "loading" is simply a stale key.
-  const [result, setResult] = React.useState<{ key: string; data: T | null; error: boolean } | null>(null);
+  const [result, setResult] = React.useState<{
+    key: string;
+    data: T | null;
+    error: boolean;
+  } | null>(null);
   React.useEffect(() => {
     if (!url || !key) return;
     let live = true;

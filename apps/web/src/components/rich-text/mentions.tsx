@@ -133,14 +133,15 @@ export function isSuggesting(dom: Element): boolean {
 }
 
 function setComboboxAttrs(dom: HTMLElement, listId: string | null) {
-  if (listId) suggesting.add(dom);
-  else suggesting.delete(dom);
+  // The editor keeps its textbox role; aria-expanded isn't valid there, but autocomplete,
+  // controls and active-descendant are, and together they describe the suggestion list.
   if (listId) {
+    suggesting.add(dom);
     dom.setAttribute('aria-autocomplete', 'list');
-    dom.setAttribute('aria-expanded', 'true');
     dom.setAttribute('aria-controls', listId);
   } else {
-    dom.setAttribute('aria-expanded', 'false');
+    suggesting.delete(dom);
+    dom.removeAttribute('aria-autocomplete');
     dom.removeAttribute('aria-controls');
     dom.removeAttribute('aria-activedescendant');
   }

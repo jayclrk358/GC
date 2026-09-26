@@ -122,7 +122,11 @@ Found a barrier? Please open an issue. Accessibility bugs are treated as high pr
       and per-channel permissions, threads with polls, reactions, voting, flairs, Q&A answers,
       drafts and full-text search; a wiki with revisions, diffs and restore; live and email
       notifications with mutes; reports, blocks, kick/ban/timeout and an audit trail.
-- [ ] **Phase 3 — Real-time chat**
+- [x] **Phase 3 — Real-time chat:** chat channels with replies, reactions, mentions (@user,
+      @role, @everyone), edits, deletes, image attachments with alt text, link previews fetched
+      behind the SSRF guard, typing indicators, who's online, read states with unread and
+      mention badges, jump to unread, a mentions inbox, pins, slow mode and message search; an
+      accessible log with arrow-key navigation and throttled screen reader announcements
 - [ ] **Phase 4 — Server browser, history charts, voting**
 - [ ] **Phase 5 — Events, applications, automod, analytics**
 - [ ] **Phase 6 — Admin console, data export, SEO, PWA, public API, Discord integration**

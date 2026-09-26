@@ -485,9 +485,12 @@ export function ChatView(props: Props) {
             {panelButton('members', t('membersTitle'), <Users aria-hidden />)}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button size="sm" variant="ghost">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  aria-label={`${t('announceShort')}: ${t(`verbosity.${verbosity}`)}`}
+                >
                   {t('announceShort')}
-                  <span className="sr-only">: {t(`verbosity.${verbosity}`)}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">

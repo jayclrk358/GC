@@ -11,6 +11,14 @@ import { mentionExtension, isSuggesting } from '@/components/rich-text/mentions'
 import { Spoiler } from '@/components/rich-text/extensions';
 import { cn } from '@/lib/utils';
 
+/**
+ * ProseMirror builds node attrs with a null prototype, which server actions can't serialise
+ * (they arrive as opaque references). Round-trip through JSON to get plain objects.
+ */
+export function plainDoc(doc: unknown): RichNode {
+  return JSON.parse(JSON.stringify(doc)) as RichNode;
+}
+
 export interface ChatEditorHandle {
   focus: () => void;
   clear: () => void;
@@ -82,12 +90,12 @@ export const ChatEditor = React.forwardRef<ChatEditorHandle, Props>(
           const inCode = view.state.selection.$from.parent.type.name === 'codeBlock';
           if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
             event.preventDefault();
-            cb.current.onSubmit(view.state.doc.toJSON() as RichNode);
+            cb.current.onSubmit(plainDoc(view.state.doc.toJSON()));
             return true;
           }
           if (event.key === 'Enter' && !event.shiftKey && !event.altKey && !suggesting && !inCode) {
             event.preventDefault();
-            cb.current.onSubmit(view.state.doc.toJSON() as RichNode);
+            cb.current.onSubmit(plainDoc(view.state.doc.toJSON()));
             return true;
           }
           if (event.key === 'Escape' && !suggesting && cb.current.onEscape) {
@@ -134,7 +142,7 @@ export const ChatEditor = React.forwardRef<ChatEditorHandle, Props>(
           editor?.commands.setContent(doc);
           editor?.commands.focus('end');
         },
-        getDoc: () => (editor ? (editor.getJSON() as RichNode) : null),
+        getDoc: () => (editor ? plainDoc(editor.getJSON()) : null),
       }),
       [editor],
     );

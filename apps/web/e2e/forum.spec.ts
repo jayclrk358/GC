@@ -1,17 +1,12 @@
-import { expect, test, type Browser, type Page } from '@playwright/test';
-import { createCommunity, expectAccessible, setScheme, signUp, uniqueUser } from './helpers';
-
-/** A second person who joins the community in their own browser context. */
-async function joinAsMember(browser: Browser, slug: string, prefix = 'member') {
-  const user = uniqueUser(prefix);
-  const context = await browser.newContext();
-  const page = await context.newPage();
-  await signUp(page, user, `/c/${slug}`);
-  await page.goto(`/c/${slug}`);
-  await page.getByRole('button', { name: 'Join community' }).first().click();
-  await expect(page.getByRole('button', { name: /Joined/ })).toBeVisible();
-  return { user, page, context };
-}
+import { expect, test, type Page } from '@playwright/test';
+import {
+  createCommunity,
+  expectAccessible,
+  joinAsMember,
+  setScheme,
+  signUp,
+  uniqueUser,
+} from './helpers';
 
 async function startThread(page: Page, slug: string, channel: string, title: string, body: string) {
   await page.goto(`/c/${slug}/forum/${channel}/new`);
@@ -107,7 +102,7 @@ test.describe('forum', () => {
   });
 
   test('Q&A: mark the answer, edit with history, search and delete', async ({ page, browser }) => {
-    await signUp(page, uniqueUser('asker'), '/new');
+    const asker = await signUp(page, uniqueUser('asker'), '/new');
     const { slug } = await createCommunity(page, { template: 'Game server' });
     const url = await startThread(
       page,
@@ -119,7 +114,19 @@ test.describe('forum', () => {
 
     const member = await joinAsMember(browser, slug, 'helper');
     await member.page.goto(url);
-    await reply(member.page, 'Name them with a name tag so they persist.');
+    // @mentions from the editor reach the server intact and link to the profile.
+    const box = member.page.getByRole('textbox', { name: 'Your reply' });
+    await box.click();
+    await member.page.keyboard.type(`@${asker.username.slice(0, 10)}`);
+    await member.page.getByRole('option', { name: new RegExp(asker.username) }).click();
+    await member.page.keyboard.type('Name them with a name tag so they persist.');
+    await member.page.getByRole('button', { name: 'Post reply' }).click();
+    await expect(post(member.page, 'Name them with a name tag')).toBeVisible();
+    await expect(
+      post(member.page, 'Name them with a name tag').getByRole('link', {
+        name: `@${asker.username}`,
+      }),
+    ).toBeVisible();
     await member.context.close();
 
     await page.reload();

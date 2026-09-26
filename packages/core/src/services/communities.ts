@@ -546,15 +546,13 @@ export async function ensureChatChannels(communityId: string): Promise<number> {
       const text = group.channels.filter((c) => c.type === 'text' && !taken.has(c.name));
       if (!text.length) continue;
       const categoryId = newId();
-      await tx
-        .insert(schema.channels)
-        .values({
-          id: categoryId,
-          communityId,
-          type: 'category',
-          name: group.category,
-          position: position++,
-        });
+      await tx.insert(schema.channels).values({
+        id: categoryId,
+        communityId,
+        type: 'category',
+        name: group.category,
+        position: position++,
+      });
       for (const ch of text) {
         await tx.insert(schema.channels).values({
           id: newId(),

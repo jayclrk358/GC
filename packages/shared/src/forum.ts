@@ -82,7 +82,7 @@ export const REACTION_NAMES: Record<(typeof REACTIONS)[number], string> = {
 };
 
 export const reportInputSchema = z.object({
-  targetType: z.enum(['post', 'thread', 'user', 'wiki_page']),
+  targetType: z.enum(['post', 'thread', 'user', 'wiki_page', 'message']),
   targetId: z.string().min(1).max(64),
   reason: z.enum(['spam', 'harassment', 'hate', 'nsfw', 'violence', 'misinformation', 'other']),
   details: z.string().trim().max(1000).default(''),

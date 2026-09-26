@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, type Page } from '@playwright/test';
+import { expect, type Browser, type Page } from '@playwright/test';
 
 export const PASSWORD = 'correct-horse-battery-staple';
 
@@ -91,3 +91,15 @@ export async function createCommunity(page: Page, opts: CommunityOpts = {}) {
 }
 
 export const FIXTURE_CTL = 'http://127.0.0.1:25591';
+
+/** A second person who joins the community in their own browser context. */
+export async function joinAsMember(browser: Browser, slug: string, prefix = 'member') {
+  const user = uniqueUser(prefix);
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await signUp(page, user, `/c/${slug}`);
+  await page.goto(`/c/${slug}`);
+  await page.getByRole('button', { name: 'Join community' }).first().click();
+  await expect(page.getByRole('button', { name: /Joined/ })).toBeVisible();
+  return { user, page, context };
+}

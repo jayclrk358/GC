@@ -8,6 +8,9 @@
  *   POST /minecraft {"motd":"...","online":true,"players":12,"max":100}
  *   POST /source    {"name":"...","online":true,"players":3,"max":24,"map":"de_dust2"}
  *   GET  /health
+ *   GET  /page/:name   an HTML page with OpenGraph tags (link preview tests)
+ *   GET  /go/:name     a redirect to /page/:name
+ *   GET  /og.png       the preview image
  * Requires SERVER_QUERY_ALLOW_PRIVATE=true in the app, because these listen on localhost.
  */
 import { createServer as createHttpServer } from 'node:http';
@@ -158,11 +161,39 @@ a2s.on('message', (msg, rinfo) => {
 });
 
 // ── Control API ─────────────────────────────────────────────────────────────
+// A 4x4 PNG for link preview images.
+const OG_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEElEQVQImWPQqLCBIwbiOABkgw3Be6BngQAAAABJRU5ErkJggg==',
+  'base64',
+);
+
 const ctl = createHttpServer((req, res) => {
   if (req.method === 'GET' && req.url === '/health') {
     res
       .writeHead(200, { 'content-type': 'application/json' })
       .end(JSON.stringify({ status: 'ok', state }));
+    return;
+  }
+  const page = req.url?.match(/^\/page\/([a-z0-9-]{1,40})$/);
+  if (req.method === 'GET' && page) {
+    const name = page[1]!;
+    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
+      .end(`<!doctype html><html><head>
+      <title>ignored</title>
+      <meta property="og:title" content="Fixture page ${name}">
+      <meta property="og:description" content="A page served by the local fixtures for link preview tests.">
+      <meta property="og:site_name" content="Magnox Fixtures">
+      <meta property="og:image" content="/og.png">
+      </head><body><h1>${name}</h1></body></html>`);
+    return;
+  }
+  const go = req.url?.match(/^\/go\/([a-z0-9-]{1,40})$/);
+  if (req.method === 'GET' && go) {
+    res.writeHead(302, { location: `/page/${go[1]}` }).end();
+    return;
+  }
+  if (req.method === 'GET' && req.url === '/og.png') {
+    res.writeHead(200, { 'content-type': 'image/png' }).end(OG_PNG);
     return;
   }
   if (req.method === 'POST' && (req.url === '/minecraft' || req.url === '/source')) {

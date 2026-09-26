@@ -141,7 +141,8 @@ export function RichTextEditor({
         return false;
       },
     },
-    onUpdate: ({ editor: e }) => onChange(e.getJSON() as RichNode),
+    // Plain objects only: ProseMirror attrs have a null prototype that server actions reject.
+    onUpdate: ({ editor: e }) => onChange(JSON.parse(JSON.stringify(e.getJSON())) as RichNode),
     onSelectionUpdate: () => force(),
     onTransaction: () => force(),
   });
