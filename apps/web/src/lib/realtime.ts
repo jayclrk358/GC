@@ -10,7 +10,11 @@ const refCounts = new Map<string, number>();
 export function getSocket(): Socket {
   if (!socket) {
     const url = process.env.NEXT_PUBLIC_REALTIME_URL || undefined;
-    socket = io(url, { withCredentials: true, transports: ['websocket', 'polling'], autoConnect: true });
+    socket = io(url, {
+      withCredentials: true,
+      transports: ['websocket', 'polling'],
+      autoConnect: true,
+    });
     // Re-join rooms after reconnects (the server forgets subscriptions).
     socket.on('connect', () => {
       for (const room of refCounts.keys()) socket!.emit('subscribe', room);
@@ -51,7 +55,8 @@ export function useRoom(room: string | null, handlers: Handlers): void {
     subscribe(room);
     const names = Object.keys(ref.current);
     const listeners = names.map((name) => {
-      const fn = (payload: unknown) => (ref.current[name] as ((p: unknown) => void) | undefined)?.(payload);
+      const fn = (payload: unknown) =>
+        (ref.current[name] as ((p: unknown) => void) | undefined)?.(payload);
       s.on(name, fn);
       return [name, fn] as const;
     });

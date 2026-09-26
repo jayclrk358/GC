@@ -51,7 +51,12 @@ export async function reorderRolesAction(communityId: string, ids: unknown) {
   });
 }
 
-export async function setMemberRoleAction(communityId: string, userId: string, roleId: string, assign: boolean) {
+export async function setMemberRoleAction(
+  communityId: string,
+  userId: string,
+  roleId: string,
+  assign: boolean,
+) {
   return runAction(async () => {
     const ctx = await ctxFor(communityId);
     await setMemberRole(ctx, userId, roleId, assign);

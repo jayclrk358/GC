@@ -7,11 +7,21 @@ import { GeneralSettings } from '@/components/community-settings/general-setting
 
 export const metadata = { title: 'Settings' };
 
-export default async function GeneralSettingsPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function GeneralSettingsPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
   const { slug } = await params;
   const { community, perms, ctx } = await loadCommunityForSettings(slug);
   if (!perms.manage) {
-    const first = perms.manageRoles ? 'roles' : perms.manageServers ? 'servers' : perms.viewAudit ? 'audit' : 'invites';
+    const first = perms.manageRoles
+      ? 'roles'
+      : perms.manageServers
+        ? 'servers'
+        : perms.viewAudit
+          ? 'audit'
+          : 'invites';
     redirect(`/c/${slug}/settings/${first}`);
   }
   const t = await getTranslations('csettings');

@@ -12,7 +12,14 @@ export function InviteList({
   invites,
 }: {
   communityId: string;
-  invites: { code: string; uses: number; maxUses: number; expiresAt: string | null; createdAt: string; creatorName: string | null }[];
+  invites: {
+    code: string;
+    uses: number;
+    maxUses: number;
+    expiresAt: string | null;
+    createdAt: string;
+    creatorName: string | null;
+  }[];
 }) {
   const t = useTranslations('invites');
   const router = useRouter();
@@ -23,11 +30,21 @@ export function InviteList({
         <caption className="sr-only">{t('manageTitle')}</caption>
         <thead className="border-b border-border text-muted">
           <tr>
-            <th scope="col" className="px-4 py-2 text-start font-semibold">{t('code')}</th>
-            <th scope="col" className="px-4 py-2 text-start font-semibold">{t('uses')}</th>
-            <th scope="col" className="px-4 py-2 text-start font-semibold">{t('expires')}</th>
-            <th scope="col" className="px-4 py-2 text-start font-semibold">{t('createdBy')}</th>
-            <th scope="col" className="px-4 py-2"><span className="sr-only">{t('revoke')}</span></th>
+            <th scope="col" className="px-4 py-2 text-start font-semibold">
+              {t('code')}
+            </th>
+            <th scope="col" className="px-4 py-2 text-start font-semibold">
+              {t('uses')}
+            </th>
+            <th scope="col" className="px-4 py-2 text-start font-semibold">
+              {t('expires')}
+            </th>
+            <th scope="col" className="px-4 py-2 text-start font-semibold">
+              {t('createdBy')}
+            </th>
+            <th scope="col" className="px-4 py-2">
+              <span className="sr-only">{t('revoke')}</span>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -38,7 +55,9 @@ export function InviteList({
                 {i.uses}
                 {i.maxUses ? ` / ${i.maxUses}` : ''}
               </td>
-              <td className="px-4 py-2">{i.expiresAt ? new Date(i.expiresAt).toLocaleString() : t('noExpiry')}</td>
+              <td className="px-4 py-2">
+                {i.expiresAt ? new Date(i.expiresAt).toLocaleString() : t('noExpiry')}
+              </td>
               <td className="px-4 py-2">{i.creatorName ?? '—'}</td>
               <td className="px-4 py-2 text-end">
                 <Button

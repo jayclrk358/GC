@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Logo } from './logo';
 import { PaletteButton, SignInButtons, UserMenu } from './header-client';
 import { NavLink } from './nav-link';
+import { ThemeToggle } from './theme-toggle';
 
 export async function SiteHeader({
   user,
@@ -37,6 +38,7 @@ export async function SiteHeader({
         </nav>
         <div className="ms-auto flex min-w-0 items-center gap-2">
           <PaletteButton />
+          <ThemeToggle />
           {extra}
           {user ? (
             <>

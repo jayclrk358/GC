@@ -37,14 +37,20 @@ export default async function MembersPage({
       />
       <nav aria-label={t('pagination')} className="flex justify-between">
         {pageNum > 0 ? (
-          <a className="font-semibold text-primary underline" href={`?${new URLSearchParams({ ...(q ? { q } : {}), page: String(pageNum - 1) })}`}>
+          <a
+            className="font-semibold text-primary underline"
+            href={`?${new URLSearchParams({ ...(q ? { q } : {}), page: String(pageNum - 1) })}`}
+          >
             {t('previous')}
           </a>
         ) : (
           <span />
         )}
         {hasMore && (
-          <a className="font-semibold text-primary underline" href={`?${new URLSearchParams({ ...(q ? { q } : {}), page: String(pageNum + 1) })}`}>
+          <a
+            className="font-semibold text-primary underline"
+            href={`?${new URLSearchParams({ ...(q ? { q } : {}), page: String(pageNum + 1) })}`}
+          >
             {t('next')}
           </a>
         )}

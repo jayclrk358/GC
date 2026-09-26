@@ -25,12 +25,27 @@ export default async function MemberSettingsPage({
   ]);
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title={t('membersTitle')} description={t('membersDescription')} actions={<MemberSearch defaultValue={q ?? ''} />} />
+      <PageHeader
+        title={t('membersTitle')}
+        description={t('membersDescription')}
+        actions={<MemberSearch defaultValue={q ?? ''} />}
+      />
       <MemberManager
         communityId={community.id}
-        members={members.map((m) => ({ userId: m.userId, name: m.nickname || m.name, username: m.username, image: m.image, roleIds: m.roleIds, isOwner: m.isOwner }))}
+        members={members.map((m) => ({
+          userId: m.userId,
+          name: m.nickname || m.name,
+          username: m.username,
+          image: m.image,
+          roleIds: m.roleIds,
+          isOwner: m.isOwner,
+        }))}
         roles={roles.filter((r) => !r.isDefault).map(roleSummary)}
-        actor={{ isOwner: ctx.isOwner, topPosition: Number.isFinite(ctx.topPosition) ? ctx.topPosition : 1_000_000, userId: ctx.userId! }}
+        actor={{
+          isOwner: ctx.isOwner,
+          topPosition: Number.isFinite(ctx.topPosition) ? ctx.topPosition : 1_000_000,
+          userId: ctx.userId!,
+        }}
       />
     </div>
   );

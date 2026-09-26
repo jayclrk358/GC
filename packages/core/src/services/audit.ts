@@ -25,7 +25,10 @@ export async function audit(tx: DbOrTx, entry: AuditEntry): Promise<void> {
 }
 
 /** Shallow diff of changed keys, for audit entries. */
-export function diffOf<T extends Record<string, unknown>>(before: T, after: Partial<T>): Record<string, unknown> {
+export function diffOf<T extends Record<string, unknown>>(
+  before: T,
+  after: Partial<T>,
+): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(after)) {
     if (JSON.stringify(before[k]) !== JSON.stringify(v)) out[k] = { from: before[k], to: v };

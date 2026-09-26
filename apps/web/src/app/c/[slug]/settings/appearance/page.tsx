@@ -13,7 +13,11 @@ export default async function AppearancePage({ params }: { params: Promise<{ slu
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title={t('title')} description={t('description')} />
-      <ThemeEditor communityId={community.id} communityName={community.name} initial={community.theme} />
+      <ThemeEditor
+        communityId={community.id}
+        communityName={community.name}
+        initial={community.theme}
+      />
     </div>
   );
 }

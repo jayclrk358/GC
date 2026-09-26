@@ -28,7 +28,7 @@ import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Input, Select } from '@/components/ui/input';
 import { Badge } from '@/components/ui/misc';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ImageUpload } from '@/components/upload/image-upload';
 import { SettingsSection } from '@/components/settings/section';
 import { updateThemeAction } from '@/app/actions/communities';
@@ -115,7 +115,11 @@ function IssueRow({ issue, onApply }: { issue: ContrastIssue; onApply: () => voi
       </p>
       {issue.suggestion && (
         <Button size="sm" variant="outline" onClick={onApply}>
-          <span aria-hidden className="size-4 rounded-sm border border-border" style={{ background: issue.suggestion }} />
+          <span
+            aria-hidden
+            className="size-4 rounded-sm border border-border"
+            style={{ background: issue.suggestion }}
+          />
           {t('useColor', { hex: issue.suggestion })}
         </Button>
       )}
@@ -134,12 +138,19 @@ function Preview({ theme, scheme, name }: { theme: Theme; scheme: Scheme; name: 
       aria-label={t('previewLabel', { scheme: t(`schemes.${scheme}`) })}
       role="img"
     >
-      <div className="h-14 rounded-ui" style={{ background: `linear-gradient(135deg, ${set.primary}, ${set.accent})` }} />
+      <div
+        className="h-14 rounded-ui"
+        style={{ background: `linear-gradient(135deg, ${set.primary}, ${set.accent})` }}
+      />
       <p className="font-heading text-xl font-extrabold">{name}</p>
       <p className="text-sm text-muted">{t('previewTagline')}</p>
       <div className="flex flex-wrap gap-2">
-        <span className="inline-flex h-9 items-center rounded-ui bg-primary px-3 text-sm font-semibold text-on-primary">{t('previewPrimary')}</span>
-        <span className="inline-flex h-9 items-center rounded-ui border border-border bg-surface-2 px-3 text-sm font-semibold">{t('previewSecondary')}</span>
+        <span className="inline-flex h-9 items-center rounded-ui bg-primary px-3 text-sm font-semibold text-on-primary">
+          {t('previewPrimary')}
+        </span>
+        <span className="inline-flex h-9 items-center rounded-ui border border-border bg-surface-2 px-3 text-sm font-semibold">
+          {t('previewSecondary')}
+        </span>
       </div>
       <div className="rounded-ui border border-border bg-surface p-3">
         <p className="font-semibold">{t('previewCardTitle')}</p>
@@ -152,12 +163,22 @@ function Preview({ theme, scheme, name }: { theme: Theme; scheme: Scheme; name: 
           <span className="text-danger">■ {t('previewError')}</span>
         </div>
       </div>
-      <span className="h-8 rounded-ui border border-muted/70 bg-surface-2 px-2 text-sm leading-8 text-muted">{t('previewInput')}</span>
+      <span className="h-8 rounded-ui border border-muted/70 bg-surface-2 px-2 text-sm leading-8 text-muted">
+        {t('previewInput')}
+      </span>
     </div>
   );
 }
 
-export function ThemeEditor({ communityId, communityName, initial }: { communityId: string; communityName: string; initial: Theme }) {
+export function ThemeEditor({
+  communityId,
+  communityName,
+  initial,
+}: {
+  communityId: string;
+  communityName: string;
+  initial: Theme;
+}) {
   const t = useTranslations('theme');
   const router = useRouter();
   const [theme, setTheme] = React.useState<Theme>(initial);
@@ -211,9 +232,11 @@ export function ThemeEditor({ communityId, communityName, initial }: { community
                     className="flex w-full flex-col gap-2 rounded-ui border-2 border-border p-2 text-start text-sm font-semibold hover:border-muted aria-pressed:border-primary"
                   >
                     <span aria-hidden className="flex overflow-hidden rounded-sm">
-                      {[p.light.bg, p.light.primary, p.light.accent, p.dark.bg, p.dark.primary].map((c, i) => (
-                        <span key={i} className="h-6 flex-1" style={{ background: c }} />
-                      ))}
+                      {[p.light.bg, p.light.primary, p.light.accent, p.dark.bg, p.dark.primary].map(
+                        (c, i) => (
+                          <span key={i} className="h-6 flex-1" style={{ background: c }} />
+                        ),
+                      )}
                     </span>
                     {t(`presetNames.${key}`)}
                   </button>
@@ -229,19 +252,33 @@ export function ThemeEditor({ communityId, communityName, initial }: { community
               <TabsTrigger value="light">{t('schemes.light')}</TabsTrigger>
               <TabsTrigger value="dark">{t('schemes.dark')}</TabsTrigger>
             </TabsList>
-          </Tabs>
-          <div className="divide-y divide-border" role="group" aria-label={t('colorsFor', { scheme: t(`schemes.${scheme}`) })}>
-            {COLOR_KEYS.map((key) => (
-              <ColorField key={`${scheme}-${key}`} colorKey={key} scheme={scheme} value={theme[scheme][key]} onChange={(v) => setColor(scheme, key, v)} />
+            {(['light', 'dark'] as const).map((s) => (
+              <TabsContent key={s} value={s} className="divide-y divide-border">
+                {COLOR_KEYS.map((key) => (
+                  <ColorField
+                    key={`${s}-${key}`}
+                    colorKey={key}
+                    scheme={s}
+                    value={theme[s][key]}
+                    onChange={(v) => setColor(s, key, v)}
+                  />
+                ))}
+              </TabsContent>
             ))}
-          </div>
+          </Tabs>
         </SettingsSection>
 
         <SettingsSection id="type" title={t('typeTitle')}>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label={t('fontBody')}>
               {(p) => (
-                <Select {...p} value={theme.fontBody} onChange={(e) => setTheme({ ...theme, fontBody: e.target.value as Theme['fontBody'] })}>
+                <Select
+                  {...p}
+                  value={theme.fontBody}
+                  onChange={(e) =>
+                    setTheme({ ...theme, fontBody: e.target.value as Theme['fontBody'] })
+                  }
+                >
                   {FONT_KEYS.map((f) => (
                     <option key={f} value={f}>
                       {t(`fonts.${f}`)}
@@ -252,7 +289,13 @@ export function ThemeEditor({ communityId, communityName, initial }: { community
             </Field>
             <Field label={t('fontHeading')}>
               {(p) => (
-                <Select {...p} value={theme.fontHeading} onChange={(e) => setTheme({ ...theme, fontHeading: e.target.value as Theme['fontHeading'] })}>
+                <Select
+                  {...p}
+                  value={theme.fontHeading}
+                  onChange={(e) =>
+                    setTheme({ ...theme, fontHeading: e.target.value as Theme['fontHeading'] })
+                  }
+                >
                   {FONT_KEYS.map((f) => (
                     <option key={f} value={f}>
                       {t(`fonts.${f}`)}
@@ -263,7 +306,13 @@ export function ThemeEditor({ communityId, communityName, initial }: { community
             </Field>
             <Field label={t('radius')}>
               {(p) => (
-                <Select {...p} value={theme.radius} onChange={(e) => setTheme({ ...theme, radius: e.target.value as Theme['radius'] })}>
+                <Select
+                  {...p}
+                  value={theme.radius}
+                  onChange={(e) =>
+                    setTheme({ ...theme, radius: e.target.value as Theme['radius'] })
+                  }
+                >
                   {(Object.keys(RADIUS_VALUES) as Theme['radius'][]).map((r) => (
                     <option key={r} value={r}>
                       {t(`radii.${r}`)}
@@ -274,7 +323,13 @@ export function ThemeEditor({ communityId, communityName, initial }: { community
             </Field>
             <Field label={t('defaultScheme')} description={t('defaultSchemeDesc')}>
               {(p) => (
-                <Select {...p} value={theme.defaultScheme} onChange={(e) => setTheme({ ...theme, defaultScheme: e.target.value as Theme['defaultScheme'] })}>
+                <Select
+                  {...p}
+                  value={theme.defaultScheme}
+                  onChange={(e) =>
+                    setTheme({ ...theme, defaultScheme: e.target.value as Theme['defaultScheme'] })
+                  }
+                >
                   <option value="auto">{t('schemeAuto')}</option>
                   <option value="light">{t('schemes.light')}</option>
                   <option value="dark">{t('schemes.dark')}</option>
@@ -283,7 +338,13 @@ export function ThemeEditor({ communityId, communityName, initial }: { community
             </Field>
             <Field label={t('headerStyle')}>
               {(p) => (
-                <Select {...p} value={theme.headerStyle} onChange={(e) => setTheme({ ...theme, headerStyle: e.target.value as Theme['headerStyle'] })}>
+                <Select
+                  {...p}
+                  value={theme.headerStyle}
+                  onChange={(e) =>
+                    setTheme({ ...theme, headerStyle: e.target.value as Theme['headerStyle'] })
+                  }
+                >
                   <option value="banner">{t('headerBanner')}</option>
                   <option value="compact">{t('headerCompact')}</option>
                 </Select>
@@ -333,7 +394,10 @@ export function ThemeEditor({ communityId, communityName, initial }: { community
             onChange={(k) => setTheme({ ...theme, backgroundKey: k ?? undefined })}
           />
           {theme.backgroundKey && (
-            <Field label={t('backgroundDim')} description={t('backgroundDimDesc', { value: theme.backgroundDim })}>
+            <Field
+              label={t('backgroundDim')}
+              description={t('backgroundDimDesc', { value: theme.backgroundDim })}
+            >
               {(p) => (
                 <input
                   {...p}
@@ -351,11 +415,17 @@ export function ThemeEditor({ communityId, communityName, initial }: { community
         </SettingsSection>
       </div>
 
-      <aside className="flex flex-col gap-4 xl:sticky xl:top-20 xl:self-start" aria-label={t('sidebar')}>
+      <aside
+        className="flex flex-col gap-4 xl:sticky xl:top-20 xl:self-start"
+        aria-label={t('sidebar')}
+      >
         <Preview theme={theme} scheme={scheme} name={communityName} />
         <section
           aria-labelledby="contrast-h"
-          className={cn('rounded-ui-lg border bg-surface p-4', issues.length ? 'border-warning' : 'border-success')}
+          className={cn(
+            'rounded-ui-lg border bg-surface p-4',
+            issues.length ? 'border-warning' : 'border-success',
+          )}
         >
           <h2 id="contrast-h" className="flex items-center gap-2 font-bold">
             {issues.length ? (
@@ -375,11 +445,17 @@ export function ThemeEditor({ communityId, communityName, initial }: { community
                   <IssueRow
                     key={`${issue.scheme}-${issue.rule}`}
                     issue={issue}
-                    onApply={() => issue.suggestion && setColor(issue.scheme, issue.fg, issue.suggestion)}
+                    onApply={() =>
+                      issue.suggestion && setColor(issue.scheme, issue.fg, issue.suggestion)
+                    }
                   />
                 ))}
               </ul>
-              <Button className="mt-3 w-full" variant="secondary" onClick={() => setTheme((th) => autoFixTheme(th))}>
+              <Button
+                className="mt-3 w-full"
+                variant="secondary"
+                onClick={() => setTheme((th) => autoFixTheme(th))}
+              >
                 <Wand2 aria-hidden /> {t('fixAll')}
               </Button>
             </>
@@ -392,7 +468,12 @@ export function ThemeEditor({ communityId, communityName, initial }: { community
                 const ratio = roundRatio(contrastRatio(theme[scheme][fg], theme[scheme][bg]));
                 return (
                   <React.Fragment key={fg}>
-                    <dt>{t('ratioLabel', { fg: t(`colors.${fg}.label`), bg: t(`colors.${bg}.label`) })}</dt>
+                    <dt>
+                      {t('ratioLabel', {
+                        fg: t(`colors.${fg}.label`),
+                        bg: t(`colors.${bg}.label`),
+                      })}
+                    </dt>
                     <dd className="text-end font-mono tabular-nums">{ratio.toFixed(2)}:1</dd>
                   </React.Fragment>
                 );
@@ -401,7 +482,12 @@ export function ThemeEditor({ communityId, communityName, initial }: { community
           </details>
         </section>
         <div className="flex flex-wrap items-center gap-2">
-          <Button onClick={save} loading={pending} disabled={issues.length > 0 || !dirty} aria-describedby="save-hint">
+          <Button
+            onClick={save}
+            loading={pending}
+            disabled={issues.length > 0 || !dirty}
+            aria-describedby="save-hint"
+          >
             {t('save')}
           </Button>
           <Button variant="ghost" onClick={() => setTheme(initial)} disabled={!dirty}>

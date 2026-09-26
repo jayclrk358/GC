@@ -4,9 +4,14 @@ import { createCommunity, expectAccessible, FIXTURE_CTL, signUp, uniqueUser } fr
 test.describe('community hubs', () => {
   test('create a community with the wizard', async ({ page }) => {
     await signUp(page, uniqueUser('owner'), '/new');
-    const { name, slug } = await createCommunity(page, { template: 'Game server', preset: 'Ocean' });
+    const { name, slug } = await createCommunity(page, {
+      template: 'Game server',
+      preset: 'Ocean',
+    });
     await expect(page.getByRole('heading', { level: 1, name })).toBeVisible();
-    await expect(page.getByRole('status').filter({ hasText: 'Your community is ready!' })).toBeVisible();
+    await expect(
+      page.getByRole('status').filter({ hasText: 'Your community is ready!' }),
+    ).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Server rules' })).toBeVisible();
     await expectAccessible(page, 'community home');
     for (const path of ['members', 'servers']) {
@@ -33,7 +38,9 @@ test.describe('community hubs', () => {
     await expect(page.getByText('Theme saved')).toBeVisible();
 
     await page.goto(`/c/${slug}`);
-    const css = await page.locator('style').evaluateAll((els) => els.map((e) => e.textContent).join(''));
+    const css = await page
+      .locator('style')
+      .evaluateAll((els) => els.map((e) => e.textContent).join(''));
     expect(css).toContain('@layer mx-community');
     expect(css).toContain('#f472ff');
   });
@@ -48,8 +55,8 @@ test.describe('community hubs', () => {
     await page.getByRole('menuitem', { name: /^FAQ/ }).click();
     const dialog = page.getByRole('dialog', { name: 'Edit FAQ block' });
     await dialog.getByRole('button', { name: 'Add item' }).click();
-    await dialog.getByLabel('Question').fill('Is it free?');
-    await dialog.getByLabel('Answer').fill('Yes, always.');
+    await dialog.getByLabel('Question', { exact: true }).fill('Is it free?');
+    await dialog.getByLabel('Answer', { exact: true }).fill('Yes, always.');
     await expectAccessible(page, 'block editor dialog');
     await dialog.getByRole('button', { name: 'Save block' }).click();
     await expect(dialog).toBeHidden();
@@ -58,24 +65,35 @@ test.describe('community hubs', () => {
     const handle = page.getByRole('button', { name: 'Drag to reorder FAQ' });
     await handle.focus();
     await page.keyboard.press('Space');
-    for (let i = 0; i < 8; i++) await page.keyboard.press('ArrowUp');
+    // Pause between presses like a person would; each move animates before the next.
+    for (let i = 0; i < 8; i++) {
+      await page.keyboard.press('ArrowUp');
+      await page.waitForTimeout(300);
+    }
     await page.keyboard.press('Space');
     const first = page.getByRole('list', { name: 'Page blocks' }).getByRole('listitem').first();
     await expect(first).toContainText('FAQ');
 
     // Move buttons are an alternative to dragging.
     await page.getByRole('button', { name: 'Move FAQ down' }).click();
-    await expect(page.getByRole('list', { name: 'Page blocks' }).getByRole('listitem').nth(1)).toContainText('FAQ');
+    await expect(
+      page.getByRole('list', { name: 'Page blocks' }).getByRole('listitem').nth(1),
+    ).toContainText('FAQ');
+    await expect(page.getByText('All changes saved')).toBeVisible();
 
     await page.reload();
-    await expect(page.getByRole('list', { name: 'Page blocks' }).getByRole('listitem').nth(1)).toContainText('FAQ');
+    await expect(
+      page.getByRole('list', { name: 'Page blocks' }).getByRole('listitem').nth(1),
+    ).toContainText('FAQ');
     await page.goto(`/c/${slug}`);
     await page.getByText('Is it free?').click();
     await expect(page.getByText('Yes, always.')).toBeVisible();
   });
 
   test('link a game server, see live status and verify ownership', async ({ page, request }) => {
-    await request.post(`${FIXTURE_CTL}/minecraft`, { data: { motd: 'Fixture Craft', online: true, players: 17, max: 120 } });
+    await request.post(`${FIXTURE_CTL}/minecraft`, {
+      data: { motd: 'Fixture Craft', online: true, players: 17, max: 120 },
+    });
     await signUp(page, uniqueUser('srv'), '/new');
     const { slug } = await createCommunity(page, { template: 'Game server' });
     await page.goto(`/c/${slug}/settings/servers`);
@@ -95,12 +113,16 @@ test.describe('community hubs', () => {
     await expectAccessible(page, 'server settings');
 
     // Put the token in the MOTD, then ask for a re-check.
-    await request.post(`${FIXTURE_CTL}/minecraft`, { data: { motd: `Fixture Craft ${token}`, players: 21 } });
-    await page.waitForTimeout(31_000); // manual refreshes within 30 s reuse the cached result
+    await request.post(`${FIXTURE_CTL}/minecraft`, {
+      data: { motd: `Fixture Craft ${token}`, players: 21 },
+    });
+    // A check within 30 s of the last one is deferred until the cache window ends.
     await row.getByRole('button', { name: /Check now/ }).click();
-    await expect(row).toContainText('Online · 21/120', { timeout: 20_000 });
+    await expect(row).toContainText('Online · 21/120', { timeout: 60_000 });
     await page.reload();
-    await expect(page.getByRole('listitem').filter({ hasText: 'Fixture Survival' })).toContainText('Verified');
+    await expect(page.getByRole('listitem').filter({ hasText: 'Fixture Survival' })).toContainText(
+      'Verified',
+    );
 
     // Public server card updates live over the socket.
     await page.goto(`/c/${slug}/servers`);
@@ -152,12 +174,12 @@ test.describe('community hubs', () => {
     await page.goto(`/c/${slug}/settings/roles`);
     await expectAccessible(page, 'roles settings');
     await page.getByRole('button', { name: 'Create role' }).click();
-    await page.getByRole('button', { name: 'New role' }).click();
+    await page.getByRole('button', { name: 'New role', exact: true }).click();
     await page.getByLabel('Role name').fill('Event Host');
     await page.getByRole('switch', { name: 'Manage events' }).click();
     await page.getByRole('button', { name: 'Save role' }).click();
     await expect(page.getByText('Role saved')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Event Host' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Event Host', exact: true })).toBeVisible();
 
     await page.goto(`/c/${slug}/settings/members`);
     await page.getByRole('button', { name: `Roles ${member.name}` }).click();
@@ -165,7 +187,9 @@ test.describe('community hubs', () => {
     await dialog.getByRole('checkbox', { name: /Event Host/ }).check();
     await expect(dialog.getByRole('checkbox', { name: /Event Host/ })).toBeChecked();
     await page.keyboard.press('Escape');
-    await expect(page.getByRole('list', { name: `Roles of ${member.name}` })).toContainText('Event Host');
+    await expect(page.getByRole('list', { name: `Roles of ${member.name}` })).toContainText(
+      'Event Host',
+    );
     await memberContext.close();
   });
 
@@ -189,4 +213,3 @@ test.describe('community hubs', () => {
     await expectAccessible(page, 'profile page');
   });
 });
-

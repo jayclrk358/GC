@@ -14,6 +14,8 @@ Magnox is built around two ideas: **deep customisation** and **first-class acces
   counts and history update live. Includes a global server browser.
 - **Forum, wiki, events and chat:** persistent, searchable discussions plus real-time channels.
 - **Roles and permissions:** Discord-style permission bits with category and channel overrides.
+- **Light, dark or system colour scheme** from a toggle in the header, saved per browser and to
+  your account. Every community theme defines both a light and a dark palette.
 - **Accessibility settings that always win:** high contrast, dyslexia-friendly fonts, text size
   and spacing, reduced motion, no autoplay, still images, underlined links, bold focus rings,
   screen-reader-friendly chat, and remappable keyboard shortcuts (single-key shortcuts can be
@@ -114,7 +116,7 @@ Found a barrier? Please open an issue. Accessibility bugs are treated as high pr
 
 - [x] **Phase 0 — Foundation:** monorepo, auth (email, OAuth, 2FA), app shell, design tokens,
       accessibility preferences, command palette, CI with axe
-- [ ] **Phase 1 — Community hubs:** creation wizard, theme editor, page builder, roles,
+- [x] **Phase 1 — Community hubs:** creation wizard, theme editor, page builder, roles,
       invites, live server status, explore, profiles, uploads
 - [ ] **Phase 2 — Forum, wiki, notifications, moderation basics**
 - [ ] **Phase 3 — Real-time chat**

@@ -59,6 +59,10 @@ export async function setScheme(
     },
     [scheme, contrast],
   );
+  // Buttons transition their colours; measure contrast only once they have settled.
+  await page.waitForFunction(() =>
+    document.getAnimations().every((a) => a.playState !== 'running'),
+  );
 }
 
 export interface CommunityOpts {

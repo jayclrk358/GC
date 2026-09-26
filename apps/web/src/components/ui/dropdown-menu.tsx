@@ -59,3 +59,26 @@ export function DropdownMenuLabel({
 export function DropdownMenuSeparator() {
   return <M.Separator className="my-1 h-px bg-border" />;
 }
+
+export const DropdownMenuRadioGroup = M.RadioGroup;
+
+export function DropdownMenuRadioItem({
+  className,
+  children,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof M.RadioItem>) {
+  return (
+    <M.RadioItem
+      className={cn(
+        'flex cursor-pointer items-center gap-2 rounded-ui-sm px-2.5 py-2 text-sm outline-none select-none data-[highlighted]:bg-surface-2 data-[state=checked]:font-semibold [&_svg]:size-4',
+        className,
+      )}
+      {...props}
+    >
+      {children}
+      <M.ItemIndicator className="ms-auto">
+        <span aria-hidden className="block size-2 rounded-full bg-primary" />
+      </M.ItemIndicator>
+    </M.RadioItem>
+  );
+}

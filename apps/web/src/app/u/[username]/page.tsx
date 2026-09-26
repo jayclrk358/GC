@@ -24,13 +24,20 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
         ) : (
           <div
             className="size-full"
-            style={{ background: `linear-gradient(135deg, ${profile.accentColor ?? 'var(--c-primary)'}, var(--c-accent))` }}
+            style={{
+              background: `linear-gradient(135deg, ${profile.accentColor ?? 'var(--c-primary)'}, var(--c-accent))`,
+            }}
           />
         )}
       </div>
       <div className="mx-auto w-full max-w-4xl px-4">
         <div className="-mt-12 flex flex-wrap items-end gap-4">
-          <Avatar src={profile.image} name={profile.name} size={112} className="border-4 border-bg" />
+          <Avatar
+            src={profile.image}
+            name={profile.name}
+            size={112}
+            className="border-4 border-bg"
+          />
           <div className="pb-2">
             <h1 className="text-3xl font-extrabold">{profile.name}</h1>
             <p className="text-muted">
@@ -59,13 +66,18 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
                         <span
                           aria-hidden
                           className="grid size-9 place-items-center rounded-ui font-bold"
-                          style={{ background: c.theme.light.primary, color: c.theme.light.onPrimary }}
+                          style={{
+                            background: c.theme.light.primary,
+                            color: c.theme.light.onPrimary,
+                          }}
                         >
                           {c.name.slice(0, 1).toUpperCase()}
                         </span>
                         <span className="min-w-0">
                           <span className="block truncate font-semibold">{c.name}</span>
-                          {c.ownerId === profile.id && <span className="text-xs text-muted">{t('owner')}</span>}
+                          {c.ownerId === profile.id && (
+                            <span className="text-xs text-muted">{t('owner')}</span>
+                          )}
                         </span>
                       </Link>
                     </li>
@@ -82,14 +94,19 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
                 </li>
               )}
               <li className="flex items-center gap-2">
-                <CalendarDays className="size-4" aria-hidden /> {t('joined', { date: formatDate(profile.createdAt) })}
+                <CalendarDays className="size-4" aria-hidden />{' '}
+                {t('joined', { date: formatDate(profile.createdAt) })}
               </li>
             </ul>
             {profile.links.length > 0 && (
               <ul className="flex flex-col gap-1">
                 {profile.links.map((l, i) => (
                   <li key={i}>
-                    <a href={l.url} rel="noopener noreferrer nofollow me" className="flex items-center gap-2 text-primary underline">
+                    <a
+                      href={l.url}
+                      rel="noopener noreferrer nofollow me"
+                      className="flex items-center gap-2 text-primary underline"
+                    >
                       <LinkIcon className="size-4" aria-hidden /> {l.label}
                     </a>
                   </li>

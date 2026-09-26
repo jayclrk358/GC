@@ -83,7 +83,11 @@ export function ImageUpload({
         <div
           className={cn(
             'grid shrink-0 place-items-center overflow-hidden border border-border bg-surface-2 text-muted',
-            shape === 'banner' ? 'h-20 w-48 rounded-ui' : shape === 'round' ? 'size-20 rounded-full' : 'size-20 rounded-ui',
+            shape === 'banner'
+              ? 'h-20 w-48 rounded-ui'
+              : shape === 'round'
+                ? 'size-20 rounded-full'
+                : 'size-20 rounded-ui',
           )}
         >
           {url ? (

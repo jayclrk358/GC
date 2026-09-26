@@ -48,7 +48,9 @@ export function LinksBlock({ id, config }: { id: string; config: BlockConfig<'li
               >
                 <Icon className="size-5 shrink-0 text-primary" aria-hidden />
                 <span className="truncate">{l.label}</span>
-                <span className="ms-auto truncate text-xs font-normal text-muted">{new URL(l.url).hostname}</span>
+                <span className="ms-auto truncate text-xs font-normal text-muted">
+                  {new URL(l.url).hostname}
+                </span>
               </a>
             </li>
           );

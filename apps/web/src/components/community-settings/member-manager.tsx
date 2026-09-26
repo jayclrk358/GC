@@ -38,20 +38,27 @@ export function MemberManager({
   const [pendingRole, setPendingRole] = React.useState<string | null>(null);
   const byId = new Map(roles.map((r) => [r.id, r]));
   const topOf = (m: Member) => Math.max(0, ...m.roleIds.map((id) => byId.get(id)?.position ?? 0));
-  const canEditMember = (m: Member) => actor.isOwner || m.userId === actor.userId || (!m.isOwner && topOf(m) < actor.topPosition);
+  const canEditMember = (m: Member) =>
+    actor.isOwner || m.userId === actor.userId || (!m.isOwner && topOf(m) < actor.topPosition);
   const canAssign = (r: RoleSummary) => actor.isOwner || r.position < actor.topPosition;
 
   if (!members.length) return <EmptyState title={t('noMembers')} />;
 
   async function toggle(member: Member, role: RoleSummary, on: boolean) {
+    // Update immediately so the checkbox responds; roll back if the server refuses.
+    const next = {
+      ...member,
+      roleIds: on ? [...member.roleIds, role.id] : member.roleIds.filter((x) => x !== role.id),
+    };
+    setEditing(next);
     setPendingRole(role.id);
     const r = await setMemberRoleAction(communityId, member.userId, role.id, on);
     setPendingRole(null);
-    if (r.ok) {
-      const next = { ...member, roleIds: on ? [...member.roleIds, role.id] : member.roleIds.filter((x) => x !== role.id) };
-      setEditing(next);
-      router.refresh();
-    } else toast.error(r.error);
+    if (r.ok) router.refresh();
+    else {
+      setEditing(member);
+      toast.error(r.error);
+    }
   }
 
   return (
@@ -63,16 +70,21 @@ export function MemberManager({
             <div className="min-w-0 flex-1">
               <p className="flex items-center gap-1 font-semibold">
                 {m.name}
-                {m.isOwner && <Crown className="size-4 text-warning" aria-label={t('owner')} role="img" />}
+                {m.isOwner && (
+                  <Crown className="size-4 text-warning" aria-label={t('owner')} role="img" />
+                )}
               </p>
               {m.username && <p className="text-sm text-muted">@{m.username}</p>}
             </div>
             <ul className="flex flex-wrap gap-1" aria-label={t('rolesOf', { name: m.name })}>
-              {m.roleIds.map((id) => byId.get(id)).filter((r): r is RoleSummary => Boolean(r)).map((r) => (
-                <li key={r.id}>
-                  <RoleBadge name={r.name} color={r.color} />
-                </li>
-              ))}
+              {m.roleIds
+                .map((id) => byId.get(id))
+                .filter((r): r is RoleSummary => Boolean(r))
+                .map((r) => (
+                  <li key={r.id}>
+                    <RoleBadge name={r.name} color={r.color} />
+                  </li>
+                ))}
             </ul>
             {canEditMember(m) && (
               <Button size="sm" variant="outline" onClick={() => setEditing(m)}>
@@ -96,7 +108,8 @@ export function MemberManager({
                         type="checkbox"
                         className="size-4 accent-[var(--c-primary)]"
                         checked={editing.roleIds.includes(r.id)}
-                        disabled={!canAssign(r) || pendingRole === r.id}
+                        disabled={!canAssign(r)}
+                        aria-busy={pendingRole === r.id || undefined}
                         onChange={(e) => void toggle(editing, r, e.target.checked)}
                       />
                       <RoleBadge name={r.name} color={r.color} />

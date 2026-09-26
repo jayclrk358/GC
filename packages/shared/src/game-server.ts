@@ -22,7 +22,12 @@ export const SERVER_PROTOCOLS = {
   tf2: { label: 'Team Fortress 2', gamedig: 'teamfortress2', defaultPort: 27015, steam: true },
   valheim: { label: 'Valheim', gamedig: 'valheim', defaultPort: 2457, steam: true },
   fivem: { label: 'FiveM (GTA V)', gamedig: 'gta5f', defaultPort: 30120, steam: false },
-  terraria: { label: 'Terraria (TShock)', gamedig: 'terrariatshock', defaultPort: 7777, steam: false },
+  terraria: {
+    label: 'Terraria (TShock)',
+    gamedig: 'terrariatshock',
+    defaultPort: 7777,
+    steam: false,
+  },
   sevendays: { label: '7 Days to Die', gamedig: 'sdtd', defaultPort: 26900, steam: true },
   dayz: { label: 'DayZ', gamedig: 'dayz', defaultPort: 27016, steam: true },
   squad: { label: 'Squad', gamedig: 'squad', defaultPort: 27165, steam: true },

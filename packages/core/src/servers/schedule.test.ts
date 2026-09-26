@@ -8,7 +8,9 @@ describe('poll scheduling', () => {
   });
 
   it('polls everything else every five minutes', () => {
-    expect(nextPollDelay({ ok: true, failCount: 0, hot: false, important: false })).toBe(POLL.normalMs);
+    expect(nextPollDelay({ ok: true, failCount: 0, hot: false, important: false })).toBe(
+      POLL.normalMs,
+    );
   });
 
   it('backs off exponentially on failure and caps at an hour', () => {
@@ -28,9 +30,23 @@ describe('poll scheduling', () => {
 
   it('goes dormant after a week offline', () => {
     const now = new Date('2026-01-10T00:00:00Z');
-    expect(shouldGoDormant({ lastOnlineAt: new Date('2026-01-02T00:00:00Z'), createdAt: new Date(0), now })).toBe(true);
-    expect(shouldGoDormant({ lastOnlineAt: new Date('2026-01-05T00:00:00Z'), createdAt: new Date(0), now })).toBe(false);
-    expect(shouldGoDormant({ lastOnlineAt: null, createdAt: new Date('2026-01-09T00:00:00Z'), now })).toBe(false);
+    expect(
+      shouldGoDormant({
+        lastOnlineAt: new Date('2026-01-02T00:00:00Z'),
+        createdAt: new Date(0),
+        now,
+      }),
+    ).toBe(true);
+    expect(
+      shouldGoDormant({
+        lastOnlineAt: new Date('2026-01-05T00:00:00Z'),
+        createdAt: new Date(0),
+        now,
+      }),
+    ).toBe(false);
+    expect(
+      shouldGoDormant({ lastOnlineAt: null, createdAt: new Date('2026-01-09T00:00:00Z'), now }),
+    ).toBe(false);
   });
 
   it('cleans server-reported text', () => {

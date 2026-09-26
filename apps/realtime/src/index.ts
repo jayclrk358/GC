@@ -60,6 +60,8 @@ const ROOM_RE = /^(community|channel|thread|server):[0-9a-f-]{36}$/;
 
 io.on('connection', (socket: Socket) => {
   const data = socket.data as SocketData;
+  log.debug({ socket: socket.id, user: data.userId }, 'connected');
+  socket.on('disconnect', (reason) => log.debug({ socket: socket.id, reason }, 'disconnected'));
   if (data.userId) void socket.join(rooms.user(data.userId));
 
   socket.on('subscribe', async (room: unknown, ack?: (res: { ok: boolean }) => void) => {
@@ -73,6 +75,7 @@ io.on('connection', (socket: Socket) => {
     if (!ok) return reply({ ok: false });
     await socket.join(room);
     data.subscriptions.add(room);
+    log.debug({ socket: socket.id, room }, 'subscribed');
     reply({ ok: true });
   });
 

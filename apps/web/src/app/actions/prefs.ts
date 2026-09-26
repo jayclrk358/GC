@@ -13,8 +13,9 @@ import {
 import { getUser } from '@/lib/auth';
 import { runAction } from '@/lib/action';
 
+// Not httpOnly: the browser also writes this cookie so changes apply before the action returns.
 const COOKIE_OPTS = {
-  httpOnly: true,
+  httpOnly: false,
   sameSite: 'lax' as const,
   path: '/',
   maxAge: 60 * 60 * 24 * 400,

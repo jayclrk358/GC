@@ -8,7 +8,15 @@ import { Button } from '@/components/ui/button';
  * Third-party embeds only load after the viewer asks for them: nothing autoplays, and no
  * requests go to the provider until then.
  */
-export function ClickToLoad({ src, title, provider }: { src: string; title: string; provider: string }) {
+export function ClickToLoad({
+  src,
+  title,
+  provider,
+}: {
+  src: string;
+  title: string;
+  provider: string;
+}) {
   const [loaded, setLoaded] = React.useState(false);
   return (
     <div className="aspect-video overflow-hidden rounded-ui-lg border border-border bg-surface-2">

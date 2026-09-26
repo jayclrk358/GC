@@ -35,7 +35,12 @@ import {
 import { Badge, EmptyState } from '@/components/ui/misc';
 import { Switch } from '@/components/ui/switch';
 import { FormError } from '@/components/auth/form-error';
-import { addBlockAction, deleteBlockAction, reorderBlocksAction, updateBlockAction } from '@/app/actions/blocks';
+import {
+  addBlockAction,
+  deleteBlockAction,
+  reorderBlocksAction,
+  updateBlockAction,
+} from '@/app/actions/blocks';
 import { cn } from '@/lib/utils';
 import { BlockForm, blockTitle, type BlockFormContext } from './block-forms';
 
@@ -57,7 +62,15 @@ function SortableItem({
   onToggle: (visible: boolean) => void;
 }) {
   const t = useTranslations('blocks');
-  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id: block.id });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: block.id });
   const typeName = t(`types.${block.type}.name`);
   const title = blockTitle(block, typeName);
   return (
@@ -92,14 +105,30 @@ function SortableItem({
         </p>
       </div>
       <div className="flex items-center gap-1">
-        <Button size="icon-sm" variant="ghost" disabled={index === 0} onClick={() => onMove(index, index - 1)} aria-label={t('moveUp', { name: title })}>
+        <Button
+          size="icon-sm"
+          variant="ghost"
+          disabled={index === 0}
+          onClick={() => onMove(index, index - 1)}
+          aria-label={t('moveUp', { name: title })}
+        >
           <ArrowUp aria-hidden />
         </Button>
-        <Button size="icon-sm" variant="ghost" disabled={index === total - 1} onClick={() => onMove(index, index + 1)} aria-label={t('moveDown', { name: title })}>
+        <Button
+          size="icon-sm"
+          variant="ghost"
+          disabled={index === total - 1}
+          onClick={() => onMove(index, index + 1)}
+          aria-label={t('moveDown', { name: title })}
+        >
           <ArrowDown aria-hidden />
         </Button>
         <label className="flex items-center gap-2 px-2 text-sm">
-          <Switch checked={block.visible} onCheckedChange={onToggle} aria-label={t('visibleToggle', { name: title })} />
+          <Switch
+            checked={block.visible}
+            onCheckedChange={onToggle}
+            aria-label={t('visibleToggle', { name: title })}
+          />
           <span aria-hidden className="hidden sm:inline">
             {t('visible')}
           </span>
@@ -108,7 +137,12 @@ function SortableItem({
           <Pencil aria-hidden /> {t('edit')}
           <span className="sr-only"> {title}</span>
         </Button>
-        <Button size="icon-sm" variant="ghost" onClick={onDelete} aria-label={t('deleteBlock', { name: title })}>
+        <Button
+          size="icon-sm"
+          variant="ghost"
+          onClick={onDelete}
+          aria-label={t('deleteBlock', { name: title })}
+        >
           <Trash2 aria-hidden />
         </Button>
       </div>
@@ -140,6 +174,10 @@ export function PageBuilder({
   const [saving, setSaving] = React.useState(false);
   const [deleting, setDeleting] = React.useState<Block | null>(null);
   const [status, setStatus] = React.useState('');
+  const [saveState, setSaveState] = React.useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  // Reorders are saved one after another so rapid moves can't reach the server out of order.
+  const saveQueue = React.useRef<Promise<unknown>>(Promise.resolve());
+  const pendingSaves = React.useRef(0);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -156,26 +194,64 @@ export function PageBuilder({
   const positionOf = (id: string | number | undefined) => blocks.findIndex((b) => b.id === id) + 1;
 
   const announcements: Announcements = {
-    onDragStart: ({ active }) => t('dnd.start', { name: nameOf(active.id), position: positionOf(active.id), total: blocks.length }),
-    onDragOver: ({ active, over }) => (over ? t('dnd.over', { name: nameOf(active.id), position: positionOf(over.id), total: blocks.length }) : ''),
-    onDragEnd: ({ active, over }) => (over ? t('dnd.end', { name: nameOf(active.id), position: positionOf(over.id), total: blocks.length }) : t('dnd.cancel', { name: nameOf(active.id) })),
+    onDragStart: ({ active }) =>
+      t('dnd.start', {
+        name: nameOf(active.id),
+        position: positionOf(active.id),
+        total: blocks.length,
+      }),
+    onDragOver: ({ active, over }) =>
+      over
+        ? t('dnd.over', {
+            name: nameOf(active.id),
+            position: positionOf(over.id),
+            total: blocks.length,
+          })
+        : '',
+    onDragEnd: ({ active, over }) =>
+      over
+        ? t('dnd.end', {
+            name: nameOf(active.id),
+            position: positionOf(over.id),
+            total: blocks.length,
+          })
+        : t('dnd.cancel', { name: nameOf(active.id) }),
     onDragCancel: ({ active }) => t('dnd.cancel', { name: nameOf(active.id) }),
   };
 
-  async function persistOrder(next: Block[], previous: Block[]) {
+  function persistOrder(next: Block[], previous: Block[]) {
     setBlocks(next);
-    const r = await reorderBlocksAction(communityId, next.map((b) => b.id));
-    if (!r.ok) {
-      setBlocks(previous);
-      toast.error(r.error);
-    }
+    setSaveState('saving');
+    pendingSaves.current++;
+    const ids = next.map((b) => b.id);
+    saveQueue.current = saveQueue.current.then(async () => {
+      const r = await reorderBlocksAction(communityId, ids);
+      pendingSaves.current--;
+      if (!r.ok) {
+        setBlocks(previous);
+        setSaveState('error');
+        toast.error(r.error);
+      } else if (pendingSaves.current === 0) {
+        setSaveState('saved');
+      }
+    });
   }
+
+  // Warn before leaving while a save is still in flight.
+  React.useEffect(() => {
+    if (saveState !== 'saving') return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [saveState]);
 
   function move(from: number, to: number) {
     if (to < 0 || to >= blocks.length) return;
     const next = arrayMove(blocks, from, to);
-    setStatus(t('dnd.end', { name: nameOf(blocks[from]!.id), position: to + 1, total: blocks.length }));
-    void persistOrder(next, blocks);
+    setStatus(
+      t('dnd.end', { name: nameOf(blocks[from]!.id), position: to + 1, total: blocks.length }),
+    );
+    persistOrder(next, blocks);
   }
 
   function onDragEnd(e: DragEndEvent) {
@@ -183,7 +259,7 @@ export function PageBuilder({
     if (!over || active.id === over.id) return;
     const from = blocks.findIndex((b) => b.id === active.id);
     const to = blocks.findIndex((b) => b.id === over.id);
-    void persistOrder(arrayMove(blocks, from, to), blocks);
+    persistOrder(arrayMove(blocks, from, to), blocks);
   }
 
   async function add(type: BlockType) {
@@ -214,7 +290,9 @@ export function PageBuilder({
       setFields(r.fields ?? {});
       return;
     }
-    setBlocks((bs) => bs.map((b) => (b.id === editing.id ? ({ ...b, config: draft } as Block) : b)));
+    setBlocks((bs) =>
+      bs.map((b) => (b.id === editing.id ? ({ ...b, config: draft } as Block) : b)),
+    );
     setEditing(null);
     toast.success(t('saved'));
   }
@@ -254,7 +332,11 @@ export function PageBuilder({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="max-h-[60vh] w-80 overflow-y-auto">
             {BLOCK_TYPES.map((type) => (
-              <DropdownMenuItem key={type} onSelect={() => void add(type)} className="flex-col items-start gap-0.5">
+              <DropdownMenuItem
+                key={type}
+                onSelect={() => void add(type)}
+                className="flex-col items-start gap-0.5"
+              >
                 <span className="font-semibold">{t(`types.${type}.name`)}</span>
                 <span className="text-xs text-muted">{t(`types.${type}.description`)}</span>
               </DropdownMenuItem>
@@ -267,7 +349,12 @@ export function PageBuilder({
           </Link>
         </Button>
       </div>
-      <p className="text-sm text-muted">{t('reorderHint')}</p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-muted">{t('reorderHint')}</p>
+        <p aria-live="polite" className="text-sm font-semibold text-muted">
+          {saveState === 'saving' ? t('saving') : saveState === 'saved' ? t('allSaved') : ''}
+        </p>
+      </div>
 
       {blocks.length === 0 ? (
         <EmptyState title={t('empty')} description={t('emptyDesc')} />
@@ -276,7 +363,10 @@ export function PageBuilder({
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={onDragEnd}
-          accessibility={{ announcements, screenReaderInstructions: { draggable: t('dnd.instructions') } }}
+          accessibility={{
+            announcements,
+            screenReaderInstructions: { draggable: t('dnd.instructions') },
+          }}
         >
           <SortableContext items={blocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
             <ol className="flex flex-col gap-2" aria-label={t('listLabel')}>
@@ -299,7 +389,10 @@ export function PageBuilder({
 
       <Dialog open={Boolean(editing)} onOpenChange={(o) => !o && setEditing(null)}>
         {editing && (
-          <DialogContent title={t('editTitle', { name: t(`types.${editing.type}.name`) })} size="lg">
+          <DialogContent
+            title={t('editTitle', { name: t(`types.${editing.type}.name`) })}
+            size="lg"
+          >
             <form
               className="flex flex-col gap-4"
               onSubmit={(e) => {
@@ -327,7 +420,9 @@ export function PageBuilder({
           <DialogContent
             size="sm"
             title={t('deleteTitle')}
-            description={t('deleteConfirm', { name: blockTitle(deleting, t(`types.${deleting.type}.name`)) })}
+            description={t('deleteConfirm', {
+              name: blockTitle(deleting, t(`types.${deleting.type}.name`)),
+            })}
           >
             <div className="flex justify-end gap-2">
               <Button variant="ghost" onClick={() => setDeleting(null)}>

@@ -4,7 +4,11 @@ export function formatDate(d: Date | string, locale = 'en'): string {
   return new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(d));
 }
 
-export function formatDateTime(d: Date | string, timeFormat: TimeFormat = 'auto', locale = 'en'): string {
+export function formatDateTime(
+  d: Date | string,
+  timeFormat: TimeFormat = 'auto',
+  locale = 'en',
+): string {
   return new Intl.DateTimeFormat(locale, {
     dateStyle: 'medium',
     timeStyle: 'short',

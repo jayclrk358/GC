@@ -5,9 +5,22 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { JoinButton } from '@/components/community/join-button';
 
-const TARGETS: Record<string, string> = { forum: '/forum', chat: '/chat', servers: '/servers', events: '/events' };
+const TARGETS: Record<string, string> = {
+  forum: '/forum',
+  chat: '/chat',
+  servers: '/servers',
+  events: '/events',
+};
 
-export function HeroBlock({ id, config, data }: { id: string; config: BlockConfig<'hero'>; data: LoadedCommunity }) {
+export function HeroBlock({
+  id,
+  config,
+  data,
+}: {
+  id: string;
+  config: BlockConfig<'hero'>;
+  data: LoadedCommunity;
+}) {
   const { community, ctx, user } = data;
   const centered = config.align === 'center';
   let cta: React.ReactNode = null;

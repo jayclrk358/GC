@@ -17,7 +17,11 @@ export function DeleteCommunity({ communityId, slug }: { communityId: string; sl
   const [error, setError] = React.useState<string | null>(null);
   const [pending, setPending] = React.useState(false);
   return (
-    <SettingsSection id="delete" title={t('danger.deleteTitle')} description={t('danger.deleteDesc')}>
+    <SettingsSection
+      id="delete"
+      title={t('danger.deleteTitle')}
+      description={t('danger.deleteDesc')}
+    >
       <form
         className="flex flex-col gap-3"
         onSubmit={async (e) => {
@@ -33,7 +37,14 @@ export function DeleteCommunity({ communityId, slug }: { communityId: string; sl
       >
         <FormError message={error} />
         <Field label={t('danger.confirmLabel', { slug })}>
-          {(p) => <Input {...p} value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="off" />}
+          {(p) => (
+            <Input
+              {...p}
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              autoComplete="off"
+            />
+          )}
         </Field>
         <div>
           <Button type="submit" variant="danger" disabled={confirm !== slug} loading={pending}>

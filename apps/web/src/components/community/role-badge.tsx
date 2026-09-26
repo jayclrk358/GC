@@ -31,7 +31,11 @@ export function RoleBadge({
           {name.slice(0, 1).toUpperCase()}
         </span>
       ) : (
-        <span aria-hidden className="size-2.5 rounded-full" style={{ background: color ?? 'var(--c-text-muted)' }} />
+        <span
+          aria-hidden
+          className="size-2.5 rounded-full"
+          style={{ background: color ?? 'var(--c-text-muted)' }}
+        />
       )}
       {name}
     </span>

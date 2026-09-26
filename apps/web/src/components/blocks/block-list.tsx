@@ -40,7 +40,14 @@ export function renderBlock(block: Block, data: LoadedCommunity) {
       return <StatsBlock id={block.id} config={block.config} data={data} />;
     case 'featuredThreads':
     case 'upcomingEvents':
-      return <PlaceholderBlock id={block.id} type={block.type} heading={block.config.heading} data={data} />;
+      return (
+        <PlaceholderBlock
+          id={block.id}
+          type={block.type}
+          heading={block.config.heading}
+          data={data}
+        />
+      );
     default:
       return null;
   }

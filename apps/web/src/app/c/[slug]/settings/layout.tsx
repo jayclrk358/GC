@@ -20,7 +20,11 @@ export default async function CommunitySettingsLayout({
     { href: `${base}/navigation`, label: t('nav.navigation'), show: perms.manage },
     { href: `${base}/roles`, label: t('nav.roles'), show: perms.manageRoles },
     { href: `${base}/members`, label: t('nav.members'), show: perms.manageRoles },
-    { href: `${base}/invites`, label: t('nav.invites'), show: perms.manageInvites || perms.createInvite },
+    {
+      href: `${base}/invites`,
+      label: t('nav.invites'),
+      show: perms.manageInvites || perms.createInvite,
+    },
     { href: `${base}/servers`, label: t('nav.servers'), show: perms.manageServers },
     { href: `${base}/audit`, label: t('nav.audit'), show: perms.viewAudit },
     { href: `${base}/danger`, label: t('nav.danger'), show: ctx.isOwner },

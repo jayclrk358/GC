@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { BlockedAddressError, isPublicAddress, networkKey, resolveTarget, UnresolvableHostError } from './ssrf';
+import {
+  BlockedAddressError,
+  isPublicAddress,
+  networkKey,
+  resolveTarget,
+  UnresolvableHostError,
+} from './ssrf';
 
 describe('isPublicAddress', () => {
   it.each([
@@ -44,7 +50,10 @@ describe('isPublicAddress', () => {
   });
 });
 
-function fakeResolver(a: Record<string, string[]>, srv: Record<string, { name: string; port: number }> = {}) {
+function fakeResolver(
+  a: Record<string, string[]>,
+  srv: Record<string, { name: string; port: number }> = {},
+) {
   return {
     lookup: async (host: string) => {
       const list = a[host];
@@ -62,7 +71,9 @@ function fakeResolver(a: Record<string, string[]>, srv: Record<string, { name: s
 describe('resolveTarget', () => {
   it('resolves a public hostname to an IP', async () => {
     const r = await resolveTarget('play.example.com', 25565, {
-      resolver: fakeResolver({ 'play.example.com': ['203.0.113.10'.replace('203.0.113', '51.15.20')] }),
+      resolver: fakeResolver({
+        'play.example.com': ['203.0.113.10'.replace('203.0.113', '51.15.20')],
+      }),
       allowPrivate: false,
     });
     expect(r).toEqual({ ip: '51.15.20.10', port: 25565, host: 'play.example.com' });
@@ -104,9 +115,9 @@ describe('resolveTarget', () => {
 
   it('rejects literal private IPs and localhost names', async () => {
     for (const host of ['127.0.0.1', '[::1]', 'localhost', 'printer.local']) {
-      await expect(resolveTarget(host, 1, { resolver: fakeResolver({}), allowPrivate: false })).rejects.toBeInstanceOf(
-        BlockedAddressError,
-      );
+      await expect(
+        resolveTarget(host, 1, { resolver: fakeResolver({}), allowPrivate: false }),
+      ).rejects.toBeInstanceOf(BlockedAddressError);
     }
   });
 

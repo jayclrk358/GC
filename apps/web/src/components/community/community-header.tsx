@@ -55,7 +55,13 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
         </div>
       )}
       <div className="mx-auto max-w-6xl px-4">
-        <div className={compact ? 'flex flex-wrap items-center gap-4 py-5' : 'flex flex-wrap items-end gap-4 pb-4'}>
+        <div
+          className={
+            compact
+              ? 'flex flex-wrap items-center gap-4 py-5'
+              : 'flex flex-wrap items-end gap-4 pb-4'
+          }
+        >
           <div className={compact ? '' : '-mt-10 sm:-mt-12'}>
             {icon ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -78,7 +84,10 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
           <div className="flex min-w-0 flex-1 flex-col gap-1 pt-2">
             <h1 className="text-2xl font-extrabold sm:text-3xl">{community.name}</h1>
             {community.tagline && <p className="text-muted">{community.tagline}</p>}
-            <ul className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted" aria-label={t('details')}>
+            <ul
+              className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted"
+              aria-label={t('details')}
+            >
               {game && (
                 <li>
                   <Badge tone="primary">{game.name}</Badge>
@@ -87,7 +96,10 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
               {showMembers && (
                 <li className="flex items-center gap-1">
                   <Users className="size-4" aria-hidden />
-                  {t('memberCount', { count: community.memberCount, formatted: formatCount(community.memberCount) })}
+                  {t('memberCount', {
+                    count: community.memberCount,
+                    formatted: formatCount(community.memberCount),
+                  })}
                 </li>
               )}
               <li className="flex items-center gap-1">
@@ -126,7 +138,10 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
             )}
           </div>
         </div>
-        <nav aria-label={t('sections', { name: community.name })} className="-mb-px overflow-x-auto">
+        <nav
+          aria-label={t('sections', { name: community.name })}
+          className="-mb-px overflow-x-auto"
+        >
           <ul className="flex gap-1">
             {nav.map((item) => (
               <li key={item.tab}>

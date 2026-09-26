@@ -7,7 +7,17 @@ const TEXT: Record<string, string> = {
 };
 
 /** Blocks for features that aren't set up yet: only managers see a hint. */
-export function PlaceholderBlock({ id, type, heading, data }: { id: string; type: string; heading: string; data: LoadedCommunity }) {
+export function PlaceholderBlock({
+  id,
+  type,
+  heading,
+  data,
+}: {
+  id: string;
+  type: string;
+  heading: string;
+  data: LoadedCommunity;
+}) {
   if (!data.perms.manage) return null;
   return (
     <BlockSection id={id} heading={heading}>

@@ -19,7 +19,13 @@ const A2S_PORT = Number(process.env.FAKE_A2S_PORT ?? 27090);
 const CTL_PORT = Number(process.env.FAKE_CTL_PORT ?? 25591);
 
 const state = {
-  minecraft: { motd: 'Fixture Craft — survival & minigames', online: true, players: 17, max: 120, version: '1.21.4' },
+  minecraft: {
+    motd: 'Fixture Craft — survival & minigames',
+    online: true,
+    players: 17,
+    max: 120,
+    version: '1.21.4',
+  },
   source: { name: 'Fixture Source Server', online: true, players: 9, max: 24, map: 'de_dust2' },
 };
 
@@ -139,7 +145,11 @@ a2s.on('message', (msg, rinfo) => {
         dur.writeFloatLE(60 * (i + 1));
         players.push(Buffer.concat([Buffer.from([i]), cstr(`player${i + 1}`), score, dur]));
       }
-      reply = Buffer.concat([HEADER, Buffer.from([0x44, Math.min(255, state.source.players)]), ...players]);
+      reply = Buffer.concat([
+        HEADER,
+        Buffer.from([0x44, Math.min(255, state.source.players)]),
+        ...players,
+      ]);
     }
   } else if (kind === 0x56) {
     reply = Buffer.concat([HEADER, Buffer.from([0x41]), CHALLENGE]);
@@ -150,7 +160,9 @@ a2s.on('message', (msg, rinfo) => {
 // ── Control API ─────────────────────────────────────────────────────────────
 const ctl = createHttpServer((req, res) => {
   if (req.method === 'GET' && req.url === '/health') {
-    res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ status: 'ok', state }));
+    res
+      .writeHead(200, { 'content-type': 'application/json' })
+      .end(JSON.stringify({ status: 'ok', state }));
     return;
   }
   if (req.method === 'POST' && (req.url === '/minecraft' || req.url === '/source')) {
@@ -174,7 +186,9 @@ const ctl = createHttpServer((req, res) => {
 mc.listen(MC_PORT, '127.0.0.1');
 a2s.bind(A2S_PORT, '127.0.0.1');
 ctl.listen(CTL_PORT, '127.0.0.1');
-console.log(`fake servers: minecraft tcp/${MC_PORT}, source udp/${A2S_PORT}, control http/${CTL_PORT}`);
+console.log(
+  `fake servers: minecraft tcp/${MC_PORT}, source udp/${A2S_PORT}, control http/${CTL_PORT}`,
+);
 
 const stop = () => {
   mc.close();

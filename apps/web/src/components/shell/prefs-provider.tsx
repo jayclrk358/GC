@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { prefsToHtmlAttributes, type Prefs } from '@magnox/shared';
+import { encodePrefsCookie, PREFS_COOKIE, prefsToHtmlAttributes, type Prefs } from '@magnox/shared';
 import { savePrefs } from '@/app/actions/prefs';
 
 interface PrefsContextValue {
@@ -18,6 +18,15 @@ export function applyPrefsToDocument(prefs: Prefs) {
   const html = document.documentElement;
   for (const [k, v] of Object.entries(prefsToHtmlAttributes(prefs))) html.setAttribute(k, v);
   html.style.fontSize = `${prefs.fontScale}%`;
+}
+
+/**
+ * Write the preference cookie in the browser straight away so a change survives an immediate
+ * reload. Display preferences aren't sensitive, so the cookie is readable by scripts.
+ */
+function writePrefsCookie(prefs: Prefs) {
+  const secure = window.location.protocol === 'https:' ? '; secure' : '';
+  document.cookie = `${PREFS_COOKIE}=${encodePrefsCookie(prefs)}; path=/; max-age=${60 * 60 * 24 * 400}; samesite=lax${secure}`;
 }
 
 export function PrefsProvider({
@@ -38,6 +47,7 @@ export function PrefsProvider({
   const preview = React.useCallback((p: Prefs) => applyPrefsToDocument(p), []);
   const save = React.useCallback(async (p: Prefs) => {
     applyPrefsToDocument(p);
+    writePrefsCookie(p);
     setPrefs(p);
     const res = await savePrefs(p);
     return res.ok;

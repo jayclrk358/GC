@@ -5,7 +5,11 @@ import { mediaUrl } from '@/lib/media';
 import { CommunityHeader } from '@/components/community/community-header';
 import { CommunityThemeStyle } from '@/components/community/theme-style';
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
   const { community } = await loadCommunity((await params).slug);
   return {
     title: { default: community.name, template: `%s · ${community.name} · Magnox` },
@@ -25,13 +29,23 @@ export default async function CommunityLayout({
   const online = await onlineInCommunity(data.community.id);
   const bg = mediaUrl(data.community.theme.backgroundKey);
   return (
-    <div data-community-theme className="relative isolate flex flex-1 flex-col bg-bg font-sans text-fg">
+    <div
+      data-community-theme
+      className="relative isolate flex flex-1 flex-col bg-bg font-sans text-fg"
+    >
       <CommunityThemeStyle theme={data.community.theme} />
       {bg && (
-        <div aria-hidden data-decorative className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div
+          aria-hidden
+          data-decorative
+          className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={bg} alt="" className="size-full object-cover" />
-          <div className="absolute inset-0 bg-bg" style={{ opacity: data.community.theme.backgroundDim / 100 }} />
+          <div
+            className="absolute inset-0 bg-bg"
+            style={{ opacity: data.community.theme.backgroundDim / 100 }}
+          />
         </div>
       )}
       <CommunityHeader data={data} online={online} />

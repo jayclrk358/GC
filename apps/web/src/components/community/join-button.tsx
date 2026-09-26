@@ -76,12 +76,16 @@ export function JoinButton({
 
   if (joinMode === 'invite' || visibility === 'private') {
     return (
-      <p className="rounded-ui border border-border px-3 py-2 text-sm text-muted">{t('inviteOnly')}</p>
+      <p className="rounded-ui border border-border px-3 py-2 text-sm text-muted">
+        {t('inviteOnly')}
+      </p>
     );
   }
   if (joinMode === 'apply') {
     return (
-      <p className="rounded-ui border border-border px-3 py-2 text-sm text-muted">{t('applicationsSoon')}</p>
+      <p className="rounded-ui border border-border px-3 py-2 text-sm text-muted">
+        {t('applicationsSoon')}
+      </p>
     );
   }
 

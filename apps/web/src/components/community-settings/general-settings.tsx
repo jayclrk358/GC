@@ -11,7 +11,11 @@ import { Input, Select, Textarea } from '@/components/ui/input';
 import { SwitchField } from '@/components/ui/switch';
 import { FormError } from '@/components/auth/form-error';
 import { SettingsSection } from '@/components/settings/section';
-import { changeSlugAction, updateBasicsAction, updateSettingsAction } from '@/app/actions/communities';
+import {
+  changeSlugAction,
+  updateBasicsAction,
+  updateSettingsAction,
+} from '@/app/actions/communities';
 
 interface Initial {
   name: string;
@@ -59,7 +63,11 @@ export function GeneralSettings({
       name: v.name,
       tagline: v.tagline,
       gameId: v.gameId || null,
-      tags: v.tags.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean).slice(0, 8),
+      tags: v.tags
+        .split(',')
+        .map((s) => s.trim().toLowerCase())
+        .filter(Boolean)
+        .slice(0, 8),
       region: v.region,
       language: v.language,
       visibility: v.visibility,
@@ -101,10 +109,24 @@ export function GeneralSettings({
         <FormError message={error} />
         <SettingsSection id="basics" title={t('general.basics')}>
           <Field label={tcr('name')} error={fields.name} required>
-            {(p) => <Input {...p} value={v.name} maxLength={60} onChange={(e) => set('name', e.target.value)} />}
+            {(p) => (
+              <Input
+                {...p}
+                value={v.name}
+                maxLength={60}
+                onChange={(e) => set('name', e.target.value)}
+              />
+            )}
           </Field>
           <Field label={tcr('tagline')} error={fields.tagline}>
-            {(p) => <Input {...p} value={v.tagline} maxLength={140} onChange={(e) => set('tagline', e.target.value)} />}
+            {(p) => (
+              <Input
+                {...p}
+                value={v.tagline}
+                maxLength={140}
+                onChange={(e) => set('tagline', e.target.value)}
+              />
+            )}
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label={tcr('game')}>
@@ -151,7 +173,11 @@ export function GeneralSettings({
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label={tcr('visibility')} description={tcr(`visibilityHelp.${v.visibility}`)}>
               {(p) => (
-                <Select {...p} value={v.visibility} onChange={(e) => set('visibility', e.target.value as Initial['visibility'])}>
+                <Select
+                  {...p}
+                  value={v.visibility}
+                  onChange={(e) => set('visibility', e.target.value as Initial['visibility'])}
+                >
                   {(['public', 'unlisted', 'private'] as const).map((k) => (
                     <option key={k} value={k}>
                       {tc(`visibility.${k}`)}
@@ -162,14 +188,23 @@ export function GeneralSettings({
             </Field>
             <Field label={tcr('joinMode')}>
               {(p) => (
-                <Select {...p} value={v.joinMode} onChange={(e) => set('joinMode', e.target.value as Initial['joinMode'])}>
+                <Select
+                  {...p}
+                  value={v.joinMode}
+                  onChange={(e) => set('joinMode', e.target.value as Initial['joinMode'])}
+                >
                   <option value="open">{tcr('joinModes.open.name')}</option>
                   <option value="invite">{tcr('joinModes.invite.name')}</option>
                 </Select>
               )}
             </Field>
           </div>
-          <SwitchField label={t('general.nsfw')} description={t('general.nsfwDesc')} checked={v.nsfw} onCheckedChange={(c) => set('nsfw', c)} />
+          <SwitchField
+            label={t('general.nsfw')}
+            description={t('general.nsfwDesc')}
+            checked={v.nsfw}
+            onCheckedChange={(c) => set('nsfw', c)}
+          />
         </SettingsSection>
 
         <SettingsSection id="display" title={t('general.display')}>
@@ -185,7 +220,14 @@ export function GeneralSettings({
             onCheckedChange={(c) => set('requireAltText', c)}
           />
           <Field label={t('general.welcomeMessage')} description={t('general.welcomeMessageDesc')}>
-            {(p) => <Textarea {...p} value={v.welcomeMessage} maxLength={500} onChange={(e) => set('welcomeMessage', e.target.value)} />}
+            {(p) => (
+              <Textarea
+                {...p}
+                value={v.welcomeMessage}
+                maxLength={500}
+                onChange={(e) => set('welcomeMessage', e.target.value)}
+              />
+            )}
           </Field>
         </SettingsSection>
 
@@ -197,7 +239,11 @@ export function GeneralSettings({
       </form>
 
       {isOwner && (
-        <SettingsSection id="address" title={t('general.address')} description={t('general.addressDesc')}>
+        <SettingsSection
+          id="address"
+          title={t('general.address')}
+          description={t('general.addressDesc')}
+        >
           <form onSubmit={saveSlug} className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <Field label={tcr('slug')} className="flex-1">
               {(p) => (
@@ -211,7 +257,12 @@ export function GeneralSettings({
                 />
               )}
             </Field>
-            <Button type="submit" variant="secondary" loading={pending === 'slug'} disabled={slug === initial.slug}>
+            <Button
+              type="submit"
+              variant="secondary"
+              loading={pending === 'slug'}
+              disabled={slug === initial.slug}
+            >
               {t('general.changeAddress')}
             </Button>
           </form>

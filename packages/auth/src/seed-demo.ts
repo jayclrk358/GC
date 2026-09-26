@@ -30,7 +30,10 @@ async function ensureUser(u: (typeof USERS)[number]): Promise<string> {
   const existing = await db.query.users.findFirst({ where: eq(schema.users.email, u.email) });
   if (existing) return existing.id;
   const res = await auth().api.signUpEmail({ body: { ...u, password: PASSWORD } });
-  await db.update(schema.users).set({ emailVerified: true }).where(eq(schema.users.id, res.user.id));
+  await db
+    .update(schema.users)
+    .set({ emailVerified: true })
+    .where(eq(schema.users.id, res.user.id));
   return res.user.id;
 }
 
@@ -86,7 +89,9 @@ async function main() {
   ];
 
   for (const c of communities) {
-    const exists = await db.query.communities.findFirst({ where: eq(schema.communities.slug, c.slug) });
+    const exists = await db.query.communities.findFirst({
+      where: eq(schema.communities.slug, c.slug),
+    });
     if (exists) continue;
     const { id } = await createCommunity(alice!, { ...c, visibility: 'public', joinMode: 'open' });
     const ownerCtx = await getMemberContext({ id }, alice!);
@@ -104,9 +109,17 @@ async function main() {
       const endpointId = newId();
       await db
         .insert(schema.serverEndpoints)
-        .values({ id: endpointId, protocol: 'minecraft', host: '127.0.0.1', port: 25590, resolvedIp: '127.0.0.1' })
+        .values({
+          id: endpointId,
+          protocol: 'minecraft',
+          host: '127.0.0.1',
+          port: 25590,
+          resolvedIp: '127.0.0.1',
+        })
         .onConflictDoNothing();
-      const endpoint = await db.query.serverEndpoints.findFirst({ where: eq(schema.serverEndpoints.port, 25590) });
+      const endpoint = await db.query.serverEndpoints.findFirst({
+        where: eq(schema.serverEndpoints.port, 25590),
+      });
       await db.insert(schema.gameServers).values({
         id: newId(),
         endpointId: endpoint!.id,

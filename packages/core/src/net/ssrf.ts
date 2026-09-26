@@ -50,7 +50,9 @@ export interface ResolvedTarget {
 
 type Resolver = {
   lookup: (host: string) => Promise<{ address: string; family: number }[]>;
-  resolveSrv: (name: string) => Promise<{ name: string; port: number; priority: number; weight: number }[]>;
+  resolveSrv: (
+    name: string,
+  ) => Promise<{ name: string; port: number; priority: number; weight: number }[]>;
 };
 
 const systemResolver: Resolver = {
@@ -70,7 +72,10 @@ export async function resolveTarget(
 ): Promise<ResolvedTarget> {
   const resolver = opts.resolver ?? systemResolver;
   const allowPrivate = opts.allowPrivate ?? env().SERVER_QUERY_ALLOW_PRIVATE;
-  let targetHost = host.trim().toLowerCase().replace(/^\[|\]$/g, '');
+  let targetHost = host
+    .trim()
+    .toLowerCase()
+    .replace(/^\[|\]$/g, '');
   let targetPort = port;
 
   if (isIpLiteral(targetHost)) {
@@ -78,7 +83,11 @@ export async function resolveTarget(
     return { ip: ipaddr.process(targetHost).toString(), port: targetPort, host: targetHost };
   }
 
-  if (!/^[a-z0-9.-]+$/.test(targetHost) || targetHost.endsWith('.local') || targetHost === 'localhost') {
+  if (
+    !/^[a-z0-9.-]+$/.test(targetHost) ||
+    targetHost.endsWith('.local') ||
+    targetHost === 'localhost'
+  ) {
     throw new BlockedAddressError();
   }
 
@@ -102,7 +111,8 @@ export async function resolveTarget(
     throw new UnresolvableHostError();
   }
   if (addresses.length === 0) throw new UnresolvableHostError();
-  if (addresses.some((a) => !isPublicAddress(a.address, allowPrivate))) throw new BlockedAddressError();
+  if (addresses.some((a) => !isPublicAddress(a.address, allowPrivate)))
+    throw new BlockedAddressError();
   const chosen = addresses.find((a) => a.family === 4) ?? addresses[0]!;
   return { ip: ipaddr.process(chosen.address).toString(), port: targetPort, host: targetHost };
 }
@@ -111,5 +121,8 @@ export async function resolveTarget(
 export function networkKey(ip: string): string {
   const addr = ipaddr.process(ip);
   if (addr.kind() === 'ipv4') return (addr as ipaddr.IPv4).octets.slice(0, 3).join('.');
-  return (addr as ipaddr.IPv6).parts.slice(0, 3).map((p) => p.toString(16)).join(':');
+  return (addr as ipaddr.IPv6).parts
+    .slice(0, 3)
+    .map((p) => p.toString(16))
+    .join(':');
 }

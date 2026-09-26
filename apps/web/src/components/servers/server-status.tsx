@@ -43,7 +43,10 @@ export function StatusDot({ online, className }: { online: boolean; className?: 
   return online ? (
     <span aria-hidden className={cn('inline-block size-2.5 rounded-full bg-success', className)} />
   ) : (
-    <span aria-hidden className={cn('inline-block size-2.5 rotate-45 border-2 border-danger', className)} />
+    <span
+      aria-hidden
+      className={cn('inline-block size-2.5 rotate-45 border-2 border-danger', className)}
+    />
   );
 }
 
@@ -71,13 +74,21 @@ export function CopyAddress({ address }: { address: string }) {
   );
 }
 
-export function ServerCard({ server, showPlayers = true }: { server: ServerCardData; showPlayers?: boolean }) {
+export function ServerCard({
+  server,
+  showPlayers = true,
+}: {
+  server: ServerCardData;
+  showPlayers?: boolean;
+}) {
   const t = useTranslations('servers');
   const status = useLiveStatus(server.endpointId, server.status);
   const checked = status.checkedAt !== null;
   const stateText = !checked ? t('checking') : status.online ? t('online') : t('offline');
   const fill =
-    status.online && status.players !== null && status.maxPlayers ? Math.min(100, (status.players / status.maxPlayers) * 100) : 0;
+    status.online && status.players !== null && status.maxPlayers
+      ? Math.min(100, (status.players / status.maxPlayers) * 100)
+      : 0;
 
   return (
     <article
@@ -89,12 +100,19 @@ export function ServerCard({ server, showPlayers = true }: { server: ServerCardD
           <h3 id={`srv-${server.id}`} className="flex items-center gap-1.5 truncate font-bold">
             {server.name}
             {server.verified && (
-              <ShieldCheck className="size-4 shrink-0 text-success" aria-label={t('verified')} role="img" />
+              <ShieldCheck
+                className="size-4 shrink-0 text-success"
+                aria-label={t('verified')}
+                role="img"
+              />
             )}
           </h3>
           <p className="text-sm text-muted">{server.protocolLabel}</p>
         </div>
-        <Badge tone={!checked ? 'neutral' : status.online ? 'success' : 'danger'} aria-live="polite">
+        <Badge
+          tone={!checked ? 'neutral' : status.online ? 'success' : 'danger'}
+          aria-live="polite"
+        >
           <StatusDot online={status.online} className={!checked ? 'opacity-40' : undefined} />
           {stateText}
         </Badge>
@@ -116,7 +134,10 @@ export function ServerCard({ server, showPlayers = true }: { server: ServerCardD
             aria-valuemax={status.maxPlayers ?? 0}
             aria-valuenow={status.players ?? 0}
           >
-            <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${fill}%` }} />
+            <div
+              className="h-full rounded-full bg-primary transition-[width]"
+              style={{ width: `${fill}%` }}
+            />
           </div>
         </div>
       )}

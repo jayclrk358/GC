@@ -52,15 +52,38 @@ function ListEditor<T>({
               <legend className="flex w-full items-center justify-between gap-2 text-sm font-semibold">
                 <span>{itemLabel(i)}</span>
               </legend>
-              {renderItem(item, (patch) => onChange(items.map((x, j) => (j === i ? { ...x, ...patch } : x))), i)}
+              {renderItem(
+                item,
+                (patch) => onChange(items.map((x, j) => (j === i ? { ...x, ...patch } : x))),
+                i,
+              )}
               <div className="flex gap-1">
-                <Button type="button" size="icon-sm" variant="ghost" disabled={i === 0} onClick={() => move(i, -1)} aria-label={t('moveItemUp', { item: itemLabel(i) })}>
+                <Button
+                  type="button"
+                  size="icon-sm"
+                  variant="ghost"
+                  disabled={i === 0}
+                  onClick={() => move(i, -1)}
+                  aria-label={t('moveItemUp', { item: itemLabel(i) })}
+                >
                   <ArrowUp aria-hidden />
                 </Button>
-                <Button type="button" size="icon-sm" variant="ghost" disabled={i === items.length - 1} onClick={() => move(i, 1)} aria-label={t('moveItemDown', { item: itemLabel(i) })}>
+                <Button
+                  type="button"
+                  size="icon-sm"
+                  variant="ghost"
+                  disabled={i === items.length - 1}
+                  onClick={() => move(i, 1)}
+                  aria-label={t('moveItemDown', { item: itemLabel(i) })}
+                >
                   <ArrowDown aria-hidden />
                 </Button>
-                <Button type="button" size="sm" variant="ghost" onClick={() => onChange(items.filter((_, j) => j !== i))}>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => onChange(items.filter((_, j) => j !== i))}
+                >
                   <Trash2 aria-hidden /> {t('remove')}
                   <span className="sr-only"> {itemLabel(i)}</span>
                 </Button>
@@ -71,7 +94,12 @@ function ListEditor<T>({
       </ol>
       {items.length < max && (
         <div>
-          <Button type="button" variant="outline" size="sm" onClick={() => onChange([...items, make()])}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => onChange([...items, make()])}
+          >
             <Plus aria-hidden /> {t('addItem')}
           </Button>
         </div>
@@ -80,11 +108,21 @@ function ListEditor<T>({
   );
 }
 
-function Heading({ value, onChange, error }: { value: string; onChange: (v: string) => void; error?: string }) {
+function Heading({
+  value,
+  onChange,
+  error,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  error?: string;
+}) {
   const t = useTranslations('blocks');
   return (
     <Field label={t('heading')} error={error}>
-      {(p) => <Input {...p} value={value} maxLength={80} onChange={(e) => onChange(e.target.value)} />}
+      {(p) => (
+        <Input {...p} value={value} maxLength={80} onChange={(e) => onChange(e.target.value)} />
+      )}
     </Field>
   );
 }
@@ -111,18 +149,43 @@ export function BlockForm({
       return (
         <div className="flex flex-col gap-4">
           <Field label={t('hero.heading')} error={f.heading} required>
-            {(p) => <Input {...p} value={c.heading} maxLength={120} onChange={(e) => set({ heading: e.target.value })} />}
+            {(p) => (
+              <Input
+                {...p}
+                value={c.heading}
+                maxLength={120}
+                onChange={(e) => set({ heading: e.target.value })}
+              />
+            )}
           </Field>
           <Field label={t('hero.subheading')} error={f.subheading}>
-            {(p) => <Textarea {...p} value={c.subheading} maxLength={300} onChange={(e) => set({ subheading: e.target.value })} />}
+            {(p) => (
+              <Textarea
+                {...p}
+                value={c.subheading}
+                maxLength={300}
+                onChange={(e) => set({ subheading: e.target.value })}
+              />
+            )}
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label={t('hero.ctaLabel')} description={t('hero.ctaLabelHint')}>
-              {(p) => <Input {...p} value={c.ctaLabel} maxLength={40} onChange={(e) => set({ ctaLabel: e.target.value })} />}
+              {(p) => (
+                <Input
+                  {...p}
+                  value={c.ctaLabel}
+                  maxLength={40}
+                  onChange={(e) => set({ ctaLabel: e.target.value })}
+                />
+              )}
             </Field>
             <Field label={t('hero.ctaTarget')}>
               {(p) => (
-                <Select {...p} value={c.ctaTarget} onChange={(e) => set({ ctaTarget: e.target.value })}>
+                <Select
+                  {...p}
+                  value={c.ctaTarget}
+                  onChange={(e) => set({ ctaTarget: e.target.value })}
+                >
                   {(['join', 'servers', 'forum', 'chat', 'events', 'url'] as const).map((k) => (
                     <option key={k} value={k}>
                       {t(`hero.targets.${k}`)}
@@ -133,7 +196,15 @@ export function BlockForm({
             </Field>
             {c.ctaTarget === 'url' && (
               <Field label={t('hero.ctaUrl')} error={f.ctaUrl}>
-                {(p) => <Input {...p} type="url" value={c.ctaUrl ?? ''} placeholder="https://" onChange={(e) => set({ ctaUrl: e.target.value || undefined })} />}
+                {(p) => (
+                  <Input
+                    {...p}
+                    type="url"
+                    value={c.ctaUrl ?? ''}
+                    placeholder="https://"
+                    onChange={(e) => set({ ctaUrl: e.target.value || undefined })}
+                  />
+                )}
               </Field>
             )}
             <Field label={t('hero.align')}>
@@ -184,10 +255,24 @@ export function BlockForm({
             renderItem={(r, update, i) => (
               <>
                 <Field label={t('rules.title')} error={f[`rules.${i}.title`]}>
-                  {(p) => <Input {...p} value={r.title} maxLength={120} onChange={(e) => update({ title: e.target.value })} />}
+                  {(p) => (
+                    <Input
+                      {...p}
+                      value={r.title}
+                      maxLength={120}
+                      onChange={(e) => update({ title: e.target.value })}
+                    />
+                  )}
                 </Field>
                 <Field label={t('rules.description')}>
-                  {(p) => <Textarea {...p} value={r.description} maxLength={1000} onChange={(e) => update({ description: e.target.value })} />}
+                  {(p) => (
+                    <Textarea
+                      {...p}
+                      value={r.description}
+                      maxLength={1000}
+                      onChange={(e) => update({ description: e.target.value })}
+                    />
+                  )}
                 </Field>
               </>
             )}
@@ -209,14 +294,35 @@ export function BlockForm({
             renderItem={(l, update, i) => (
               <div className="grid gap-3 sm:grid-cols-[1fr_2fr_10rem]">
                 <Field label={t('links.label')} error={f[`links.${i}.label`]}>
-                  {(p) => <Input {...p} value={l.label} maxLength={60} onChange={(e) => update({ label: e.target.value })} />}
+                  {(p) => (
+                    <Input
+                      {...p}
+                      value={l.label}
+                      maxLength={60}
+                      onChange={(e) => update({ label: e.target.value })}
+                    />
+                  )}
                 </Field>
                 <Field label={t('links.url')} error={f[`links.${i}.url`]}>
-                  {(p) => <Input {...p} type="url" value={l.url} placeholder="https://" onChange={(e) => update({ url: e.target.value })} />}
+                  {(p) => (
+                    <Input
+                      {...p}
+                      type="url"
+                      value={l.url}
+                      placeholder="https://"
+                      onChange={(e) => update({ url: e.target.value })}
+                    />
+                  )}
                 </Field>
                 <Field label={t('links.kind')}>
                   {(p) => (
-                    <Select {...p} value={l.kind} onChange={(e) => update({ kind: e.target.value as (typeof LINK_KINDS)[number] })}>
+                    <Select
+                      {...p}
+                      value={l.kind}
+                      onChange={(e) =>
+                        update({ kind: e.target.value as (typeof LINK_KINDS)[number] })
+                      }
+                    >
                       {LINK_KINDS.map((k) => (
                         <option key={k} value={k}>
                           {t(`links.kinds.${k}`)}
@@ -245,10 +351,24 @@ export function BlockForm({
             renderItem={(item, update, i) => (
               <>
                 <Field label={t('faq.question')} error={f[`items.${i}.q`]}>
-                  {(p) => <Input {...p} value={item.q} maxLength={200} onChange={(e) => update({ q: e.target.value })} />}
+                  {(p) => (
+                    <Input
+                      {...p}
+                      value={item.q}
+                      maxLength={200}
+                      onChange={(e) => update({ q: e.target.value })}
+                    />
+                  )}
                 </Field>
                 <Field label={t('faq.answer')} error={f[`items.${i}.a`]}>
-                  {(p) => <Textarea {...p} value={item.a} maxLength={2000} onChange={(e) => update({ a: e.target.value })} />}
+                  {(p) => (
+                    <Textarea
+                      {...p}
+                      value={item.a}
+                      maxLength={2000}
+                      onChange={(e) => update({ a: e.target.value })}
+                    />
+                  )}
                 </Field>
               </>
             )}
@@ -285,11 +405,30 @@ export function BlockForm({
                   onChange={(k) => update({ key: k ?? '' })}
                   shape="banner"
                 />
-                <Field label={t('gallery.alt')} description={t('gallery.altHint')} error={f[`images.${i}.alt`] ?? f[`images.${i}.key`]} required>
-                  {(p) => <Textarea {...p} value={img.alt} maxLength={500} onChange={(e) => update({ alt: e.target.value })} />}
+                <Field
+                  label={t('gallery.alt')}
+                  description={t('gallery.altHint')}
+                  error={f[`images.${i}.alt`] ?? f[`images.${i}.key`]}
+                  required
+                >
+                  {(p) => (
+                    <Textarea
+                      {...p}
+                      value={img.alt}
+                      maxLength={500}
+                      onChange={(e) => update({ alt: e.target.value })}
+                    />
+                  )}
                 </Field>
                 <Field label={t('gallery.caption')}>
-                  {(p) => <Input {...p} value={img.caption} maxLength={200} onChange={(e) => update({ caption: e.target.value })} />}
+                  {(p) => (
+                    <Input
+                      {...p}
+                      value={img.caption}
+                      maxLength={200}
+                      onChange={(e) => update({ caption: e.target.value })}
+                    />
+                  )}
                 </Field>
               </>
             )}
@@ -313,7 +452,13 @@ export function BlockForm({
                       type="checkbox"
                       className="size-4 accent-[var(--c-primary)]"
                       checked={c.roleIds.includes(r.id)}
-                      onChange={(e) => set({ roleIds: e.target.checked ? [...c.roleIds, r.id] : c.roleIds.filter((x) => x !== r.id) })}
+                      onChange={(e) =>
+                        set({
+                          roleIds: e.target.checked
+                            ? [...c.roleIds, r.id]
+                            : c.roleIds.filter((x) => x !== r.id),
+                        })
+                      }
                     />
                     {r.name}
                   </label>
@@ -329,11 +474,37 @@ export function BlockForm({
       return (
         <div className="flex flex-col gap-4">
           <Heading value={c.heading} onChange={(v) => set({ heading: v })} />
-          <Field label={t('discord.code')} description={t('discord.codeHint')} error={f.code} required>
-            {(p) => <Input {...p} value={c.code} maxLength={32} onChange={(e) => set({ code: e.target.value.replace(/^https?:\/\/(www\.)?(discord\.gg|discord\.com\/invite)\//, '') })} />}
+          <Field
+            label={t('discord.code')}
+            description={t('discord.codeHint')}
+            error={f.code}
+            required
+          >
+            {(p) => (
+              <Input
+                {...p}
+                value={c.code}
+                maxLength={32}
+                onChange={(e) =>
+                  set({
+                    code: e.target.value.replace(
+                      /^https?:\/\/(www\.)?(discord\.gg|discord\.com\/invite)\//,
+                      '',
+                    ),
+                  })
+                }
+              />
+            )}
           </Field>
           <Field label={t('discord.description')}>
-            {(p) => <Input {...p} value={c.description} maxLength={200} onChange={(e) => set({ description: e.target.value })} />}
+            {(p) => (
+              <Input
+                {...p}
+                value={c.description}
+                maxLength={200}
+                onChange={(e) => set({ description: e.target.value })}
+              />
+            )}
           </Field>
         </div>
       );
@@ -346,18 +517,45 @@ export function BlockForm({
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label={t('embed.provider')}>
               {(p) => (
-                <Select {...p} value={c.provider} onChange={(e) => set({ provider: e.target.value })}>
+                <Select
+                  {...p}
+                  value={c.provider}
+                  onChange={(e) => set({ provider: e.target.value })}
+                >
                   <option value="youtube">YouTube</option>
                   <option value="twitch">Twitch</option>
                 </Select>
               )}
             </Field>
-            <Field label={c.provider === 'youtube' ? t('embed.videoId') : t('embed.channel')} error={f.ref} required>
-              {(p) => <Input {...p} value={c.ref} maxLength={64} onChange={(e) => set({ ref: e.target.value.trim() })} />}
+            <Field
+              label={c.provider === 'youtube' ? t('embed.videoId') : t('embed.channel')}
+              error={f.ref}
+              required
+            >
+              {(p) => (
+                <Input
+                  {...p}
+                  value={c.ref}
+                  maxLength={64}
+                  onChange={(e) => set({ ref: e.target.value.trim() })}
+                />
+              )}
             </Field>
           </div>
-          <Field label={t('embed.title')} description={t('embed.titleHint')} error={f.title} required>
-            {(p) => <Input {...p} value={c.title} maxLength={120} onChange={(e) => set({ title: e.target.value })} />}
+          <Field
+            label={t('embed.title')}
+            description={t('embed.titleHint')}
+            error={f.title}
+            required
+          >
+            {(p) => (
+              <Input
+                {...p}
+                value={c.title}
+                maxLength={120}
+                onChange={(e) => set({ title: e.target.value })}
+              />
+            )}
           </Field>
         </div>
       );
@@ -381,7 +579,13 @@ export function BlockForm({
                         type="checkbox"
                         className="size-4 accent-[var(--c-primary)]"
                         checked={c.serverIds.includes(s.id)}
-                        onChange={(e) => set({ serverIds: e.target.checked ? [...c.serverIds, s.id] : c.serverIds.filter((x) => x !== s.id) })}
+                        onChange={(e) =>
+                          set({
+                            serverIds: e.target.checked
+                              ? [...c.serverIds, s.id]
+                              : c.serverIds.filter((x) => x !== s.id),
+                          })
+                        }
                       />
                       {s.name}
                     </label>
@@ -390,7 +594,11 @@ export function BlockForm({
               </ul>
             )}
           </fieldset>
-          <SwitchField label={t('serverStatus.showPlayers')} checked={c.showPlayers} onCheckedChange={(v) => set({ showPlayers: v })} />
+          <SwitchField
+            label={t('serverStatus.showPlayers')}
+            checked={c.showPlayers}
+            onCheckedChange={(v) => set({ showPlayers: v })}
+          />
           <Field label={t('serverStatus.layout')}>
             {(p) => (
               <Select {...p} value={c.layout} onChange={(e) => set({ layout: e.target.value })}>
@@ -409,7 +617,18 @@ export function BlockForm({
         <div className="flex flex-col gap-4">
           <Heading value={c.heading} onChange={(v) => set({ heading: v })} />
           <Field label={t('count')}>
-            {(p) => <Input {...p} type="number" min={1} max={10} value={c.count} onChange={(e) => set({ count: Math.max(1, Math.min(10, Number(e.target.value) || 1)) })} />}
+            {(p) => (
+              <Input
+                {...p}
+                type="number"
+                min={1}
+                max={10}
+                value={c.count}
+                onChange={(e) =>
+                  set({ count: Math.max(1, Math.min(10, Number(e.target.value) || 1)) })
+                }
+              />
+            )}
           </Field>
         </div>
       );
@@ -419,9 +638,21 @@ export function BlockForm({
       return (
         <div className="flex flex-col gap-2">
           <Heading value={c.heading} onChange={(v) => set({ heading: v })} />
-          <SwitchField label={t('stats.members')} checked={c.showMembers} onCheckedChange={(v) => set({ showMembers: v })} />
-          <SwitchField label={t('stats.online')} checked={c.showOnline} onCheckedChange={(v) => set({ showOnline: v })} />
-          <SwitchField label={t('stats.servers')} checked={c.showServers} onCheckedChange={(v) => set({ showServers: v })} />
+          <SwitchField
+            label={t('stats.members')}
+            checked={c.showMembers}
+            onCheckedChange={(v) => set({ showMembers: v })}
+          />
+          <SwitchField
+            label={t('stats.online')}
+            checked={c.showOnline}
+            onCheckedChange={(v) => set({ showOnline: v })}
+          />
+          <SwitchField
+            label={t('stats.servers')}
+            checked={c.showServers}
+            onCheckedChange={(v) => set({ showServers: v })}
+          />
         </div>
       );
     }

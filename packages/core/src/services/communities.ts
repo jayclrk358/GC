@@ -39,9 +39,17 @@ export async function isSlugAvailable(slug: string): Promise<boolean> {
   return rows.length === 0;
 }
 
-export async function createCommunity(userId: string, raw: unknown): Promise<{ id: string; slug: string }> {
+export async function createCommunity(
+  userId: string,
+  raw: unknown,
+): Promise<{ id: string; slug: string }> {
   const input = createCommunitySchema.parse(raw);
-  await enforceRateLimit(`community-create:${userId}`, 5, 24 * 3600, 'You can create up to 5 communities per day.');
+  await enforceRateLimit(
+    `community-create:${userId}`,
+    5,
+    24 * 3600,
+    'You can create up to 5 communities per day.',
+  );
 
   const [{ owned } = { owned: 0 }] = await db
     .select({ owned: count() })
@@ -51,14 +59,19 @@ export async function createCommunity(userId: string, raw: unknown): Promise<{ i
     throw new AppError('forbidden', `You can own up to ${MAX_OWNED_COMMUNITIES} communities.`);
   }
   if (!(await isSlugAvailable(input.slug))) {
-    throw new AppError('conflict', 'That address is already taken.', { fields: { slug: 'Already taken' } });
+    throw new AppError('conflict', 'That address is already taken.', {
+      fields: { slug: 'Already taken' },
+    });
   }
   if (input.gameId) {
     const game = await db.query.games.findFirst({ where: eq(schema.games.id, input.gameId) });
-    if (!game) throw new AppError('validation', 'Unknown game.', { fields: { gameId: 'Unknown game' } });
+    if (!game)
+      throw new AppError('validation', 'Unknown game.', { fields: { gameId: 'Unknown game' } });
   }
 
-  const preset = (PRESET_KEYS as string[]).includes(input.preset) ? (input.preset as PresetKey) : 'magnox';
+  const preset = (PRESET_KEYS as string[]).includes(input.preset)
+    ? (input.preset as PresetKey)
+    : 'magnox';
   const template = TEMPLATES[input.template];
   const id = newId();
 
@@ -122,7 +135,12 @@ export async function createCommunity(userId: string, raw: unknown): Promise<{ i
       );
     }
 
-    await audit(tx, { communityId: id, actorId: userId, action: 'community.create', diff: { template: input.template } });
+    await audit(tx, {
+      communityId: id,
+      actorId: userId,
+      action: 'community.create',
+      diff: { template: input.template },
+    });
   });
 
   return { id, slug: input.slug };
@@ -141,12 +159,16 @@ export async function updateCommunityBasics(ctx: MemberContext, raw: unknown): P
   const input = basicsUpdateSchema.parse(raw);
   if (input.gameId) {
     const game = await db.query.games.findFirst({ where: eq(schema.games.id, input.gameId) });
-    if (!game) throw new AppError('validation', 'Unknown game.', { fields: { gameId: 'Unknown game' } });
+    if (!game)
+      throw new AppError('validation', 'Unknown game.', { fields: { gameId: 'Unknown game' } });
   }
   const before = await getCommunityRow(ctx.community.id);
   const patch = { ...input, ...(input.tags ? { tags: [...new Set(input.tags)] } : {}) };
   await db.transaction(async (tx) => {
-    await tx.update(schema.communities).set(patch).where(eq(schema.communities.id, ctx.community.id));
+    await tx
+      .update(schema.communities)
+      .set(patch)
+      .where(eq(schema.communities.id, ctx.community.id));
     await audit(tx, {
       communityId: ctx.community.id,
       actorId: ctx.userId,
@@ -163,7 +185,10 @@ export async function changeSlug(ctx: MemberContext, raw: unknown): Promise<stri
   await enforceRateLimit(`slug-change:${ctx.community.id}`, 3, 24 * 3600);
   if (!(await isSlugAvailable(slug))) throw conflict('That address is already taken.');
   await db.transaction(async (tx) => {
-    await tx.update(schema.communities).set({ slug }).where(eq(schema.communities.id, ctx.community.id));
+    await tx
+      .update(schema.communities)
+      .set({ slug })
+      .where(eq(schema.communities.id, ctx.community.id));
     await audit(tx, {
       communityId: ctx.community.id,
       actorId: ctx.userId,
@@ -181,7 +206,8 @@ async function assertUploadsExist(keys: (string | undefined)[]): Promise<void> {
     .select({ key: schema.uploads.key })
     .from(schema.uploads)
     .where(inArray(schema.uploads.key, wanted));
-  if (rows.length !== new Set(wanted).size) throw new AppError('validation', 'One of the images could not be found.');
+  if (rows.length !== new Set(wanted).size)
+    throw new AppError('validation', 'One of the images could not be found.');
 }
 
 export async function updateCommunityTheme(ctx: MemberContext, raw: unknown): Promise<Theme> {
@@ -196,8 +222,15 @@ export async function updateCommunityTheme(ctx: MemberContext, raw: unknown): Pr
   }
   await assertUploadsExist([theme.bannerKey, theme.iconKey, theme.backgroundKey]);
   await db.transaction(async (tx) => {
-    await tx.update(schema.communities).set({ theme }).where(eq(schema.communities.id, ctx.community.id));
-    await audit(tx, { communityId: ctx.community.id, actorId: ctx.userId, action: 'community.theme' });
+    await tx
+      .update(schema.communities)
+      .set({ theme })
+      .where(eq(schema.communities.id, ctx.community.id));
+    await audit(tx, {
+      communityId: ctx.community.id,
+      actorId: ctx.userId,
+      action: 'community.theme',
+    });
   });
   return theme;
 }
@@ -206,8 +239,15 @@ export async function updateCommunityNav(ctx: MemberContext, raw: unknown): Prom
   requirePerm(ctx, Permission.MANAGE_COMMUNITY);
   const nav = navSchema.parse(raw);
   await db.transaction(async (tx) => {
-    await tx.update(schema.communities).set({ nav }).where(eq(schema.communities.id, ctx.community.id));
-    await audit(tx, { communityId: ctx.community.id, actorId: ctx.userId, action: 'community.nav' });
+    await tx
+      .update(schema.communities)
+      .set({ nav })
+      .where(eq(schema.communities.id, ctx.community.id));
+    await audit(tx, {
+      communityId: ctx.community.id,
+      actorId: ctx.userId,
+      action: 'community.nav',
+    });
   });
 }
 
@@ -238,7 +278,11 @@ export async function deleteCommunity(ctx: MemberContext, confirmSlug: string): 
       .update(schema.communities)
       .set({ deletedAt: new Date(), slug: `deleted-${ctx.community.id}`, visibility: 'private' })
       .where(eq(schema.communities.id, ctx.community.id));
-    await audit(tx, { communityId: ctx.community.id, actorId: ctx.userId, action: 'community.delete' });
+    await audit(tx, {
+      communityId: ctx.community.id,
+      actorId: ctx.userId,
+      action: 'community.delete',
+    });
   });
 }
 
@@ -323,7 +367,10 @@ export async function exploreCommunities(
       .orderBy(...order)
       .limit(pageSize)
       .offset(page * pageSize),
-    db.select({ n: count() }).from(c).where(and(...where)),
+    db
+      .select({ n: count() })
+      .from(c)
+      .where(and(...where)),
   ]);
   return { items: rows, total: totals[0]?.n ?? 0, page, pageSize };
 }

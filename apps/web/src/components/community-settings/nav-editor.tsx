@@ -12,7 +12,15 @@ import { Badge } from '@/components/ui/misc';
 import { Switch } from '@/components/ui/switch';
 import { updateNavAction } from '@/app/actions/communities';
 
-export function NavEditor({ communityId, initial, available }: { communityId: string; initial: NavConfig; available: string[] }) {
+export function NavEditor({
+  communityId,
+  initial,
+  available,
+}: {
+  communityId: string;
+  initial: NavConfig;
+  available: string[];
+}) {
   const t = useTranslations('csettings');
   const tc = useTranslations('community');
   const router = useRouter();
@@ -26,7 +34,13 @@ export function NavEditor({ communityId, initial, available }: { communityId: st
     const next = [...items];
     [next[i], next[j]] = [next[j]!, next[i]!];
     setItems(next);
-    setAnnounce(t('navigation.moved', { tab: tc(`tabs.${next[j]!.tab}`), position: j + 1, total: next.length }));
+    setAnnounce(
+      t('navigation.moved', {
+        tab: tc(`tabs.${next[j]!.tab}`),
+        position: j + 1,
+        total: next.length,
+      }),
+    );
   }
 
   async function save() {
@@ -51,10 +65,22 @@ export function NavEditor({ communityId, initial, available }: { communityId: st
           return (
             <li key={item.tab} className="flex flex-wrap items-center gap-3 p-3">
               <div className="flex flex-col">
-                <Button size="icon-sm" variant="ghost" disabled={i === 0} onClick={() => move(i, -1)} aria-label={t('navigation.moveUp', { tab: name })}>
+                <Button
+                  size="icon-sm"
+                  variant="ghost"
+                  disabled={i === 0}
+                  onClick={() => move(i, -1)}
+                  aria-label={t('navigation.moveUp', { tab: name })}
+                >
                   <ArrowUp aria-hidden />
                 </Button>
-                <Button size="icon-sm" variant="ghost" disabled={i === items.length - 1} onClick={() => move(i, 1)} aria-label={t('navigation.moveDown', { tab: name })}>
+                <Button
+                  size="icon-sm"
+                  variant="ghost"
+                  disabled={i === items.length - 1}
+                  onClick={() => move(i, 1)}
+                  aria-label={t('navigation.moveDown', { tab: name })}
+                >
                   <ArrowDown aria-hidden />
                 </Button>
               </div>
@@ -69,13 +95,17 @@ export function NavEditor({ communityId, initial, available }: { communityId: st
                 placeholder={name}
                 maxLength={24}
                 value={item.label}
-                onChange={(e) => setItems(items.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))}
+                onChange={(e) =>
+                  setItems(items.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))
+                }
               />
               <label className="ms-auto flex items-center gap-2 text-sm">
                 <Switch
                   checked={item.visible}
                   disabled={item.tab === 'home'}
-                  onCheckedChange={(c) => setItems(items.map((x, j) => (j === i ? { ...x, visible: c } : x)))}
+                  onCheckedChange={(c) =>
+                    setItems(items.map((x, j) => (j === i ? { ...x, visible: c } : x)))
+                  }
                   aria-label={t('navigation.show', { tab: name })}
                 />
                 <span aria-hidden>{t('navigation.visible')}</span>

@@ -11,7 +11,8 @@ const TYPES: Record<string, string> = {
 export async function GET(_req: Request, { params }: { params: Promise<{ key: string[] }> }) {
   if (env().STORAGE_DRIVER !== 'local') return new Response('Not found', { status: 404 });
   const key = (await params).key.join('/');
-  if (!/^u\/[a-z0-9]{8,40}\.(webp|png|jpg|gif)$/.test(key)) return new Response('Not found', { status: 404 });
+  if (!/^u\/[a-z0-9]{8,40}\.(webp|png|jpg|gif)$/.test(key))
+    return new Response('Not found', { status: 404 });
   const body = await storage().get(key);
   if (!body) return new Response('Not found', { status: 404 });
   const ext = key.split('.').pop()!;

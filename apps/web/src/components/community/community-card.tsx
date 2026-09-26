@@ -17,16 +17,30 @@ export async function CommunityCard({ c }: { c: Card }) {
       <div className="relative h-24" data-decorative aria-hidden>
         {banner ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={banner} alt="" className="size-full object-cover" style={{ objectPosition: `50% ${theme.bannerFocalY}%` }} />
+          <img
+            src={banner}
+            alt=""
+            className="size-full object-cover"
+            style={{ objectPosition: `50% ${theme.bannerFocalY}%` }}
+          />
         ) : (
-          <div className="size-full" style={{ background: `linear-gradient(135deg, ${theme.light.primary}, ${theme.light.accent})` }} />
+          <div
+            className="size-full"
+            style={{
+              background: `linear-gradient(135deg, ${theme.light.primary}, ${theme.light.accent})`,
+            }}
+          />
         )}
       </div>
       <div className="flex flex-1 flex-col gap-2 p-4 pt-0">
         <div className="-mt-7">
           {icon ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={icon} alt="" className="size-14 rounded-ui border-4 border-surface bg-surface object-cover" />
+            <img
+              src={icon}
+              alt=""
+              className="size-14 rounded-ui border-4 border-surface bg-surface object-cover"
+            />
           ) : (
             <span
               aria-hidden
@@ -38,7 +52,10 @@ export async function CommunityCard({ c }: { c: Card }) {
           )}
         </div>
         <h3 className="text-lg font-bold">
-          <Link href={`/c/${c.slug}`} className="after:absolute after:inset-0 focus-visible:outline-none">
+          <Link
+            href={`/c/${c.slug}`}
+            className="after:absolute after:inset-0 focus-visible:outline-none"
+          >
             {c.name}
           </Link>
         </h3>

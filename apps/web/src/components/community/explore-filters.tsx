@@ -35,8 +35,18 @@ export function ExploreFilters({
       <Field label={t('search')}>
         {(p) => (
           <div className="relative">
-            <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden />
-            <Input {...p} name="q" type="search" defaultValue={values.q ?? ''} placeholder={t('searchPlaceholder')} className="ps-9" />
+            <Search
+              className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted"
+              aria-hidden
+            />
+            <Input
+              {...p}
+              name="q"
+              type="search"
+              defaultValue={values.q ?? ''}
+              placeholder={t('searchPlaceholder')}
+              className="ps-9"
+            />
           </div>
         )}
       </Field>

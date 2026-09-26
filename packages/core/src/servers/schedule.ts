@@ -33,7 +33,11 @@ export function nextPollDelay(s: PollState, jitter = 0): number {
   return Math.round(raw * (1 + 0.1 * j));
 }
 
-export function shouldGoDormant(opts: { lastOnlineAt: Date | null; createdAt: Date; now: Date }): boolean {
+export function shouldGoDormant(opts: {
+  lastOnlineAt: Date | null;
+  createdAt: Date;
+  now: Date;
+}): boolean {
   const since = opts.lastOnlineAt ?? opts.createdAt;
   return opts.now.getTime() - since.getTime() >= POLL.dormantAfterMs;
 }
@@ -41,7 +45,11 @@ export function shouldGoDormant(opts: { lastOnlineAt: Date | null; createdAt: Da
 /** Strip Minecraft formatting codes (§x) and control characters from server-reported text. */
 export function cleanServerText(value: unknown, max = 200): string | null {
   if (typeof value !== 'string') return null;
-  // eslint-disable-next-line no-control-regex
-  const cleaned = value.replace(/§[0-9a-fk-or]/gi, '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim();
+  const cleaned = value
+    .replace(/§[0-9a-fk-or]/gi, '')
+    // eslint-disable-next-line no-control-regex -- stripping control characters is the point
+    .replace(/[\u0000-\u001f\u007f]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
   return cleaned ? cleaned.slice(0, max) : null;
 }

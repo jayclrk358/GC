@@ -71,7 +71,10 @@ const UploadImage = Image.extend({
     return [];
   },
   renderHTML({ HTMLAttributes }) {
-    return ['img', mergeAttributes(HTMLAttributes, { src: mediaUrl(String(HTMLAttributes.src ?? '')) ?? '' })];
+    return [
+      'img',
+      mergeAttributes(HTMLAttributes, { src: mediaUrl(String(HTMLAttributes.src ?? '')) ?? '' }),
+    ];
   },
 });
 
@@ -112,7 +115,7 @@ export function RichTextEditor({
   const [alt, setAlt] = React.useState('');
   const [imageError, setImageError] = React.useState<string | null>(null);
   const [uploading, setUploading] = React.useState(false);
-  const fileRef = React.useRef<HTMLInputElement>(null);
+  const fileInputId = React.useId();
   const toolbarRef = React.useRef<HTMLDivElement>(null);
   const [, force] = React.useReducer((x: number) => x + 1, 0);
 
@@ -152,11 +155,41 @@ export function RichTextEditor({
 
   const tools: ToolButton[][] = [
     [
-      { id: 'bold', label: t('bold'), icon: <Bold />, run: (e) => e.chain().focus().toggleBold().run(), active: (e) => e.isActive('bold') },
-      { id: 'italic', label: t('italic'), icon: <Italic />, run: (e) => e.chain().focus().toggleItalic().run(), active: (e) => e.isActive('italic') },
-      { id: 'strike', label: t('strike'), icon: <Strikethrough />, run: (e) => e.chain().focus().toggleStrike().run(), active: (e) => e.isActive('strike') },
-      { id: 'code', label: t('code'), icon: <Code />, run: (e) => e.chain().focus().toggleCode().run(), active: (e) => e.isActive('code') },
-      { id: 'spoiler', label: t('spoiler'), icon: <EyeOff />, run: (e) => e.chain().focus().toggleSpoiler().run(), active: (e) => e.isActive('spoiler') },
+      {
+        id: 'bold',
+        label: t('bold'),
+        icon: <Bold />,
+        run: (e) => e.chain().focus().toggleBold().run(),
+        active: (e) => e.isActive('bold'),
+      },
+      {
+        id: 'italic',
+        label: t('italic'),
+        icon: <Italic />,
+        run: (e) => e.chain().focus().toggleItalic().run(),
+        active: (e) => e.isActive('italic'),
+      },
+      {
+        id: 'strike',
+        label: t('strike'),
+        icon: <Strikethrough />,
+        run: (e) => e.chain().focus().toggleStrike().run(),
+        active: (e) => e.isActive('strike'),
+      },
+      {
+        id: 'code',
+        label: t('code'),
+        icon: <Code />,
+        run: (e) => e.chain().focus().toggleCode().run(),
+        active: (e) => e.isActive('code'),
+      },
+      {
+        id: 'spoiler',
+        label: t('spoiler'),
+        icon: <EyeOff />,
+        run: (e) => e.chain().focus().toggleSpoiler().run(),
+        active: (e) => e.isActive('spoiler'),
+      },
       {
         id: 'link',
         label: t('link'),
@@ -170,18 +203,76 @@ export function RichTextEditor({
       },
     ],
     [
-      { id: 'h2', label: t('heading2'), icon: <Heading2 />, run: (e) => e.chain().focus().toggleHeading({ level: 2 }).run(), active: (e) => e.isActive('heading', { level: 2 }) },
-      { id: 'h3', label: t('heading3'), icon: <Heading3 />, run: (e) => e.chain().focus().toggleHeading({ level: 3 }).run(), active: (e) => e.isActive('heading', { level: 3 }) },
-      { id: 'ul', label: t('bulletList'), icon: <List />, run: (e) => e.chain().focus().toggleBulletList().run(), active: (e) => e.isActive('bulletList') },
-      { id: 'ol', label: t('orderedList'), icon: <ListOrdered />, run: (e) => e.chain().focus().toggleOrderedList().run(), active: (e) => e.isActive('orderedList') },
-      { id: 'quote', label: t('quote'), icon: <Quote />, run: (e) => e.chain().focus().toggleBlockquote().run(), active: (e) => e.isActive('blockquote') },
-      { id: 'codeblock', label: t('codeBlock'), icon: <SquareCode />, run: (e) => e.chain().focus().toggleCodeBlock().run(), active: (e) => e.isActive('codeBlock') },
-      { id: 'hr', label: t('divider'), icon: <Minus />, run: (e) => e.chain().focus().setHorizontalRule().run() },
-      { id: 'image', label: t('image'), icon: <ImagePlus />, run: () => fileRef.current?.click() },
+      {
+        id: 'h2',
+        label: t('heading2'),
+        icon: <Heading2 />,
+        run: (e) => e.chain().focus().toggleHeading({ level: 2 }).run(),
+        active: (e) => e.isActive('heading', { level: 2 }),
+      },
+      {
+        id: 'h3',
+        label: t('heading3'),
+        icon: <Heading3 />,
+        run: (e) => e.chain().focus().toggleHeading({ level: 3 }).run(),
+        active: (e) => e.isActive('heading', { level: 3 }),
+      },
+      {
+        id: 'ul',
+        label: t('bulletList'),
+        icon: <List />,
+        run: (e) => e.chain().focus().toggleBulletList().run(),
+        active: (e) => e.isActive('bulletList'),
+      },
+      {
+        id: 'ol',
+        label: t('orderedList'),
+        icon: <ListOrdered />,
+        run: (e) => e.chain().focus().toggleOrderedList().run(),
+        active: (e) => e.isActive('orderedList'),
+      },
+      {
+        id: 'quote',
+        label: t('quote'),
+        icon: <Quote />,
+        run: (e) => e.chain().focus().toggleBlockquote().run(),
+        active: (e) => e.isActive('blockquote'),
+      },
+      {
+        id: 'codeblock',
+        label: t('codeBlock'),
+        icon: <SquareCode />,
+        run: (e) => e.chain().focus().toggleCodeBlock().run(),
+        active: (e) => e.isActive('codeBlock'),
+      },
+      {
+        id: 'hr',
+        label: t('divider'),
+        icon: <Minus />,
+        run: (e) => e.chain().focus().setHorizontalRule().run(),
+      },
+      {
+        id: 'image',
+        label: t('image'),
+        icon: <ImagePlus />,
+        run: () => document.getElementById(fileInputId)?.click(),
+      },
     ],
     [
-      { id: 'undo', label: t('undo'), icon: <Undo2 />, run: (e) => e.chain().focus().undo().run(), disabled: (e) => !e.can().undo() },
-      { id: 'redo', label: t('redo'), icon: <Redo2 />, run: (e) => e.chain().focus().redo().run(), disabled: (e) => !e.can().redo() },
+      {
+        id: 'undo',
+        label: t('undo'),
+        icon: <Undo2 />,
+        run: (e) => e.chain().focus().undo().run(),
+        disabled: (e) => !e.can().undo(),
+      },
+      {
+        id: 'redo',
+        label: t('redo'),
+        icon: <Redo2 />,
+        run: (e) => e.chain().focus().redo().run(),
+        disabled: (e) => !e.can().redo(),
+      },
     ],
   ];
 
@@ -189,7 +280,9 @@ export function RichTextEditor({
   const [focusIndex, setFocusIndex] = React.useState(0);
   const flat = tools.flat();
   function onToolbarKey(e: React.KeyboardEvent) {
-    const buttons = Array.from(toolbarRef.current?.querySelectorAll<HTMLButtonElement>('button') ?? []);
+    const buttons = Array.from(
+      toolbarRef.current?.querySelectorAll<HTMLButtonElement>('button') ?? [],
+    );
     let next = focusIndex;
     if (e.key === 'ArrowRight') next = (focusIndex + 1) % buttons.length;
     else if (e.key === 'ArrowLeft') next = (focusIndex - 1 + buttons.length) % buttons.length;
@@ -243,7 +336,11 @@ export function RichTextEditor({
                   onFocus={() => setFocusIndex(index)}
                   aria-label={tool.label}
                   aria-pressed={tool.active ? Boolean(active) : undefined}
-                  disabled={!editor || (tool.disabled ? tool.disabled(editor) : false) || (tool.id === 'image' && uploading)}
+                  disabled={
+                    !editor ||
+                    (tool.disabled ? tool.disabled(editor) : false) ||
+                    (tool.id === 'image' && uploading)
+                  }
                   onClick={() => editor && tool.run(editor)}
                   className={cn(
                     'grid size-8 place-items-center rounded-ui-sm text-muted hover:bg-surface-2 hover:text-fg disabled:opacity-40 [&_svg]:size-4',
@@ -256,9 +353,21 @@ export function RichTextEditor({
             })}
           </React.Fragment>
         ))}
-        {uploading && <span className="ms-2 text-xs text-muted" role="status">{t('uploading')}</span>}
+        {uploading && (
+          <span className="ms-2 text-xs text-muted" role="status">
+            {t('uploading')}
+          </span>
+        )}
       </div>
-      <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" onChange={onFile} tabIndex={-1} aria-hidden />
+      <input
+        id={fileInputId}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif"
+        className="hidden"
+        onChange={onFile}
+        tabIndex={-1}
+        aria-hidden
+      />
       {imageError && (
         <p role="alert" className="px-3 pt-2 text-sm text-danger">
           {imageError}
@@ -284,7 +393,15 @@ export function RichTextEditor({
                 return;
               }
               if (editor.state.selection.empty && !editor.isActive('link')) {
-                editor.chain().focus().insertContent({ type: 'text', text: url, marks: [{ type: 'link', attrs: { href: url } }] }).run();
+                editor
+                  .chain()
+                  .focus()
+                  .insertContent({
+                    type: 'text',
+                    text: url,
+                    marks: [{ type: 'link', attrs: { href: url } }],
+                  })
+                  .run();
               } else {
                 editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
               }
@@ -292,7 +409,16 @@ export function RichTextEditor({
             }}
           >
             <Field label={t('linkUrl')} error={linkError} description={t('linkHint')}>
-              {(p) => <Input {...p} type="url" value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} placeholder="https://" autoFocus />}
+              {(p) => (
+                <Input
+                  {...p}
+                  type="url"
+                  value={linkUrl}
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                  placeholder="https://"
+                  autoFocus
+                />
+              )}
             </Field>
             <div className="flex justify-end gap-2">
               <Button type="button" variant="ghost" onClick={() => setLinkOpen(false)}>
@@ -324,8 +450,21 @@ export function RichTextEditor({
               // eslint-disable-next-line @next/next/no-img-element
               <img src={pendingImage.url} alt="" className="max-h-48 rounded-ui object-contain" />
             )}
-            <Field label={t('altLabel')} description={t('altHint')} required={altRequired} error={imageError}>
-              {(p) => <Textarea {...p} value={alt} maxLength={1000} onChange={(e) => setAlt(e.target.value)} autoFocus />}
+            <Field
+              label={t('altLabel')}
+              description={t('altHint')}
+              required={altRequired}
+              error={imageError}
+            >
+              {(p) => (
+                <Textarea
+                  {...p}
+                  value={alt}
+                  maxLength={1000}
+                  onChange={(e) => setAlt(e.target.value)}
+                  autoFocus
+                />
+              )}
             </Field>
             <div className="flex justify-end gap-2">
               {!altRequired && (
@@ -333,7 +472,8 @@ export function RichTextEditor({
                   type="button"
                   variant="ghost"
                   onClick={() => {
-                    if (editor && pendingImage) editor.chain().focus().setImage({ src: pendingImage.key, alt: '' }).run();
+                    if (editor && pendingImage)
+                      editor.chain().focus().setImage({ src: pendingImage.key, alt: '' }).run();
                     setPendingImage(null);
                   }}
                 >

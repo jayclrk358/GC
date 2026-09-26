@@ -35,7 +35,8 @@ async function assertOwnUpload(userId: string, key: string | null | undefined, p
   const row = await db.query.uploads.findFirst({
     where: and(eq(schema.uploads.key, key), eq(schema.uploads.ownerId, userId)),
   });
-  if (!row || row.purpose !== purpose) throw new AppError('validation', 'That image could not be found.');
+  if (!row || row.purpose !== purpose)
+    throw new AppError('validation', 'That image could not be found.');
 }
 
 export async function updateProfile(userId: string, raw: unknown): Promise<void> {
@@ -43,7 +44,10 @@ export async function updateProfile(userId: string, raw: unknown): Promise<void>
   await assertOwnUpload(userId, input.avatarKey, 'avatar');
   await assertOwnUpload(userId, input.bannerKey, 'banner');
   if (input.favoriteGames.length) {
-    const rows = await db.select({ id: schema.games.id }).from(schema.games).where(inArray(schema.games.id, input.favoriteGames));
+    const rows = await db
+      .select({ id: schema.games.id })
+      .from(schema.games)
+      .where(inArray(schema.games.id, input.favoriteGames));
     input.favoriteGames = rows.map((r) => r.id);
   }
   await db.transaction(async (tx) => {
@@ -62,20 +66,29 @@ export async function updateProfile(userId: string, raw: unknown): Promise<void>
       .values({ userId, ...values })
       .onConflictDoUpdate({ target: schema.userProfiles.userId, set: values });
     if (input.avatarKey !== undefined) {
-      await tx.update(schema.users).set({ image: mediaUrl(input.avatarKey) }).where(eq(schema.users.id, userId));
+      await tx
+        .update(schema.users)
+        .set({ image: mediaUrl(input.avatarKey) })
+        .where(eq(schema.users.id, userId));
     }
   });
 }
 
 export async function getOwnProfile(userId: string) {
-  const profile = await db.query.userProfiles.findFirst({ where: eq(schema.userProfiles.userId, userId) });
+  const profile = await db.query.userProfiles.findFirst({
+    where: eq(schema.userProfiles.userId, userId),
+  });
   return profile ?? null;
 }
 
 export async function getPublicProfile(username: string) {
-  const user = await db.query.users.findFirst({ where: eq(schema.users.username, username.toLowerCase()) });
+  const user = await db.query.users.findFirst({
+    where: eq(schema.users.username, username.toLowerCase()),
+  });
   if (!user || user.banned) return null;
-  const profile = await db.query.userProfiles.findFirst({ where: eq(schema.userProfiles.userId, user.id) });
+  const profile = await db.query.userProfiles.findFirst({
+    where: eq(schema.userProfiles.userId, user.id),
+  });
   const games = profile?.favoriteGames.length
     ? await db
         .select({ id: schema.games.id, name: schema.games.name })

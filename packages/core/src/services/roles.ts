@@ -58,7 +58,8 @@ export async function createRole(ctx: MemberContext, raw: unknown): Promise<Role
   const permissions = parsePermissions(input.permissions);
   assertCanGrant(ctx, permissions);
   const existing = await listRoles(ctx.community.id);
-  if (existing.length >= 100) throw new AppError('forbidden', 'A community can have up to 100 roles.');
+  if (existing.length >= 100)
+    throw new AppError('forbidden', 'A community can have up to 100 roles.');
 
   const role = await db.transaction(async (tx) => {
     // New roles go to the bottom of the hierarchy, just above @everyone.
@@ -81,7 +82,14 @@ export async function createRole(ctx: MemberContext, raw: unknown): Promise<Role
         position: 1,
       })
       .returning();
-    await audit(tx, { communityId: ctx.community.id, actorId: ctx.userId, action: 'role.create', targetType: 'role', targetId: row!.id, diff: { name: input.name } });
+    await audit(tx, {
+      communityId: ctx.community.id,
+      actorId: ctx.userId,
+      action: 'role.create',
+      targetType: 'role',
+      targetId: row!.id,
+      diff: { name: input.name },
+    });
     return row!;
   });
   await bumpPermVersion(ctx.community.id);
@@ -117,7 +125,10 @@ export async function updateRole(ctx: MemberContext, roleId: string, raw: unknow
       targetId: role.id,
       diff: {
         name: role.name !== input.name ? { from: role.name, to: input.name } : undefined,
-        permissions: role.permissions !== permissions ? { from: String(role.permissions), to: String(permissions) } : undefined,
+        permissions:
+          role.permissions !== permissions
+            ? { from: String(role.permissions), to: String(permissions) }
+            : undefined,
       },
     });
   });
@@ -133,8 +144,20 @@ export async function deleteRole(ctx: MemberContext, roleId: string): Promise<vo
     await tx.delete(schema.roles).where(eq(schema.roles.id, role.id));
     await tx
       .delete(schema.permissionOverwrites)
-      .where(and(eq(schema.permissionOverwrites.targetType, 'role'), eq(schema.permissionOverwrites.targetId, role.id)));
-    await audit(tx, { communityId: ctx.community.id, actorId: ctx.userId, action: 'role.delete', targetType: 'role', targetId: role.id, diff: { name: role.name } });
+      .where(
+        and(
+          eq(schema.permissionOverwrites.targetType, 'role'),
+          eq(schema.permissionOverwrites.targetId, role.id),
+        ),
+      );
+    await audit(tx, {
+      communityId: ctx.community.id,
+      actorId: ctx.userId,
+      action: 'role.delete',
+      targetType: 'role',
+      targetId: role.id,
+      diff: { name: role.name },
+    });
   });
   await bumpPermVersion(ctx.community.id);
 }
@@ -156,7 +179,10 @@ export async function reorderRoles(ctx: MemberContext, orderedIds: unknown): Pro
   const positions = manageable.map((r) => r.position).sort((a, b) => b - a);
   await db.transaction(async (tx) => {
     for (let i = 0; i < ids.length; i++) {
-      await tx.update(schema.roles).set({ position: positions[i]! }).where(eq(schema.roles.id, ids[i]!));
+      await tx
+        .update(schema.roles)
+        .set({ position: positions[i]! })
+        .where(eq(schema.roles.id, ids[i]!));
     }
     await audit(tx, { communityId: ctx.community.id, actorId: ctx.userId, action: 'role.reorder' });
   });
@@ -168,7 +194,9 @@ async function targetTopPosition(communityId: string, userId: string): Promise<n
     .select({ position: schema.roles.position })
     .from(schema.memberRoles)
     .innerJoin(schema.roles, eq(schema.roles.id, schema.memberRoles.roleId))
-    .where(and(eq(schema.memberRoles.communityId, communityId), eq(schema.memberRoles.userId, userId)));
+    .where(
+      and(eq(schema.memberRoles.communityId, communityId), eq(schema.memberRoles.userId, userId)),
+    );
   return Math.max(0, ...rows.map((r) => r.position));
 }
 
@@ -251,7 +279,12 @@ export async function roleIdsForMembers(communityId: string, userIds: string[]) 
   const rows = await db
     .select({ userId: schema.memberRoles.userId, roleId: schema.memberRoles.roleId })
     .from(schema.memberRoles)
-    .where(and(eq(schema.memberRoles.communityId, communityId), inArray(schema.memberRoles.userId, userIds)))
+    .where(
+      and(
+        eq(schema.memberRoles.communityId, communityId),
+        inArray(schema.memberRoles.userId, userIds),
+      ),
+    )
     .orderBy(asc(schema.memberRoles.roleId));
   const map = new Map<string, string[]>();
   for (const r of rows) map.set(r.userId, [...(map.get(r.userId) ?? []), r.roleId]);

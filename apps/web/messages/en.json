@@ -634,7 +634,6 @@
     "colorsTitle": "Colours",
     "colorsDesc": "Set colours for both light and dark mode. Visitors see the mode they prefer.",
     "schemeTabs": "Colour scheme to edit",
-    "colorsFor": "{scheme} colours",
     "schemes": {
       "light": "Light",
       "dark": "Dark"
@@ -939,7 +938,9 @@
       "members": "Show member count",
       "online": "Show online count",
       "servers": "Show server numbers"
-    }
+    },
+    "saving": "Saving…",
+    "allSaved": "All changes saved"
   },
   "editor": {
     "placeholder": "Write something…",
@@ -1177,7 +1178,7 @@
     "refresh": "Refresh",
     "checkNow": "Check now",
     "refreshQueued": "Checking the server now…",
-    "refreshCached": "Checked less than 30 seconds ago.",
+    "refreshCached": "Checked moments ago. Checking again in {seconds, plural, one {# second} other {# seconds}}.",
     "edit": "Edit",
     "remove": "Remove",
     "empty": "No servers yet",
@@ -1189,5 +1190,13 @@
     "removeTitle": "Remove server?",
     "removeConfirm": "{name} will be removed from this community.",
     "cancel": "Cancel"
+  },
+  "themeToggle": {
+    "label": "Colour scheme: {current}",
+    "title": "Colour scheme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "Match system",
+    "more": "More display settings…"
   }
 }

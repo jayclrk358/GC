@@ -57,7 +57,9 @@ interface QueryOutcome {
 async function query(protocol: ServerProtocol, host: string, port: number): Promise<QueryOutcome> {
   let target;
   try {
-    target = await resolveTarget(host, port, { srvService: protocol === 'minecraft' ? '_minecraft._tcp' : undefined });
+    target = await resolveTarget(host, port, {
+      srvService: protocol === 'minecraft' ? '_minecraft._tcp' : undefined,
+    });
   } catch (e) {
     if (e instanceof BlockedAddressError) return { ok: false, error: 'blocked' };
     if (e instanceof UnresolvableHostError) return { ok: false, error: 'dns' };
@@ -92,12 +94,17 @@ async function query(protocol: ServerProtocol, host: string, port: number): Prom
 
 function extractMotd(result: QueryResult): string {
   const raw = result.raw as Record<string, unknown> | undefined;
-  const desc = raw?.vanilla && typeof raw.vanilla === 'object' ? (raw.vanilla as Record<string, unknown>).raw : undefined;
+  const desc =
+    raw?.vanilla && typeof raw.vanilla === 'object'
+      ? (raw.vanilla as Record<string, unknown>).raw
+      : undefined;
   return JSON.stringify([result.name, desc ?? null, raw?.description ?? null]).slice(0, 20_000);
 }
 
 export async function pollEndpoint(endpointId: string): Promise<void> {
-  const endpoint = await db.query.serverEndpoints.findFirst({ where: eq(schema.serverEndpoints.id, endpointId) });
+  const endpoint = await db.query.serverEndpoints.findFirst({
+    where: eq(schema.serverEndpoints.id, endpointId),
+  });
   if (!endpoint) return;
 
   const listings = await db
@@ -108,14 +115,21 @@ export async function pollEndpoint(endpointId: string): Promise<void> {
       verifyToken: schema.gameServers.verifyToken,
     })
     .from(schema.gameServers)
-    .where(and(eq(schema.gameServers.endpointId, endpointId), isNull(schema.gameServers.deletedAt)));
+    .where(
+      and(eq(schema.gameServers.endpointId, endpointId), isNull(schema.gameServers.deletedAt)),
+    );
 
   if (listings.length === 0) {
-    await db.update(schema.serverEndpoints).set({ dormant: true }).where(eq(schema.serverEndpoints.id, endpointId));
+    await db
+      .update(schema.serverEndpoints)
+      .set({ dormant: true })
+      .where(eq(schema.serverEndpoints.id, endpointId));
     return;
   }
 
-  const protocol = (endpoint.protocol in SERVER_PROTOCOLS ? endpoint.protocol : 'source') as ServerProtocol;
+  const protocol = (
+    endpoint.protocol in SERVER_PROTOCOLS ? endpoint.protocol : 'source'
+  ) as ServerProtocol;
   const outcome = await query(protocol, endpoint.host, endpoint.port);
   const now = new Date();
   const hot = Boolean(endpoint.hotUntil && endpoint.hotUntil > now);
@@ -136,7 +150,9 @@ export async function pollEndpoint(endpointId: string): Promise<void> {
     update = {
       online: true,
       players: players === null ? null : Math.max(0, Math.min(1_000_000, players)),
-      maxPlayers: Number.isFinite(r.maxplayers) ? Math.max(0, Math.min(1_000_000, r.maxplayers)) : null,
+      maxPlayers: Number.isFinite(r.maxplayers)
+        ? Math.max(0, Math.min(1_000_000, r.maxplayers))
+        : null,
       map: cleanServerText(r.map, 80),
       version: cleanServerText(r.version, 60),
       reportedName: cleanServerText(r.name, 200),
@@ -146,19 +162,31 @@ export async function pollEndpoint(endpointId: string): Promise<void> {
       lastOnlineAt: now,
       failCount: 0,
       lastError: null,
-      nextPollAt: new Date(now.getTime() + nextPollDelay({ ok: true, failCount: 0, hot, important }, Math.random() * 2 - 1)),
+      nextPollAt: new Date(
+        now.getTime() +
+          nextPollDelay({ ok: true, failCount: 0, hot, important }, Math.random() * 2 - 1),
+      ),
     };
 
     // Ownership verification: the token must appear in the server name/MOTD.
     const motd = extractMotd(r);
     const toVerify = listings.filter((l) => !l.verifiedAt && motd.includes(l.verifyToken));
     for (const l of toVerify) {
-      await db.update(schema.gameServers).set({ verifiedAt: now }).where(eq(schema.gameServers.id, l.id));
-      log.info({ serverId: l.id }, 'server verified');
+      // Two polls can overlap (scheduled + manual); only the first one records verification.
+      const updated = await db
+        .update(schema.gameServers)
+        .set({ verifiedAt: now })
+        .where(and(eq(schema.gameServers.id, l.id), isNull(schema.gameServers.verifiedAt)))
+        .returning({ id: schema.gameServers.id });
+      if (updated.length) log.info({ serverId: l.id }, 'server verified');
     }
   } else {
     const failCount = endpoint.failCount + 1;
-    const dormant = shouldGoDormant({ lastOnlineAt: endpoint.lastOnlineAt, createdAt: endpoint.createdAt, now });
+    const dormant = shouldGoDormant({
+      lastOnlineAt: endpoint.lastOnlineAt,
+      createdAt: endpoint.createdAt,
+      now,
+    });
     update = {
       online: false,
       players: null,
@@ -167,7 +195,10 @@ export async function pollEndpoint(endpointId: string): Promise<void> {
       failCount,
       lastError: outcome.error ?? 'timeout',
       dormant,
-      nextPollAt: new Date(now.getTime() + nextPollDelay({ ok: false, failCount, hot, important }, Math.random() * 2 - 1)),
+      nextPollAt: new Date(
+        now.getTime() +
+          nextPollDelay({ ok: false, failCount, hot, important }, Math.random() * 2 - 1),
+      ),
     };
   }
 
@@ -177,7 +208,10 @@ export async function pollEndpoint(endpointId: string): Promise<void> {
     .where(eq(schema.serverEndpoints.id, endpointId))
     .returning();
   if (row) {
-    realtime().to(rooms.server(endpointId)).emit('server:status', { endpointId, status: endpointStatus(row) });
+    realtime()
+      .to(rooms.server(endpointId))
+      .emit('server:status', { endpointId, status: endpointStatus(row) });
+    log.debug({ endpointId, online: row.online, players: row.players }, 'status published');
   }
 }
 
@@ -186,5 +220,10 @@ export async function wakeHotDormant(): Promise<void> {
   await db
     .update(schema.serverEndpoints)
     .set({ dormant: false, nextPollAt: new Date() })
-    .where(and(eq(schema.serverEndpoints.dormant, true), gt(schema.serverEndpoints.hotUntil, new Date())));
+    .where(
+      and(
+        eq(schema.serverEndpoints.dormant, true),
+        gt(schema.serverEndpoints.hotUntil, new Date()),
+      ),
+    );
 }

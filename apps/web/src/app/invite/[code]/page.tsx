@@ -47,7 +47,10 @@ export default async function InvitePage({ params }: { params: Promise<{ code: s
             <span
               aria-hidden
               className="grid size-20 place-items-center rounded-ui-lg text-3xl font-extrabold"
-              style={{ background: invite.theme.light.primary, color: invite.theme.light.onPrimary }}
+              style={{
+                background: invite.theme.light.primary,
+                color: invite.theme.light.onPrimary,
+              }}
             >
               {invite.name.slice(0, 1).toUpperCase()}
             </span>
@@ -57,7 +60,12 @@ export default async function InvitePage({ params }: { params: Promise<{ code: s
           </p>
           <h1 className="text-2xl font-extrabold">{invite.name}</h1>
           {invite.tagline && <p className="text-muted">{invite.tagline}</p>}
-          <p className="text-sm text-muted">{t('memberCount', { count: invite.memberCount, formatted: formatCount(invite.memberCount) })}</p>
+          <p className="text-sm text-muted">
+            {t('memberCount', {
+              count: invite.memberCount,
+              formatted: formatCount(invite.memberCount),
+            })}
+          </p>
         </div>
         <div className="mt-6">
           {user ? (
@@ -65,10 +73,14 @@ export default async function InvitePage({ params }: { params: Promise<{ code: s
           ) : (
             <div className="flex flex-col gap-2">
               <Button asChild size="lg">
-                <Link href={`/sign-up?next=${encodeURIComponent(`/invite/${code}`)}`}>{t('signUpToJoin')}</Link>
+                <Link href={`/sign-up?next=${encodeURIComponent(`/invite/${code}`)}`}>
+                  {t('signUpToJoin')}
+                </Link>
               </Button>
               <Button asChild variant="ghost">
-                <Link href={`/sign-in?next=${encodeURIComponent(`/invite/${code}`)}`}>{t('signInToJoin')}</Link>
+                <Link href={`/sign-in?next=${encodeURIComponent(`/invite/${code}`)}`}>
+                  {t('signInToJoin')}
+                </Link>
               </Button>
             </div>
           )}

@@ -36,7 +36,11 @@ export async function addMember(tx: DbOrTx, communityId: string, userId: string)
   return false;
 }
 
-export async function removeMember(tx: DbOrTx, communityId: string, userId: string): Promise<boolean> {
+export async function removeMember(
+  tx: DbOrTx,
+  communityId: string,
+  userId: string,
+): Promise<boolean> {
   const deleted = await tx
     .delete(schema.members)
     .where(and(eq(schema.members.communityId, communityId), eq(schema.members.userId, userId)))
@@ -73,7 +77,13 @@ export async function leaveCommunity(ctx: MemberContext): Promise<void> {
   }
   await db.transaction(async (tx) => {
     await removeMember(tx, ctx.community.id, ctx.userId!);
-    await audit(tx, { communityId: ctx.community.id, actorId: ctx.userId, action: 'member.leave', targetType: 'user', targetId: ctx.userId! });
+    await audit(tx, {
+      communityId: ctx.community.id,
+      actorId: ctx.userId,
+      action: 'member.leave',
+      targetType: 'user',
+      targetId: ctx.userId!,
+    });
   });
 }
 
@@ -100,7 +110,11 @@ export async function listMembers(
   if (q) {
     const pat = `%${q.replace(/[%_\\]/g, '\\$&')}%`;
     where.push(
-      or(ilike(schema.users.name, pat), ilike(schema.users.username, pat), ilike(schema.members.nickname, pat))!,
+      or(
+        ilike(schema.users.name, pat),
+        ilike(schema.users.username, pat),
+        ilike(schema.members.nickname, pat),
+      )!,
     );
   }
   if (opts.roleId) {
@@ -110,7 +124,12 @@ export async function listMembers(
         db
           .select({ userId: schema.memberRoles.userId })
           .from(schema.memberRoles)
-          .where(and(eq(schema.memberRoles.communityId, communityId), eq(schema.memberRoles.roleId, opts.roleId))),
+          .where(
+            and(
+              eq(schema.memberRoles.communityId, communityId),
+              eq(schema.memberRoles.roleId, opts.roleId),
+            ),
+          ),
       ),
     );
   }
@@ -136,12 +155,21 @@ export async function listMembers(
     ? await db
         .select({ userId: schema.memberRoles.userId, roleId: schema.memberRoles.roleId })
         .from(schema.memberRoles)
-        .where(and(eq(schema.memberRoles.communityId, communityId), inArray(schema.memberRoles.userId, ids)))
+        .where(
+          and(
+            eq(schema.memberRoles.communityId, communityId),
+            inArray(schema.memberRoles.userId, ids),
+          ),
+        )
     : [];
   const byUser = new Map<string, string[]>();
   for (const r of roleRows) byUser.set(r.userId, [...(byUser.get(r.userId) ?? []), r.roleId]);
   return {
-    members: page.map((r) => ({ ...r, roleIds: byUser.get(r.userId) ?? [], isOwner: r.userId === ownerId })),
+    members: page.map((r) => ({
+      ...r,
+      roleIds: byUser.get(r.userId) ?? [],
+      isOwner: r.userId === ownerId,
+    })),
     hasMore: rows.length > limit,
   };
 }
@@ -162,9 +190,17 @@ export async function membersWithRoles(communityId: string, roleIds: string[], l
     .innerJoin(schema.users, eq(schema.users.id, schema.memberRoles.userId))
     .innerJoin(
       schema.members,
-      and(eq(schema.members.userId, schema.memberRoles.userId), eq(schema.members.communityId, communityId)),
+      and(
+        eq(schema.members.userId, schema.memberRoles.userId),
+        eq(schema.members.communityId, communityId),
+      ),
     )
-    .where(and(eq(schema.memberRoles.communityId, communityId), inArray(schema.memberRoles.roleId, roleIds)))
+    .where(
+      and(
+        eq(schema.memberRoles.communityId, communityId),
+        inArray(schema.memberRoles.roleId, roleIds),
+      ),
+    )
     .limit(limit);
 }
 

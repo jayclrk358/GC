@@ -23,7 +23,10 @@ export function InviteButton({ communityId }: { communityId: string }) {
   async function generate() {
     setPending(true);
     setError(null);
-    const r = await createInviteAction(communityId, { expiresInHours: Number(expires), maxUses: Number(maxUses) });
+    const r = await createInviteAction(communityId, {
+      expiresInHours: Number(expires),
+      maxUses: Number(maxUses),
+    });
     setPending(false);
     if (r.ok) setLink(`${window.location.origin}/invite/${r.data.code}`);
     else setError(r.error);
@@ -46,7 +49,11 @@ export function InviteButton({ communityId }: { communityId: string }) {
         </Button>
       </DialogTrigger>
       <DialogContent title={t('title')} description={t('description')}>
-        {error && <Alert tone="danger" live>{error}</Alert>}
+        {error && (
+          <Alert tone="danger" live>
+            {error}
+          </Alert>
+        )}
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label={t('expiresAfter')}>
             {(p) => (
@@ -75,7 +82,9 @@ export function InviteButton({ communityId }: { communityId: string }) {
         {link ? (
           <div className="flex flex-col gap-2">
             <Field label={t('link')}>
-              {(p) => <Input {...p} readOnly value={link} onFocus={(e) => e.currentTarget.select()} />}
+              {(p) => (
+                <Input {...p} readOnly value={link} onFocus={(e) => e.currentTarget.select()} />
+              )}
             </Field>
             <div className="flex gap-2">
               <Button

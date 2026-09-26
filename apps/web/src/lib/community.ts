@@ -32,7 +32,12 @@ export const loadCommunity = cache(async (slug: string) => {
     createInvite: ctx.isMember && has(ctx.base, Permission.CREATE_INVITE),
     viewAudit: has(ctx.base, Permission.VIEW_AUDIT_LOG),
   };
-  const canOpenSettings = perms.manage || perms.manageRoles || perms.manageServers || perms.manageInvites || perms.viewAudit;
+  const canOpenSettings =
+    perms.manage ||
+    perms.manageRoles ||
+    perms.manageServers ||
+    perms.manageInvites ||
+    perms.viewAudit;
   return { ctx, community, game, nav, user, perms: { ...perms, settings: canOpenSettings } };
 });
 

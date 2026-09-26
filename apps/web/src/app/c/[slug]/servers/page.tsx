@@ -9,7 +9,11 @@ import { ServerCard } from '@/components/servers/server-status';
 
 export const metadata = { title: 'Servers' };
 
-export default async function CommunityServersPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function CommunityServersPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
   const data = await loadCommunity((await params).slug);
   const t = await getTranslations('servers');
   const servers = await listCommunityServers(data.community.id);
@@ -25,7 +29,11 @@ export default async function CommunityServersPage({ params }: { params: Promise
         )}
       </div>
       {servers.length === 0 ? (
-        <EmptyState icon={<Server />} title={t('none')} description={data.perms.manageServers ? t('noneManage') : undefined} />
+        <EmptyState
+          icon={<Server />}
+          title={t('none')}
+          description={data.perms.manageServers ? t('noneManage') : undefined}
+        />
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {servers.map((s) => (

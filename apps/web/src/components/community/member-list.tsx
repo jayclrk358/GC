@@ -39,12 +39,18 @@ export async function MemberList({
         const headingId = `group-${key}`;
         return (
           <section key={key} aria-labelledby={headingId}>
-            <h3 id={headingId} className="mb-3 text-sm font-bold tracking-wide text-muted uppercase">
+            <h3
+              id={headingId}
+              className="mb-3 text-sm font-bold tracking-wide text-muted uppercase"
+            >
               {role ? role.name : t('tabs.members')} — {list.length}
             </h3>
             <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {list.map((m) => (
-                <li key={m.userId} className="flex items-center gap-3 rounded-ui border border-border bg-surface p-3">
+                <li
+                  key={m.userId}
+                  className="flex items-center gap-3 rounded-ui border border-border bg-surface p-3"
+                >
                   <Avatar src={m.image} name={m.nickname || m.name} size={40} />
                   <div className="min-w-0 flex-1">
                     <p className="flex items-center gap-1 truncate font-semibold">
@@ -53,9 +59,11 @@ export async function MemberList({
                           {m.nickname || m.name}
                         </Link>
                       ) : (
-                        (m.nickname || m.name)
+                        m.nickname || m.name
                       )}
-                      {m.isOwner && <Crown className="size-4 text-warning" aria-label={t('owner')} role="img" />}
+                      {m.isOwner && (
+                        <Crown className="size-4 text-warning" aria-label={t('owner')} role="img" />
+                      )}
                     </p>
                     {m.username && <p className="truncate text-sm text-muted">@{m.username}</p>}
                     {m.roleIds.length > 0 && (

@@ -36,9 +36,11 @@ function Swatches({ preset }: { preset: PresetKey }) {
   const p = THEME_PRESETS[preset];
   return (
     <span aria-hidden className="flex w-full overflow-hidden rounded-ui-sm border border-border">
-      {[p.light.bg, p.light.primary, p.light.accent, p.dark.bg, p.dark.primary, p.dark.accent].map((c, i) => (
-        <span key={i} className="h-8 flex-1" style={{ background: c }} />
-      ))}
+      {[p.light.bg, p.light.primary, p.light.accent, p.dark.bg, p.dark.primary, p.dark.accent].map(
+        (c, i) => (
+          <span key={i} className="h-8 flex-1" style={{ background: c }} />
+        ),
+      )}
     </span>
   );
 }
@@ -53,7 +55,9 @@ export function CreateWizard({ games }: { games: { id: string; name: string }[] 
   const [fields, setFields] = React.useState<Record<string, string>>({});
   const [pending, setPending] = React.useState(false);
   const [slugEdited, setSlugEdited] = React.useState(false);
-  const [slugStatus, setSlugStatus] = React.useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
+  const [slugStatus, setSlugStatus] = React.useState<
+    'idle' | 'checking' | 'available' | 'taken' | 'invalid'
+  >('idle');
   const [v, setV] = React.useState({
     name: '',
     slug: '',
@@ -67,7 +71,8 @@ export function CreateWizard({ games }: { games: { id: string; name: string }[] 
     region: 'global',
     language: 'en',
   });
-  const set = <K extends keyof typeof v>(k: K, val: (typeof v)[K]) => setV((s) => ({ ...s, [k]: val }));
+  const set = <K extends keyof typeof v>(k: K, val: (typeof v)[K]) =>
+    setV((s) => ({ ...s, [k]: val }));
 
   const index = STEPS.indexOf(step);
   const firstRender = React.useRef(true);
@@ -85,7 +90,9 @@ export function CreateWizard({ games }: { games: { id: string; name: string }[] 
     const id = setTimeout(async () => {
       setSlugStatus('checking');
       try {
-        const r = await fetch(`/api/slug-available?slug=${encodeURIComponent(v.slug)}`, { signal: ctrl.signal });
+        const r = await fetch(`/api/slug-available?slug=${encodeURIComponent(v.slug)}`, {
+          signal: ctrl.signal,
+        });
         const d = (await r.json()) as { valid: boolean; available: boolean };
         setSlugStatus(!d.valid ? 'invalid' : d.available ? 'available' : 'taken');
       } catch {
@@ -156,10 +163,18 @@ export function CreateWizard({ games }: { games: { id: string; name: string }[] 
               <span
                 className={cn(
                   'flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-semibold',
-                  s === step ? 'border-primary bg-primary text-on-primary' : i < index ? 'border-primary text-primary' : 'border-border text-muted',
+                  s === step
+                    ? 'border-primary bg-primary text-on-primary'
+                    : i < index
+                      ? 'border-primary text-primary'
+                      : 'border-border text-muted',
                 )}
               >
-                {i < index ? <Check className="size-4" aria-hidden /> : <span aria-hidden>{i + 1}</span>}
+                {i < index ? (
+                  <Check className="size-4" aria-hidden />
+                ) : (
+                  <span aria-hidden>{i + 1}</span>
+                )}
                 {t(`steps.${s}`)}
                 {i < index && <span className="sr-only">({t('completed')})</span>}
               </span>
@@ -202,7 +217,9 @@ export function CreateWizard({ games }: { games: { id: string; name: string }[] 
               {(p) => (
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center">
-                    <span className="rounded-s-ui border border-e-0 border-muted/70 bg-surface-2 px-3 py-2 text-muted">/c/</span>
+                    <span className="rounded-s-ui border border-e-0 border-muted/70 bg-surface-2 px-3 py-2 text-muted">
+                      /c/
+                    </span>
                     <Input
                       {...p}
                       value={v.slug}
@@ -220,7 +237,11 @@ export function CreateWizard({ games }: { games: { id: string; name: string }[] 
                     aria-live="polite"
                     className={cn(
                       'text-sm',
-                      slugStatus === 'available' ? 'text-success' : slugStatus === 'taken' || slugStatus === 'invalid' ? 'text-danger' : 'text-muted',
+                      slugStatus === 'available'
+                        ? 'text-success'
+                        : slugStatus === 'taken' || slugStatus === 'invalid'
+                          ? 'text-danger'
+                          : 'text-muted',
                     )}
                   >
                     {slugMessage}
@@ -229,7 +250,14 @@ export function CreateWizard({ games }: { games: { id: string; name: string }[] 
               )}
             </Field>
             <Field label={t('tagline')} description={t('taglineHint')} error={fields.tagline}>
-              {(p) => <Input {...p} value={v.tagline} maxLength={140} onChange={(e) => set('tagline', e.target.value)} />}
+              {(p) => (
+                <Input
+                  {...p}
+                  value={v.tagline}
+                  maxLength={140}
+                  onChange={(e) => set('tagline', e.target.value)}
+                />
+              )}
             </Field>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label={t('game')} error={fields.gameId}>
@@ -245,7 +273,14 @@ export function CreateWizard({ games }: { games: { id: string; name: string }[] 
                 )}
               </Field>
               <Field label={t('tags')} description={t('tagsHint')} error={fields.tags}>
-                {(p) => <Input {...p} value={v.tags} onChange={(e) => set('tags', e.target.value)} placeholder="pvp, survival, eu" />}
+                {(p) => (
+                  <Input
+                    {...p}
+                    value={v.tags}
+                    onChange={(e) => set('tags', e.target.value)}
+                    placeholder="pvp, survival, eu"
+                  />
+                )}
               </Field>
             </div>
           </div>
@@ -329,7 +364,11 @@ export function CreateWizard({ games }: { games: { id: string; name: string }[] 
               </Field>
               <Field label={t('language')}>
                 {(p) => (
-                  <Select {...p} value={v.language} onChange={(e) => set('language', e.target.value)}>
+                  <Select
+                    {...p}
+                    value={v.language}
+                    onChange={(e) => set('language', e.target.value)}
+                  >
                     {LANGUAGES.map((l) => (
                       <option key={l} value={l}>
                         {tc(`languages.${l}`)}

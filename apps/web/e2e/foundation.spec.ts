@@ -54,6 +54,27 @@ test.describe('foundation', () => {
     await expectAccessible(page, 'accessibility settings (high contrast)');
   });
 
+  test('header toggle switches to dark mode and remembers it', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: /^Colour scheme:/ }).click();
+    await page.getByRole('menuitemradio', { name: 'Dark' }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-scheme', 'dark');
+    const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+    expect(bg).toBe('rgb(15, 16, 23)');
+    await page.reload();
+    await expect(page.locator('html')).toHaveAttribute('data-scheme', 'dark');
+    await expect(page.getByRole('button', { name: 'Colour scheme: Dark' })).toBeVisible();
+    await expectAccessible(page, 'home after switching to dark');
+
+    await page.getByRole('button', { name: 'Colour scheme: Dark' }).click();
+    await expect(page.getByRole('menuitemradio', { name: 'Dark' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+    await page.getByRole('menuitemradio', { name: 'Light' }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-scheme', 'light');
+  });
+
   test('command palette opens from the keyboard', async ({ page }) => {
     await page.goto('/');
     await page.keyboard.press('Control+k');

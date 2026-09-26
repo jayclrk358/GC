@@ -11,7 +11,11 @@ export async function EmbedBlock({ id, config }: { id: string; config: BlockConf
       : `https://player.twitch.tv/?channel=${config.ref}&parent=${host}&autoplay=true`;
   return (
     <BlockSection id={id} heading={config.heading || undefined}>
-      <ClickToLoad src={src} title={config.title} provider={config.provider === 'youtube' ? 'YouTube' : 'Twitch'} />
+      <ClickToLoad
+        src={src}
+        title={config.title}
+        provider={config.provider === 'youtube' ? 'YouTube' : 'Twitch'}
+      />
     </BlockSection>
   );
 }

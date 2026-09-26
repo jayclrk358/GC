@@ -8,7 +8,11 @@ import { ServerManager } from '@/components/community-settings/server-manager';
 
 export const metadata = { title: 'Servers' };
 
-export default async function ServerSettingsPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function ServerSettingsPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
   const { community, perms } = await loadCommunityForSettings((await params).slug);
   if (!perms.manageServers) notFound();
   const t = await getTranslations('serverSettings');
@@ -20,7 +24,11 @@ export default async function ServerSettingsPage({ params }: { params: Promise<{
       <ServerManager
         communityId={community.id}
         servers={servers}
-        protocols={PROTOCOL_KEYS.map((k) => ({ key: k, label: SERVER_PROTOCOLS[k].label, defaultPort: SERVER_PROTOCOLS[k].defaultPort }))}
+        protocols={PROTOCOL_KEYS.map((k) => ({
+          key: k,
+          label: SERVER_PROTOCOLS[k].label,
+          defaultPort: SERVER_PROTOCOLS[k].defaultPort,
+        }))}
       />
     </div>
   );

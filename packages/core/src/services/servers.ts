@@ -134,7 +134,10 @@ function toView(r: ViewRow, opts: { showToken: boolean }): ServerView {
   };
 }
 
-async function queryViews(where: SQL, opts: { showToken: boolean; order?: SQL[]; limit?: number }): Promise<ServerView[]> {
+async function queryViews(
+  where: SQL,
+  opts: { showToken: boolean; order?: SQL[]; limit?: number },
+): Promise<ServerView[]> {
   const rows = await db
     .select(selectView)
     .from(schema.gameServers)
@@ -149,7 +152,9 @@ export async function listCommunityServers(
   communityId: string,
   opts: { manage?: boolean } = {},
 ): Promise<ServerView[]> {
-  return queryViews(eq(schema.gameServers.communityId, communityId), { showToken: Boolean(opts.manage) });
+  return queryViews(eq(schema.gameServers.communityId, communityId), {
+    showToken: Boolean(opts.manage),
+  });
 }
 
 export async function getServersByIds(communityId: string, ids: string[]): Promise<ServerView[]> {
@@ -162,17 +167,32 @@ export async function getServersByIds(communityId: string, ids: string[]): Promi
   return ids.map((id) => byId.get(id)).filter((v): v is ServerView => Boolean(v));
 }
 
-export async function listPublicServers(opts: { q?: string; protocol?: string; limit?: number } = {}) {
-  const where: SQL[] = [eq(schema.gameServers.listed, true), isNotNull(schema.gameServers.verifiedAt)];
-  if (opts.protocol && opts.protocol in SERVER_PROTOCOLS) where.push(eq(schema.serverEndpoints.protocol, opts.protocol));
+export async function listPublicServers(
+  opts: { q?: string; protocol?: string; limit?: number } = {},
+) {
+  const where: SQL[] = [
+    eq(schema.gameServers.listed, true),
+    isNotNull(schema.gameServers.verifiedAt),
+  ];
+  if (opts.protocol && opts.protocol in SERVER_PROTOCOLS)
+    where.push(eq(schema.serverEndpoints.protocol, opts.protocol));
   const q = opts.q?.trim().slice(0, 100);
   if (q) {
     const pat = `%${q.replace(/[%_\\]/g, '\\$&')}%`;
-    where.push(or(sql`${schema.gameServers.name} ILIKE ${pat}`, sql`${q} = ANY(${schema.gameServers.tags})`)!);
+    where.push(
+      or(
+        sql`${schema.gameServers.name} ILIKE ${pat}`,
+        sql`${q} = ANY(${schema.gameServers.tags})`,
+      )!,
+    );
   }
   return queryViews(and(...where)!, {
     showToken: false,
-    order: [desc(schema.serverEndpoints.online), sql`${schema.serverEndpoints.players} desc nulls last`, desc(schema.gameServers.voteCount)],
+    order: [
+      desc(schema.serverEndpoints.online),
+      sql`${schema.serverEndpoints.players} desc nulls last`,
+      desc(schema.gameServers.voteCount),
+    ],
     limit: opts.limit ?? 50,
   });
 }
@@ -231,26 +251,46 @@ export async function addServer(ctx: MemberContext, raw: unknown): Promise<Serve
   requirePerm(ctx, Permission.MANAGE_SERVERS);
   const input = serverInputSchema.parse(raw);
   const userId = ctx.userId!;
-  await enforceRateLimit(`server-add:${userId}`, 10, 3600, 'You can add up to 10 servers per hour.');
+  await enforceRateLimit(
+    `server-add:${userId}`,
+    10,
+    3600,
+    'You can add up to 10 servers per hour.',
+  );
 
   const [{ n: communityCount } = { n: 0 }] = await db
     .select({ n: sql<number>`count(*)::int` })
     .from(schema.gameServers)
-    .where(and(eq(schema.gameServers.communityId, ctx.community.id), isNull(schema.gameServers.deletedAt)));
+    .where(
+      and(
+        eq(schema.gameServers.communityId, ctx.community.id),
+        isNull(schema.gameServers.deletedAt),
+      ),
+    );
   if (communityCount >= MAX_SERVERS_PER_COMMUNITY) {
-    throw new AppError('forbidden', `A community can link up to ${MAX_SERVERS_PER_COMMUNITY} servers.`);
+    throw new AppError(
+      'forbidden',
+      `A community can link up to ${MAX_SERVERS_PER_COMMUNITY} servers.`,
+    );
   }
   const [{ n: unverified } = { n: 0 }] = await db
     .select({ n: sql<number>`count(*)::int` })
     .from(schema.gameServers)
     .where(
-      and(eq(schema.gameServers.ownerId, userId), isNull(schema.gameServers.verifiedAt), isNull(schema.gameServers.deletedAt)),
+      and(
+        eq(schema.gameServers.ownerId, userId),
+        isNull(schema.gameServers.verifiedAt),
+        isNull(schema.gameServers.deletedAt),
+      ),
     );
   const account = await db.query.users.findFirst({ where: eq(schema.users.id, userId) });
   const young = account && Date.now() - account.createdAt.getTime() < 24 * 3600_000;
   const cap = young ? 2 : MAX_UNVERIFIED_PER_USER;
   if (unverified >= cap) {
-    throw new AppError('forbidden', `Verify your existing servers before adding more (limit ${cap} unverified).`);
+    throw new AppError(
+      'forbidden',
+      `Verify your existing servers before adding more (limit ${cap} unverified).`,
+    );
   }
 
   const endpointId = await findOrCreateEndpoint(input.protocol, input.host, input.port);
@@ -279,14 +319,23 @@ export async function addServer(ctx: MemberContext, raw: unknown): Promise<Serve
       diff: { address: displayAddress(input.protocol, input.host, input.port) },
     });
   });
-  await enqueue(QUEUES.poll, 'poll-endpoint', { endpointId }, { jobId: `poll-${endpointId}-${Date.now()}` });
+  await enqueue(
+    QUEUES.poll,
+    'poll-endpoint',
+    { endpointId },
+    { jobId: `poll-${endpointId}-${Date.now()}` },
+  );
   const [view] = await queryViews(eq(schema.gameServers.id, id), { showToken: true });
   return view!;
 }
 
 async function loadServer(ctx: MemberContext, id: string) {
   const row = await db.query.gameServers.findFirst({
-    where: and(eq(schema.gameServers.id, id), eq(schema.gameServers.communityId, ctx.community.id), isNull(schema.gameServers.deletedAt)),
+    where: and(
+      eq(schema.gameServers.id, id),
+      eq(schema.gameServers.communityId, ctx.community.id),
+      isNull(schema.gameServers.deletedAt),
+    ),
   });
   if (!row) throw notFound('Server');
   return row;
@@ -296,10 +345,17 @@ export async function updateServer(ctx: MemberContext, id: string, raw: unknown)
   requirePerm(ctx, Permission.MANAGE_SERVERS);
   const row = await loadServer(ctx, id);
   const input = serverInputSchema.parse(raw);
-  const endpoint = await db.query.serverEndpoints.findFirst({ where: eq(schema.serverEndpoints.id, row.endpointId) });
+  const endpoint = await db.query.serverEndpoints.findFirst({
+    where: eq(schema.serverEndpoints.id, row.endpointId),
+  });
   const addressChanged =
-    !endpoint || endpoint.protocol !== input.protocol || endpoint.host !== input.host || endpoint.port !== input.port;
-  const endpointId = addressChanged ? await findOrCreateEndpoint(input.protocol, input.host, input.port) : row.endpointId;
+    !endpoint ||
+    endpoint.protocol !== input.protocol ||
+    endpoint.host !== input.host ||
+    endpoint.port !== input.port;
+  const endpointId = addressChanged
+    ? await findOrCreateEndpoint(input.protocol, input.host, input.port)
+    : row.endpointId;
   await db.transaction(async (tx) => {
     await tx
       .update(schema.gameServers)
@@ -314,10 +370,21 @@ export async function updateServer(ctx: MemberContext, id: string, raw: unknown)
         ...(addressChanged ? { verifiedAt: null, verifyToken: `mx-${randomToken(10)}` } : {}),
       })
       .where(eq(schema.gameServers.id, id));
-    await audit(tx, { communityId: ctx.community.id, actorId: ctx.userId, action: 'server.update', targetType: 'server', targetId: id });
+    await audit(tx, {
+      communityId: ctx.community.id,
+      actorId: ctx.userId,
+      action: 'server.update',
+      targetType: 'server',
+      targetId: id,
+    });
   });
   if (addressChanged) {
-    await enqueue(QUEUES.poll, 'poll-endpoint', { endpointId }, { jobId: `poll-${endpointId}-${Date.now()}` });
+    await enqueue(
+      QUEUES.poll,
+      'poll-endpoint',
+      { endpointId },
+      { jobId: `poll-${endpointId}-${Date.now()}` },
+    );
   }
 }
 
@@ -325,26 +392,66 @@ export async function removeServer(ctx: MemberContext, id: string): Promise<void
   requirePerm(ctx, Permission.MANAGE_SERVERS);
   const row = await loadServer(ctx, id);
   await db.transaction(async (tx) => {
-    await tx.update(schema.gameServers).set({ deletedAt: new Date() }).where(eq(schema.gameServers.id, row.id));
-    await audit(tx, { communityId: ctx.community.id, actorId: ctx.userId, action: 'server.remove', targetType: 'server', targetId: id, diff: { name: row.name } });
+    await tx
+      .update(schema.gameServers)
+      .set({ deletedAt: new Date() })
+      .where(eq(schema.gameServers.id, row.id));
+    await audit(tx, {
+      communityId: ctx.community.id,
+      actorId: ctx.userId,
+      action: 'server.remove',
+      targetType: 'server',
+      targetId: id,
+      diff: { name: row.name },
+    });
   });
 }
 
 /** Ask the worker to poll now (verification checks, "refresh" button). Cached for 30 s. */
-export async function requestRefresh(ctx: MemberContext, id: string): Promise<{ queued: boolean }> {
+export async function requestRefresh(
+  ctx: MemberContext,
+  id: string,
+): Promise<{ queued: boolean; retryInSeconds: number }> {
   requirePerm(ctx, Permission.MANAGE_SERVERS);
   const row = await loadServer(ctx, id);
   await enforceRateLimit(`server-refresh:${ctx.userId}`, 20, 600);
-  const endpoint = await db.query.serverEndpoints.findFirst({ where: eq(schema.serverEndpoints.id, row.endpointId) });
-  if (endpoint?.lastCheckedAt && Date.now() - endpoint.lastCheckedAt.getTime() < POLL.refreshCacheMs) {
-    return { queued: false };
+  const endpoint = await db.query.serverEndpoints.findFirst({
+    where: eq(schema.serverEndpoints.id, row.endpointId),
+  });
+  if (
+    endpoint?.lastCheckedAt &&
+    Date.now() - endpoint.lastCheckedAt.getTime() < POLL.refreshCacheMs
+  ) {
+    // Checked moments ago: don't query again now, but schedule one check for when the cache
+    // window ends. It's a separate delayed job so an in-flight poll can't overwrite it, and the
+    // job id collapses repeated clicks within the window into one.
+    const due = endpoint.lastCheckedAt.getTime() + POLL.refreshCacheMs;
+    await db
+      .update(schema.serverEndpoints)
+      .set({ hotUntil: new Date(Date.now() + POLL.hotWindowMs) })
+      .where(eq(schema.serverEndpoints.id, row.endpointId));
+    await enqueue(
+      QUEUES.poll,
+      'poll-endpoint',
+      { endpointId: row.endpointId },
+      {
+        delay: Math.max(0, due - Date.now()),
+        jobId: `poll-${row.endpointId}-refresh-${Math.floor(due / POLL.refreshCacheMs)}`,
+      },
+    );
+    return { queued: false, retryInSeconds: Math.max(1, Math.ceil((due - Date.now()) / 1000)) };
   }
   await db
     .update(schema.serverEndpoints)
     .set({ hotUntil: new Date(Date.now() + POLL.hotWindowMs), dormant: false })
     .where(eq(schema.serverEndpoints.id, row.endpointId));
-  await enqueue(QUEUES.poll, 'poll-endpoint', { endpointId: row.endpointId }, { jobId: `poll-${row.endpointId}-${Date.now()}` });
-  return { queued: true };
+  await enqueue(
+    QUEUES.poll,
+    'poll-endpoint',
+    { endpointId: row.endpointId },
+    { jobId: `poll-${row.endpointId}-${Date.now()}` },
+  );
+  return { queued: true, retryInSeconds: 0 };
 }
 
 /** Viewers looking at a server keep it on the fast polling tier. */
@@ -356,12 +463,17 @@ export async function markEndpointsHot(endpointIds: string[]): Promise<void> {
     .where(
       and(
         inArray(schema.serverEndpoints.id, endpointIds),
-        or(isNull(schema.serverEndpoints.hotUntil), sql`${schema.serverEndpoints.hotUntil} < now() + interval '5 minutes'`),
+        or(
+          isNull(schema.serverEndpoints.hotUntil),
+          sql`${schema.serverEndpoints.hotUntil} < now() + interval '5 minutes'`,
+        ),
       ),
     );
 }
 
-export async function countOnlineServers(communityId: string): Promise<{ total: number; online: number; players: number }> {
+export async function countOnlineServers(
+  communityId: string,
+): Promise<{ total: number; online: number; players: number }> {
   const views = await listCommunityServers(communityId);
   return {
     total: views.length,
@@ -369,4 +481,3 @@ export async function countOnlineServers(communityId: string): Promise<{ total: 
     players: views.reduce((acc, v) => acc + (v.status.online ? (v.status.players ?? 0) : 0), 0),
   };
 }
-

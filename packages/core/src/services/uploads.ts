@@ -16,7 +16,13 @@ export interface UploadResult {
   posterUrl: string | null;
 }
 
-const COMMUNITY_PURPOSES = new Set<UploadPurpose>(['icon', 'banner', 'background', 'gallery', 'emoji']);
+const COMMUNITY_PURPOSES = new Set<UploadPurpose>([
+  'icon',
+  'banner',
+  'background',
+  'gallery',
+  'emoji',
+]);
 
 export function isUploadPurpose(p: string): p is UploadPurpose {
   return p in UPLOAD_PURPOSES;
@@ -29,11 +35,19 @@ export async function saveUpload(opts: {
   data: Buffer;
   alt?: string;
 }): Promise<UploadResult> {
-  await enforceRateLimit(`upload:${opts.userId}`, 40, 600, 'Too many uploads. Please wait a few minutes.');
+  await enforceRateLimit(
+    `upload:${opts.userId}`,
+    40,
+    600,
+    'Too many uploads. Please wait a few minutes.',
+  );
   if (COMMUNITY_PURPOSES.has(opts.purpose)) {
     if (!opts.communityId) throw new AppError('bad_request', 'Missing community.');
     const ctx = await getMemberContext({ id: opts.communityId }, opts.userId);
-    requirePerm(ctx, opts.purpose === 'emoji' ? Permission.MANAGE_EMOJI : Permission.MANAGE_COMMUNITY);
+    requirePerm(
+      ctx,
+      opts.purpose === 'emoji' ? Permission.MANAGE_EMOJI : Permission.MANAGE_COMMUNITY,
+    );
   }
   const img = await processImage(opts.data, opts.purpose);
   await storage().put(img.key, img.body, img.mime);

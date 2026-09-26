@@ -38,7 +38,10 @@ export default async function CommunityHome({
     <div className="flex flex-col gap-6">
       {created && data.perms.manage && (
         <Alert tone="success" live title={t('created')}>
-          <Link href={`/c/${data.community.slug}/settings/appearance`} className="font-semibold underline">
+          <Link
+            href={`/c/${data.community.slug}/settings/appearance`}
+            className="font-semibold underline"
+          >
             {t('customise')}
           </Link>
         </Alert>

@@ -8,7 +8,11 @@ import { InviteList } from '@/components/community-settings/invite-list';
 
 export const metadata = { title: 'Invites' };
 
-export default async function InvitesSettingsPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function InvitesSettingsPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
   const { community, perms, ctx } = await loadCommunityForSettings((await params).slug);
   if (!perms.manageInvites && !perms.createInvite) notFound();
   const t = await getTranslations('invites');
@@ -20,7 +24,14 @@ export default async function InvitesSettingsPage({ params }: { params: Promise<
         description={t('manageDescription')}
         actions={perms.createInvite ? <InviteButton communityId={community.id} /> : undefined}
       />
-      <InviteList communityId={community.id} invites={invites.map((i) => ({ ...i, expiresAt: i.expiresAt?.toISOString() ?? null, createdAt: i.createdAt.toISOString() }))} />
+      <InviteList
+        communityId={community.id}
+        invites={invites.map((i) => ({
+          ...i,
+          expiresAt: i.expiresAt?.toISOString() ?? null,
+          createdAt: i.createdAt.toISOString(),
+        }))}
+      />
     </div>
   );
 }

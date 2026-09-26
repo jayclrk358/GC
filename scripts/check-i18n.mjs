@@ -32,7 +32,8 @@ const problems = [];
 let checked = 0;
 for (const file of walk(join(root, 'src'))) {
   const src = readFileSync(file, 'utf8');
-  const decl = /const\s+(\w+)\s*=\s*(?:await\s+)?(?:useTranslations|getTranslations)\(\s*'([\w.]+)'\s*\)/g;
+  const decl =
+    /const\s+(\w+)\s*=\s*(?:await\s+)?(?:useTranslations|getTranslations)\(\s*'([\w.]+)'\s*\)/g;
   for (const m of src.matchAll(decl)) {
     const [, v, ns] = m;
     if (lookup(ns) === undefined) problems.push(`${file}: namespace "${ns}" missing`);

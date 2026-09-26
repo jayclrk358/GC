@@ -9,7 +9,15 @@ import { ExploreFilters } from '@/components/community/explore-filters';
 
 export const metadata = { title: 'Explore communities' };
 
-type SP = { q?: string; game?: string; tag?: string; region?: string; language?: string; sort?: string; page?: string };
+type SP = {
+  q?: string;
+  game?: string;
+  tag?: string;
+  region?: string;
+  language?: string;
+  sort?: string;
+  page?: string;
+};
 
 export default async function ExplorePage({ searchParams }: { searchParams: Promise<SP> }) {
   const sp = await searchParams;
@@ -22,14 +30,17 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
       game: sp.game || undefined,
       tag: sp.tag || undefined,
       region: (REGIONS as readonly string[]).includes(sp.region ?? '') ? sp.region : undefined,
-      language: (LANGUAGES as readonly string[]).includes(sp.language ?? '') ? sp.language : undefined,
+      language: (LANGUAGES as readonly string[]).includes(sp.language ?? '')
+        ? sp.language
+        : undefined,
       sort,
       page,
     }),
     listGames(),
   ]);
   const pages = Math.ceil(result.total / result.pageSize);
-  const link = (p: number) => `?${new URLSearchParams({ ...Object.fromEntries(Object.entries(sp).filter(([, v]) => v)), page: String(p) })}`;
+  const link = (p: number) =>
+    `?${new URLSearchParams({ ...Object.fromEntries(Object.entries(sp).filter(([, v]) => v)), page: String(p) })}`;
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8">

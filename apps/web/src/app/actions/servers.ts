@@ -1,7 +1,13 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { addServer, getMemberContext, removeServer, requestRefresh, updateServer } from '@magnox/core';
+import {
+  addServer,
+  getMemberContext,
+  removeServer,
+  requestRefresh,
+  updateServer,
+} from '@magnox/core';
 import { getUser } from '@/lib/auth';
 import { runAction } from '@/lib/action';
 

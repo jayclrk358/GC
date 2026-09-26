@@ -19,7 +19,11 @@ export async function addBlockAction(communityId: string, type: unknown, config?
   });
 }
 
-export async function updateBlockAction(communityId: string, id: string, patch: { config?: unknown; visible?: boolean }) {
+export async function updateBlockAction(
+  communityId: string,
+  id: string,
+  patch: { config?: unknown; visible?: boolean },
+) {
   return runAction(async () => {
     const ctx = await ctxFor(communityId);
     await updateBlock(ctx, id, patch);
