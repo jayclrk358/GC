@@ -26,7 +26,6 @@ export function FollowButton({
     <Button
       size="sm"
       variant="outline"
-      aria-pressed={following}
       onClick={async () => {
         setFollowing(!following);
         const r = await setFollowAction(communityId, threadId, !following);
@@ -84,7 +83,7 @@ export function ModTools({
           <Button
             size="sm"
             variant="outline"
-            aria-pressed={pinned}
+
             onClick={() =>
               void apply({ pinned: !pinned }, pinned ? t('unpinnedToast') : t('pinnedToast'))
             }
@@ -94,7 +93,7 @@ export function ModTools({
           <Button
             size="sm"
             variant="outline"
-            aria-pressed={locked}
+
             onClick={() =>
               void apply({ locked: !locked }, locked ? t('unlockedToast') : t('lockedToast'))
             }

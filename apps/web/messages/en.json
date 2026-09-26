@@ -1350,7 +1350,9 @@
     "upvote": "Upvote",
     "downvote": "Downvote",
     "votesFor": "Votes for {title}",
-    "goToForum": "Go to the forum"
+    "goToForum": "Go to the forum",
+    "timedOutTitle": "You're timed out",
+    "timedOutBody": "A moderator has paused your posting in this community until {date}. You can still read."
   },
   "report": {
     "title": "Report {what}",

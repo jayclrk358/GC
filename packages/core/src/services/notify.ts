@@ -55,14 +55,12 @@ export interface NotificationInput {
 export async function deliver(items: NotificationInput[]): Promise<void> {
   if (!items.length) return;
   for (let i = 0; i < items.length; i += 500) {
-    const batch = items
-      .slice(i, i + 500)
-      .map((n) => ({
-        id: newId(),
-        ...n,
-        targetType: n.targetType ?? null,
-        targetId: n.targetId ?? null,
-      }));
+    const batch = items.slice(i, i + 500).map((n) => ({
+      id: newId(),
+      ...n,
+      targetType: n.targetType ?? null,
+      targetId: n.targetId ?? null,
+    }));
     await db.insert(schema.notifications).values(batch);
     for (const n of batch) {
       realtime()

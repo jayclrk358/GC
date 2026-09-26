@@ -103,7 +103,6 @@ export function PostActions({
         <Button
           size="sm"
           variant={post.isSolution ? 'secondary' : 'ghost'}
-          aria-pressed={post.isSolution}
           onClick={async () => {
             const r = await markSolutionAction(
               communityId,

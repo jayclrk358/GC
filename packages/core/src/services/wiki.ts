@@ -1,4 +1,4 @@
-import { diffWords } from 'diff';
+import { diffText } from '../diff';
 import { and, asc, desc, eq, isNull, sql } from 'drizzle-orm';
 import { db, schema } from '@magnox/db';
 import {
@@ -232,18 +232,7 @@ export async function wikiHistory(ctx: MemberContext, pageId: string) {
     .limit(200);
 }
 
-export interface DiffPart {
-  kind: 'same' | 'added' | 'removed';
-  text: string;
-}
-
-/** Word-level diff between two plain-text versions. */
-export function diffText(before: string, after: string): DiffPart[] {
-  return diffWords(before, after).map((p) => ({
-    kind: p.added ? 'added' : p.removed ? 'removed' : 'same',
-    text: p.value,
-  }));
-}
+export { diffText, type DiffPart } from '../diff';
 
 export async function compareRevision(ctx: MemberContext, pageId: string, revisionId: string) {
   await loadPage(ctx, pageId);

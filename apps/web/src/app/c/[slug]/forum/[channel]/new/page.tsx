@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { getChannelByName, listFlairs } from '@magnox/core';
+import { listFlairs } from '@magnox/core';
 import { has, Permission } from '@magnox/shared';
-import { loadCommunity } from '@/lib/community';
+import { loadCommunity, loadForumChannel } from '@/lib/community';
 import { ThreadComposer } from '@/components/forum/thread-composer';
 
 export const metadata = { title: 'New thread' };
@@ -17,7 +17,7 @@ export default async function NewThreadPage({
   const data = await loadCommunity(slug);
   if (!data.user)
     redirect(`/sign-in?next=${encodeURIComponent(`/c/${slug}/forum/${channelName}/new`)}`);
-  const channel = await getChannelByName(data.ctx, channelName);
+  const channel = await loadForumChannel(data.ctx, channelName);
   const perms = BigInt(channel.perms);
   const isMod = has(perms, Permission.MANAGE_THREADS);
   if (!has(perms, Permission.CREATE_THREADS) || (channel.type === 'announcement' && !isMod))

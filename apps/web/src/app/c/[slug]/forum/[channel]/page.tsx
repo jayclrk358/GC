@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { Hash, Megaphone, PenSquare } from 'lucide-react';
-import { getChannelByName, isMuted, listFlairs, listThreads } from '@magnox/core';
+import { isMuted, listFlairs, listThreads } from '@magnox/core';
 import { has, Permission, THREAD_SORTS, type ThreadSort } from '@magnox/shared';
-import { loadCommunity } from '@/lib/community';
+import { loadCommunity, loadForumChannel } from '@/lib/community';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/misc';
 import { ThreadList } from '@/components/forum/thread-list';
@@ -26,7 +26,7 @@ export default async function ChannelPage({
   const sp = await searchParams;
   const data = await loadCommunity(slug);
   const t = await getTranslations('forum');
-  const channel = await getChannelByName(data.ctx, channelName);
+  const channel = await loadForumChannel(data.ctx, channelName);
   const perms = BigInt(channel.perms);
   const sort = (THREAD_SORTS as readonly string[]).includes(sp.sort ?? '')
     ? (sp.sort as ThreadSort)

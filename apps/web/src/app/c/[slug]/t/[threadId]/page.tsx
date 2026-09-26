@@ -347,6 +347,10 @@ export default async function ThreadPage({
           <Alert tone="warning" title={t('lockedTitle')}>
             {t('lockedBody')}
           </Alert>
+        ) : data.ctx.timedOut && data.ctx.timeoutUntil ? (
+          <Alert tone="warning" title={t('timedOutTitle')}>
+            {t('timedOutBody', { date: formatDateTime(data.ctx.timeoutUntil) })}
+          </Alert>
         ) : !userId ? (
           <Alert tone="info">
             <span className="flex flex-wrap items-center justify-between gap-2">

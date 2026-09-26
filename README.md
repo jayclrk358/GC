@@ -118,7 +118,10 @@ Found a barrier? Please open an issue. Accessibility bugs are treated as high pr
       accessibility preferences, command palette, CI with axe
 - [x] **Phase 1 — Community hubs:** creation wizard, theme editor, page builder, roles,
       invites, live server status, explore, profiles, uploads
-- [ ] **Phase 2 — Forum, wiki, notifications, moderation basics**
+- [x] **Phase 2 — Forum, wiki, notifications, moderation basics:** forum channels with categories
+      and per-channel permissions, threads with polls, reactions, voting, flairs, Q&A answers,
+      drafts and full-text search; a wiki with revisions, diffs and restore; live and email
+      notifications with mutes; reports, blocks, kick/ban/timeout and an audit trail.
 - [ ] **Phase 3 — Real-time chat**
 - [ ] **Phase 4 — Server browser, history charts, voting**
 - [ ] **Phase 5 — Events, applications, automod, analytics**
