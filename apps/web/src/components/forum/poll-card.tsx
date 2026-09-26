@@ -7,12 +7,22 @@ import type { PollResults } from '@magnox/core';
 import { Button } from '@/components/ui/button';
 import { votePollAction } from '@/app/actions/forum';
 
-export function PollCard({ communityId, initial, canVote }: { communityId: string; initial: PollResults; canVote: boolean }) {
+export function PollCard({
+  communityId,
+  initial,
+  canVote,
+}: {
+  communityId: string;
+  initial: PollResults;
+  canVote: boolean;
+}) {
   const t = useTranslations('forum');
   const [poll, setPoll] = React.useState(initial);
   const voted = poll.options.some((o) => o.mine);
   const [choosing, setChoosing] = React.useState(!voted && canVote && !poll.closed);
-  const [selected, setSelected] = React.useState<string[]>(poll.options.filter((o) => o.mine).map((o) => o.id));
+  const [selected, setSelected] = React.useState<string[]>(
+    poll.options.filter((o) => o.mine).map((o) => o.id),
+  );
   const [pending, setPending] = React.useState(false);
   const total = poll.options.reduce((a, o) => a + o.votes, 0);
 
@@ -27,13 +37,21 @@ export function PollCard({ communityId, initial, canVote }: { communityId: strin
   }
 
   return (
-    <section aria-labelledby={`poll-${poll.id}`} className="rounded-ui-lg border border-border bg-surface p-4">
+    <section
+      aria-labelledby={`poll-${poll.id}`}
+      className="rounded-ui-lg border border-border bg-surface p-4"
+    >
       <h3 id={`poll-${poll.id}`} className="font-bold">
         {poll.question}
       </h3>
       <p className="text-sm text-muted">
-        {poll.multiple ? t('pollPickMany') : t('pollPickOne')} · {t('voters', { count: poll.totalVoters })}
-        {poll.closed ? ` · ${t('pollClosed')}` : poll.closesAt ? ` · ${t('pollClosesAt', { date: new Date(poll.closesAt).toLocaleString() })}` : ''}
+        {poll.multiple ? t('pollPickMany') : t('pollPickOne')} ·{' '}
+        {t('voters', { count: poll.totalVoters })}
+        {poll.closed
+          ? ` · ${t('pollClosed')}`
+          : poll.closesAt
+            ? ` · ${t('pollClosesAt', { date: new Date(poll.closesAt).toLocaleString() })}`
+            : ''}
       </p>
       {choosing ? (
         <form
@@ -46,7 +64,10 @@ export function PollCard({ communityId, initial, canVote }: { communityId: strin
           <fieldset className="flex flex-col gap-2">
             <legend className="sr-only">{poll.question}</legend>
             {poll.options.map((o) => (
-              <label key={o.id} className="flex items-center gap-3 rounded-ui border border-border px-3 py-2 has-[:checked]:border-primary">
+              <label
+                key={o.id}
+                className="flex items-center gap-3 rounded-ui border border-border px-3 py-2 has-[:checked]:border-primary"
+              >
                 <input
                   type={poll.multiple ? 'checkbox' : 'radio'}
                   name={`poll-${poll.id}`}

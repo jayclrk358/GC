@@ -48,7 +48,13 @@ export function ChannelLiveBanner({ channelId }: { channelId: string }) {
   );
 }
 
-export function ThreadLiveBanner({ threadId, userId }: { threadId: string; userId: string | null }) {
+export function ThreadLiveBanner({
+  threadId,
+  userId,
+}: {
+  threadId: string;
+  userId: string | null;
+}) {
   const t = useTranslations('forum');
   const router = useRouter();
   const [count, setCount] = React.useState(0);

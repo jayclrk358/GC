@@ -46,7 +46,10 @@ export function VoteButtons({
     <div
       role="group"
       aria-label={t('votesFor', { title })}
-      className={cn('flex items-center gap-0.5', orientation === 'vertical' ? 'flex-col' : 'flex-row')}
+      className={cn(
+        'flex items-center gap-0.5',
+        orientation === 'vertical' ? 'flex-col' : 'flex-row',
+      )}
     >
       <button
         type="button"

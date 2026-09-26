@@ -2,7 +2,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { CalendarDays, Link as LinkIcon, MapPin } from 'lucide-react';
-import { getPublicProfile } from '@magnox/core';
+import { getPublicProfile, hasBlocked } from '@magnox/core';
+import { getUser } from '@/lib/auth';
+import { BlockButton } from '@/components/moderation/block-button';
 import { formatDate } from '@/lib/format';
 import { Avatar, Badge } from '@/components/ui/misc';
 
@@ -15,6 +17,9 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
   const profile = await getPublicProfile((await params).username);
   if (!profile) notFound();
   const t = await getTranslations('profile');
+  const viewer = await getUser();
+  const blocked =
+    viewer && viewer.id !== profile.id ? await hasBlocked(viewer.id, profile.id) : false;
   return (
     <div className="flex flex-col">
       <div className="h-40 sm:h-56" data-decorative aria-hidden>
@@ -45,6 +50,11 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
               {profile.pronouns && <span> · {profile.pronouns}</span>}
             </p>
           </div>
+          {viewer && viewer.id !== profile.id && (
+            <div className="ms-auto pb-2">
+              <BlockButton userId={profile.id} name={profile.name} blocked={blocked} />
+            </div>
+          )}
         </div>
         <div className="mt-6 grid gap-8 md:grid-cols-[2fr_1fr]">
           <div className="flex flex-col gap-6">

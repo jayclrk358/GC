@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { isSafeHref, type RichMark, type RichNode } from '@magnox/shared';
+import { docHeadings, isSafeHref, type RichMark, type RichNode } from '@magnox/shared';
 import { mediaUrl } from '@/lib/media';
 import { cn } from '@/lib/utils';
 import { Spoiler } from './spoiler';
@@ -39,17 +39,28 @@ function renderText(text: string, marks: RichMark[] | undefined, key: React.Key)
   return <React.Fragment key={key}>{node}</React.Fragment>;
 }
 
-function renderNode(n: RichNode, key: React.Key, headingOffset: number): React.ReactNode {
-  const children = n.content?.map((c, i) => renderNode(c, i, headingOffset));
+interface RenderOpts {
+  headingOffset: number;
+  /** Heading anchor ids in document order, consumed as headings render. */
+  anchors?: { ids: string[]; next: number };
+}
+
+function renderNode(n: RichNode, key: React.Key, opts: RenderOpts): React.ReactNode {
+  const children = n.content?.map((c, i) => renderNode(c, i, opts));
   switch (n.type) {
     case 'doc':
       return <React.Fragment key={key}>{children}</React.Fragment>;
     case 'paragraph':
       return <p key={key}>{children}</p>;
     case 'heading': {
-      const level = Math.min(6, Number(n.attrs?.level ?? 2) + headingOffset);
+      const level = Math.min(6, Number(n.attrs?.level ?? 2) + opts.headingOffset);
       const Tag = `h${level}` as 'h2';
-      return <Tag key={key}>{children}</Tag>;
+      const id = opts.anchors ? opts.anchors.ids[opts.anchors.next++] : undefined;
+      return (
+        <Tag key={key} id={id} className={id ? 'scroll-mt-24' : undefined}>
+          {children}
+        </Tag>
+      );
     }
     case 'bulletList':
       return <ul key={key}>{children}</ul>;
@@ -111,12 +122,19 @@ export function RichText({
   doc,
   className,
   headingOffset = 0,
+  anchors = false,
 }: {
   doc: RichNode | null | undefined;
   className?: string;
   /** Shift heading levels down so they nest under the surrounding page structure. */
   headingOffset?: number;
+  /** Give headings ids (from `docHeadings`) so a table of contents can link to them. */
+  anchors?: boolean;
 }) {
   if (!doc) return null;
-  return <div className={cn('prose-mx', className)}>{renderNode(doc, 'root', headingOffset)}</div>;
+  const opts: RenderOpts = {
+    headingOffset,
+    anchors: anchors ? { ids: docHeadings(doc).map((h) => h.id), next: 0 } : undefined,
+  };
+  return <div className={cn('prose-mx', className)}>{renderNode(doc, 'root', opts)}</div>;
 }

@@ -13,7 +13,9 @@ export const metadata = { title: 'Forum' };
 export default async function ForumIndex({ params }: { params: Promise<{ slug: string }> }) {
   const data = await loadCommunity((await params).slug);
   const t = await getTranslations('forum');
-  const { tree, channels } = await listVisibleChannels(data.ctx, { types: ['forum', 'announcement'] });
+  const { tree, channels } = await listVisibleChannels(data.ctx, {
+    types: ['forum', 'announcement'],
+  });
   const stats = await forumChannelStats(channels.map((c) => c.id));
   const base = `/c/${data.community.slug}`;
   return (
@@ -32,11 +34,18 @@ export default async function ForumIndex({ params }: { params: Promise<{ slug: s
         </div>
       </div>
       {channels.length === 0 ? (
-        <EmptyState icon={<MessagesSquare />} title={t('noChannels')} description={data.perms.manageChannels ? t('noChannelsManage') : undefined} />
+        <EmptyState
+          icon={<MessagesSquare />}
+          title={t('noChannels')}
+          description={data.perms.manageChannels ? t('noChannelsManage') : undefined}
+        />
       ) : (
         tree.categories.map((cat) => (
           <section key={cat.id ?? 'none'} aria-labelledby={`cat-${cat.id ?? 'none'}`}>
-            <h3 id={`cat-${cat.id ?? 'none'}`} className="mb-2 text-sm font-bold tracking-wide text-muted uppercase">
+            <h3
+              id={`cat-${cat.id ?? 'none'}`}
+              className="mb-2 text-sm font-bold tracking-wide text-muted uppercase"
+            >
               {cat.name || t('uncategorised')}
             </h3>
             <ul className="divide-y divide-border rounded-ui-lg border border-border bg-surface">
@@ -52,14 +61,21 @@ export default async function ForumIndex({ params }: { params: Promise<{ slug: s
                       </Link>
                       {c.topic && <p className="text-sm text-muted">{c.topic}</p>}
                     </div>
-                    <p className="w-28 text-sm text-muted tabular-nums">{t('threadCount', { count: s?.threads ?? 0 })}</p>
+                    <p className="w-28 text-sm text-muted tabular-nums">
+                      {t('threadCount', { count: s?.threads ?? 0 })}
+                    </p>
                     <div className="w-64 min-w-0 text-sm">
                       {s?.latest ? (
                         <>
-                          <Link href={`${base}/t/${s.latest.id}`} className="block truncate font-medium hover:underline">
+                          <Link
+                            href={`${base}/t/${s.latest.id}`}
+                            className="block truncate font-medium hover:underline"
+                          >
                             {s.latest.title}
                           </Link>
-                          <span className="text-muted">{relativeTime(s.latest.lastActivityAt)}</span>
+                          <span className="text-muted">
+                            {relativeTime(s.latest.lastActivityAt)}
+                          </span>
                         </>
                       ) : (
                         <span className="text-muted">{t('noThreadsYet')}</span>

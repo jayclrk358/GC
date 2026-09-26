@@ -26,88 +26,104 @@ export interface MentionListHandle {
   onKeyDown: (props: SuggestionKeyDownProps) => boolean;
 }
 
-const MentionList = React.forwardRef<MentionListHandle, ListProps>(function MentionList(props, ref) {
-  const [index, setIndex] = React.useState(0);
-  const [lastItems, setLastItems] = React.useState(props.items);
-  if (props.items !== lastItems) {
-    setLastItems(props.items);
-    setIndex(0);
-  }
-  const optionId = (i: number) => `${props.listId}-opt-${i}`;
+const MentionList = React.forwardRef<MentionListHandle, ListProps>(
+  function MentionList(props, ref) {
+    const [index, setIndex] = React.useState(0);
+    const [lastItems, setLastItems] = React.useState(props.items);
+    if (props.items !== lastItems) {
+      setLastItems(props.items);
+      setIndex(0);
+    }
+    const optionId = (i: number) => `${props.listId}-opt-${i}`;
 
-  React.useEffect(() => {
-    // Combobox pattern: the editor keeps focus and points at the highlighted option.
-    const dom = props.editor.view.dom;
-    if (props.items.length) dom.setAttribute('aria-activedescendant', optionId(index));
-    else dom.removeAttribute('aria-activedescendant');
-  });
+    React.useEffect(() => {
+      // Combobox pattern: the editor keeps focus and points at the highlighted option.
+      const dom = props.editor.view.dom;
+      if (props.items.length) dom.setAttribute('aria-activedescendant', optionId(index));
+      else dom.removeAttribute('aria-activedescendant');
+    });
 
-  const select = (i: number) => {
-    const item = props.items[i];
-    if (item) props.command(item);
-  };
+    const select = (i: number) => {
+      const item = props.items[i];
+      if (item) props.command(item);
+    };
 
-  React.useImperativeHandle(ref, () => ({
-    onKeyDown: ({ event }) => {
-      if (!props.items.length) return false;
-      if (event.key === 'ArrowDown') {
-        setIndex((i) => (i + 1) % props.items.length);
-        return true;
-      }
-      if (event.key === 'ArrowUp') {
-        setIndex((i) => (i - 1 + props.items.length) % props.items.length);
-        return true;
-      }
-      if (event.key === 'Enter' || event.key === 'Tab') {
-        select(index);
-        return true;
-      }
-      return false;
-    },
-  }));
+    React.useImperativeHandle(ref, () => ({
+      onKeyDown: ({ event }) => {
+        if (!props.items.length) return false;
+        if (event.key === 'ArrowDown') {
+          setIndex((i) => (i + 1) % props.items.length);
+          return true;
+        }
+        if (event.key === 'ArrowUp') {
+          setIndex((i) => (i - 1 + props.items.length) % props.items.length);
+          return true;
+        }
+        if (event.key === 'Enter' || event.key === 'Tab') {
+          select(index);
+          return true;
+        }
+        return false;
+      },
+    }));
 
-  return (
-    <div className="w-72 overflow-hidden rounded-ui border border-border bg-surface text-fg shadow-xl">
-      <p role="status" className="sr-only">
-        {props.items.length ? `${props.items.length} suggestions. Use up and down arrows to choose.` : 'No matches'}
-      </p>
-      {props.items.length === 0 ? (
-        <p className="px-3 py-2 text-sm text-muted">No matches</p>
-      ) : (
-        <ul id={props.listId} role="listbox" aria-label="Mention suggestions" className="max-h-64 overflow-y-auto p-1">
-          {props.items.map((item, i) => (
-            <li
-              key={`${item.kind}-${item.id}`}
-              id={optionId(i)}
-              role="option"
-              aria-selected={i === index}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                select(i);
-              }}
-              onMouseEnter={() => setIndex(i)}
-              className={cn('flex cursor-pointer items-center gap-2 rounded-ui-sm px-2 py-1.5 text-sm', i === index && 'bg-surface-2')}
-            >
-              {item.kind === 'user' ? (
-                <Avatar src={item.image} name={item.detail || item.label} size={24} />
-              ) : item.kind === 'role' ? (
-                <span aria-hidden className="grid size-6 place-items-center rounded-full" style={{ background: item.color ?? 'var(--c-surface-2)' }}>
-                  <AtSign className="size-3.5 text-white" />
+    return (
+      <div className="w-72 overflow-hidden rounded-ui border border-border bg-surface text-fg shadow-xl">
+        <p role="status" className="sr-only">
+          {props.items.length
+            ? `${props.items.length} suggestions. Use up and down arrows to choose.`
+            : 'No matches'}
+        </p>
+        {props.items.length === 0 ? (
+          <p className="px-3 py-2 text-sm text-muted">No matches</p>
+        ) : (
+          <ul
+            id={props.listId}
+            role="listbox"
+            aria-label="Mention suggestions"
+            className="max-h-64 overflow-y-auto p-1"
+          >
+            {props.items.map((item, i) => (
+              <li
+                key={`${item.kind}-${item.id}`}
+                id={optionId(i)}
+                role="option"
+                aria-selected={i === index}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  select(i);
+                }}
+                onMouseEnter={() => setIndex(i)}
+                className={cn(
+                  'flex cursor-pointer items-center gap-2 rounded-ui-sm px-2 py-1.5 text-sm',
+                  i === index && 'bg-surface-2',
+                )}
+              >
+                {item.kind === 'user' ? (
+                  <Avatar src={item.image} name={item.detail || item.label} size={24} />
+                ) : item.kind === 'role' ? (
+                  <span
+                    aria-hidden
+                    className="grid size-6 place-items-center rounded-full"
+                    style={{ background: item.color ?? 'var(--c-surface-2)' }}
+                  >
+                    <AtSign className="size-3.5 text-white" />
+                  </span>
+                ) : (
+                  <Users className="size-5 text-muted" aria-hidden />
+                )}
+                <span className="min-w-0">
+                  <span className="block truncate font-semibold">@{item.label}</span>
+                  <span className="block truncate text-xs text-muted">{item.detail}</span>
                 </span>
-              ) : (
-                <Users className="size-5 text-muted" aria-hidden />
-              )}
-              <span className="min-w-0">
-                <span className="block truncate font-semibold">@{item.label}</span>
-                <span className="block truncate text-xs text-muted">{item.detail}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-});
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  },
+);
 
 function setComboboxAttrs(editor: Editor, listId: string | null) {
   const dom = editor.view.dom;
@@ -150,13 +166,19 @@ export function mentionExtension(communityId: string) {
   }).configure({
     HTMLAttributes: { class: 'font-semibold text-primary' },
     renderHTML({ options, node }) {
-      return ['span', mergeAttributes({ 'data-type': 'mention' }, options.HTMLAttributes), `@${node.attrs.label ?? node.attrs.id}`];
+      return [
+        'span',
+        mergeAttributes({ 'data-type': 'mention' }, options.HTMLAttributes),
+        `@${node.attrs.label ?? node.attrs.id}`,
+      ];
     },
     suggestion: {
       char: '@',
       items: async ({ query }) => {
         try {
-          const r = await fetch(`/api/communities/${communityId}/mentions?q=${encodeURIComponent(query)}`);
+          const r = await fetch(
+            `/api/communities/${communityId}/mentions?q=${encodeURIComponent(query)}`,
+          );
           if (!r.ok) return [];
           return ((await r.json()) as { items: MentionItem[] }).items;
         } catch {
@@ -179,7 +201,10 @@ export function mentionExtension(communityId: string) {
         const listId = `mention-list-${++counter}`;
         return {
           onStart: (props) => {
-            component = new ReactRenderer(MentionList, { props: { ...props, listId }, editor: props.editor });
+            component = new ReactRenderer(MentionList, {
+              props: { ...props, listId },
+              editor: props.editor,
+            });
             document.body.appendChild(component.element);
             setComboboxAttrs(props.editor, listId);
             void place(component.element as HTMLElement, props.clientRect?.());

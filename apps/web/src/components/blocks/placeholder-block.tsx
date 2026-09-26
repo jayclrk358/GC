@@ -2,7 +2,6 @@ import type { LoadedCommunity } from '@/lib/community';
 import { BlockSection } from './section';
 
 const TEXT: Record<string, string> = {
-  featuredThreads: 'Latest forum threads will appear here once the forum is set up.',
   upcomingEvents: 'Upcoming events will appear here once you schedule some.',
 };
 

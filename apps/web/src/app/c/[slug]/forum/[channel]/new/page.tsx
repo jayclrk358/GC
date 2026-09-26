@@ -8,16 +8,24 @@ import { ThreadComposer } from '@/components/forum/thread-composer';
 
 export const metadata = { title: 'New thread' };
 
-export default async function NewThreadPage({ params }: { params: Promise<{ slug: string; channel: string }> }) {
+export default async function NewThreadPage({
+  params,
+}: {
+  params: Promise<{ slug: string; channel: string }>;
+}) {
   const { slug, channel: channelName } = await params;
   const data = await loadCommunity(slug);
-  if (!data.user) redirect(`/sign-in?next=${encodeURIComponent(`/c/${slug}/forum/${channelName}/new`)}`);
+  if (!data.user)
+    redirect(`/sign-in?next=${encodeURIComponent(`/c/${slug}/forum/${channelName}/new`)}`);
   const channel = await getChannelByName(data.ctx, channelName);
   const perms = BigInt(channel.perms);
   const isMod = has(perms, Permission.MANAGE_THREADS);
-  if (!has(perms, Permission.CREATE_THREADS) || (channel.type === 'announcement' && !isMod)) notFound();
+  if (!has(perms, Permission.CREATE_THREADS) || (channel.type === 'announcement' && !isMod))
+    notFound();
   const t = await getTranslations('forum');
-  const flairs = (await listFlairs(data.community.id, channel.id)).filter((f) => isMod || !f.modOnly);
+  const flairs = (await listFlairs(data.community.id, channel.id)).filter(
+    (f) => isMod || !f.modOnly,
+  );
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
       <nav aria-label={t('breadcrumb')} className="text-sm text-muted">

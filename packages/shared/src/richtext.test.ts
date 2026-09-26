@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   collectMentions,
+  docHeadings,
   docToText,
   imagesMissingAlt,
   isSafeHref,
@@ -71,5 +72,34 @@ describe('rich text sanitizer', () => {
     );
     expect(docToText(d)).toBe('hi @ana');
     expect(collectMentions(d)).toEqual([{ kind: 'user', id: 'u1' }]);
+  });
+});
+
+describe('docHeadings', () => {
+  it('lists headings with unique anchor ids', () => {
+    const d = {
+      type: 'doc',
+      content: [
+        {
+          type: 'heading',
+          attrs: { level: 2 },
+          content: [{ type: 'text', text: 'Getting started' }],
+        },
+        { type: 'paragraph', content: [{ type: 'text', text: 'Hi' }] },
+        {
+          type: 'heading',
+          attrs: { level: 3 },
+          content: [{ type: 'text', text: 'Getting started' }],
+        },
+        { type: 'heading', attrs: { level: 3 }, content: [{ type: 'text', text: 'Été 🎉' }] },
+        { type: 'heading', attrs: { level: 4 }, content: [{ type: 'text', text: '!!!' }] },
+      ],
+    };
+    expect(docHeadings(d)).toEqual([
+      { level: 2, text: 'Getting started', id: 'h-getting-started' },
+      { level: 3, text: 'Getting started', id: 'h-getting-started-2' },
+      { level: 3, text: 'Été 🎉', id: 'h-ete' },
+      { level: 4, text: '!!!', id: 'h-section' },
+    ]);
   });
 });

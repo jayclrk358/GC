@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, inArray, isNull, lt, or, sql, type SQL } from 'drizzle-orm';
 import { db, schema, type Tx } from '@magnox/db';
 import {
   docToText,
@@ -51,7 +51,12 @@ export interface ThreadListItem {
   hasPoll: boolean;
 }
 
-async function requireChannelPerm(ctx: MemberContext, channel: ChannelView, flag: bigint, message?: string) {
+async function requireChannelPerm(
+  ctx: MemberContext,
+  channel: ChannelView,
+  flag: bigint,
+  message?: string,
+) {
   if (!ctx.userId) throw unauthorized();
   if (!has(BigInt(channel.perms), flag)) throw forbidden(message);
 }
@@ -77,7 +82,8 @@ export async function listThreads(
   const t = schema.threads;
   const where: SQL[] = [eq(t.channelId, channel.id), isNull(t.deletedAt)];
   if (opts.flairId) where.push(eq(t.flairId, opts.flairId));
-  if (sort === 'unanswered') where.push(channel.settings.qa ? isNull(t.solutionPostId) : eq(t.replyCount, 0));
+  if (sort === 'unanswered')
+    where.push(channel.settings.qa ? isNull(t.solutionPostId) : eq(t.replyCount, 0));
 
   const hot = sql`(sign(${t.score} + ${t.replyCount} * 0.5) * log(greatest(abs(${t.score} + ${t.replyCount} * 0.5), 1)) + extract(epoch from ${t.createdAt} - timestamptz '2025-01-01') / 45000)`;
   const order =
@@ -117,22 +123,36 @@ export async function listThreads(
       .orderBy(desc(t.pinned), ...order)
       .limit(pageSize)
       .offset(page * pageSize),
-    db.select({ n: count() }).from(t).where(and(...where)),
+    db
+      .select({ n: count() })
+      .from(t)
+      .where(and(...where)),
   ]);
 
   const ids = rows.map((r) => r.id);
-  const [votes, reads] = ctx.userId && ids.length
-    ? await Promise.all([
-        db
-          .select({ threadId: schema.threadVotes.threadId, value: schema.threadVotes.value })
-          .from(schema.threadVotes)
-          .where(and(eq(schema.threadVotes.userId, ctx.userId), inArray(schema.threadVotes.threadId, ids))),
-        db
-          .select({ threadId: schema.threadReads.threadId, readAt: schema.threadReads.readAt })
-          .from(schema.threadReads)
-          .where(and(eq(schema.threadReads.userId, ctx.userId), inArray(schema.threadReads.threadId, ids))),
-      ])
-    : [[], []];
+  const [votes, reads] =
+    ctx.userId && ids.length
+      ? await Promise.all([
+          db
+            .select({ threadId: schema.threadVotes.threadId, value: schema.threadVotes.value })
+            .from(schema.threadVotes)
+            .where(
+              and(
+                eq(schema.threadVotes.userId, ctx.userId),
+                inArray(schema.threadVotes.threadId, ids),
+              ),
+            ),
+          db
+            .select({ threadId: schema.threadReads.threadId, readAt: schema.threadReads.readAt })
+            .from(schema.threadReads)
+            .where(
+              and(
+                eq(schema.threadReads.userId, ctx.userId),
+                inArray(schema.threadReads.threadId, ids),
+              ),
+            ),
+        ])
+      : [[], []];
   const voteBy = new Map(votes.map((v) => [v.threadId, v.value]));
   const readBy = new Map(reads.map((r) => [r.threadId, r.readAt]));
 
@@ -148,7 +168,9 @@ export async function listThreads(
       lastActivityAt: r.lastActivityAt,
       createdAt: r.createdAt,
       flair: r.flairId ? { id: r.flairId, name: r.flairName!, color: r.flairColor } : null,
-      author: r.authorName ? { name: r.authorName, username: r.authorUsername, image: r.authorImage } : null,
+      author: r.authorName
+        ? { name: r.authorName, username: r.authorUsername, image: r.authorImage }
+        : null,
       myVote: voteBy.get(r.id) ?? 0,
       unread: Boolean(ctx.userId) && (readBy.get(r.id) ?? new Date(0)) < r.lastActivityAt,
       hasPoll: Boolean(r.pollId),
@@ -160,9 +182,14 @@ export async function listThreads(
 }
 
 /** Recent threads across every forum the viewer can see (landing-page block). */
-export async function recentThreads(ctx: MemberContext, opts: { channelId?: string; count: number }) {
+export async function recentThreads(
+  ctx: MemberContext,
+  opts: { channelId?: string; count: number },
+) {
   const { channels } = await listVisibleChannels(ctx, { types: ['forum', 'announcement'] });
-  const allowed = channels.filter((c) => (opts.channelId ? c.id === opts.channelId : true)).map((c) => c.id);
+  const allowed = channels
+    .filter((c) => (opts.channelId ? c.id === opts.channelId : true))
+    .map((c) => c.id);
   if (!allowed.length) return [];
   return db
     .select({
@@ -185,25 +212,44 @@ export type ThreadRow = typeof schema.threads.$inferSelect;
 
 export async function getThread(ctx: MemberContext, threadId: string) {
   const thread = await db.query.threads.findFirst({
-    where: and(eq(schema.threads.id, threadId), eq(schema.threads.communityId, ctx.community.id), isNull(schema.threads.deletedAt)),
+    where: and(
+      eq(schema.threads.id, threadId),
+      eq(schema.threads.communityId, ctx.community.id),
+      isNull(schema.threads.deletedAt),
+    ),
   });
   if (!thread) throw notFound('Thread');
   const channel = await getChannelById(ctx, thread.channelId);
   const [flair, poll, myVote, following] = await Promise.all([
-    thread.flairId ? db.query.flairs.findFirst({ where: eq(schema.flairs.id, thread.flairId) }) : null,
+    thread.flairId
+      ? db.query.flairs.findFirst({ where: eq(schema.flairs.id, thread.flairId) })
+      : null,
     db.query.polls.findFirst({ where: eq(schema.polls.threadId, thread.id) }),
     ctx.userId
       ? db.query.threadVotes.findFirst({
-          where: and(eq(schema.threadVotes.threadId, thread.id), eq(schema.threadVotes.userId, ctx.userId)),
+          where: and(
+            eq(schema.threadVotes.threadId, thread.id),
+            eq(schema.threadVotes.userId, ctx.userId),
+          ),
         })
       : null,
     ctx.userId
       ? db.query.threadFollows.findFirst({
-          where: and(eq(schema.threadFollows.threadId, thread.id), eq(schema.threadFollows.userId, ctx.userId)),
+          where: and(
+            eq(schema.threadFollows.threadId, thread.id),
+            eq(schema.threadFollows.userId, ctx.userId),
+          ),
         })
       : null,
   ]);
-  return { thread, channel, flair: flair ?? null, poll: poll ?? null, myVote: myVote?.value ?? 0, following: Boolean(following) };
+  return {
+    thread,
+    channel,
+    flair: flair ?? null,
+    poll: poll ?? null,
+    myVote: myVote?.value ?? 0,
+    following: Boolean(following),
+  };
 }
 
 export interface PostView {
@@ -250,12 +296,18 @@ export async function listPosts(
     db.select({ n: count() }).from(schema.posts).where(eq(schema.posts.threadId, threadId)),
   ]);
   const postIds = rows.map((r) => r.id);
-  const authorIds = [...new Set(rows.map((r) => r.authorId).filter((x): x is string => Boolean(x)))];
+  const authorIds = [
+    ...new Set(rows.map((r) => r.authorId).filter((x): x is string => Boolean(x))),
+  ];
 
   const [reactions, members, topRoles, blocks] = await Promise.all([
     postIds.length
       ? db
-          .select({ postId: schema.postReactions.postId, emoji: schema.postReactions.emoji, userId: schema.postReactions.userId })
+          .select({
+            postId: schema.postReactions.postId,
+            emoji: schema.postReactions.emoji,
+            userId: schema.postReactions.userId,
+          })
           .from(schema.postReactions)
           .where(inArray(schema.postReactions.postId, postIds))
       : [],
@@ -263,20 +315,40 @@ export async function listPosts(
       ? db
           .select({ userId: schema.members.userId, nickname: schema.members.nickname })
           .from(schema.members)
-          .where(and(eq(schema.members.communityId, ctx.community.id), inArray(schema.members.userId, authorIds)))
+          .where(
+            and(
+              eq(schema.members.communityId, ctx.community.id),
+              inArray(schema.members.userId, authorIds),
+            ),
+          )
       : [],
     authorIds.length
       ? db
-          .select({ userId: schema.memberRoles.userId, name: schema.roles.name, color: schema.roles.color, position: schema.roles.position })
+          .select({
+            userId: schema.memberRoles.userId,
+            name: schema.roles.name,
+            color: schema.roles.color,
+            position: schema.roles.position,
+          })
           .from(schema.memberRoles)
           .innerJoin(schema.roles, eq(schema.roles.id, schema.memberRoles.roleId))
-          .where(and(eq(schema.memberRoles.communityId, ctx.community.id), inArray(schema.memberRoles.userId, authorIds)))
+          .where(
+            and(
+              eq(schema.memberRoles.communityId, ctx.community.id),
+              inArray(schema.memberRoles.userId, authorIds),
+            ),
+          )
       : [],
     ctx.userId && authorIds.length
       ? db
           .select({ blockedId: schema.userBlocks.blockedId })
           .from(schema.userBlocks)
-          .where(and(eq(schema.userBlocks.userId, ctx.userId), inArray(schema.userBlocks.blockedId, authorIds)))
+          .where(
+            and(
+              eq(schema.userBlocks.userId, ctx.userId),
+              inArray(schema.userBlocks.blockedId, authorIds),
+            ),
+          )
       : [],
   ]);
   const nick = new Map(members.map((m) => [m.userId, m.nickname]));
@@ -318,7 +390,9 @@ export async function listPosts(
         },
         reactions: [...(byPost.get(r.id)?.entries() ?? [])]
           .map(([emoji, v]) => ({ emoji, ...v }))
-          .sort((a, b) => REACTIONS.indexOf(a.emoji as never) - REACTIONS.indexOf(b.emoji as never)),
+          .sort(
+            (a, b) => REACTIONS.indexOf(a.emoji as never) - REACTIONS.indexOf(b.emoji as never),
+          ),
         blocked: Boolean(r.authorId && blocked.has(r.authorId)),
       };
     }),
@@ -326,6 +400,25 @@ export async function listPosts(
     page,
     pageSize,
   };
+}
+
+/** Which page of a thread a post is on, for permalinks and notification links. */
+export async function locatePost(
+  ctx: MemberContext,
+  threadId: string,
+  postId: string,
+  pageSize = 30,
+): Promise<number> {
+  await getThread(ctx, threadId);
+  const post = await db.query.posts.findFirst({
+    where: and(eq(schema.posts.id, postId), eq(schema.posts.threadId, threadId)),
+  });
+  if (!post) throw notFound('Post');
+  const [row] = await db
+    .select({ n: count() })
+    .from(schema.posts)
+    .where(and(eq(schema.posts.threadId, threadId), lt(schema.posts.id, postId)));
+  return Math.floor((row?.n ?? 0) / pageSize);
 }
 
 // ── Writing ────────────────────────────────────────────────────────────────
@@ -350,7 +443,9 @@ function prepareBody(raw: unknown): { body: RichNode; text: string } {
   const body = sanitizeDoc(raw);
   const text = docToText(body, 50_000);
   if (!text.trim() && !JSON.stringify(body).includes('"image"')) {
-    throw new AppError('validation', 'Write something first.', { fields: { body: 'Write something first.' } });
+    throw new AppError('validation', 'Write something first.', {
+      fields: { body: 'Write something first.' },
+    });
   }
   return { body, text };
 }
@@ -359,20 +454,32 @@ export async function createThread(ctx: MemberContext, raw: unknown): Promise<{ 
   const input = threadInputSchema.parse(raw);
   const channel = await getChannelById(ctx, input.channelId);
   assertForum(channel);
-  await requireChannelPerm(ctx, channel, Permission.CREATE_THREADS, "You can't start threads in this channel.");
+  await requireChannelPerm(
+    ctx,
+    channel,
+    Permission.CREATE_THREADS,
+    "You can't start threads in this channel.",
+  );
   const isMod = has(BigInt(channel.perms), Permission.MANAGE_THREADS);
-  if (channel.type === 'announcement' && !isMod) throw forbidden('Only moderators can post announcements.');
+  if (channel.type === 'announcement' && !isMod)
+    throw forbidden('Only moderators can post announcements.');
   await enforceRateLimit(`thread:${ctx.userId}`, 10, 600, 'You are starting threads too quickly.');
   await enforceSlowmode(ctx, channel);
 
   if (input.flairId) {
     const flair = await db.query.flairs.findFirst({
-      where: and(eq(schema.flairs.id, input.flairId), eq(schema.flairs.communityId, ctx.community.id)),
+      where: and(
+        eq(schema.flairs.id, input.flairId),
+        eq(schema.flairs.communityId, ctx.community.id),
+      ),
     });
-    if (!flair || (flair.channelId && flair.channelId !== channel.id)) throw new AppError('validation', 'Choose a valid flair.');
+    if (!flair || (flair.channelId && flair.channelId !== channel.id))
+      throw new AppError('validation', 'Choose a valid flair.');
     if (flair.modOnly && !isMod) throw forbidden('That flair is for moderators.');
   } else if (channel.settings.requireFlair) {
-    throw new AppError('validation', 'Choose a flair for your thread.', { fields: { flairId: 'Required' } });
+    throw new AppError('validation', 'Choose a flair for your thread.', {
+      fields: { flairId: 'Required' },
+    });
   }
   const { body, text } = prepareBody(input.body);
   const threadId = newId();
@@ -404,10 +511,15 @@ export async function createThread(ctx: MemberContext, raw: unknown): Promise<{ 
         question: input.poll.question,
         options: input.poll.options.map((label, i) => ({ id: `o${i + 1}`, label })),
         multiple: input.poll.multiple,
-        closesAt: input.poll.closesInHours ? new Date(Date.now() + input.poll.closesInHours * 3600_000) : null,
+        closesAt: input.poll.closesInHours
+          ? new Date(Date.now() + input.poll.closesInHours * 3600_000)
+          : null,
       });
     }
-    await tx.update(schema.channels).set({ lastActivityAt: new Date() }).where(eq(schema.channels.id, channel.id));
+    await tx
+      .update(schema.channels)
+      .set({ lastActivityAt: new Date() })
+      .where(eq(schema.channels.id, channel.id));
     await autoFollow(tx, ctx.userId!, threadId);
   });
   await queueFanout({ kind: 'post', postId });
@@ -420,10 +532,19 @@ async function loadThreadForWrite(ctx: MemberContext, threadId: string) {
   return { thread, channel, isMod: has(BigInt(channel.perms), Permission.MANAGE_THREADS) };
 }
 
-export async function createReply(ctx: MemberContext, threadId: string, raw: unknown): Promise<{ id: string }> {
+export async function createReply(
+  ctx: MemberContext,
+  threadId: string,
+  raw: unknown,
+): Promise<{ id: string }> {
   const input = postInputSchema.parse(raw);
   const { thread, channel, isMod } = await loadThreadForWrite(ctx, threadId);
-  await requireChannelPerm(ctx, channel, Permission.REPLY_IN_THREADS, "You can't reply in this channel.");
+  await requireChannelPerm(
+    ctx,
+    channel,
+    Permission.REPLY_IN_THREADS,
+    "You can't reply in this channel.",
+  );
   if (thread.locked && !isMod) throw forbidden('This thread is locked.');
   await enforceRateLimit(`reply:${ctx.userId}`, 30, 300, 'You are replying too quickly.');
   await enforceSlowmode(ctx, channel);
@@ -447,20 +568,34 @@ export async function createReply(ctx: MemberContext, threadId: string, raw: unk
     });
     await tx
       .update(schema.threads)
-      .set({ replyCount: sql`${schema.threads.replyCount} + 1`, lastActivityAt: new Date(), lastPostId: postId })
+      .set({
+        replyCount: sql`${schema.threads.replyCount} + 1`,
+        lastActivityAt: new Date(),
+        lastPostId: postId,
+      })
       .where(eq(schema.threads.id, thread.id));
-    await tx.update(schema.channels).set({ lastActivityAt: new Date() }).where(eq(schema.channels.id, channel.id));
+    await tx
+      .update(schema.channels)
+      .set({ lastActivityAt: new Date() })
+      .where(eq(schema.channels.id, channel.id));
     await autoFollow(tx, ctx.userId!, thread.id);
     await tx
       .insert(schema.threadReads)
-      .values({ threadId: thread.id, userId: ctx.userId!, lastReadPostId: postId, readAt: new Date() })
+      .values({
+        threadId: thread.id,
+        userId: ctx.userId!,
+        lastReadPostId: postId,
+        readAt: new Date(),
+      })
       .onConflictDoUpdate({
         target: [schema.threadReads.threadId, schema.threadReads.userId],
         set: { lastReadPostId: postId, readAt: new Date() },
       });
   });
   await queueFanout({ kind: 'post', postId });
-  realtime().to(rooms.thread(thread.id)).emit('post:new', { threadId: thread.id, postId, authorId: ctx.userId });
+  realtime()
+    .to(rooms.thread(thread.id))
+    .emit('post:new', { threadId: thread.id, postId, authorId: ctx.userId });
   return { id: postId };
 }
 
@@ -471,19 +606,30 @@ export async function editPost(
   opts: { title?: string } = {},
 ): Promise<void> {
   const post = await db.query.posts.findFirst({
-    where: and(eq(schema.posts.id, postId), eq(schema.posts.communityId, ctx.community.id), isNull(schema.posts.deletedAt)),
+    where: and(
+      eq(schema.posts.id, postId),
+      eq(schema.posts.communityId, ctx.community.id),
+      isNull(schema.posts.deletedAt),
+    ),
   });
   if (!post) throw notFound('Post');
-  if (!ctx.userId || post.authorId !== ctx.userId) throw forbidden('You can only edit your own posts.');
+  if (!ctx.userId || post.authorId !== ctx.userId)
+    throw forbidden('You can only edit your own posts.');
   const { thread } = await loadThreadForWrite(ctx, post.threadId);
   if (thread.locked) throw forbidden('This thread is locked.');
   const input = postInputSchema.pick({ body: true }).parse(raw);
   const { body, text } = prepareBody(input.body);
-  const title = opts.title !== undefined ? z.string().trim().min(3).max(200).parse(opts.title) : undefined;
+  const title =
+    opts.title !== undefined ? z.string().trim().min(3).max(200).parse(opts.title) : undefined;
   await enforceRateLimit(`edit:${ctx.userId}`, 30, 300);
   await db.transaction(async (tx) => {
-    await tx.insert(schema.postRevisions).values({ id: newId(), postId, editorId: ctx.userId, body: post.body });
-    await tx.update(schema.posts).set({ body, bodyText: text, editedAt: new Date() }).where(eq(schema.posts.id, postId));
+    await tx
+      .insert(schema.postRevisions)
+      .values({ id: newId(), postId, editorId: ctx.userId, body: post.body });
+    await tx
+      .update(schema.posts)
+      .set({ body, bodyText: text, editedAt: new Date() })
+      .where(eq(schema.posts.id, postId));
     if (post.isOp && title && title !== thread.title) {
       await tx.update(schema.threads).set({ title }).where(eq(schema.threads.id, thread.id));
     }
@@ -491,9 +637,17 @@ export async function editPost(
   realtime().to(rooms.thread(thread.id)).emit('post:edited', { threadId: thread.id, postId });
 }
 
-export async function deletePost(ctx: MemberContext, postId: string, reason?: string): Promise<{ threadDeleted: boolean }> {
+export async function deletePost(
+  ctx: MemberContext,
+  postId: string,
+  reason?: string,
+): Promise<{ threadDeleted: boolean }> {
   const post = await db.query.posts.findFirst({
-    where: and(eq(schema.posts.id, postId), eq(schema.posts.communityId, ctx.community.id), isNull(schema.posts.deletedAt)),
+    where: and(
+      eq(schema.posts.id, postId),
+      eq(schema.posts.communityId, ctx.community.id),
+      isNull(schema.posts.deletedAt),
+    ),
   });
   if (!post) throw notFound('Post');
   const { thread, channel, isMod } = await loadThreadForWrite(ctx, post.threadId);
@@ -504,16 +658,25 @@ export async function deletePost(ctx: MemberContext, postId: string, reason?: st
   await db.transaction(async (tx) => {
     if (post.isOp) {
       // Removing the opening post removes the whole thread.
-      await tx.update(schema.threads).set({ deletedAt: now }).where(eq(schema.threads.id, thread.id));
+      await tx
+        .update(schema.threads)
+        .set({ deletedAt: now })
+        .where(eq(schema.threads.id, thread.id));
     }
-    await tx.update(schema.posts).set({ deletedAt: now, deletedBy: ctx.userId }).where(eq(schema.posts.id, postId));
+    await tx
+      .update(schema.posts)
+      .set({ deletedAt: now, deletedBy: ctx.userId })
+      .where(eq(schema.posts.id, postId));
     if (!post.isOp) {
       await tx
         .update(schema.threads)
         .set({ replyCount: sql`greatest(${schema.threads.replyCount} - 1, 0)` })
         .where(eq(schema.threads.id, thread.id));
       if (thread.solutionPostId === postId) {
-        await tx.update(schema.threads).set({ solutionPostId: null }).where(eq(schema.threads.id, thread.id));
+        await tx
+          .update(schema.threads)
+          .set({ solutionPostId: null })
+          .where(eq(schema.threads.id, thread.id));
       }
     }
     if (!own) {
@@ -539,17 +702,30 @@ export async function postHistory(ctx: MemberContext, postId: string) {
   if (!post) throw notFound('Post');
   await getThread(ctx, post.threadId);
   return db
-    .select({ id: schema.postRevisions.id, body: schema.postRevisions.body, createdAt: schema.postRevisions.createdAt })
+    .select({
+      id: schema.postRevisions.id,
+      body: schema.postRevisions.body,
+      createdAt: schema.postRevisions.createdAt,
+    })
     .from(schema.postRevisions)
     .where(eq(schema.postRevisions.postId, postId))
     .orderBy(desc(schema.postRevisions.id))
     .limit(50);
 }
 
-export async function toggleReaction(ctx: MemberContext, postId: string, emoji: string): Promise<{ added: boolean }> {
-  if (!(REACTIONS as readonly string[]).includes(emoji)) throw new AppError('validation', 'Unknown reaction.');
+export async function toggleReaction(
+  ctx: MemberContext,
+  postId: string,
+  emoji: string,
+): Promise<{ added: boolean }> {
+  if (!(REACTIONS as readonly string[]).includes(emoji))
+    throw new AppError('validation', 'Unknown reaction.');
   const post = await db.query.posts.findFirst({
-    where: and(eq(schema.posts.id, postId), eq(schema.posts.communityId, ctx.community.id), isNull(schema.posts.deletedAt)),
+    where: and(
+      eq(schema.posts.id, postId),
+      eq(schema.posts.communityId, ctx.community.id),
+      isNull(schema.posts.deletedAt),
+    ),
   });
   if (!post) throw notFound('Post');
   const { channel } = await loadThreadForWrite(ctx, post.threadId);
@@ -563,25 +739,38 @@ export async function toggleReaction(ctx: MemberContext, postId: string, emoji: 
   const existing = await db.query.postReactions.findFirst({ where: key });
   if (existing) await db.delete(schema.postReactions).where(key);
   else await db.insert(schema.postReactions).values({ postId, userId: ctx.userId!, emoji });
-  realtime().to(rooms.thread(post.threadId)).emit('post:reactions', { threadId: post.threadId, postId });
+  realtime()
+    .to(rooms.thread(post.threadId))
+    .emit('post:reactions', { threadId: post.threadId, postId });
   return { added: !existing };
 }
 
-export async function voteThread(ctx: MemberContext, threadId: string, rawValue: unknown): Promise<{ score: number; value: number }> {
+export async function voteThread(
+  ctx: MemberContext,
+  threadId: string,
+  rawValue: unknown,
+): Promise<{ score: number; value: number }> {
   const value = z.union([z.literal(-1), z.literal(0), z.literal(1)]).parse(rawValue);
   const { thread, channel } = await loadThreadForWrite(ctx, threadId);
   if (!channel.settings.voting) throw new AppError('bad_request', 'Voting is off in this channel.');
   await requireChannelPerm(ctx, channel, Permission.VOTE, "You can't vote here.");
-  if (thread.authorId === ctx.userId) throw new AppError('bad_request', "You can't vote on your own thread.");
+  if (thread.authorId === ctx.userId)
+    throw new AppError('bad_request', "You can't vote on your own thread.");
   await enforceRateLimit(`vote:${ctx.userId}`, 60, 60);
   const score = await db.transaction(async (tx) => {
-    const key = and(eq(schema.threadVotes.threadId, threadId), eq(schema.threadVotes.userId, ctx.userId!));
+    const key = and(
+      eq(schema.threadVotes.threadId, threadId),
+      eq(schema.threadVotes.userId, ctx.userId!),
+    );
     if (value === 0) await tx.delete(schema.threadVotes).where(key);
     else {
       await tx
         .insert(schema.threadVotes)
         .values({ threadId, userId: ctx.userId!, value })
-        .onConflictDoUpdate({ target: [schema.threadVotes.threadId, schema.threadVotes.userId], set: { value } });
+        .onConflictDoUpdate({
+          target: [schema.threadVotes.threadId, schema.threadVotes.userId],
+          set: { value },
+        });
     }
     const [{ s } = { s: 0 }] = await tx
       .select({ s: sql<number>`coalesce(sum(${schema.threadVotes.value}), 0)::int` })
@@ -622,20 +811,29 @@ export async function pollResults(ctx: MemberContext, pollId: string): Promise<P
   };
 }
 
-export async function votePoll(ctx: MemberContext, pollId: string, rawOptions: unknown): Promise<PollResults> {
+export async function votePoll(
+  ctx: MemberContext,
+  pollId: string,
+  rawOptions: unknown,
+): Promise<PollResults> {
   const optionIds = z.array(z.string().max(8)).max(10).parse(rawOptions);
   const poll = await db.query.polls.findFirst({ where: eq(schema.polls.id, pollId) });
   if (!poll) throw notFound('Poll');
   const { channel } = await loadThreadForWrite(ctx, poll.threadId);
   await requireChannelPerm(ctx, channel, Permission.VOTE, "You can't vote here.");
-  if (poll.closesAt && poll.closesAt < new Date()) throw new AppError('bad_request', 'This poll has closed.');
+  if (poll.closesAt && poll.closesAt < new Date())
+    throw new AppError('bad_request', 'This poll has closed.');
   const valid = new Set(poll.options.map((o) => o.id));
   const chosen = [...new Set(optionIds)].filter((id) => valid.has(id));
   if (!poll.multiple && chosen.length > 1) throw new AppError('validation', 'Choose one option.');
   await db.transaction(async (tx) => {
-    await tx.delete(schema.pollVotes).where(and(eq(schema.pollVotes.pollId, pollId), eq(schema.pollVotes.userId, ctx.userId!)));
+    await tx
+      .delete(schema.pollVotes)
+      .where(and(eq(schema.pollVotes.pollId, pollId), eq(schema.pollVotes.userId, ctx.userId!)));
     if (chosen.length) {
-      await tx.insert(schema.pollVotes).values(chosen.map((optionId) => ({ pollId, userId: ctx.userId!, optionId })));
+      await tx
+        .insert(schema.pollVotes)
+        .values(chosen.map((optionId) => ({ pollId, userId: ctx.userId!, optionId })));
     }
   });
   return pollResults(ctx, pollId);
@@ -650,7 +848,11 @@ const threadModSchema = z.object({
   flairId: z.string().uuid().nullable().optional(),
 });
 
-export async function moderateThread(ctx: MemberContext, threadId: string, raw: unknown): Promise<void> {
+export async function moderateThread(
+  ctx: MemberContext,
+  threadId: string,
+  raw: unknown,
+): Promise<void> {
   const input = threadModSchema.parse(raw);
   const { thread, channel, isMod } = await loadThreadForWrite(ctx, threadId);
   const own = thread.authorId === ctx.userId;
@@ -662,14 +864,18 @@ export async function moderateThread(ctx: MemberContext, threadId: string, raw: 
   if (input.channelId && input.channelId !== channel.id) {
     const target = await getChannelById(ctx, input.channelId);
     assertForum(target);
-    if (!has(BigInt(target.perms), Permission.MANAGE_THREADS)) throw forbidden('You need Manage threads in the target channel.');
+    if (!has(BigInt(target.perms), Permission.MANAGE_THREADS))
+      throw forbidden('You need Manage threads in the target channel.');
     set.channelId = target.id;
     set.flairId = null;
   }
   if (input.flairId !== undefined) {
     if (input.flairId) {
       const flair = await db.query.flairs.findFirst({
-        where: and(eq(schema.flairs.id, input.flairId), eq(schema.flairs.communityId, ctx.community.id)),
+        where: and(
+          eq(schema.flairs.id, input.flairId),
+          eq(schema.flairs.communityId, ctx.community.id),
+        ),
       });
       if (!flair) throw new AppError('validation', 'Choose a valid flair.');
       if (flair.modOnly && !isMod) throw forbidden('That flair is for moderators.');
@@ -692,19 +898,31 @@ export async function moderateThread(ctx: MemberContext, threadId: string, raw: 
   });
 }
 
-export async function markSolution(ctx: MemberContext, threadId: string, postId: string | null): Promise<void> {
+export async function markSolution(
+  ctx: MemberContext,
+  threadId: string,
+  postId: string | null,
+): Promise<void> {
   const { thread, channel, isMod } = await loadThreadForWrite(ctx, threadId);
   if (!channel.settings.qa) throw new AppError('bad_request', 'This channel is not a Q&A channel.');
-  if (thread.authorId !== ctx.userId && !isMod) throw forbidden('Only the author or a moderator can pick the answer.');
+  if (thread.authorId !== ctx.userId && !isMod)
+    throw forbidden('Only the author or a moderator can pick the answer.');
   let solutionAuthor: string | null = null;
   if (postId) {
     const post = await db.query.posts.findFirst({
-      where: and(eq(schema.posts.id, postId), eq(schema.posts.threadId, threadId), isNull(schema.posts.deletedAt)),
+      where: and(
+        eq(schema.posts.id, postId),
+        eq(schema.posts.threadId, threadId),
+        isNull(schema.posts.deletedAt),
+      ),
     });
     if (!post || post.isOp) throw new AppError('validation', 'Pick a reply as the answer.');
     solutionAuthor = post.authorId;
   }
-  await db.update(schema.threads).set({ solutionPostId: postId }).where(eq(schema.threads.id, threadId));
+  await db
+    .update(schema.threads)
+    .set({ solutionPostId: postId })
+    .where(eq(schema.threads.id, threadId));
   if (solutionAuthor && solutionAuthor !== ctx.userId) {
     await notifyUser({
       userId: solutionAuthor,
@@ -713,30 +931,55 @@ export async function markSolution(ctx: MemberContext, threadId: string, postId:
       actorId: ctx.userId,
       targetType: 'post',
       targetId: postId!,
-      url: `/c/${ctx.community.slug}/t/${threadId}#post-${postId}`,
-      data: { title: thread.title, excerpt: 'Your reply was marked as the answer.', community: ctx.community.name },
+      url: `/c/${ctx.community.slug}/t/${threadId}/p/${postId}`,
+      data: {
+        title: thread.title,
+        excerpt: 'Your reply was marked as the answer.',
+        community: ctx.community.name,
+      },
     });
   }
 }
 
-export async function setFollow(ctx: MemberContext, threadId: string, follow: boolean): Promise<void> {
+export async function setFollow(
+  ctx: MemberContext,
+  threadId: string,
+  follow: boolean,
+): Promise<void> {
   if (!ctx.userId) throw unauthorized();
   await getThread(ctx, threadId);
-  if (follow) await db.insert(schema.threadFollows).values({ threadId, userId: ctx.userId }).onConflictDoNothing();
+  if (follow)
+    await db
+      .insert(schema.threadFollows)
+      .values({ threadId, userId: ctx.userId })
+      .onConflictDoNothing();
   else {
     await db
       .delete(schema.threadFollows)
-      .where(and(eq(schema.threadFollows.threadId, threadId), eq(schema.threadFollows.userId, ctx.userId)));
+      .where(
+        and(
+          eq(schema.threadFollows.threadId, threadId),
+          eq(schema.threadFollows.userId, ctx.userId),
+        ),
+      );
   }
 }
 
-export async function markThreadRead(userId: string, threadId: string, lastPostId: string | null): Promise<void> {
+export async function markThreadRead(
+  userId: string,
+  threadId: string,
+  lastPostId: string | null,
+): Promise<void> {
   await db
     .insert(schema.threadReads)
     .values({ threadId, userId, lastReadPostId: lastPostId, readAt: new Date() })
     .onConflictDoUpdate({
       target: [schema.threadReads.threadId, schema.threadReads.userId],
-      set: { lastReadPostId: lastPostId, readAt: new Date() },
+      // Never move the marker backwards (e.g. reading an older tab after a newer one).
+      set: {
+        lastReadPostId: sql`greatest(${schema.threadReads.lastReadPostId}, excluded.last_read_post_id)`,
+        readAt: new Date(),
+      },
     });
 }
 
@@ -755,7 +998,8 @@ export async function createFlair(ctx: MemberContext, raw: unknown) {
   requirePerm(ctx, Permission.MANAGE_CHANNELS);
   const input = flairInputSchema.parse(raw);
   const existing = await listFlairs(ctx.community.id);
-  if (existing.length >= 100) throw new AppError('forbidden', 'A community can have up to 100 flairs.');
+  if (existing.length >= 100)
+    throw new AppError('forbidden', 'A community can have up to 100 flairs.');
   const [row] = await db
     .insert(schema.flairs)
     .values({ id: newId(), communityId: ctx.community.id, ...input, position: existing.length })
@@ -774,7 +1018,9 @@ export async function updateFlair(ctx: MemberContext, id: string, raw: unknown) 
 
 export async function deleteFlair(ctx: MemberContext, id: string) {
   requirePerm(ctx, Permission.MANAGE_CHANNELS);
-  await db.delete(schema.flairs).where(and(eq(schema.flairs.id, id), eq(schema.flairs.communityId, ctx.community.id)));
+  await db
+    .delete(schema.flairs)
+    .where(and(eq(schema.flairs.id, id), eq(schema.flairs.communityId, ctx.community.id)));
 }
 
 // ── Search ─────────────────────────────────────────────────────────────────
@@ -783,7 +1029,9 @@ export async function searchForum(ctx: MemberContext, rawQ: string, limit = 30) 
   const q = rawQ.trim().slice(0, 100);
   if (q.length < 2) return [];
   const { channels } = await listVisibleChannels(ctx, { types: ['forum', 'announcement'] });
-  const readable = channels.filter((c) => has(BigInt(c.perms), Permission.READ_HISTORY)).map((c) => c.id);
+  const readable = channels
+    .filter((c) => has(BigInt(c.perms), Permission.READ_HISTORY))
+    .map((c) => c.id);
   if (!readable.length) return [];
   const tsq = sql`websearch_to_tsquery('simple', ${q})`;
   const rows = await db
@@ -808,27 +1056,42 @@ export async function searchForum(ctx: MemberContext, rawQ: string, limit = 30) 
         or(sql`${schema.threads.search} @@ ${tsq}`, sql`${schema.posts.search} @@ ${tsq}`),
       ),
     )
-    .orderBy(desc(sql`greatest(ts_rank(${schema.threads.search}, ${tsq}) * 2, ts_rank(${schema.posts.search}, ${tsq}))`))
+    .orderBy(
+      desc(
+        sql`greatest(ts_rank(${schema.threads.search}, ${tsq}) * 2, ts_rank(${schema.posts.search}, ${tsq}))`,
+      ),
+    )
     .limit(limit * 3);
   // One result per thread, best match first.
   const seen = new Set<string>();
-  return rows.filter((r) => (seen.has(r.threadId) ? false : (seen.add(r.threadId), true))).slice(0, limit);
+  return rows
+    .filter((r) => (seen.has(r.threadId) ? false : (seen.add(r.threadId), true)))
+    .slice(0, limit);
 }
-
 
 /** Channel perms for a thread (used by the realtime server). */
 export async function canViewThread(ctx: MemberContext, threadId: string): Promise<boolean> {
   const thread = await db.query.threads.findFirst({ where: eq(schema.threads.id, threadId) });
   if (!thread || thread.communityId !== ctx.community.id || thread.deletedAt) return false;
-  const channel = await db.query.channels.findFirst({ where: eq(schema.channels.id, thread.channelId) });
+  const channel = await db.query.channels.findFirst({
+    where: eq(schema.channels.id, thread.channelId),
+  });
   if (!channel) return false;
-  const perms = await channelPermissions(ctx, { id: channel.id, parentId: channel.parentId, communityId: channel.communityId, type: channel.type });
+  const perms = await channelPermissions(ctx, {
+    id: channel.id,
+    parentId: channel.parentId,
+    communityId: channel.communityId,
+    type: channel.type,
+  });
   return has(perms, Permission.VIEW_CHANNEL);
 }
 
 /** Thread count and most recent thread for each forum channel (forum index page). */
 export async function forumChannelStats(channelIds: string[]) {
-  const stats = new Map<string, { threads: number; latest: { id: string; title: string; lastActivityAt: Date } | null }>();
+  const stats = new Map<
+    string,
+    { threads: number; latest: { id: string; title: string; lastActivityAt: Date } | null }
+  >();
   if (!channelIds.length) return stats;
   const counts = await db
     .select({ channelId: schema.threads.channelId, n: count() })
@@ -847,6 +1110,7 @@ export async function forumChannelStats(channelIds: string[]) {
     .orderBy(schema.threads.channelId, desc(schema.threads.lastActivityAt));
   for (const id of channelIds) stats.set(id, { threads: 0, latest: null });
   for (const c of counts) stats.get(c.channelId)!.threads = c.n;
-  for (const l of latest) stats.get(l.channelId)!.latest = { id: l.id, title: l.title, lastActivityAt: l.lastActivityAt };
+  for (const l of latest)
+    stats.get(l.channelId)!.latest = { id: l.id, title: l.title, lastActivityAt: l.lastActivityAt };
   return stats;
 }

@@ -8,7 +8,13 @@ import { has, normalizeNav, Permission, type NavTab } from '@magnox/shared';
 import { getUser } from './auth';
 
 /** Tabs whose features exist. Later phases add forum, chat, wiki and events. */
-export const AVAILABLE_TABS: ReadonlySet<NavTab> = new Set(['home', 'forum', 'wiki', 'members', 'servers']);
+export const AVAILABLE_TABS: ReadonlySet<NavTab> = new Set([
+  'home',
+  'forum',
+  'wiki',
+  'members',
+  'servers',
+]);
 
 export const loadCommunity = cache(async (slug: string) => {
   const user = await getUser();
@@ -42,7 +48,12 @@ export const loadCommunity = cache(async (slug: string) => {
     perms.manageRoles ||
     perms.manageServers ||
     perms.manageInvites ||
-    perms.viewAudit;
+    perms.viewAudit ||
+    perms.manageChannels ||
+    perms.manageReports ||
+    perms.ban ||
+    perms.kick ||
+    perms.timeout;
   return { ctx, community, game, nav, user, perms: { ...perms, settings: canOpenSettings } };
 });
 

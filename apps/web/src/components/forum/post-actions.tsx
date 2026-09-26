@@ -43,7 +43,14 @@ export function PostActions({
   channelName: string;
   threadId: string;
   threadTitle: string;
-  post: { id: string; isOp: boolean; body: RichNode | null; authorName: string; edited: boolean; isSolution: boolean };
+  post: {
+    id: string;
+    isOp: boolean;
+    body: RichNode | null;
+    authorName: string;
+    edited: boolean;
+    isSolution: boolean;
+  };
   can: { reply: boolean; edit: boolean; delete: boolean; report: boolean; solve: boolean };
 }) {
   const t = useTranslations('forum');
@@ -56,12 +63,19 @@ export function PostActions({
   const [pending, setPending] = React.useState(false);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
   const [reporting, setReporting] = React.useState(false);
-  const [history, setHistory] = React.useState<{ id: string; body: RichNode; createdAt: Date }[] | null>(null);
+  const [history, setHistory] = React.useState<
+    { id: string; body: RichNode; createdAt: Date }[] | null
+  >(null);
 
   async function saveEdit() {
     if (!draft) return;
     setPending(true);
-    const r = await editPostAction(communityId, post.id, { body: draft }, post.isOp ? title : undefined);
+    const r = await editPostAction(
+      communityId,
+      post.id,
+      { body: draft },
+      post.isOp ? title : undefined,
+    );
     setPending(false);
     if (r.ok) {
       setEditing(false);
@@ -91,7 +105,11 @@ export function PostActions({
           variant={post.isSolution ? 'secondary' : 'ghost'}
           aria-pressed={post.isSolution}
           onClick={async () => {
-            const r = await markSolutionAction(communityId, threadId, post.isSolution ? null : post.id);
+            const r = await markSolutionAction(
+              communityId,
+              threadId,
+              post.isSolution ? null : post.id,
+            );
             if (r.ok) router.refresh();
             else toast.error(r.error);
           }}
@@ -102,7 +120,11 @@ export function PostActions({
       {(can.edit || can.delete || can.report || post.edited) && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button size="icon-sm" variant="ghost" aria-label={t('moreActions', { name: post.authorName })}>
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              aria-label={t('moreActions', { name: post.authorName })}
+            >
               <MoreHorizontal aria-hidden />
             </Button>
           </DropdownMenuTrigger>
@@ -149,10 +171,24 @@ export function PostActions({
             <FormError message={error} />
             {post.isOp && (
               <Field label={t('threadTitle')}>
-                {(p) => <Input {...p} value={title} maxLength={200} onChange={(e) => setTitle(e.target.value)} />}
+                {(p) => (
+                  <Input
+                    {...p}
+                    value={title}
+                    maxLength={200}
+                    onChange={(e) => setTitle(e.target.value)}
+                  />
+                )}
               </Field>
             )}
-            <RichTextEditor label={t('body')} value={draft} onChange={setDraft} communityId={communityId} mentions={communityId} onSubmitShortcut={() => void saveEdit()} />
+            <RichTextEditor
+              label={t('body')}
+              value={draft}
+              onChange={setDraft}
+              communityId={communityId}
+              mentions={communityId}
+              onSubmitShortcut={() => void saveEdit()}
+            />
             <div className="flex justify-end gap-2">
               <Button type="button" variant="ghost" onClick={() => setEditing(false)}>
                 {t('cancel')}
@@ -197,7 +233,9 @@ export function PostActions({
             <ol className="flex flex-col gap-4">
               {history.map((h) => (
                 <li key={h.id} className="rounded-ui border border-border p-3">
-                  <p className="mb-2 text-sm text-muted">{t('versionFrom', { date: formatDateTime(h.createdAt) })}</p>
+                  <p className="mb-2 text-sm text-muted">
+                    {t('versionFrom', { date: formatDateTime(h.createdAt) })}
+                  </p>
                   <RichText doc={h.body} />
                 </li>
               ))}

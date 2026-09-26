@@ -41,7 +41,12 @@ export async function createReplyAction(communityId: string, threadId: string, i
   });
 }
 
-export async function editPostAction(communityId: string, postId: string, input: unknown, title?: string) {
+export async function editPostAction(
+  communityId: string,
+  postId: string,
+  input: unknown,
+  title?: string,
+) {
   return runAction(async () => {
     const ctx = await ctxFor(communityId);
     await editPost(ctx, postId, input, { title });
@@ -82,7 +87,11 @@ export async function moderateThreadAction(communityId: string, threadId: string
   });
 }
 
-export async function markSolutionAction(communityId: string, threadId: string, postId: string | null) {
+export async function markSolutionAction(
+  communityId: string,
+  threadId: string,
+  postId: string | null,
+) {
   return runAction(async () => markSolution(await ctxFor(communityId), threadId, postId));
 }
 

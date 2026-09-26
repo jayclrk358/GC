@@ -187,3 +187,38 @@ export function collectMentions(node: RichNode): { kind: string; id: string }[] 
   walk(node);
   return out;
 }
+
+export interface DocHeading {
+  level: number;
+  text: string;
+  /** Stable, unique anchor id (`h-` prefix keeps it clear of app ids). */
+  id: string;
+}
+
+/** The document's headings in order, with unique anchor ids for a table of contents. */
+export function docHeadings(node: RichNode | null | undefined): DocHeading[] {
+  if (!node) return [];
+  const out: DocHeading[] = [];
+  const seen = new Map<string, number>();
+  const walk = (n: RichNode) => {
+    if (n.type === 'heading') {
+      const text = docToText(n, 200).replace(/\s+/g, ' ').trim();
+      const base =
+        'h-' +
+        (text
+          .normalize('NFKD')
+          .replace(/[̀-ͯ]/g, '')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '')
+          .slice(0, 50) || 'section');
+      const k = seen.get(base) ?? 0;
+      seen.set(base, k + 1);
+      out.push({ level: Number(n.attrs?.level ?? 2), text, id: k ? `${base}-${k + 1}` : base });
+      return;
+    }
+    n.content?.forEach(walk);
+  };
+  walk(node);
+  return out;
+}

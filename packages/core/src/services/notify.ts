@@ -31,8 +31,13 @@ export type FanoutJob =
 
 /** Queue notification fan-out; the worker does the heavy lifting. */
 export async function queueFanout(job: FanoutJob): Promise<void> {
-  const id = job.kind === 'post' ? job.postId : job.kind === 'report' ? job.reportId : job.revisionId;
-  await enqueue(QUEUES.notify, 'fanout', job, { jobId: `fanout-${job.kind}-${id}`, attempts: 3, backoff: { type: 'exponential', delay: 2000 } });
+  const id =
+    job.kind === 'post' ? job.postId : job.kind === 'report' ? job.reportId : job.revisionId;
+  await enqueue(QUEUES.notify, 'fanout', job, {
+    jobId: `fanout-${job.kind}-${id}`,
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 2000 },
+  });
 }
 
 export interface NotificationInput {
@@ -50,10 +55,19 @@ export interface NotificationInput {
 export async function deliver(items: NotificationInput[]): Promise<void> {
   if (!items.length) return;
   for (let i = 0; i < items.length; i += 500) {
-    const batch = items.slice(i, i + 500).map((n) => ({ id: newId(), ...n, targetType: n.targetType ?? null, targetId: n.targetId ?? null }));
+    const batch = items
+      .slice(i, i + 500)
+      .map((n) => ({
+        id: newId(),
+        ...n,
+        targetType: n.targetType ?? null,
+        targetId: n.targetId ?? null,
+      }));
     await db.insert(schema.notifications).values(batch);
     for (const n of batch) {
-      realtime().to(rooms.user(n.userId)).emit('notification:new', { id: n.id, type: n.type, url: n.url, data: n.data });
+      realtime()
+        .to(rooms.user(n.userId))
+        .emit('notification:new', { id: n.id, type: n.type, url: n.url, data: n.data });
     }
   }
 }
@@ -78,27 +92,47 @@ export async function usersWhoCanView(
     db
       .select({ userId: schema.members.userId, timeoutUntil: schema.members.timeoutUntil })
       .from(schema.members)
-      .where(and(eq(schema.members.communityId, communityId), inArray(schema.members.userId, userIds))),
+      .where(
+        and(eq(schema.members.communityId, communityId), inArray(schema.members.userId, userIds)),
+      ),
     db
       .select({ userId: schema.memberRoles.userId, roleId: schema.memberRoles.roleId })
       .from(schema.memberRoles)
-      .where(and(eq(schema.memberRoles.communityId, communityId), inArray(schema.memberRoles.userId, userIds))),
+      .where(
+        and(
+          eq(schema.memberRoles.communityId, communityId),
+          inArray(schema.memberRoles.userId, userIds),
+        ),
+      ),
     db
       .select()
       .from(schema.permissionOverwrites)
-      .where(inArray(schema.permissionOverwrites.channelId, channel.parentId ? [channel.parentId, channel.id] : [channel.id])),
+      .where(
+        inArray(
+          schema.permissionOverwrites.channelId,
+          channel.parentId ? [channel.parentId, channel.id] : [channel.id],
+        ),
+      ),
   ]);
   if (!community) return new Set();
   const everyone = roles.find((r) => r.isDefault);
   if (!everyone) return new Set();
   const roleById = new Map(roles.map((r) => [r.id, r]));
   const rolesByUser = new Map<string, string[]>();
-  for (const mr of memberRoles) rolesByUser.set(mr.userId, [...(rolesByUser.get(mr.userId) ?? []), mr.roleId]);
+  for (const mr of memberRoles)
+    rolesByUser.set(mr.userId, [...(rolesByUser.get(mr.userId) ?? []), mr.roleId]);
   const layer = (channelId: string): Overwrite[] =>
     overwrites
       .filter((o) => o.channelId === channelId)
-      .map((o) => ({ targetType: o.targetType, targetId: o.targetId, allow: o.allow, deny: o.deny }));
-  const layers = channel.parentId ? [layer(channel.parentId), layer(channel.id)] : [layer(channel.id)];
+      .map((o) => ({
+        targetType: o.targetType,
+        targetId: o.targetId,
+        allow: o.allow,
+        deny: o.deny,
+      }));
+  const layers = channel.parentId
+    ? [layer(channel.parentId), layer(channel.id)]
+    : [layer(channel.id)];
   const out = new Set<string>();
   const now = new Date();
   for (const m of members) {
@@ -132,7 +166,9 @@ async function blockedBy(recipients: string[], actorId: string): Promise<Set<str
   const rows = await db
     .select({ userId: schema.userBlocks.userId })
     .from(schema.userBlocks)
-    .where(and(eq(schema.userBlocks.blockedId, actorId), inArray(schema.userBlocks.userId, recipients)));
+    .where(
+      and(eq(schema.userBlocks.blockedId, actorId), inArray(schema.userBlocks.userId, recipients)),
+    );
   return new Set(rows.map((r) => r.userId));
 }
 
@@ -147,7 +183,11 @@ async function mutedFor(
     .where(
       and(
         inArray(schema.mutes.userId, recipients),
-        or(...targets.map((t) => and(eq(schema.mutes.targetType, t.type), eq(schema.mutes.targetId, t.id))))!,
+        or(
+          ...targets.map((t) =>
+            and(eq(schema.mutes.targetType, t.type), eq(schema.mutes.targetId, t.id)),
+          ),
+        )!,
         or(isNull(schema.mutes.until), gt(schema.mutes.until, new Date()))!,
       ),
     );
@@ -166,8 +206,14 @@ export async function resolveMentions(
   canMentionEveryone: boolean,
 ): Promise<{ users: string[]; roleUsers: string[]; everyone: boolean }> {
   const mentions = collectMentions(doc);
-  const userIds = [...new Set(mentions.filter((m) => m.kind === 'user').map((m) => m.id))].slice(0, 50);
-  const roleIds = [...new Set(mentions.filter((m) => m.kind === 'role').map((m) => m.id))].slice(0, 10);
+  const userIds = [...new Set(mentions.filter((m) => m.kind === 'user').map((m) => m.id))].slice(
+    0,
+    50,
+  );
+  const roleIds = [...new Set(mentions.filter((m) => m.kind === 'role').map((m) => m.id))].slice(
+    0,
+    10,
+  );
   const everyone = canMentionEveryone && mentions.some((m) => m.kind === 'everyone');
 
   const users = userIds.length
@@ -175,7 +221,12 @@ export async function resolveMentions(
         await db
           .select({ userId: schema.members.userId })
           .from(schema.members)
-          .where(and(eq(schema.members.communityId, communityId), inArray(schema.members.userId, userIds)))
+          .where(
+            and(
+              eq(schema.members.communityId, communityId),
+              inArray(schema.members.userId, userIds),
+            ),
+          )
       ).map((r) => r.userId)
     : [];
 
@@ -191,15 +242,29 @@ export async function resolveMentions(
         await db
           .selectDistinct({ userId: schema.memberRoles.userId })
           .from(schema.memberRoles)
-          .where(and(eq(schema.memberRoles.communityId, communityId), inArray(schema.memberRoles.roleId, allowed)))
+          .where(
+            and(
+              eq(schema.memberRoles.communityId, communityId),
+              inArray(schema.memberRoles.roleId, allowed),
+            ),
+          )
       ).map((r) => r.userId);
     }
   }
   return { users, roleUsers, everyone };
 }
 
-async function maybeEmail(userId: string, type: NotificationType, subject: string, body: string, url: string, key: string) {
-  const settings = await db.query.notificationSettings.findFirst({ where: eq(schema.notificationSettings.userId, userId) });
+async function maybeEmail(
+  userId: string,
+  type: NotificationType,
+  subject: string,
+  body: string,
+  url: string,
+  key: string,
+) {
+  const settings = await db.query.notificationSettings.findFirst({
+    where: eq(schema.notificationSettings.userId, userId),
+  });
   const wants =
     type === 'mention'
       ? (settings?.emailMentions ?? true)
@@ -216,7 +281,11 @@ async function maybeEmail(userId: string, type: NotificationType, subject: strin
   const user = await db.query.users.findFirst({ where: eq(schema.users.id, userId) });
   if (!user?.email || user.banned) return;
   const link = `${env().APP_URL}${url}`;
-  const { text, html } = renderEmail({ heading: subject, body, action: { label: 'Open in Magnox', url: link } });
+  const { text, html } = renderEmail({
+    heading: subject,
+    body,
+    action: { label: 'Open in Magnox', url: link },
+  });
   await sendMail({ to: user.email, subject, text, html });
 }
 
@@ -281,9 +350,11 @@ async function fanoutPost(postId: string): Promise<void> {
     ]),
     usersWhoCanView(community.id, channel, recipients),
   ]);
-  recipients = recipients.filter((id) => canView.has(id) && !blocked.has(id) && (direct.has(id) || !muted.has(id)));
+  recipients = recipients.filter(
+    (id) => canView.has(id) && !blocked.has(id) && (direct.has(id) || !muted.has(id)),
+  );
 
-  const url = `/c/${community.slug}/t/${thread.id}#post-${post.id}`;
+  const url = `/c/${community.slug}/t/${thread.id}${post.isOp ? '' : `/p/${post.id}`}`;
   const data = { title: thread.title, excerpt: excerpt(post.bodyText), community: community.name };
   await deliver(
     recipients.map((userId) => ({
@@ -318,7 +389,12 @@ async function canMentionEveryoneIn(
 ): Promise<boolean> {
   try {
     const ctx = await getMemberContext({ id: communityId }, userId);
-    const perms = await channelPermissions(ctx, { id: channel.id, parentId: channel.parentId, communityId, type: 'forum' });
+    const perms = await channelPermissions(ctx, {
+      id: channel.id,
+      parentId: channel.parentId,
+      communityId,
+      type: 'forum',
+    });
     return has(perms, Permission.MENTION_EVERYONE);
   } catch {
     return false;
@@ -328,18 +404,32 @@ async function canMentionEveryoneIn(
 async function fanoutReport(reportId: string): Promise<void> {
   const report = await db.query.reports.findFirst({ where: eq(schema.reports.id, reportId) });
   if (!report) return;
-  const community = await db.query.communities.findFirst({ where: eq(schema.communities.id, report.communityId) });
+  const community = await db.query.communities.findFirst({
+    where: eq(schema.communities.id, report.communityId),
+  });
   if (!community) return;
-  const roles = await db.select().from(schema.roles).where(eq(schema.roles.communityId, community.id));
+  const roles = await db
+    .select()
+    .from(schema.roles)
+    .where(eq(schema.roles.communityId, community.id));
   const modRoles = roles
-    .filter((r) => has(r.permissions, Permission.MANAGE_REPORTS) || has(r.permissions, Permission.ADMINISTRATOR))
+    .filter(
+      (r) =>
+        has(r.permissions, Permission.MANAGE_REPORTS) ||
+        has(r.permissions, Permission.ADMINISTRATOR),
+    )
     .map((r) => r.id);
   const mods = new Set<string>([community.ownerId]);
   if (modRoles.length) {
     const rows = await db
       .selectDistinct({ userId: schema.memberRoles.userId })
       .from(schema.memberRoles)
-      .where(and(eq(schema.memberRoles.communityId, community.id), inArray(schema.memberRoles.roleId, modRoles)));
+      .where(
+        and(
+          eq(schema.memberRoles.communityId, community.id),
+          inArray(schema.memberRoles.roleId, modRoles),
+        ),
+      );
     for (const r of rows) mods.add(r.userId);
   }
   if (report.reporterId) mods.delete(report.reporterId);
@@ -352,7 +442,11 @@ async function fanoutReport(reportId: string): Promise<void> {
       targetType: 'report',
       targetId: report.id,
       url: `/c/${community.slug}/settings/reports`,
-      data: { title: `New report: ${report.reason}`, excerpt: excerpt(report.excerpt), community: community.name },
+      data: {
+        title: `New report: ${report.reason}`,
+        excerpt: excerpt(report.excerpt),
+        community: community.name,
+      },
     })),
   );
 }
@@ -363,7 +457,9 @@ async function fanoutWikiEdit(pageId: string, revisionId: string): Promise<void>
     db.query.wikiRevisions.findFirst({ where: eq(schema.wikiRevisions.id, revisionId) }),
   ]);
   if (!page || !revision || !page.createdBy || page.createdBy === revision.authorId) return;
-  const community = await db.query.communities.findFirst({ where: eq(schema.communities.id, page.communityId) });
+  const community = await db.query.communities.findFirst({
+    where: eq(schema.communities.id, page.communityId),
+  });
   if (!community) return;
   const muted = await mutedFor([page.createdBy], [{ type: 'community', id: community.id }]);
   if (muted.size) return;
@@ -374,8 +470,12 @@ async function fanoutWikiEdit(pageId: string, revisionId: string): Promise<void>
     actorId: revision.authorId,
     targetType: 'wiki_page',
     targetId: page.id,
-    url: `/c/${community.slug}/wiki/${page.slug}/history`,
-    data: { title: page.title, excerpt: revision.summary || 'Page edited', community: community.name },
+    url: `/c/${community.slug}/wiki/${page.slug}/history/${revision.id}`,
+    data: {
+      title: page.title,
+      excerpt: revision.summary || 'Page edited',
+      community: community.name,
+    },
   });
 }
 
@@ -436,7 +536,10 @@ export async function markNotificationsRead(userId: string, raw: unknown): Promi
   const ids = z.union([z.literal('all'), z.array(z.string().uuid()).max(100)]).parse(raw);
   const where = [eq(schema.notifications.userId, userId), isNull(schema.notifications.readAt)];
   if (ids !== 'all') where.push(inArray(schema.notifications.id, ids));
-  await db.update(schema.notifications).set({ readAt: new Date() }).where(and(...where));
+  await db
+    .update(schema.notifications)
+    .set({ readAt: new Date() })
+    .where(and(...where));
   realtime().to(rooms.user(userId)).emit('notification:read', { ids });
 }
 
@@ -448,7 +551,9 @@ const settingsSchema = z.object({
 });
 
 export async function getNotificationSettings(userId: string) {
-  const row = await db.query.notificationSettings.findFirst({ where: eq(schema.notificationSettings.userId, userId) });
+  const row = await db.query.notificationSettings.findFirst({
+    where: eq(schema.notificationSettings.userId, userId),
+  });
   return {
     emailMentions: row?.emailMentions ?? true,
     emailReplies: row?.emailReplies ?? false,
@@ -468,7 +573,12 @@ export async function updateNotificationSettings(userId: string, raw: unknown): 
 const muteSchema = z.object({
   targetType: z.enum(['community', 'channel', 'thread']),
   targetId: z.string().uuid(),
-  seconds: z.number().int().min(0).max(30 * 86400).default(0),
+  seconds: z
+    .number()
+    .int()
+    .min(0)
+    .max(30 * 86400)
+    .default(0),
 });
 
 export async function setMute(userId: string, raw: unknown, muted: boolean): Promise<void> {
@@ -489,12 +599,100 @@ export async function setMute(userId: string, raw: unknown, muted: boolean): Pro
   await db
     .insert(schema.mutes)
     .values({ userId, targetType: input.targetType, targetId: input.targetId, until })
-    .onConflictDoUpdate({ target: [schema.mutes.userId, schema.mutes.targetType, schema.mutes.targetId], set: { until } });
+    .onConflictDoUpdate({
+      target: [schema.mutes.userId, schema.mutes.targetType, schema.mutes.targetId],
+      set: { until },
+    });
 }
 
-export async function isMuted(userId: string, targetType: 'community' | 'channel' | 'thread', targetId: string) {
+export async function isMuted(
+  userId: string,
+  targetType: 'community' | 'channel' | 'thread',
+  targetId: string,
+) {
   const row = await db.query.mutes.findFirst({
-    where: and(eq(schema.mutes.userId, userId), eq(schema.mutes.targetType, targetType), eq(schema.mutes.targetId, targetId)),
+    where: and(
+      eq(schema.mutes.userId, userId),
+      eq(schema.mutes.targetType, targetType),
+      eq(schema.mutes.targetId, targetId),
+    ),
   });
   return Boolean(row && (!row.until || row.until > new Date()));
+}
+
+export interface MuteView {
+  targetType: 'community' | 'channel' | 'thread';
+  targetId: string;
+  label: string;
+  community: string | null;
+  href: string | null;
+  until: Date | null;
+}
+
+/** Active mutes with something human-readable to show for each. */
+export async function listMutes(userId: string): Promise<MuteView[]> {
+  const rows = (await db.query.mutes.findMany({ where: eq(schema.mutes.userId, userId) })).filter(
+    (m) => !m.until || m.until > new Date(),
+  );
+  const ids = (type: string) => rows.filter((r) => r.targetType === type).map((r) => r.targetId);
+  const [communities, channels, threads] = await Promise.all([
+    ids('community').length
+      ? db
+          .select({
+            id: schema.communities.id,
+            name: schema.communities.name,
+            slug: schema.communities.slug,
+          })
+          .from(schema.communities)
+          .where(inArray(schema.communities.id, ids('community')))
+      : [],
+    ids('channel').length
+      ? db
+          .select({
+            id: schema.channels.id,
+            name: schema.channels.name,
+            community: schema.communities.name,
+            slug: schema.communities.slug,
+          })
+          .from(schema.channels)
+          .innerJoin(schema.communities, eq(schema.communities.id, schema.channels.communityId))
+          .where(inArray(schema.channels.id, ids('channel')))
+      : [],
+    ids('thread').length
+      ? db
+          .select({
+            id: schema.threads.id,
+            name: schema.threads.title,
+            community: schema.communities.name,
+            slug: schema.communities.slug,
+          })
+          .from(schema.threads)
+          .innerJoin(schema.communities, eq(schema.communities.id, schema.threads.communityId))
+          .where(inArray(schema.threads.id, ids('thread')))
+      : [],
+  ]);
+  const byId = new Map<string, { label: string; community: string | null; href: string }>();
+  for (const c of communities)
+    byId.set(c.id, { label: c.name, community: null, href: `/c/${c.slug}` });
+  for (const c of channels)
+    byId.set(c.id, {
+      label: `#${c.name}`,
+      community: c.community,
+      href: `/c/${c.slug}/forum/${c.name}`,
+    });
+  for (const t of threads)
+    byId.set(t.id, { label: t.name, community: t.community, href: `/c/${t.slug}/t/${t.id}` });
+  return rows
+    .filter((r) => byId.has(r.targetId))
+    .map((r) => {
+      const info = byId.get(r.targetId)!;
+      return {
+        targetType: r.targetType,
+        targetId: r.targetId,
+        label: info.label,
+        community: info.community,
+        href: info.href,
+        until: r.until,
+      };
+    });
 }

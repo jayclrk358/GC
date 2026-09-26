@@ -16,7 +16,7 @@ export default async function MemberSettingsPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { community, perms, ctx } = await loadCommunityForSettings((await params).slug);
-  if (!perms.manageRoles) notFound();
+  if (!perms.manageRoles && !perms.kick && !perms.ban && !perms.timeout) notFound();
   const { q } = await searchParams;
   const t = await getTranslations('roles');
   const [{ members }, roles] = await Promise.all([
@@ -39,6 +39,7 @@ export default async function MemberSettingsPage({
           image: m.image,
           roleIds: m.roleIds,
           isOwner: m.isOwner,
+          timeoutUntil: m.timeoutUntil?.toISOString() ?? null,
         }))}
         roles={roles.filter((r) => !r.isDefault).map(roleSummary)}
         actor={{
@@ -46,6 +47,7 @@ export default async function MemberSettingsPage({
           topPosition: Number.isFinite(ctx.topPosition) ? ctx.topPosition : 1_000_000,
           userId: ctx.userId!,
         }}
+        can={{ roles: perms.manageRoles, kick: perms.kick, ban: perms.ban, timeout: perms.timeout }}
       />
     </div>
   );

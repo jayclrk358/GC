@@ -85,6 +85,22 @@
 }
 
 @layer components {
+  /* Wiki diffs: colour plus underline/strike so changes don't rely on colour alone. */
+  .diff-ins {
+    background: color-mix(in srgb, var(--c-success) 22%, transparent);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+  }
+  .diff-del {
+    background: color-mix(in srgb, var(--c-danger) 20%, transparent);
+    text-decoration: line-through;
+  }
+  /* System highlight colours: readable in light, dark and forced-colours modes. */
+  mark {
+    background: Mark;
+    color: MarkText;
+    border-radius: 2px;
+  }
   /* Links inside prose/rich text are always distinguishable without colour. */
   .prose-mx a {
     color: var(--c-primary);

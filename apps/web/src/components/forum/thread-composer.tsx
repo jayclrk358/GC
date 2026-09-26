@@ -72,8 +72,14 @@ export function ThreadComposer({
   );
   const [draftDecided, setDraftDecided] = React.useState(false);
   const savedDraft = React.useMemo(() => parseDraft(savedRaw), [savedRaw]);
-  const offerDraft = !draftDecided && savedDraft !== null && Boolean(savedDraft.title || docToText(savedDraft.body));
-  const [poll, setPoll] = React.useState<{ question: string; options: string[]; multiple: boolean; closesInHours: number } | null>(null);
+  const offerDraft =
+    !draftDecided && savedDraft !== null && Boolean(savedDraft.title || docToText(savedDraft.body));
+  const [poll, setPoll] = React.useState<{
+    question: string;
+    options: string[];
+    multiple: boolean;
+    closesInHours: number;
+  } | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [fields, setFields] = React.useState<Record<string, string>>({});
   const [pending, setPending] = React.useState(false);
@@ -83,7 +89,11 @@ export function ThreadComposer({
     if (!draftDecided) return;
     const id = setTimeout(() => {
       try {
-        if (title || docToText(body)) window.localStorage.setItem(draftKey(channelId), JSON.stringify({ title, body, flairId }));
+        if (title || docToText(body))
+          window.localStorage.setItem(
+            draftKey(channelId),
+            JSON.stringify({ title, body, flairId }),
+          );
       } catch {
         /* storage unavailable */
       }
@@ -109,10 +119,12 @@ export function ThreadComposer({
     setDraftDecided(true);
   }
 
-  const edit = <T,>(setter: (v: T) => void) => (v: T) => {
-    setter(v);
-    setDraftDecided(true);
-  };
+  const edit =
+    <T,>(setter: (v: T) => void) =>
+    (v: T) => {
+      setter(v);
+      setDraftDecided(true);
+    };
 
   async function submit() {
     setPending(true);
@@ -164,7 +176,15 @@ export function ThreadComposer({
       )}
       <FormError message={error} />
       <Field label={t('threadTitle')} error={fields.title} required>
-        {(p) => <Input {...p} value={title} maxLength={200} onChange={(e) => edit(setTitle)(e.target.value)} autoFocus />}
+        {(p) => (
+          <Input
+            {...p}
+            value={title}
+            maxLength={200}
+            onChange={(e) => edit(setTitle)(e.target.value)}
+            autoFocus
+          />
+        )}
       </Field>
       {flairs.length > 0 && (
         <Field label={t('flair')} error={fields.flairId} required={requireFlair}>
@@ -209,7 +229,12 @@ export function ThreadComposer({
             <legend className="px-1 font-semibold">{t('pollLegend')}</legend>
             <Field label={t('pollQuestion')} error={fields['poll.question']} required>
               {(p) => (
-                <Input {...p} value={poll.question} maxLength={200} onChange={(e) => setPoll({ ...poll, question: e.target.value })} />
+                <Input
+                  {...p}
+                  value={poll.question}
+                  maxLength={200}
+                  onChange={(e) => setPoll({ ...poll, question: e.target.value })}
+                />
               )}
             </Field>
             <ol className="flex flex-col gap-2">
@@ -221,7 +246,12 @@ export function ThreadComposer({
                         {...p}
                         value={o}
                         maxLength={100}
-                        onChange={(e) => setPoll({ ...poll, options: poll.options.map((x, j) => (j === i ? e.target.value : x)) })}
+                        onChange={(e) =>
+                          setPoll({
+                            ...poll,
+                            options: poll.options.map((x, j) => (j === i ? e.target.value : x)),
+                          })
+                        }
                       />
                     )}
                   </Field>
@@ -231,7 +261,9 @@ export function ThreadComposer({
                       size="icon"
                       variant="ghost"
                       aria-label={t('removeOption', { n: i + 1 })}
-                      onClick={() => setPoll({ ...poll, options: poll.options.filter((_, j) => j !== i) })}
+                      onClick={() =>
+                        setPoll({ ...poll, options: poll.options.filter((_, j) => j !== i) })
+                      }
                     >
                       <Trash2 aria-hidden />
                     </Button>
@@ -241,16 +273,31 @@ export function ThreadComposer({
             </ol>
             {poll.options.length < 10 && (
               <div>
-                <Button type="button" variant="outline" size="sm" onClick={() => setPoll({ ...poll, options: [...poll.options, ''] })}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPoll({ ...poll, options: [...poll.options, ''] })}
+                >
                   <Plus aria-hidden /> {t('addOption')}
                 </Button>
               </div>
             )}
-            {fields['poll.options'] && <p className="text-sm text-danger">{fields['poll.options']}</p>}
-            <SwitchField label={t('pollMultiple')} checked={poll.multiple} onCheckedChange={(v) => setPoll({ ...poll, multiple: v })} />
+            {fields['poll.options'] && (
+              <p className="text-sm text-danger">{fields['poll.options']}</p>
+            )}
+            <SwitchField
+              label={t('pollMultiple')}
+              checked={poll.multiple}
+              onCheckedChange={(v) => setPoll({ ...poll, multiple: v })}
+            />
             <Field label={t('pollCloses')}>
               {(p) => (
-                <Select {...p} value={poll.closesInHours} onChange={(e) => setPoll({ ...poll, closesInHours: Number(e.target.value) })}>
+                <Select
+                  {...p}
+                  value={poll.closesInHours}
+                  onChange={(e) => setPoll({ ...poll, closesInHours: Number(e.target.value) })}
+                >
                   <option value={0}>{t('pollNever')}</option>
                   <option value={24}>{t('pollDays', { count: 1 })}</option>
                   <option value={72}>{t('pollDays', { count: 3 })}</option>
@@ -270,7 +317,9 @@ export function ThreadComposer({
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => setPoll({ question: '', options: ['', ''], multiple: false, closesInHours: 0 })}
+              onClick={() =>
+                setPoll({ question: '', options: ['', ''], multiple: false, closesInHours: 0 })
+              }
             >
               <BarChart3 aria-hidden /> {t('addPoll')}
             </Button>

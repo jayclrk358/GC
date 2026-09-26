@@ -76,7 +76,8 @@ export async function listVisibleChannels(
     lastActivityAt: r.lastActivityAt,
     perms: String(perms.get(r.id) ?? 0n),
   }));
-  const wanted = (v: ChannelView) => v.type !== 'category' && (!opts.types || opts.types.includes(v.type));
+  const wanted = (v: ChannelView) =>
+    v.type !== 'category' && (!opts.types || opts.types.includes(v.type));
   const categories: ChannelTree['categories'] = [];
   const uncategorised = views.filter((v) => wanted(v) && !v.parentId);
   if (uncategorised.length) categories.push({ id: null, name: '', channels: uncategorised });
@@ -106,7 +107,8 @@ async function assertCategory(communityId: string, parentId: string | null) {
   const parent = await db.query.channels.findFirst({
     where: and(eq(schema.channels.id, parentId), eq(schema.channels.communityId, communityId)),
   });
-  if (!parent || parent.type !== 'category') throw new AppError('validation', 'Choose a valid category.');
+  if (!parent || parent.type !== 'category')
+    throw new AppError('validation', 'Choose a valid category.');
 }
 
 async function nameTaken(communityId: string, name: string, exceptId?: string) {
@@ -127,7 +129,8 @@ export async function createChannel(ctx: MemberContext, raw: unknown): Promise<C
   requirePerm(ctx, Permission.MANAGE_CHANNELS);
   const input = channelInputSchema.parse(raw);
   const existing = await listChannelRows(ctx.community.id);
-  if (existing.length >= 200) throw new AppError('forbidden', 'A community can have up to 200 channels.');
+  if (existing.length >= 200)
+    throw new AppError('forbidden', 'A community can have up to 200 channels.');
   if (input.type !== 'category') {
     await assertCategory(ctx.community.id, input.parentId);
     if (await nameTaken(ctx.community.id, input.name)) {
@@ -213,7 +216,10 @@ export async function deleteChannel(ctx: MemberContext, id: string): Promise<voi
   const row = await loadChannelRow(ctx, id);
   await db.transaction(async (tx) => {
     if (row.type === 'category') {
-      await tx.update(schema.channels).set({ parentId: null }).where(eq(schema.channels.parentId, id));
+      await tx
+        .update(schema.channels)
+        .set({ parentId: null })
+        .where(eq(schema.channels.parentId, id));
     }
     await tx.delete(schema.channels).where(eq(schema.channels.id, id));
     await audit(tx, {
@@ -239,7 +245,10 @@ export async function reorderChannels(ctx: MemberContext, rawIds: unknown): Prom
   }
   await db.transaction(async (tx) => {
     for (let i = 0; i < ids.length; i++) {
-      await tx.update(schema.channels).set({ position: i + 1 }).where(eq(schema.channels.id, ids[i]!));
+      await tx
+        .update(schema.channels)
+        .set({ position: i + 1 })
+        .where(eq(schema.channels.id, ids[i]!));
     }
   });
 }
@@ -251,7 +260,10 @@ export interface OverwriteView {
   deny: string;
 }
 
-export async function listOverwrites(ctx: MemberContext, channelId: string): Promise<OverwriteView[]> {
+export async function listOverwrites(
+  ctx: MemberContext,
+  channelId: string,
+): Promise<OverwriteView[]> {
   requirePerm(ctx, Permission.MANAGE_CHANNELS);
   await loadChannelRow(ctx, channelId);
   const rows = await db
@@ -274,9 +286,17 @@ const overwriteSchema = z.object({
 });
 
 /** Set (or clear, when both are zero) one role/member overwrite on a channel. */
-export async function setOverwrite(ctx: MemberContext, channelId: string, raw: unknown): Promise<void> {
+export async function setOverwrite(
+  ctx: MemberContext,
+  channelId: string,
+  raw: unknown,
+): Promise<void> {
   requirePerm(ctx, Permission.MANAGE_CHANNELS);
-  requirePerm(ctx, Permission.MANAGE_ROLES, 'Changing channel permissions also needs Manage roles.');
+  requirePerm(
+    ctx,
+    Permission.MANAGE_ROLES,
+    'Changing channel permissions also needs Manage roles.',
+  );
   await loadChannelRow(ctx, channelId);
   const input = overwriteSchema.parse(raw);
   const allow = parsePermissions(input.allow) & CHANNEL_SCOPED;
@@ -286,7 +306,10 @@ export async function setOverwrite(ctx: MemberContext, channelId: string, raw: u
   }
   if (input.targetType === 'role') {
     const role = await db.query.roles.findFirst({
-      where: and(eq(schema.roles.id, input.targetId), eq(schema.roles.communityId, ctx.community.id)),
+      where: and(
+        eq(schema.roles.id, input.targetId),
+        eq(schema.roles.communityId, ctx.community.id),
+      ),
     });
     if (!role) throw notFound('Role');
     if (!ctx.isOwner && !role.isDefault && role.position >= ctx.topPosition) {
@@ -294,7 +317,10 @@ export async function setOverwrite(ctx: MemberContext, channelId: string, raw: u
     }
   } else {
     const member = await db.query.members.findFirst({
-      where: and(eq(schema.members.communityId, ctx.community.id), eq(schema.members.userId, input.targetId)),
+      where: and(
+        eq(schema.members.communityId, ctx.community.id),
+        eq(schema.members.userId, input.targetId),
+      ),
     });
     if (!member) throw notFound('Member');
   }
@@ -325,7 +351,11 @@ export async function setOverwrite(ctx: MemberContext, channelId: string, raw: u
       action: 'channel.permissions',
       targetType: 'channel',
       targetId: channelId,
-      diff: { target: `${input.targetType}:${input.targetId}`, allow: String(allow), deny: String(deny) },
+      diff: {
+        target: `${input.targetType}:${input.targetId}`,
+        allow: String(allow),
+        deny: String(deny),
+      },
     });
   });
   await bumpPermVersion(ctx.community.id);

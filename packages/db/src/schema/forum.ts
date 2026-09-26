@@ -210,4 +210,3 @@ export const threadReads = pgTable(
   },
   (t) => [primaryKey({ columns: [t.threadId, t.userId] })],
 );
-

@@ -8,14 +8,24 @@ import {
   addBlock,
   closeRedis,
   createCommunity,
+  createReply,
+  createThread,
+  createWikiPage,
+  ensureStarterContent,
   env,
   getMemberContext,
   joinCommunity,
   listRoles,
+  listVisibleChannels,
+  markSolution,
+  moderateThread,
   setMemberRole,
+  toggleReaction,
   updateCommunityTheme,
+  updateWikiPage,
+  voteThread,
 } from '@magnox/core';
-import { docFromText, newId, randomToken, themeFromPreset } from '@magnox/shared';
+import { docFromText, newId, randomToken, themeFromPreset, type RichNode } from '@magnox/shared';
 import { auth } from './index';
 
 const PASSWORD = 'magnox-demo-1234';
@@ -35,6 +45,186 @@ async function ensureUser(u: (typeof USERS)[number]): Promise<string> {
     .set({ emailVerified: true })
     .where(eq(schema.users.id, res.user.id));
   return res.user.id;
+}
+
+const text = (t: string): RichNode => ({ type: 'text', text: t });
+const p = (...content: RichNode[]): RichNode => ({ type: 'paragraph', content });
+const h = (level: 2 | 3, t: string): RichNode => ({
+  type: 'heading',
+  attrs: { level },
+  content: [text(t)],
+});
+const ul = (...items: string[]): RichNode => ({
+  type: 'bulletList',
+  content: items.map((i) => ({ type: 'listItem', content: [p(text(i))] })),
+});
+const doc = (...content: RichNode[]): RichNode => ({ type: 'doc', content });
+
+/** A handful of threads, replies and wiki pages so a fresh install doesn't look empty. */
+async function seedContent(
+  communityId: string,
+  name: string,
+  users: { alice: string; bob: string; carol: string },
+) {
+  const as = (u: string) => getMemberContext({ id: communityId }, u);
+  const [a, b, c] = await Promise.all([as(users.alice), as(users.bob), as(users.carol)]);
+  const threads = await db.query.threads.findFirst({
+    where: eq(schema.threads.communityId, communityId),
+  });
+  if (!threads) await seedForum(name, users, a, b, c);
+  const hasRules = await db.query.wikiPages.findFirst({
+    where: (w, { and: andFn, eq: eqFn }) =>
+      andFn(eqFn(w.communityId, communityId), eqFn(w.slug, 'rules')),
+  });
+  if (!hasRules) await seedWiki(communityId, name, a, b);
+}
+
+type Ctx = Awaited<ReturnType<typeof getMemberContext>>;
+
+async function seedForum(
+  name: string,
+  users: { alice: string; bob: string; carol: string },
+  a: Ctx,
+  b: Ctx,
+  c: Ctx,
+) {
+  const { channels } = await listVisibleChannels(a!, { types: ['forum', 'announcement'] });
+  const announce = channels.find((ch) => ch.type === 'announcement');
+  const forums = channels.filter((ch) => ch.type === 'forum');
+  const general = forums.find((ch) => !ch.settings.qa) ?? forums[0];
+  const qa = forums.find((ch) => ch.settings.qa);
+  const voting =
+    forums.find((ch) => ch.settings.voting && ch.id !== general?.id) ??
+    forums.find((ch) => ch.settings.voting);
+
+  if (announce) {
+    const { id } = await createThread(a, {
+      channelId: announce.id,
+      title: `Welcome to ${name}!`,
+      body: doc(
+        p(
+          text(
+            `Hi everyone, and welcome. This forum is the place for anything that should stick around longer than a chat message.`,
+          ),
+        ),
+        p(
+          text(
+            'Please read the rules in the wiki, introduce yourself in the general channel and have fun.',
+          ),
+        ),
+      ),
+    });
+    await moderateThread(a, id, { pinned: true });
+  }
+  if (general) {
+    const { id } = await createThread(b, {
+      channelId: general.id,
+      title: 'Introduce yourself 👋',
+      body: docFromText(
+        "I'll start: I'm Bob, I mostly play in the evenings and I'm always up for co-op. What about you?",
+      ),
+      poll: {
+        question: 'When do you usually play?',
+        options: ['Mornings', 'Afternoons', 'Evenings', 'Late nights'],
+        multiple: true,
+        closesInHours: 0,
+      },
+    });
+    const r1 = await createReply(c, id, {
+      body: doc(
+        p(
+          text('Carol here! Weekends mostly. '),
+          { type: 'mention', attrs: { id: users.bob, label: 'bob', kind: 'user' } },
+          text(' we should team up sometime.'),
+        ),
+      ),
+    });
+    await createReply(a, id, {
+      body: docFromText('Welcome both of you. Glad to have you here!'),
+      replyToId: r1.id,
+    });
+    await toggleReaction(a, r1.id, '❤️');
+    await toggleReaction(b, r1.id, '👍');
+  }
+  if (qa) {
+    const { id } = await createThread(c, {
+      channelId: qa.id,
+      title: 'How do I get whitelisted / join the group?',
+      body: docFromText(
+        "I've joined the community here but I'm not sure what the next step is. Is there a form?",
+      ),
+    });
+    const answer = await createReply(b, id, {
+      body: docFromText(
+        'No form needed. Post your in-game name in the general channel and one of the staff will add you within a day.',
+      ),
+    });
+    await markSolution(c, id, answer.id);
+  }
+  if (voting) {
+    const { id } = await createThread(c, {
+      channelId: voting.id,
+      title: 'Idea: monthly community showcase',
+      body: docFromText(
+        'Once a month we could vote on the best builds, clips or guides and feature them on the home page.',
+      ),
+    });
+    await voteThread(a, id, 1);
+    await voteThread(b, id, 1);
+  }
+}
+
+async function seedWiki(communityId: string, name: string, a: Ctx, b: Ctx) {
+  const rules = await createWikiPage(a, {
+    title: 'Rules',
+    summary: 'First draft of the rules',
+    body: doc(
+      p(
+        text(
+          `These rules keep ${name} a friendly place. Moderators may act on anything that breaks their spirit, not just their letter.`,
+        ),
+      ),
+      h(2, 'Be kind'),
+      ul('No harassment, hate speech or personal attacks.', 'Disagree with ideas, not people.'),
+      h(2, 'Keep it on topic'),
+      ul('Use the right channel.', 'No spam, advertising or unsolicited DMs.'),
+      h(2, 'Play fair'),
+      ul(
+        'No cheating, exploits or griefing.',
+        'Report problems to staff instead of taking revenge.',
+      ),
+    ),
+  });
+  const page = await db.query.wikiPages.findFirst({
+    where: (w, { and: andFn, eq: eqFn }) =>
+      andFn(eqFn(w.communityId, communityId), eqFn(w.slug, rules.slug)),
+  });
+  if (page) {
+    await updateWikiPage(b, page.id, {
+      title: 'Rules',
+      summary: 'Added a section on reporting',
+      baseRevisionId: page.currentRevisionId,
+      body: doc(
+        ...(page.body.content ?? []),
+        h(2, 'Reporting'),
+        p(
+          text(
+            'Use the Report option on any post. Reports go straight to the moderators and stay anonymous.',
+          ),
+        ),
+      ),
+    });
+  }
+  await createWikiPage(b, {
+    title: 'FAQ',
+    summary: 'Common questions',
+    body: doc(
+      h(2, 'How do I join?'),
+      p(text('Press Join on the community page. Some communities need an invite link.')),
+      h(2, 'Where do I ask for help?'),
+      p(text('Use the help or support forum and mark the answer that solved it.')),
+    ),
+  });
 }
 
 async function main() {
@@ -92,7 +282,11 @@ async function main() {
     const exists = await db.query.communities.findFirst({
       where: eq(schema.communities.slug, c.slug),
     });
-    if (exists) continue;
+    if (exists) {
+      await ensureStarterContent(exists.id);
+      await seedContent(exists.id, exists.name, { alice: alice!, bob: bob!, carol: carol! });
+      continue;
+    }
     const { id } = await createCommunity(alice!, { ...c, visibility: 'public', joinMode: 'open' });
     const ownerCtx = await getMemberContext({ id }, alice!);
     await updateCommunityTheme(ownerCtx, { ...themeFromPreset(c.preset as never) });
@@ -135,6 +329,7 @@ async function main() {
         verifiedAt: new Date(),
       });
     }
+    await seedContent(id, c.name, { alice: alice!, bob: bob!, carol: carol! });
     console.log(`✔ community /c/${c.slug}`);
   }
 }

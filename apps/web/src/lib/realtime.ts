@@ -66,3 +66,27 @@ export function useRoom(room: string | null, handlers: Handlers): void {
     };
   }, [room]);
 }
+
+/**
+ * Listen for events delivered to this user's own room, which every signed-in socket joins on
+ * connect (notifications, removals). No subscription needed.
+ */
+export function useUserEvents(handlers: Handlers, enabled = true): void {
+  const ref = React.useRef(handlers);
+  React.useEffect(() => {
+    ref.current = handlers;
+  });
+  React.useEffect(() => {
+    if (!enabled) return;
+    const s = getSocket();
+    const listeners = Object.keys(ref.current).map((name) => {
+      const fn = (payload: unknown) =>
+        (ref.current[name] as ((p: unknown) => void) | undefined)?.(payload);
+      s.on(name, fn);
+      return [name, fn] as const;
+    });
+    return () => {
+      for (const [name, fn] of listeners) s.off(name, fn);
+    };
+  }, [enabled]);
+}

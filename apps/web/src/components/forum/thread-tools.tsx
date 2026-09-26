@@ -9,9 +9,17 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Field } from '@/components/ui/field';
 import { Select } from '@/components/ui/input';
-import { moderateThreadAction, setFollowAction } from '@/app/actions/forum';
+import { markThreadReadAction, moderateThreadAction, setFollowAction } from '@/app/actions/forum';
 
-export function FollowButton({ communityId, threadId, following: initial }: { communityId: string; threadId: string; following: boolean }) {
+export function FollowButton({
+  communityId,
+  threadId,
+  following: initial,
+}: {
+  communityId: string;
+  threadId: string;
+  following: boolean;
+}) {
   const t = useTranslations('forum');
   const [following, setFollowing] = React.useState(initial);
   return (
@@ -73,11 +81,26 @@ export function ModTools({
     <>
       {isMod && (
         <>
-          <Button size="sm" variant="outline" aria-pressed={pinned} onClick={() => void apply({ pinned: !pinned }, pinned ? t('unpinnedToast') : t('pinnedToast'))}>
+          <Button
+            size="sm"
+            variant="outline"
+            aria-pressed={pinned}
+            onClick={() =>
+              void apply({ pinned: !pinned }, pinned ? t('unpinnedToast') : t('pinnedToast'))
+            }
+          >
             <Pin aria-hidden /> {pinned ? t('unpin') : t('pin')}
           </Button>
-          <Button size="sm" variant="outline" aria-pressed={locked} onClick={() => void apply({ locked: !locked }, locked ? t('unlockedToast') : t('lockedToast'))}>
-            {locked ? <Unlock aria-hidden /> : <Lock aria-hidden />} {locked ? t('unlock') : t('lock')}
+          <Button
+            size="sm"
+            variant="outline"
+            aria-pressed={locked}
+            onClick={() =>
+              void apply({ locked: !locked }, locked ? t('unlockedToast') : t('lockedToast'))
+            }
+          >
+            {locked ? <Unlock aria-hidden /> : <Lock aria-hidden />}{' '}
+            {locked ? t('unlock') : t('lock')}
           </Button>
         </>
       )}
@@ -134,9 +157,15 @@ export function ModTools({
   );
 }
 
-export function ReadMarker({ threadId, lastPostId }: { threadId: string; lastPostId: string | null }) {
+export function ReadMarker({
+  threadId,
+  lastPostId,
+}: {
+  threadId: string;
+  lastPostId: string | null;
+}) {
   React.useEffect(() => {
-    void import('@/app/actions/forum').then((m) => m.markThreadReadAction(threadId, lastPostId));
+    void markThreadReadAction(threadId, lastPostId);
   }, [threadId, lastPostId]);
   return null;
 }

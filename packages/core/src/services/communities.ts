@@ -14,6 +14,7 @@ import {
   PRESET_KEYS,
   themeFromPreset,
   themeSchema,
+  type CommunityTemplate,
   type PresetKey,
   type Theme,
 } from '@magnox/shared';
@@ -121,51 +122,11 @@ export async function createCommunity(
 
     await tx.insert(schema.members).values({ communityId: id, userId });
 
-    let position = 1;
-    for (const group of template.channels) {
-      const categoryId = newId();
-      await tx.insert(schema.channels).values({
-        id: categoryId,
-        communityId: id,
-        type: 'category',
-        name: group.category,
-        position: position++,
-      });
-      for (const ch of group.channels) {
-        await tx.insert(schema.channels).values({
-          id: newId(),
-          communityId: id,
-          parentId: categoryId,
-          type: ch.type,
-          name: ch.name,
-          topic: ch.topic,
-          settings: { voting: false, qa: false, requireFlair: false, defaultSort: 'latest', ...ch.settings },
-          position: position++,
-        });
-      }
-    }
-    const wikiId = newId();
-    const wikiRevisionId = newId();
-    const welcome = `Welcome to the ${input.name} wiki. Members with the Edit wiki permission can add pages.`;
-    await tx.insert(schema.wikiPages).values({
-      id: wikiId,
+    await insertStarterContent(tx, {
       communityId: id,
-      slug: 'home',
-      title: 'Home',
-      body: docFromText(welcome),
-      bodyText: welcome,
-      currentRevisionId: wikiRevisionId,
-      createdBy: userId,
-      updatedBy: userId,
-    });
-    await tx.insert(schema.wikiRevisions).values({
-      id: wikiRevisionId,
-      pageId: wikiId,
-      authorId: userId,
-      title: 'Home',
-      body: docFromText(welcome),
-      bodyText: welcome,
-      summary: 'Created page',
+      template: input.template,
+      name: input.name,
+      userId,
     });
 
     const blocks = template.blocks({ name: input.name, tagline: input.tagline });
@@ -455,4 +416,101 @@ export async function listGames() {
     .select({ id: schema.games.id, name: schema.games.name, protocol: schema.games.protocol })
     .from(schema.games)
     .orderBy(schema.games.name);
+}
+
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+/** Default channels and a wiki home page from the community's template. */
+async function insertStarterContent(
+  tx: Tx,
+  {
+    communityId,
+    template: templateId,
+    name,
+    userId,
+  }: { communityId: string; template: CommunityTemplate; name: string; userId: string },
+) {
+  const template = TEMPLATES[templateId];
+  let position = 1;
+  for (const group of template.channels) {
+    const categoryId = newId();
+    await tx.insert(schema.channels).values({
+      id: categoryId,
+      communityId,
+      type: 'category',
+      name: group.category,
+      position: position++,
+    });
+    for (const ch of group.channels) {
+      await tx.insert(schema.channels).values({
+        id: newId(),
+        communityId,
+        parentId: categoryId,
+        type: ch.type,
+        name: ch.name,
+        topic: ch.topic,
+        settings: {
+          voting: false,
+          qa: false,
+          requireFlair: false,
+          defaultSort: 'latest',
+          ...ch.settings,
+        },
+        position: position++,
+      });
+    }
+  }
+  const wikiId = newId();
+  const wikiRevisionId = newId();
+  const welcome = `Welcome to the ${name} wiki. Members with the Edit wiki permission can add pages.`;
+  await tx.insert(schema.wikiPages).values({
+    id: wikiId,
+    communityId,
+    slug: 'home',
+    title: 'Home',
+    body: docFromText(welcome),
+    bodyText: welcome,
+    currentRevisionId: wikiRevisionId,
+    createdBy: userId,
+    updatedBy: userId,
+  });
+  await tx.insert(schema.wikiRevisions).values({
+    id: wikiRevisionId,
+    pageId: wikiId,
+    authorId: userId,
+    title: 'Home',
+    body: docFromText(welcome),
+    bodyText: welcome,
+    summary: 'Created page',
+  });
+}
+
+/**
+ * Give an existing community the starter channels and wiki page if it has none (communities
+ * created before forums existed). Used by the demo seed.
+ */
+export async function ensureStarterContent(communityId: string): Promise<boolean> {
+  const community = await db.query.communities.findFirst({
+    where: eq(schema.communities.id, communityId),
+  });
+  if (!community) return false;
+  const existing = await db.query.channels.findFirst({
+    where: eq(schema.channels.communityId, communityId),
+  });
+  if (existing) return false;
+  const hasWiki = await db.query.wikiPages.findFirst({
+    where: eq(schema.wikiPages.communityId, communityId),
+  });
+  if (hasWiki) return false;
+  await db.transaction((tx) =>
+    insertStarterContent(tx, {
+      communityId,
+      template: (community.template in TEMPLATES
+        ? community.template
+        : 'fanhub') as CommunityTemplate,
+      name: community.name,
+      userId: community.ownerId,
+    }),
+  );
+  return true;
 }

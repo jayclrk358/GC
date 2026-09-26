@@ -30,7 +30,10 @@ export const notifications = pgTable(
     targetId: text('target_id'),
     url: text('url').notNull(),
     /** Snapshot of what to show, so notifications survive edits and deletions. */
-    data: jsonb('data').$type<{ title?: string; excerpt?: string; community?: string }>().notNull().default({}),
+    data: jsonb('data')
+      .$type<{ title?: string; excerpt?: string; community?: string }>()
+      .notNull()
+      .default({}),
     readAt: tz('read_at'),
     createdAt: createdAt(),
   },

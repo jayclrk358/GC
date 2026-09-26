@@ -9,15 +9,19 @@ export function NavLink({
   href,
   children,
   exact,
+  also,
   className,
 }: {
   href: string;
   children: React.ReactNode;
   exact?: boolean;
+  /** Other path prefixes that belong to this section (e.g. threads belong to the forum tab). */
+  also?: string[];
   className?: string;
 }) {
   const pathname = usePathname();
-  const active = exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
+  const under = (p: string) => pathname === p || pathname.startsWith(`${p}/`);
+  const active = (exact ? pathname === href : under(href)) || Boolean(also?.some(under));
   return (
     <Link
       href={href}

@@ -1,13 +1,14 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { Hash, Megaphone, PenSquare } from 'lucide-react';
-import { getChannelByName, listFlairs, listThreads } from '@magnox/core';
+import { getChannelByName, isMuted, listFlairs, listThreads } from '@magnox/core';
 import { has, Permission, THREAD_SORTS, type ThreadSort } from '@magnox/shared';
 import { loadCommunity } from '@/lib/community';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/misc';
 import { ThreadList } from '@/components/forum/thread-list';
 import { ChannelLiveBanner } from '@/components/forum/live-banners';
+import { MuteMenu } from '@/components/notifications/mute-menu';
 import { cn } from '@/lib/utils';
 
 export async function generateMetadata({ params }: { params: Promise<{ channel: string }> }) {
@@ -27,22 +28,31 @@ export default async function ChannelPage({
   const t = await getTranslations('forum');
   const channel = await getChannelByName(data.ctx, channelName);
   const perms = BigInt(channel.perms);
-  const sort = (THREAD_SORTS as readonly string[]).includes(sp.sort ?? '') ? (sp.sort as ThreadSort) : undefined;
+  const sort = (THREAD_SORTS as readonly string[]).includes(sp.sort ?? '')
+    ? (sp.sort as ThreadSort)
+    : undefined;
   const page = Math.max(0, Number(sp.page ?? 0) || 0);
-  const [list, flairs] = await Promise.all([
+  const [list, flairs, muted] = await Promise.all([
     listThreads(data.ctx, channel, { sort, flairId: sp.flair, page }),
     listFlairs(data.community.id, channel.id),
+    data.user && data.ctx.isMember ? isMuted(data.user.id, 'channel', channel.id) : false,
   ]);
   const activeSort = sort ?? channel.settings.defaultSort ?? 'latest';
   const base = `/c/${slug}/forum/${channel.name}`;
   const qs = (patch: Record<string, string | undefined>) => {
-    const p = new URLSearchParams(Object.entries({ sort: sp.sort, flair: sp.flair, ...patch }).filter(([, v]) => v) as [string, string][]);
+    const p = new URLSearchParams(
+      Object.entries({ sort: sp.sort, flair: sp.flair, ...patch }).filter(([, v]) => v) as [
+        string,
+        string,
+      ][],
+    );
     const s = p.toString();
     return s ? `${base}?${s}` : base;
   };
   const sorts = THREAD_SORTS.filter((s) => s !== 'unanswered' || channel.settings.qa);
   const canPost =
-    has(perms, Permission.CREATE_THREADS) && (channel.type !== 'announcement' || has(perms, Permission.MANAGE_THREADS));
+    has(perms, Permission.CREATE_THREADS) &&
+    (channel.type !== 'announcement' || has(perms, Permission.MANAGE_THREADS));
   const pages = Math.ceil(list.total / list.pageSize);
   const Icon = channel.type === 'announcement' ? Megaphone : Hash;
 
@@ -62,13 +72,23 @@ export default async function ChannelPage({
           </h2>
           {channel.topic && <p className="mt-1 text-muted">{channel.topic}</p>}
         </div>
-        {canPost && (
-          <Button asChild>
-            <Link href={`${base}/new`}>
-              <PenSquare aria-hidden /> {t('newThread')}
-            </Link>
-          </Button>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          {data.user && data.ctx.isMember && (
+            <MuteMenu
+              targetType="channel"
+              targetId={channel.id}
+              name={`#${channel.name}`}
+              muted={muted}
+            />
+          )}
+          {canPost && (
+            <Button asChild>
+              <Link href={`${base}/new`}>
+                <PenSquare aria-hidden /> {t('newThread')}
+              </Link>
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -108,7 +128,11 @@ export default async function ChannelPage({
                       'flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-sm aria-[current=true]:border-primary aria-[current=true]:font-semibold',
                     )}
                   >
-                    <span aria-hidden className="size-2 rounded-full" style={{ background: f.color ?? 'var(--c-text-muted)' }} />
+                    <span
+                      aria-hidden
+                      className="size-2 rounded-full"
+                      style={{ background: f.color ?? 'var(--c-text-muted)' }}
+                    />
                     {f.name}
                   </Link>
                 </li>
@@ -136,7 +160,10 @@ export default async function ChannelPage({
       {pages > 1 && (
         <nav aria-label={t('pagination')} className="flex items-center justify-between">
           {page > 0 ? (
-            <Link href={qs({ page: String(page - 1) })} className="font-semibold text-primary underline">
+            <Link
+              href={qs({ page: String(page - 1) })}
+              className="font-semibold text-primary underline"
+            >
               {t('previous')}
             </Link>
           ) : (
@@ -144,7 +171,10 @@ export default async function ChannelPage({
           )}
           <span className="text-sm text-muted">{t('pageOf', { page: page + 1, pages })}</span>
           {page + 1 < pages ? (
-            <Link href={qs({ page: String(page + 1) })} className="font-semibold text-primary underline">
+            <Link
+              href={qs({ page: String(page + 1) })}
+              className="font-semibold text-primary underline"
+            >
               {t('next')}
             </Link>
           ) : (

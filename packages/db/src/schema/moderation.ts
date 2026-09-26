@@ -3,7 +3,15 @@ import { users } from './auth';
 import { communities } from './communities';
 import { createdAt, tz } from './_helpers';
 
-export const REPORT_REASONS = ['spam', 'harassment', 'hate', 'nsfw', 'violence', 'misinformation', 'other'] as const;
+export const REPORT_REASONS = [
+  'spam',
+  'harassment',
+  'hate',
+  'nsfw',
+  'violence',
+  'misinformation',
+  'other',
+] as const;
 export type ReportReason = (typeof REPORT_REASONS)[number];
 
 export const reports = pgTable(
@@ -14,7 +22,9 @@ export const reports = pgTable(
       .notNull()
       .references(() => communities.id, { onDelete: 'cascade' }),
     reporterId: text('reporter_id').references(() => users.id, { onDelete: 'set null' }),
-    targetType: text('target_type', { enum: ['post', 'thread', 'user', 'wiki_page', 'message'] }).notNull(),
+    targetType: text('target_type', {
+      enum: ['post', 'thread', 'user', 'wiki_page', 'message'],
+    }).notNull(),
     targetId: text('target_id').notNull(),
     /** Author of the reported content (or the reported user). */
     targetUserId: text('target_user_id').references(() => users.id, { onDelete: 'set null' }),
@@ -22,7 +32,9 @@ export const reports = pgTable(
     details: text('details').notNull().default(''),
     /** Snapshot of the content at report time. */
     excerpt: text('excerpt').notNull().default(''),
-    status: text('status', { enum: ['open', 'resolved', 'dismissed'] }).notNull().default('open'),
+    status: text('status', { enum: ['open', 'resolved', 'dismissed'] })
+      .notNull()
+      .default('open'),
     resolvedBy: text('resolved_by').references(() => users.id, { onDelete: 'set null' }),
     resolvedAt: tz('resolved_at'),
     resolution: text('resolution'),
@@ -45,5 +57,8 @@ export const userBlocks = pgTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     createdAt: createdAt(),
   },
-  (t) => [primaryKey({ columns: [t.userId, t.blockedId] }), index('user_blocks_blocked_idx').on(t.blockedId)],
+  (t) => [
+    primaryKey({ columns: [t.userId, t.blockedId] }),
+    index('user_blocks_blocked_idx').on(t.blockedId),
+  ],
 );

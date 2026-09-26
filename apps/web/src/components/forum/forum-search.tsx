@@ -21,8 +21,18 @@ export function ForumSearch({ slug, defaultValue = '' }: { slug: string; default
         {t('searchLabel')}
       </label>
       <div className="relative">
-        <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden />
-        <Input id="forum-q" name="q" type="search" defaultValue={defaultValue} placeholder={t('searchLabel')} className="w-64 ps-9" />
+        <Search
+          className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted"
+          aria-hidden
+        />
+        <Input
+          id="forum-q"
+          name="q"
+          type="search"
+          defaultValue={defaultValue}
+          placeholder={t('searchLabel')}
+          className="w-64 ps-9"
+        />
       </div>
     </form>
   );

@@ -1,12 +1,14 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { Plus } from 'lucide-react';
+import { unreadCount } from '@magnox/core';
 import type { SessionUser } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { Logo } from './logo';
 import { PaletteButton, SignInButtons, UserMenu } from './header-client';
 import { NavLink } from './nav-link';
 import { ThemeToggle } from './theme-toggle';
+import { NotificationBell } from '@/components/notifications/notification-bell';
 
 export async function SiteHeader({
   user,
@@ -16,6 +18,7 @@ export async function SiteHeader({
   extra?: React.ReactNode;
 }) {
   const t = await getTranslations('shell');
+  const unread = user ? await unreadCount(user.id).catch(() => 0) : 0;
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-surface/95 backdrop-blur supports-[backdrop-filter]:bg-surface/85">
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-3 px-4">
@@ -47,6 +50,7 @@ export async function SiteHeader({
                   <Plus aria-hidden /> {t('createCommunity')}
                 </Link>
               </Button>
+              <NotificationBell initialUnread={unread} />
               <UserMenu
                 user={{
                   name: user.name,

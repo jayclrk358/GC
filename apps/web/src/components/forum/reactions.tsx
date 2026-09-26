@@ -36,7 +36,9 @@ export function Reactions({
     const existing = reactions.find((r) => r.emoji === emoji);
     const next = existing
       ? reactions
-          .map((r) => (r.emoji === emoji ? { ...r, mine: !r.mine, count: r.count + (r.mine ? -1 : 1) } : r))
+          .map((r) =>
+            r.emoji === emoji ? { ...r, mine: !r.mine, count: r.count + (r.mine ? -1 : 1) } : r,
+          )
           .filter((r) => r.count > 0)
       : [...reactions, { emoji, count: 1, mine: true }];
     setReactions(next);
@@ -81,7 +83,11 @@ export function Reactions({
             </button>
           </Popover.Trigger>
           <Popover.Portal>
-            <Popover.Content sideOffset={6} className="z-50 rounded-ui border border-border bg-surface p-1 shadow-xl" aria-label={t('pickReaction')}>
+            <Popover.Content
+              sideOffset={6}
+              className="z-50 rounded-ui border border-border bg-surface p-1 shadow-xl"
+              aria-label={t('pickReaction')}
+            >
               <div className="grid grid-cols-4 gap-1">
                 {REACTIONS.map((e) => (
                   <button

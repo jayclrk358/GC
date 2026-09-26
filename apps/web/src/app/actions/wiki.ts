@@ -29,7 +29,11 @@ export async function updateWikiPageAction(communityId: string, pageId: string, 
   });
 }
 
-export async function restoreRevisionAction(communityId: string, pageId: string, revisionId: string) {
+export async function restoreRevisionAction(
+  communityId: string,
+  pageId: string,
+  revisionId: string,
+) {
   return runAction(async () => {
     const ctx = await ctxFor(communityId);
     await restoreRevision(ctx, pageId, revisionId);

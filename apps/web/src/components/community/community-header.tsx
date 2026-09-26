@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/misc';
 import { NavLink } from '@/components/shell/nav-link';
 import { JoinButton } from './join-button';
 import { InviteButton } from './invite-button';
+import { MuteMenu } from '@/components/notifications/mute-menu';
+import { isMuted } from '@magnox/core';
 
 const TAB_PATHS: Record<string, string> = {
   home: '',
@@ -129,6 +131,15 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
               visibility={community.visibility}
             />
             {perms.createInvite && <InviteButton communityId={community.id} />}
+            {user && ctx.isMember && (
+              <MuteMenu
+                targetType="community"
+                targetId={community.id}
+                name={community.name}
+                muted={await isMuted(user.id, 'community', community.id)}
+                iconOnly
+              />
+            )}
             {perms.settings && (
               <Button asChild variant="outline" size="icon" aria-label={t('settings')}>
                 <Link href={`${base}/settings`}>
@@ -148,6 +159,7 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
                 <NavLink
                   href={`${base}${TAB_PATHS[item.tab]}`}
                   exact={item.tab === 'home'}
+                  also={item.tab === 'forum' ? [`${base}/t`] : undefined}
                   className="rounded-none rounded-t-ui-sm border-b-2 border-transparent px-4 py-2.5 aria-[current=page]:border-primary aria-[current=page]:bg-transparent"
                 >
                   {item.label || t(`tabs.${item.tab}`)}

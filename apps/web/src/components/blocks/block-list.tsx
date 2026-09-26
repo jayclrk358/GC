@@ -4,6 +4,7 @@ import { AboutBlock } from './about-block';
 import { DiscordBlock } from './discord-block';
 import { EmbedBlock } from './embed-block';
 import { FaqBlock } from './faq-block';
+import { FeaturedThreadsBlock } from './featured-threads-block';
 import { GalleryBlock } from './gallery-block';
 import { HeroBlock } from './hero-block';
 import { LinksBlock } from './links-block';
@@ -39,6 +40,7 @@ export function renderBlock(block: Block, data: LoadedCommunity) {
     case 'stats':
       return <StatsBlock id={block.id} config={block.config} data={data} />;
     case 'featuredThreads':
+      return <FeaturedThreadsBlock id={block.id} config={block.config} data={data} />;
     case 'upcomingEvents':
       return (
         <PlaceholderBlock

@@ -7,6 +7,7 @@ import {
   has,
   newId,
   Permission,
+  RESERVED_WIKI_SLUGS,
   sanitizeDoc,
   slugifyTitle,
   wikiPageInputSchema,
@@ -45,7 +46,9 @@ export async function listWikiTree(ctx: MemberContext): Promise<WikiTreeNode[]> 
       protected: schema.wikiPages.protected,
     })
     .from(schema.wikiPages)
-    .where(and(eq(schema.wikiPages.communityId, ctx.community.id), isNull(schema.wikiPages.deletedAt)))
+    .where(
+      and(eq(schema.wikiPages.communityId, ctx.community.id), isNull(schema.wikiPages.deletedAt)),
+    )
     .orderBy(asc(schema.wikiPages.position), asc(schema.wikiPages.title));
   const nodes = new Map<string, WikiTreeNode>(rows.map((r) => [r.id, { ...r, children: [] }]));
   const roots: WikiTreeNode[] = [];
@@ -57,7 +60,10 @@ export async function listWikiTree(ctx: MemberContext): Promise<WikiTreeNode[]> 
   return roots;
 }
 
-export async function getWikiPage(ctx: MemberContext, slug: string): Promise<WikiPageRow & { editorName: string | null }> {
+export async function getWikiPage(
+  ctx: MemberContext,
+  slug: string,
+): Promise<WikiPageRow & { editorName: string | null }> {
   const rows = await db
     .select({ page: schema.wikiPages, editorName: schema.users.name })
     .from(schema.wikiPages)
@@ -79,6 +85,7 @@ async function uniqueSlug(communityId: string, title: string, exceptId?: string)
   const base = slugifyTitle(title) || 'page';
   for (let i = 1; i < 100; i++) {
     const slug = i === 1 ? base : `${base}-${i}`;
+    if (RESERVED_WIKI_SLUGS.has(slug)) continue;
     const existing = await db.query.wikiPages.findFirst({
       where: and(eq(schema.wikiPages.communityId, communityId), eq(schema.wikiPages.slug, slug)),
     });
@@ -94,7 +101,10 @@ async function assertParent(ctx: MemberContext, parentId: string | null, selfId?
   let current: string | null = parentId;
   for (let depth = 0; current && depth < 20; depth++) {
     const p: WikiPageRow | undefined = await db.query.wikiPages.findFirst({
-      where: and(eq(schema.wikiPages.id, current), eq(schema.wikiPages.communityId, ctx.community.id)),
+      where: and(
+        eq(schema.wikiPages.id, current),
+        eq(schema.wikiPages.communityId, ctx.community.id),
+      ),
     });
     if (!p) throw new AppError('validation', 'Choose a valid parent page.');
     if (p.id === selfId) throw new AppError('validation', 'That would put the page inside itself.');
@@ -138,15 +148,29 @@ export async function createWikiPage(ctx: MemberContext, raw: unknown): Promise<
   return { slug };
 }
 
-export async function updateWikiPage(ctx: MemberContext, pageId: string, raw: unknown): Promise<{ slug: string }> {
+export async function updateWikiPage(
+  ctx: MemberContext,
+  pageId: string,
+  raw: unknown,
+): Promise<{ slug: string }> {
   const page = await loadPage(ctx, pageId);
-  if (!canEditWiki(ctx, page)) throw forbidden(page.protected ? 'This page is protected.' : "You can't edit this wiki.");
+  if (!canEditWiki(ctx, page))
+    throw forbidden(page.protected ? 'This page is protected.' : "You can't edit this wiki.");
   const input = wikiPageInputSchema.parse(raw);
+  if (input.baseRevisionId && input.baseRevisionId !== page.currentRevisionId) {
+    throw new AppError(
+      'conflict',
+      'Someone else saved this page while you were editing. Copy your changes, reload, and apply them again.',
+    );
+  }
   await enforceRateLimit(`wiki:${ctx.userId}`, 30, 600);
   await assertParent(ctx, input.parentId, page.id);
   const body = sanitizeDoc(input.body);
   const text = docToText(body, 200_000);
-  const slug = input.title !== page.title ? await uniqueSlug(ctx.community.id, input.title, page.id) : page.slug;
+  const slug =
+    input.title !== page.title
+      ? await uniqueSlug(ctx.community.id, input.title, page.id)
+      : page.slug;
   const revisionId = newId();
   await db.transaction(async (tx) => {
     await tx.insert(schema.wikiRevisions).values({
@@ -178,7 +202,11 @@ export async function updateWikiPage(ctx: MemberContext, pageId: string, raw: un
 
 async function loadPage(ctx: MemberContext, pageId: string): Promise<WikiPageRow> {
   const page = await db.query.wikiPages.findFirst({
-    where: and(eq(schema.wikiPages.id, pageId), eq(schema.wikiPages.communityId, ctx.community.id), isNull(schema.wikiPages.deletedAt)),
+    where: and(
+      eq(schema.wikiPages.id, pageId),
+      eq(schema.wikiPages.communityId, ctx.community.id),
+      isNull(schema.wikiPages.deletedAt),
+    ),
   });
   if (!page) throw notFound('Page');
   return page;
@@ -226,10 +254,14 @@ export async function compareRevision(ctx: MemberContext, pageId: string, revisi
   const [previous] = await db
     .select()
     .from(schema.wikiRevisions)
-    .where(and(eq(schema.wikiRevisions.pageId, pageId), sql`${schema.wikiRevisions.id} < ${rev.id}`))
+    .where(
+      and(eq(schema.wikiRevisions.pageId, pageId), sql`${schema.wikiRevisions.id} < ${rev.id}`),
+    )
     .orderBy(desc(schema.wikiRevisions.id))
     .limit(1);
-  const author = rev.authorId ? await db.query.users.findFirst({ where: eq(schema.users.id, rev.authorId) }) : null;
+  const author = rev.authorId
+    ? await db.query.users.findFirst({ where: eq(schema.users.id, rev.authorId) })
+    : null;
   return {
     revision: { ...rev, authorName: author?.name ?? null },
     previous: previous ?? null,
@@ -238,7 +270,11 @@ export async function compareRevision(ctx: MemberContext, pageId: string, revisi
   };
 }
 
-export async function restoreRevision(ctx: MemberContext, pageId: string, revisionId: string): Promise<void> {
+export async function restoreRevision(
+  ctx: MemberContext,
+  pageId: string,
+  revisionId: string,
+): Promise<void> {
   const page = await loadPage(ctx, pageId);
   if (!canEditWiki(ctx, page)) throw forbidden();
   const rev = await db.query.wikiRevisions.findFirst({
@@ -259,16 +295,36 @@ export async function restoreRevision(ctx: MemberContext, pageId: string, revisi
     });
     await tx
       .update(schema.wikiPages)
-      .set({ title: rev.title, body: rev.body, bodyText: rev.bodyText, currentRevisionId: newRevId, updatedBy: ctx.userId, updatedAt: new Date() })
+      .set({
+        title: rev.title,
+        body: rev.body,
+        bodyText: rev.bodyText,
+        currentRevisionId: newRevId,
+        updatedBy: ctx.userId,
+        updatedAt: new Date(),
+      })
       .where(eq(schema.wikiPages.id, pageId));
   });
 }
 
-export async function setWikiProtected(ctx: MemberContext, pageId: string, value: boolean): Promise<void> {
+export async function setWikiProtected(
+  ctx: MemberContext,
+  pageId: string,
+  value: boolean,
+): Promise<void> {
   requirePerm(ctx, Permission.MANAGE_WIKI);
   await loadPage(ctx, pageId);
-  await db.update(schema.wikiPages).set({ protected: value }).where(eq(schema.wikiPages.id, pageId));
-  await audit(db, { communityId: ctx.community.id, actorId: ctx.userId, action: value ? 'wiki.protect' : 'wiki.unprotect', targetType: 'wiki_page', targetId: pageId });
+  await db
+    .update(schema.wikiPages)
+    .set({ protected: value })
+    .where(eq(schema.wikiPages.id, pageId));
+  await audit(db, {
+    communityId: ctx.community.id,
+    actorId: ctx.userId,
+    action: value ? 'wiki.protect' : 'wiki.unprotect',
+    targetType: 'wiki_page',
+    targetId: pageId,
+  });
 }
 
 export async function deleteWikiPage(ctx: MemberContext, pageId: string): Promise<void> {
@@ -276,12 +332,22 @@ export async function deleteWikiPage(ctx: MemberContext, pageId: string): Promis
   const page = await loadPage(ctx, pageId);
   await db.transaction(async (tx) => {
     // Children move up to the deleted page's parent.
-    await tx.update(schema.wikiPages).set({ parentId: page.parentId }).where(eq(schema.wikiPages.parentId, page.id));
+    await tx
+      .update(schema.wikiPages)
+      .set({ parentId: page.parentId })
+      .where(eq(schema.wikiPages.parentId, page.id));
     await tx
       .update(schema.wikiPages)
       .set({ deletedAt: new Date(), slug: `deleted-${page.id}` })
       .where(eq(schema.wikiPages.id, page.id));
-    await audit(tx, { communityId: ctx.community.id, actorId: ctx.userId, action: 'wiki.delete', targetType: 'wiki_page', targetId: page.id, diff: { title: page.title } });
+    await audit(tx, {
+      communityId: ctx.community.id,
+      actorId: ctx.userId,
+      action: 'wiki.delete',
+      targetType: 'wiki_page',
+      targetId: page.id,
+      diff: { title: page.title },
+    });
   });
 }
 

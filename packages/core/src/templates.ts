@@ -26,7 +26,11 @@ export interface TemplateChannel {
   type: 'forum' | 'announcement';
   name: string;
   topic: string;
-  settings?: { voting?: boolean; qa?: boolean; defaultSort?: 'latest' | 'hot' | 'top' | 'new' | 'unanswered' };
+  settings?: {
+    voting?: boolean;
+    qa?: boolean;
+    defaultSort?: 'latest' | 'hot' | 'top' | 'new' | 'unanswered';
+  };
 }
 
 export interface TemplateDef {
@@ -75,10 +79,24 @@ export const TEMPLATES: Record<CommunityTemplate, TemplateDef> = {
       {
         category: 'Server',
         channels: [
-          { type: 'announcement', name: 'announcements', topic: 'Updates, maintenance and events from the staff.' },
+          {
+            type: 'announcement',
+            name: 'announcements',
+            topic: 'Updates, maintenance and events from the staff.',
+          },
           { type: 'forum', name: 'general', topic: 'Talk about anything on the server.' },
-          { type: 'forum', name: 'support', topic: 'Ask for help. Mark the reply that solved it.', settings: { qa: true } },
-          { type: 'forum', name: 'suggestions', topic: 'Ideas for the server. Vote for the ones you like.', settings: { voting: true, defaultSort: 'top' } },
+          {
+            type: 'forum',
+            name: 'support',
+            topic: 'Ask for help. Mark the reply that solved it.',
+            settings: { qa: true },
+          },
+          {
+            type: 'forum',
+            name: 'suggestions',
+            topic: 'Ideas for the server. Vote for the ones you like.',
+            settings: { voting: true, defaultSort: 'top' },
+          },
         ],
       },
     ],
@@ -136,7 +154,12 @@ export const TEMPLATES: Record<CommunityTemplate, TemplateDef> = {
         channels: [
           { type: 'announcement', name: 'announcements', topic: 'News from leadership.' },
           { type: 'forum', name: 'general', topic: 'Chat with the squad.' },
-          { type: 'forum', name: 'strategy', topic: 'Tactics, loadouts and match reviews.', settings: { voting: true } },
+          {
+            type: 'forum',
+            name: 'strategy',
+            topic: 'Tactics, loadouts and match reviews.',
+            settings: { voting: true },
+          },
         ],
       },
     ],
@@ -175,8 +198,18 @@ export const TEMPLATES: Record<CommunityTemplate, TemplateDef> = {
         category: 'Discussion',
         channels: [
           { type: 'announcement', name: 'news', topic: 'Patch notes, news and community updates.' },
-          { type: 'forum', name: 'general-discussion', topic: 'Everything about the game.', settings: { voting: true, defaultSort: 'hot' } },
-          { type: 'forum', name: 'guides', topic: 'Tips, builds and walkthroughs.', settings: { voting: true, defaultSort: 'top' } },
+          {
+            type: 'forum',
+            name: 'general-discussion',
+            topic: 'Everything about the game.',
+            settings: { voting: true, defaultSort: 'hot' },
+          },
+          {
+            type: 'forum',
+            name: 'guides',
+            topic: 'Tips, builds and walkthroughs.',
+            settings: { voting: true, defaultSort: 'top' },
+          },
           { type: 'forum', name: 'help', topic: 'Questions and answers.', settings: { qa: true } },
         ],
       },
@@ -222,7 +255,12 @@ export const TEMPLATES: Record<CommunityTemplate, TemplateDef> = {
         channels: [
           { type: 'announcement', name: 'announcements', topic: 'Stream schedule and news.' },
           { type: 'forum', name: 'general', topic: 'Hang out and chat.' },
-          { type: 'forum', name: 'fan-creations', topic: 'Share your art, clips and edits.', settings: { voting: true, defaultSort: 'hot' } },
+          {
+            type: 'forum',
+            name: 'fan-creations',
+            topic: 'Share your art, clips and edits.',
+            settings: { voting: true, defaultSort: 'hot' },
+          },
         ],
       },
     ],

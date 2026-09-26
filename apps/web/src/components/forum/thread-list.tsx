@@ -24,11 +24,21 @@ export async function ThreadList({
 }) {
   const t = await getTranslations('forum');
   return (
-    <ol className="divide-y divide-border rounded-ui-lg border border-border bg-surface" aria-label={t('threads')}>
+    <ol
+      className="divide-y divide-border rounded-ui-lg border border-border bg-surface"
+      aria-label={t('threads')}
+    >
       {threads.map((th) => (
         <li key={th.id} className="flex items-start gap-3 p-4">
           {voting && (
-            <VoteButtons communityId={communityId} threadId={th.id} score={th.score} myVote={th.myVote} title={th.title} disabled={!signedIn} />
+            <VoteButtons
+              communityId={communityId}
+              threadId={th.id}
+              score={th.score}
+              myVote={th.myVote}
+              title={th.title}
+              disabled={!signedIn}
+            />
           )}
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">

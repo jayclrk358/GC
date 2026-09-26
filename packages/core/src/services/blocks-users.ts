@@ -19,7 +19,9 @@ export async function blockUser(userId: string | null, blockedId: string): Promi
 
 export async function unblockUser(userId: string | null, blockedId: string): Promise<void> {
   if (!userId) throw unauthorized();
-  await db.delete(schema.userBlocks).where(and(eq(schema.userBlocks.userId, userId), eq(schema.userBlocks.blockedId, blockedId)));
+  await db
+    .delete(schema.userBlocks)
+    .where(and(eq(schema.userBlocks.userId, userId), eq(schema.userBlocks.blockedId, blockedId)));
 }
 
 export async function listBlockedUsers(userId: string) {

@@ -60,11 +60,15 @@ export default async function ForumSearchPage({
         <ol className="flex flex-col gap-3">
           {results.map((r) => (
             <li key={r.threadId} className="rounded-ui-lg border border-border bg-surface p-4">
-              <Link href={`${base}/t/${r.threadId}#post-${r.postId}`} className="text-lg font-bold hover:underline">
+              <Link
+                href={`${base}/t/${r.threadId}#post-${r.postId}`}
+                className="text-lg font-bold hover:underline"
+              >
                 {r.title}
               </Link>
               <p className="mt-1 text-sm text-muted">
-                #{r.channelName} · {t('replies', { count: r.replyCount })} · {relativeTime(r.lastActivityAt)}
+                #{r.channelName} · {t('replies', { count: r.replyCount })} ·{' '}
+                {relativeTime(r.lastActivityAt)}
               </p>
               {r.snippet && (
                 <p className="mt-2 text-sm">

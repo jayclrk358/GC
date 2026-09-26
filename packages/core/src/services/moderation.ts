@@ -24,7 +24,9 @@ async function targetRank(communityId: string, userId: string, ownerId: string) 
     .select({ position: schema.roles.position })
     .from(schema.memberRoles)
     .innerJoin(schema.roles, eq(schema.roles.id, schema.memberRoles.roleId))
-    .where(and(eq(schema.memberRoles.communityId, communityId), eq(schema.memberRoles.userId, userId)));
+    .where(
+      and(eq(schema.memberRoles.communityId, communityId), eq(schema.memberRoles.userId, userId)),
+    );
   return { isOwner: userId === ownerId, topPosition: Math.max(0, ...rows.map((r) => r.position)) };
 }
 
@@ -38,14 +40,25 @@ async function assertCanModerate(ctx: MemberContext, userId: string) {
 
 const reasonSchema = z.string().trim().max(500).default('');
 
-export async function kickMember(ctx: MemberContext, userId: string, rawReason: unknown): Promise<void> {
+export async function kickMember(
+  ctx: MemberContext,
+  userId: string,
+  rawReason: unknown,
+): Promise<void> {
   requirePerm(ctx, Permission.KICK_MEMBERS);
   await assertCanModerate(ctx, userId);
   const reason = reasonSchema.parse(rawReason);
   await db.transaction(async (tx) => {
     const removed = await removeMember(tx, ctx.community.id, userId);
     if (!removed) throw notFound('Member');
-    await audit(tx, { communityId: ctx.community.id, actorId: ctx.userId, action: 'member.kick', targetType: 'user', targetId: userId, reason });
+    await audit(tx, {
+      communityId: ctx.community.id,
+      actorId: ctx.userId,
+      action: 'member.kick',
+      targetType: 'user',
+      targetId: userId,
+      reason,
+    });
   });
   realtime().to(rooms.user(userId)).emit('community:removed', { communityId: ctx.community.id });
   await notifyUser({
@@ -54,15 +67,28 @@ export async function kickMember(ctx: MemberContext, userId: string, rawReason: 
     communityId: ctx.community.id,
     actorId: null,
     url: `/c/${ctx.community.slug}`,
-    data: { title: `You were removed from ${ctx.community.name}`, excerpt: reason, community: ctx.community.name },
+    data: {
+      title: `You were removed from ${ctx.community.name}`,
+      excerpt: reason,
+      community: ctx.community.name,
+    },
   });
 }
 
 const banSchema = z.object({
   reason: reasonSchema,
-  duration: z.enum(Object.keys(BAN_DURATIONS) as [keyof typeof BAN_DURATIONS, ...(keyof typeof BAN_DURATIONS)[]]).default('permanent'),
+  duration: z
+    .enum(
+      Object.keys(BAN_DURATIONS) as [keyof typeof BAN_DURATIONS, ...(keyof typeof BAN_DURATIONS)[]],
+    )
+    .default('permanent'),
   /** Remove the member's posts from this far back. */
-  deleteSeconds: z.number().int().min(0).max(7 * 86400).default(0),
+  deleteSeconds: z
+    .number()
+    .int()
+    .min(0)
+    .max(7 * 86400)
+    .default(0),
 });
 
 export async function banMember(ctx: MemberContext, userId: string, raw: unknown): Promise<void> {
@@ -77,7 +103,13 @@ export async function banMember(ctx: MemberContext, userId: string, raw: unknown
     await removeMember(tx, ctx.community.id, userId);
     await tx
       .insert(schema.bans)
-      .values({ communityId: ctx.community.id, userId, reason: input.reason, bannedBy: ctx.userId, expiresAt })
+      .values({
+        communityId: ctx.community.id,
+        userId,
+        reason: input.reason,
+        bannedBy: ctx.userId,
+        expiresAt,
+      })
       .onConflictDoUpdate({
         target: [schema.bans.communityId, schema.bans.userId],
         set: { reason: input.reason, bannedBy: ctx.userId, expiresAt, createdAt: new Date() },
@@ -139,7 +171,13 @@ export async function unbanMember(ctx: MemberContext, userId: string): Promise<v
     .where(and(eq(schema.bans.communityId, ctx.community.id), eq(schema.bans.userId, userId)))
     .returning({ userId: schema.bans.userId });
   if (!deleted.length) throw notFound('Ban');
-  await audit(db, { communityId: ctx.community.id, actorId: ctx.userId, action: 'member.unban', targetType: 'user', targetId: userId });
+  await audit(db, {
+    communityId: ctx.community.id,
+    actorId: ctx.userId,
+    action: 'member.unban',
+    targetType: 'user',
+    targetId: userId,
+  });
 }
 
 export async function listBans(ctx: MemberContext) {
@@ -165,15 +203,28 @@ export async function listBans(ctx: MemberContext) {
 
 const timeoutSchema = z.object({
   reason: reasonSchema,
-  duration: z.enum(Object.keys(TIMEOUT_DURATIONS) as [keyof typeof TIMEOUT_DURATIONS, ...(keyof typeof TIMEOUT_DURATIONS)[]]).nullable(),
+  duration: z
+    .enum(
+      Object.keys(TIMEOUT_DURATIONS) as [
+        keyof typeof TIMEOUT_DURATIONS,
+        ...(keyof typeof TIMEOUT_DURATIONS)[],
+      ],
+    )
+    .nullable(),
 });
 
 /** Set or clear (duration null) a timeout. Timed-out members can read but not post. */
-export async function timeoutMember(ctx: MemberContext, userId: string, raw: unknown): Promise<void> {
+export async function timeoutMember(
+  ctx: MemberContext,
+  userId: string,
+  raw: unknown,
+): Promise<void> {
   requirePerm(ctx, Permission.TIMEOUT_MEMBERS);
   await assertCanModerate(ctx, userId);
   const input = timeoutSchema.parse(raw);
-  const until = input.duration ? new Date(Date.now() + TIMEOUT_DURATIONS[input.duration] * 1000) : null;
+  const until = input.duration
+    ? new Date(Date.now() + TIMEOUT_DURATIONS[input.duration] * 1000)
+    : null;
   const updated = await db
     .update(schema.members)
     .set({ timeoutUntil: until })
@@ -215,28 +266,42 @@ async function resolveReportTarget(ctx: MemberContext, targetType: string, targe
   switch (targetType) {
     case 'post': {
       const post = await db.query.posts.findFirst({
-        where: and(eq(schema.posts.id, targetId), eq(schema.posts.communityId, ctx.community.id), isNull(schema.posts.deletedAt)),
+        where: and(
+          eq(schema.posts.id, targetId),
+          eq(schema.posts.communityId, ctx.community.id),
+          isNull(schema.posts.deletedAt),
+        ),
       });
       if (!post) throw notFound('Post');
       return { userId: post.authorId, excerpt: post.bodyText.slice(0, 500) };
     }
     case 'thread': {
       const thread = await db.query.threads.findFirst({
-        where: and(eq(schema.threads.id, targetId), eq(schema.threads.communityId, ctx.community.id), isNull(schema.threads.deletedAt)),
+        where: and(
+          eq(schema.threads.id, targetId),
+          eq(schema.threads.communityId, ctx.community.id),
+          isNull(schema.threads.deletedAt),
+        ),
       });
       if (!thread) throw notFound('Thread');
       return { userId: thread.authorId, excerpt: thread.title };
     }
     case 'wiki_page': {
       const page = await db.query.wikiPages.findFirst({
-        where: and(eq(schema.wikiPages.id, targetId), eq(schema.wikiPages.communityId, ctx.community.id)),
+        where: and(
+          eq(schema.wikiPages.id, targetId),
+          eq(schema.wikiPages.communityId, ctx.community.id),
+        ),
       });
       if (!page) throw notFound('Page');
       return { userId: page.updatedBy, excerpt: `${page.title}: ${page.bodyText.slice(0, 400)}` };
     }
     case 'user': {
       const member = await db.query.members.findFirst({
-        where: and(eq(schema.members.communityId, ctx.community.id), eq(schema.members.userId, targetId)),
+        where: and(
+          eq(schema.members.communityId, ctx.community.id),
+          eq(schema.members.userId, targetId),
+        ),
       });
       if (!member) throw notFound('Member');
       const user = await db.query.users.findFirst({ where: eq(schema.users.id, targetId) });
@@ -250,9 +315,15 @@ async function resolveReportTarget(ctx: MemberContext, targetType: string, targe
 export async function createReport(ctx: MemberContext, raw: unknown): Promise<{ id: string }> {
   requireMember(ctx);
   const input = reportInputSchema.parse(raw);
-  await enforceRateLimit(`report:${ctx.userId}`, 20, 3600, 'You have sent a lot of reports. Please wait a while.');
+  await enforceRateLimit(
+    `report:${ctx.userId}`,
+    20,
+    3600,
+    'You have sent a lot of reports. Please wait a while.',
+  );
   const target = await resolveReportTarget(ctx, input.targetType, input.targetId);
-  if (target.userId === ctx.userId) throw new AppError('bad_request', "You can't report your own content.");
+  if (target.userId === ctx.userId)
+    throw new AppError('bad_request', "You can't report your own content.");
   const existing = await db.query.reports.findFirst({
     where: and(
       eq(schema.reports.communityId, ctx.community.id),
@@ -279,7 +350,10 @@ export async function createReport(ctx: MemberContext, raw: unknown): Promise<{ 
   return { id };
 }
 
-export async function listReports(ctx: MemberContext, status: 'open' | 'resolved' | 'dismissed' = 'open') {
+export async function listReports(
+  ctx: MemberContext,
+  status: 'open' | 'resolved' | 'dismissed' = 'open',
+) {
   requirePerm(ctx, Permission.MANAGE_REPORTS);
   const reporter = sql<string>`(select name from users where id = ${schema.reports.reporterId})`;
   const targetUser = sql<string>`(select name from users where id = ${schema.reports.targetUserId})`;
@@ -315,7 +389,10 @@ export async function listReports(ctx: MemberContext, status: 'open' | 'resolved
       .where(inArray(schema.posts.id, postIds));
     for (const p of posts) threadOf.set(p.id, p.threadId);
   }
-  return rows.map((r) => ({ ...r, threadId: r.targetType === 'thread' ? r.targetId : (threadOf.get(r.targetId) ?? null) }));
+  return rows.map((r) => ({
+    ...r,
+    threadId: r.targetType === 'thread' ? r.targetId : (threadOf.get(r.targetId) ?? null),
+  }));
 }
 
 export async function openReportCount(ctx: MemberContext): Promise<number> {
@@ -323,7 +400,9 @@ export async function openReportCount(ctx: MemberContext): Promise<number> {
   const [row] = await db
     .select({ n: sql<number>`count(*)::int` })
     .from(schema.reports)
-    .where(and(eq(schema.reports.communityId, ctx.community.id), eq(schema.reports.status, 'open')));
+    .where(
+      and(eq(schema.reports.communityId, ctx.community.id), eq(schema.reports.status, 'open')),
+    );
   return row?.n ?? 0;
 }
 
@@ -332,12 +411,21 @@ const resolveSchema = z.object({
   resolution: z.string().trim().max(500).default(''),
 });
 
-export async function resolveReport(ctx: MemberContext, reportId: string, raw: unknown): Promise<void> {
+export async function resolveReport(
+  ctx: MemberContext,
+  reportId: string,
+  raw: unknown,
+): Promise<void> {
   requirePerm(ctx, Permission.MANAGE_REPORTS);
   const input = resolveSchema.parse(raw);
   const updated = await db
     .update(schema.reports)
-    .set({ status: input.status, resolution: input.resolution, resolvedBy: ctx.userId, resolvedAt: new Date() })
+    .set({
+      status: input.status,
+      resolution: input.resolution,
+      resolvedBy: ctx.userId,
+      resolvedAt: new Date(),
+    })
     .where(and(eq(schema.reports.id, reportId), eq(schema.reports.communityId, ctx.community.id)))
     .returning({ id: schema.reports.id });
   if (!updated.length) throw notFound('Report');

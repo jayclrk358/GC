@@ -40,7 +40,10 @@ export function ReplyComposer({
     }
     setPending(true);
     setError(null);
-    const r = await createReplyAction(communityId, threadId, { body, replyToId: replyTo?.postId ?? null });
+    const r = await createReplyAction(communityId, threadId, {
+      body,
+      replyToId: replyTo?.postId ?? null,
+    });
     setPending(false);
     if (!r.ok) {
       setError(r.error);
@@ -55,7 +58,11 @@ export function ReplyComposer({
   }
 
   return (
-    <section ref={composerRef} aria-labelledby="reply-h" className="flex flex-col gap-3 rounded-ui-lg border border-border bg-surface p-4">
+    <section
+      ref={composerRef}
+      aria-labelledby="reply-h"
+      className="flex flex-col gap-3 rounded-ui-lg border border-border bg-surface p-4"
+    >
       <h3 id="reply-h" className="font-bold">
         {t('writeReply')}
       </h3>
@@ -65,7 +72,12 @@ export function ReplyComposer({
       {replyTo && (
         <p className="flex items-center gap-2 text-sm">
           <span>{t('replyingTo', { name: replyTo.authorName })}</span>
-          <Button size="icon-sm" variant="ghost" onClick={() => setReplyTo(null)} aria-label={t('cancelReplyTo')}>
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            onClick={() => setReplyTo(null)}
+            aria-label={t('cancelReplyTo')}
+          >
             <X aria-hidden />
           </Button>
         </p>

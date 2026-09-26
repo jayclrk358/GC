@@ -11,7 +11,15 @@ import { RadioCards } from '@/components/ui/radio-cards';
 import { FormError } from '@/components/auth/form-error';
 import { reportAction } from '@/app/actions/forum';
 
-const REASONS = ['spam', 'harassment', 'hate', 'nsfw', 'violence', 'misinformation', 'other'] as const;
+const REASONS = [
+  'spam',
+  'harassment',
+  'hate',
+  'nsfw',
+  'violence',
+  'misinformation',
+  'other',
+] as const;
 type Reason = (typeof REASONS)[number];
 
 export function ReportDialog({
@@ -63,7 +71,14 @@ export function ReportDialog({
             />
           </fieldset>
           <Field label={t('details')} description={t('detailsHint')}>
-            {(p) => <Textarea {...p} value={details} maxLength={1000} onChange={(e) => setDetails(e.target.value)} />}
+            {(p) => (
+              <Textarea
+                {...p}
+                value={details}
+                maxLength={1000}
+                onChange={(e) => setDetails(e.target.value)}
+              />
+            )}
           </Field>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>

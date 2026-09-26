@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { channelInputSchema, channelNameSchema, hotScore, slugifyTitle, threadInputSchema } from './forum';
+import {
+  channelInputSchema,
+  channelNameSchema,
+  hotScore,
+  slugifyTitle,
+  threadInputSchema,
+} from './forum';
 import { docFromText } from './richtext';
 
 describe('forum schemas', () => {

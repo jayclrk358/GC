@@ -298,7 +298,11 @@ export async function canSubscribe(
     }
     case 'thread': {
       const thread = await db
-        .select({ communityId: schema.threads.communityId, channelId: schema.threads.channelId, deletedAt: schema.threads.deletedAt })
+        .select({
+          communityId: schema.threads.communityId,
+          channelId: schema.threads.channelId,
+          deletedAt: schema.threads.deletedAt,
+        })
         .from(schema.threads)
         .where(eq(schema.threads.id, id))
         .limit(1);

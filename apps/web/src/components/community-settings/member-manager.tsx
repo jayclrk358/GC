@@ -11,6 +11,8 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Avatar, EmptyState } from '@/components/ui/misc';
 import { RoleBadge } from '@/components/community/role-badge';
 import { setMemberRoleAction } from '@/app/actions/roles';
+import { MemberModActions } from '@/components/moderation/member-mod-actions';
+import { formatDateTime } from '@/lib/format';
 
 interface Member {
   userId: string;
@@ -19,6 +21,7 @@ interface Member {
   image: string | null;
   roleIds: string[];
   isOwner: boolean;
+  timeoutUntil: string | null;
 }
 
 export function MemberManager({
@@ -26,11 +29,13 @@ export function MemberManager({
   members,
   roles,
   actor,
+  can,
 }: {
   communityId: string;
   members: Member[];
   roles: RoleSummary[];
   actor: { isOwner: boolean; topPosition: number; userId: string };
+  can: { roles: boolean; kick: boolean; ban: boolean; timeout: boolean };
 }) {
   const t = useTranslations('roles');
   const router = useRouter();
@@ -40,6 +45,8 @@ export function MemberManager({
   const topOf = (m: Member) => Math.max(0, ...m.roleIds.map((id) => byId.get(id)?.position ?? 0));
   const canEditMember = (m: Member) =>
     actor.isOwner || m.userId === actor.userId || (!m.isOwner && topOf(m) < actor.topPosition);
+  const outranks = (m: Member) =>
+    m.userId !== actor.userId && !m.isOwner && (actor.isOwner || topOf(m) < actor.topPosition);
   const canAssign = (r: RoleSummary) => actor.isOwner || r.position < actor.topPosition;
 
   if (!members.length) return <EmptyState title={t('noMembers')} />;
@@ -75,6 +82,11 @@ export function MemberManager({
                 )}
               </p>
               {m.username && <p className="text-sm text-muted">@{m.username}</p>}
+              {m.timeoutUntil && new Date(m.timeoutUntil) > new Date() && (
+                <p className="text-sm font-medium text-warning">
+                  {t('timedOutUntil', { date: formatDateTime(m.timeoutUntil) })}
+                </p>
+              )}
             </div>
             <ul className="flex flex-wrap gap-1" aria-label={t('rolesOf', { name: m.name })}>
               {m.roleIds
@@ -86,7 +98,14 @@ export function MemberManager({
                   </li>
                 ))}
             </ul>
-            {canEditMember(m) && (
+            {outranks(m) && (
+              <MemberModActions
+                communityId={communityId}
+                member={{ userId: m.userId, name: m.name, timeoutUntil: m.timeoutUntil }}
+                can={{ kick: can.kick, ban: can.ban, timeout: can.timeout }}
+              />
+            )}
+            {can.roles && canEditMember(m) && (
               <Button size="sm" variant="outline" onClick={() => setEditing(m)}>
                 <Tags aria-hidden /> {t('manageRoles')}
                 <span className="sr-only"> {m.name}</span>
