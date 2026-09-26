@@ -1,5 +1,8 @@
 # Keep LF line endings on every platform (Prettier expects LF; Windows Git would convert to CRLF).
 * text=auto eol=lf
+# cmd.exe needs CRLF in batch files.
+*.cmd text eol=crlf
+*.bat text eol=crlf
 *.png binary
 *.jpg binary
 *.jpeg binary
