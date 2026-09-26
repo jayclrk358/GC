@@ -22,7 +22,15 @@ export interface TemplateBlock {
   config: Record<string, unknown>;
 }
 
+export interface TemplateChannel {
+  type: 'forum' | 'announcement';
+  name: string;
+  topic: string;
+  settings?: { voting?: boolean; qa?: boolean; defaultSort?: 'latest' | 'hot' | 'top' | 'new' | 'unanswered' };
+}
+
 export interface TemplateDef {
+  channels: { category: string; channels: TemplateChannel[] }[];
   roles: TemplateRole[];
   blocks: (ctx: { name: string; tagline: string }) => TemplateBlock[];
   nav: NavConfig;
@@ -63,6 +71,17 @@ function nav(order: string[]): NavConfig {
 /** Starting points for a new community. Everything can be changed afterwards. */
 export const TEMPLATES: Record<CommunityTemplate, TemplateDef> = {
   server: {
+    channels: [
+      {
+        category: 'Server',
+        channels: [
+          { type: 'announcement', name: 'announcements', topic: 'Updates, maintenance and events from the staff.' },
+          { type: 'forum', name: 'general', topic: 'Talk about anything on the server.' },
+          { type: 'forum', name: 'support', topic: 'Ask for help. Mark the reply that solved it.', settings: { qa: true } },
+          { type: 'forum', name: 'suggestions', topic: 'Ideas for the server. Vote for the ones you like.', settings: { voting: true, defaultSort: 'top' } },
+        ],
+      },
+    ],
     roles: [
       ADMIN,
       {
@@ -111,6 +130,16 @@ export const TEMPLATES: Record<CommunityTemplate, TemplateDef> = {
     ],
   },
   clan: {
+    channels: [
+      {
+        category: 'Clan',
+        channels: [
+          { type: 'announcement', name: 'announcements', topic: 'News from leadership.' },
+          { type: 'forum', name: 'general', topic: 'Chat with the squad.' },
+          { type: 'forum', name: 'strategy', topic: 'Tactics, loadouts and match reviews.', settings: { voting: true } },
+        ],
+      },
+    ],
     roles: [
       { ...ADMIN, name: 'Leader' },
       { name: 'Officer', color: '#0891b2', permissions: DEFAULT_MODERATOR, hoist: true },
@@ -141,6 +170,17 @@ export const TEMPLATES: Record<CommunityTemplate, TemplateDef> = {
     ],
   },
   fanhub: {
+    channels: [
+      {
+        category: 'Discussion',
+        channels: [
+          { type: 'announcement', name: 'news', topic: 'Patch notes, news and community updates.' },
+          { type: 'forum', name: 'general-discussion', topic: 'Everything about the game.', settings: { voting: true, defaultSort: 'hot' } },
+          { type: 'forum', name: 'guides', topic: 'Tips, builds and walkthroughs.', settings: { voting: true, defaultSort: 'top' } },
+          { type: 'forum', name: 'help', topic: 'Questions and answers.', settings: { qa: true } },
+        ],
+      },
+    ],
     roles: [
       ADMIN,
       MOD,
@@ -176,6 +216,16 @@ export const TEMPLATES: Record<CommunityTemplate, TemplateDef> = {
     ],
   },
   creator: {
+    channels: [
+      {
+        category: 'Community',
+        channels: [
+          { type: 'announcement', name: 'announcements', topic: 'Stream schedule and news.' },
+          { type: 'forum', name: 'general', topic: 'Hang out and chat.' },
+          { type: 'forum', name: 'fan-creations', topic: 'Share your art, clips and edits.', settings: { voting: true, defaultSort: 'hot' } },
+        ],
+      },
+    ],
     roles: [ADMIN, MOD, { name: 'Supporter', color: '#db2777', permissions: 0n, hoist: true }],
     nav: nav(['home', 'chat', 'forum', 'events', 'members', 'wiki', 'servers']),
     blocks: ({ name, tagline }) => [

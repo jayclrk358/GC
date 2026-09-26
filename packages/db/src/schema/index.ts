@@ -5,3 +5,7 @@ export * from './communities';
 export * from './channels';
 export * from './uploads';
 export * from './servers';
+export * from './forum';
+export * from './wiki';
+export * from './notifications';
+export * from './moderation';

@@ -8,3 +8,4 @@ export * from './ids';
 export * from './slug';
 export * from './community';
 export * from './game-server';
+export * from './forum';

@@ -86,6 +86,9 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.2
         version: 3.2.2(react@19.3.0)
+      '@floating-ui/dom':
+        specifier: ^1.8.0
+        version: 1.8.0
       '@fontsource-variable/inter':
         specifier: ^5.3.0
         version: 5.3.0
@@ -125,6 +128,9 @@ importers:
       '@tiptap/extension-image':
         specifier: ^3.31.3
         version: 3.31.3(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))
+      '@tiptap/extension-mention':
+        specifier: 3.31.3
+        version: 3.31.3(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3)(@tiptap/suggestion@3.31.3(@floating-ui/dom@1.8.0)(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3))
       '@tiptap/extension-placeholder':
         specifier: ^3.31.3
         version: 3.31.3(@tiptap/extensions@3.31.3(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3))
@@ -140,6 +146,9 @@ importers:
       '@tiptap/starter-kit':
         specifier: ^3.31.3
         version: 3.31.3
+      '@tiptap/suggestion':
+        specifier: 3.31.3
+        version: 3.31.3(@floating-ui/dom@1.8.0)(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3)
       better-auth:
         specifier: ^1.7.6
         version: 1.7.6(drizzle-kit@0.31.11)(drizzle-orm@0.45.3(kysely@0.29.6)(postgres@3.4.9))(next@16.3.6(@babel/core@7.29.7)(@playwright/test@1.63.0)(@types/node@22.20.4)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(vitest@5.0.2(@types/node@22.20.4)(vite@8.3.1(@types/node@22.20.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)))
@@ -280,6 +289,9 @@ importers:
       bullmq:
         specifier: ^5.81.5
         version: 5.81.5
+      diff:
+        specifier: ^9.0.0
+        version: 9.0.0
       drizzle-orm:
         specifier: ^0.45.3
         version: 0.45.3(kysely@0.29.6)(postgres@3.4.9)
@@ -2720,6 +2732,13 @@ packages:
       '@tiptap/core': 3.31.3
       '@tiptap/pm': 3.31.3
 
+  '@tiptap/extension-mention@3.31.3':
+    resolution: {integrity: sha512-ygOPc3nQijSMUTbEdMeng12P1szk3znubA9xNi84f31VnR18VjmU0we8SIOSSVwDfm1GppSjRER2qHmX/wGIIw==}
+    peerDependencies:
+      '@tiptap/core': 3.31.3
+      '@tiptap/pm': 3.31.3
+      '@tiptap/suggestion': 3.31.3
+
   '@tiptap/extension-ordered-list@3.31.3':
     resolution: {integrity: sha512-mp3g11NgA/PYu8rj7J7Ez3l4qBy6WfTSmHIG4PZvEGG5w2oUAIkgb9DU7nPPzjmeme27oazFYZw+AtZA0+u4tw==}
     peerDependencies:
@@ -2771,6 +2790,13 @@ packages:
 
   '@tiptap/starter-kit@3.31.3':
     resolution: {integrity: sha512-WKof9RewdmGHvWJ1wn0/HVNG2mV+HOgVRyJkKekuM9fgr6BZAAH/xZsWE1eon+94JnQ+KtK2ThydXQM/qc6b2A==}
+
+  '@tiptap/suggestion@3.31.3':
+    resolution: {integrity: sha512-z1OQ/Yx6seMZehi1AcmNkyJ8qkHQzybArmCyRdmreS4YL9C4bPMBe5lbMfFsArYs+KD5JyHwps5j7J/YE5BIuw==}
+    peerDependencies:
+      '@floating-ui/dom': ^1.0.0
+      '@tiptap/core': 3.31.3
+      '@tiptap/pm': 3.31.3
 
   '@tybys/wasm-util@0.10.4':
     resolution: {integrity: sha512-W3c4gRigFS0T/Ma4qIYF3GDAc5AQdHb1yL5znJT1Zv1YaD9Kitx656wBjvr19qbiosmZT8lWDM5BEMynUqX65A==}
@@ -3433,6 +3459,10 @@ packages:
 
   detect-node-es@1.1.0:
     resolution: {integrity: sha512-ypdmJU/TbBby2Dxibuv7ZLW3Bs1QEmM7nHjEANfohJLvE0XVujisn1qPJcZxg+qDucsr+bP6fLD1rPS3AhJ7EQ==}
+
+  diff@9.0.0:
+    resolution: {integrity: sha512-svtcdpS8CgJyqAjEQIXdb3OjhFVVYjzGAPO8WGCmRbrml64SPw/jJD4GoE98aR7r25A0XcgrK3F02yw9R/vhQw==}
+    engines: {node: '>=0.3.1'}
 
   dijkstrajs@1.0.3:
     resolution: {integrity: sha512-qiSlmBq9+BCdCA/L46dw8Uy93mloxsPSbwnm5yrKn2vMPiy8KyAskTF6zuV/j5BMsmOGZDPs7KjU+mjb670kfA==}
@@ -7641,6 +7671,12 @@ snapshots:
       '@tiptap/core': 3.31.3(@tiptap/pm@3.31.3)
       '@tiptap/pm': 3.31.3
 
+  '@tiptap/extension-mention@3.31.3(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3)(@tiptap/suggestion@3.31.3(@floating-ui/dom@1.8.0)(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3))':
+    dependencies:
+      '@tiptap/core': 3.31.3(@tiptap/pm@3.31.3)
+      '@tiptap/pm': 3.31.3
+      '@tiptap/suggestion': 3.31.3(@floating-ui/dom@1.8.0)(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3)
+
   '@tiptap/extension-ordered-list@3.31.3(@tiptap/extension-list@3.31.3(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3))':
     dependencies:
       '@tiptap/extension-list': 3.31.3(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3)
@@ -7728,6 +7764,12 @@ snapshots:
       '@tiptap/extension-text': 3.31.3(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))
       '@tiptap/extension-underline': 3.31.3(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))
       '@tiptap/extensions': 3.31.3(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3)
+      '@tiptap/pm': 3.31.3
+
+  '@tiptap/suggestion@3.31.3(@floating-ui/dom@1.8.0)(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3)':
+    dependencies:
+      '@floating-ui/dom': 1.8.0
+      '@tiptap/core': 3.31.3(@tiptap/pm@3.31.3)
       '@tiptap/pm': 3.31.3
 
   '@tybys/wasm-util@0.10.4':
@@ -8344,6 +8386,8 @@ snapshots:
   detect-libc@2.1.2: {}
 
   detect-node-es@1.1.0: {}
+
+  diff@9.0.0: {}
 
   dijkstrajs@1.0.3: {}
 

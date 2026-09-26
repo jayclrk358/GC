@@ -7,6 +7,7 @@ import {
   communityBasicsSchema,
   createCommunitySchema,
   DEFAULT_EVERYONE,
+  docFromText,
   isValidSlug,
   navSchema,
   newId,
@@ -119,6 +120,53 @@ export async function createCommunity(
     );
 
     await tx.insert(schema.members).values({ communityId: id, userId });
+
+    let position = 1;
+    for (const group of template.channels) {
+      const categoryId = newId();
+      await tx.insert(schema.channels).values({
+        id: categoryId,
+        communityId: id,
+        type: 'category',
+        name: group.category,
+        position: position++,
+      });
+      for (const ch of group.channels) {
+        await tx.insert(schema.channels).values({
+          id: newId(),
+          communityId: id,
+          parentId: categoryId,
+          type: ch.type,
+          name: ch.name,
+          topic: ch.topic,
+          settings: { voting: false, qa: false, requireFlair: false, defaultSort: 'latest', ...ch.settings },
+          position: position++,
+        });
+      }
+    }
+    const wikiId = newId();
+    const wikiRevisionId = newId();
+    const welcome = `Welcome to the ${input.name} wiki. Members with the Edit wiki permission can add pages.`;
+    await tx.insert(schema.wikiPages).values({
+      id: wikiId,
+      communityId: id,
+      slug: 'home',
+      title: 'Home',
+      body: docFromText(welcome),
+      bodyText: welcome,
+      currentRevisionId: wikiRevisionId,
+      createdBy: userId,
+      updatedBy: userId,
+    });
+    await tx.insert(schema.wikiRevisions).values({
+      id: wikiRevisionId,
+      pageId: wikiId,
+      authorId: userId,
+      title: 'Home',
+      body: docFromText(welcome),
+      bodyText: welcome,
+      summary: 'Created page',
+    });
 
     const blocks = template.blocks({ name: input.name, tagline: input.tagline });
     const keys = generateNKeysBetween(null, null, blocks.length);

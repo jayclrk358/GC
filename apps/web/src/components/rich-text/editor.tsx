@@ -33,6 +33,7 @@ import { usePrefs } from '@/components/shell/prefs-provider';
 import { uploadImage } from '@/components/upload/image-upload';
 import { mediaUrl } from '@/lib/media';
 import { cn } from '@/lib/utils';
+import { mentionExtension } from './mentions';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -96,6 +97,9 @@ export function RichTextEditor({
   requireAlt,
   minHeight = '10rem',
   describedBy,
+  mentions,
+  onSubmitShortcut,
+  autoFocus,
 }: {
   value: RichNode | null | undefined;
   onChange: (doc: RichNode) => void;
@@ -105,6 +109,11 @@ export function RichTextEditor({
   requireAlt?: boolean;
   minHeight?: string;
   describedBy?: string;
+  /** Enable @mentions of this community's members and roles. */
+  mentions?: string;
+  /** Called on Ctrl/Cmd+Enter (e.g. to submit a reply). */
+  onSubmitShortcut?: () => void;
+  autoFocus?: boolean;
 }) {
   const t = useTranslations('editor');
   const { prefs } = usePrefs();
@@ -118,9 +127,14 @@ export function RichTextEditor({
   const fileInputId = React.useId();
   const toolbarRef = React.useRef<HTMLDivElement>(null);
   const [, force] = React.useReducer((x: number) => x + 1, 0);
+  const submitRef = React.useRef(onSubmitShortcut);
+  React.useEffect(() => {
+    submitRef.current = onSubmitShortcut;
+  });
 
   const editor = useEditor({
     immediatelyRender: false,
+    autofocus: autoFocus ? 'end' : false,
     extensions: [
       StarterKit.configure({
         heading: { levels: [2, 3, 4] },
@@ -136,6 +150,7 @@ export function RichTextEditor({
       UploadImage.configure({ inline: false, allowBase64: false }),
       Spoiler,
       Placeholder.configure({ placeholder: placeholder ?? t('placeholder') }),
+      ...(mentions ? [mentionExtension(mentions)] : []),
     ],
     content: value ?? undefined,
     editorProps: {
@@ -146,6 +161,14 @@ export function RichTextEditor({
         ...(describedBy ? { 'aria-describedby': describedBy } : {}),
         class: 'prose-mx px-3 py-2 outline-none',
         style: `min-height:${minHeight}`,
+      },
+      handleKeyDown: (_view, event) => {
+        if (event.key === 'Enter' && (event.metaKey || event.ctrlKey) && submitRef.current) {
+          event.preventDefault();
+          submitRef.current();
+          return true;
+        }
+        return false;
       },
     },
     onUpdate: ({ editor: e }) => onChange(e.getJSON() as RichNode),

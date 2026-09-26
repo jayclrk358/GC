@@ -16,6 +16,7 @@
     "@magnox/shared": "workspace:*",
     "@socket.io/redis-emitter": "^5.1.0",
     "bullmq": "^5.81.5",
+    "diff": "^9.0.0",
     "drizzle-orm": "^0.45.3",
     "fractional-indexing": "^4.0.0",
     "ioredis": "^5.11.1",

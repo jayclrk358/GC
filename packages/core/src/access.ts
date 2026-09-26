@@ -296,6 +296,23 @@ export async function canSubscribe(
         return false;
       }
     }
+    case 'thread': {
+      const thread = await db
+        .select({ communityId: schema.threads.communityId, channelId: schema.threads.channelId, deletedAt: schema.threads.deletedAt })
+        .from(schema.threads)
+        .where(eq(schema.threads.id, id))
+        .limit(1);
+      const t = thread[0];
+      if (!t || t.deletedAt) return false;
+      const channel = await loadChannel(t.channelId);
+      if (!channel) return false;
+      try {
+        const ctx = await getMemberContext({ id: t.communityId }, userId);
+        return has(await channelPermissions(ctx, channel), Permission.VIEW_CHANNEL);
+      } catch {
+        return false;
+      }
+    }
     default:
       return false;
   }

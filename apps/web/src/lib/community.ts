@@ -8,7 +8,7 @@ import { has, normalizeNav, Permission, type NavTab } from '@magnox/shared';
 import { getUser } from './auth';
 
 /** Tabs whose features exist. Later phases add forum, chat, wiki and events. */
-export const AVAILABLE_TABS: ReadonlySet<NavTab> = new Set(['home', 'members', 'servers']);
+export const AVAILABLE_TABS: ReadonlySet<NavTab> = new Set(['home', 'forum', 'wiki', 'members', 'servers']);
 
 export const loadCommunity = cache(async (slug: string) => {
   const user = await getUser();
@@ -31,6 +31,11 @@ export const loadCommunity = cache(async (slug: string) => {
     manageInvites: has(ctx.base, Permission.MANAGE_INVITES),
     createInvite: ctx.isMember && has(ctx.base, Permission.CREATE_INVITE),
     viewAudit: has(ctx.base, Permission.VIEW_AUDIT_LOG),
+    manageChannels: has(ctx.base, Permission.MANAGE_CHANNELS),
+    manageReports: has(ctx.base, Permission.MANAGE_REPORTS),
+    ban: has(ctx.base, Permission.BAN_MEMBERS),
+    kick: has(ctx.base, Permission.KICK_MEMBERS),
+    timeout: has(ctx.base, Permission.TIMEOUT_MEMBERS),
   };
   const canOpenSettings =
     perms.manage ||
