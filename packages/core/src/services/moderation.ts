@@ -16,6 +16,7 @@ import { realtime } from '../emitter';
 import { enforceRateLimit } from '../ratelimit';
 import { rooms } from '../rooms';
 import { audit } from './audit';
+import { getChatChannel } from './chat';
 import { removeMember } from './members';
 import { notifyUser, queueFanout } from './notify';
 
@@ -295,6 +296,19 @@ async function resolveReportTarget(ctx: MemberContext, targetType: string, targe
       });
       if (!page) throw notFound('Page');
       return { userId: page.updatedBy, excerpt: `${page.title}: ${page.bodyText.slice(0, 400)}` };
+    }
+    case 'message': {
+      const msg = await db.query.messages.findFirst({
+        where: and(
+          eq(schema.messages.id, targetId),
+          eq(schema.messages.communityId, ctx.community.id),
+          isNull(schema.messages.deletedAt),
+        ),
+      });
+      if (!msg) throw notFound('Message');
+      // Reporters must be able to see what they report.
+      await getChatChannel(ctx, msg.channelId);
+      return { userId: msg.authorId, excerpt: msg.content.slice(0, 500) };
     }
     case 'user': {
       const member = await db.query.members.findFirst({

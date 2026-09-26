@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm';
 import { db, schema } from '@magnox/db';
 import {
   getChannelByName,
+  getChatChannelByName,
   getCommunityRow,
   getMemberContext,
   isAppError,
@@ -13,10 +14,11 @@ import {
 import { has, normalizeNav, Permission, type NavTab } from '@magnox/shared';
 import { getUser } from './auth';
 
-/** Tabs whose features exist. Later phases add forum, chat, wiki and events. */
+/** Tabs whose features exist. Events arrive in a later phase. */
 export const AVAILABLE_TABS: ReadonlySet<NavTab> = new Set([
   'home',
   'forum',
+  'chat',
   'wiki',
   'members',
   'servers',
@@ -78,6 +80,16 @@ export async function loadForumChannel(ctx: MemberContext, name: string) {
     const channel = await getChannelByName(ctx, decodeURIComponent(name));
     if (channel.type !== 'forum' && channel.type !== 'announcement') notFound();
     return channel;
+  } catch (e) {
+    if (isAppError(e) && (e.code === 'not_found' || e.code === 'forbidden')) notFound();
+    throw e;
+  }
+}
+
+/** A chat (text) channel the viewer can see, or a 404. */
+export async function loadChatChannel(ctx: MemberContext, name: string) {
+  try {
+    return await getChatChannelByName(ctx, decodeURIComponent(name));
   } catch (e) {
     if (isAppError(e) && (e.code === 'not_found' || e.code === 'forbidden')) notFound();
     throw e;

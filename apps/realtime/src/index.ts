@@ -33,7 +33,9 @@ io.adapter(createAdapter(pub, sub));
 
 export interface SocketData {
   userId: string | null;
+  name: string;
   subscriptions: Set<string>;
+  lastTyping: number;
 }
 
 io.use(async (socket, next) => {
@@ -47,11 +49,13 @@ io.use(async (socket, next) => {
       headers: fromNodeHeaders(socket.handshake.headers),
     });
     socket.data.userId = session?.user.id ?? null;
+    socket.data.name = session?.user.name ?? '';
   } catch (err) {
     log.error({ err }, 'session lookup failed');
     socket.data.userId = null;
   }
   socket.data.subscriptions = new Set<string>();
+  socket.data.lastTyping = 0;
   next();
 });
 
@@ -83,6 +87,18 @@ io.on('connection', (socket: Socket) => {
     if (typeof room !== 'string') return;
     await socket.leave(room);
     data.subscriptions.delete(room);
+  });
+
+  // Typing indicators are ephemeral: relayed to the channel room, never stored. Only people
+  // subscribed to (so allowed to view) the channel can send or receive them.
+  socket.on('typing', (channelId: unknown) => {
+    if (!data.userId || typeof channelId !== 'string') return;
+    const room = rooms.channel(channelId);
+    if (!data.subscriptions.has(room)) return;
+    const now = Date.now();
+    if (now - data.lastTyping < 2000) return;
+    data.lastTyping = now;
+    socket.to(room).emit('typing', { channelId, userId: data.userId, name: data.name });
   });
 
   registerPresence(io, socket);

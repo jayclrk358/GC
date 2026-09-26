@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { mergeAttributes, ReactRenderer, type Editor } from '@tiptap/react';
+import { mergeAttributes, ReactRenderer } from '@tiptap/react';
 import Mention from '@tiptap/extension-mention';
 import type { SuggestionKeyDownProps, SuggestionProps } from '@tiptap/suggestion';
 import { computePosition, flip, offset, shift } from '@floating-ui/dom';
@@ -125,8 +125,16 @@ const MentionList = React.forwardRef<MentionListHandle, ListProps>(
   },
 );
 
-function setComboboxAttrs(editor: Editor, listId: string | null) {
-  const dom = editor.view.dom;
+/** Editors whose @mention suggestions are open (Enter should pick a suggestion, not send). */
+const suggesting = new WeakSet<Element>();
+
+export function isSuggesting(dom: Element): boolean {
+  return suggesting.has(dom);
+}
+
+function setComboboxAttrs(dom: HTMLElement, listId: string | null) {
+  if (listId) suggesting.add(dom);
+  else suggesting.delete(dom);
   if (listId) {
     dom.setAttribute('aria-autocomplete', 'list');
     dom.setAttribute('aria-expanded', 'true');
@@ -206,7 +214,7 @@ export function mentionExtension(communityId: string) {
               editor: props.editor,
             });
             document.body.appendChild(component.element);
-            setComboboxAttrs(props.editor, listId);
+            setComboboxAttrs(props.editor.view.dom, listId);
             void place(component.element as HTMLElement, props.clientRect?.());
           },
           onUpdate: (props) => {
@@ -215,6 +223,7 @@ export function mentionExtension(communityId: string) {
           },
           onKeyDown: (props) => {
             if (props.event.key === 'Escape') {
+              setComboboxAttrs(props.view.dom, null);
               component?.destroy();
               component?.element.remove();
               component = null;
@@ -223,7 +232,7 @@ export function mentionExtension(communityId: string) {
             return component?.ref?.onKeyDown(props) ?? false;
           },
           onExit: (props) => {
-            setComboboxAttrs(props.editor, null);
+            setComboboxAttrs(props.editor.view.dom, null);
             component?.destroy();
             component?.element.remove();
             component = null;

@@ -21,3 +21,15 @@ export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f
 export function isUuid(value: string): boolean {
   return UUID_RE.test(value);
 }
+
+/** The earliest UUIDv7 for a moment in time: every id generated at or after it sorts higher. */
+export function uuidAtTime(date: Date | number): string {
+  const ms = Math.max(0, Math.floor(typeof date === 'number' ? date : date.getTime()));
+  const hex = ms.toString(16).padStart(12, '0').slice(-12);
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-7000-8000-000000000000`;
+}
+
+/** Milliseconds since the epoch encoded in a UUIDv7. */
+export function timeOfUuid(id: string): number {
+  return parseInt(id.replace(/-/g, '').slice(0, 12), 16);
+}

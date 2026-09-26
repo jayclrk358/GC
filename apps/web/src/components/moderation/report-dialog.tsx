@@ -33,7 +33,7 @@ export function ReportDialog({
   open: boolean;
   onOpenChange: (o: boolean) => void;
   communityId: string;
-  targetType: 'post' | 'thread' | 'user' | 'wiki_page';
+  targetType: 'post' | 'thread' | 'user' | 'wiki_page' | 'message';
   targetId: string;
   what: string;
 }) {

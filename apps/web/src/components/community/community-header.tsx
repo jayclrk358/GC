@@ -35,7 +35,10 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
   return (
     <header className="border-b border-border bg-surface">
       {!compact && (
-        <div className="relative h-36 overflow-hidden sm:h-52" data-decorative>
+        <div
+          className="relative h-36 overflow-hidden group-data-[dense=true]/dense:hidden sm:h-52"
+          data-decorative
+        >
           {banner ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -60,11 +63,17 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
         <div
           className={
             compact
-              ? 'flex flex-wrap items-center gap-4 py-5'
-              : 'flex flex-wrap items-end gap-4 pb-4'
+              ? 'flex flex-wrap items-center gap-4 py-5 group-data-[dense=true]/dense:gap-3 group-data-[dense=true]/dense:py-2'
+              : 'flex flex-wrap items-end gap-4 pb-4 group-data-[dense=true]/dense:items-center group-data-[dense=true]/dense:gap-3 group-data-[dense=true]/dense:py-2'
           }
         >
-          <div className={compact ? '' : '-mt-10 sm:-mt-12'}>
+          <div
+            className={
+              compact
+                ? ''
+                : '-mt-10 group-data-[dense=true]/dense:mt-0 sm:-mt-12 sm:group-data-[dense=true]/dense:mt-0'
+            }
+          >
             {icon ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -72,22 +81,26 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
                 alt=""
                 width={96}
                 height={96}
-                className="size-20 rounded-ui-lg border-4 border-surface bg-surface object-cover sm:size-24"
+                className="size-20 rounded-ui-lg border-4 border-surface bg-surface object-cover group-data-[dense=true]/dense:size-10 group-data-[dense=true]/dense:border-2 sm:size-24 sm:group-data-[dense=true]/dense:size-10"
               />
             ) : (
               <span
                 aria-hidden
-                className="grid size-20 place-items-center rounded-ui-lg border-4 border-surface bg-primary font-heading text-3xl font-extrabold text-on-primary sm:size-24"
+                className="grid size-20 place-items-center rounded-ui-lg border-4 border-surface bg-primary font-heading text-3xl font-extrabold text-on-primary group-data-[dense=true]/dense:size-10 group-data-[dense=true]/dense:border-2 group-data-[dense=true]/dense:text-lg sm:size-24 sm:group-data-[dense=true]/dense:size-10"
               >
                 {community.name.slice(0, 1).toUpperCase()}
               </span>
             )}
           </div>
-          <div className="flex min-w-0 flex-1 flex-col gap-1 pt-2">
-            <h1 className="text-2xl font-extrabold sm:text-3xl">{community.name}</h1>
-            {community.tagline && <p className="text-muted">{community.tagline}</p>}
+          <div className="flex min-w-0 flex-1 flex-col gap-1 pt-2 group-data-[dense=true]/dense:gap-0 group-data-[dense=true]/dense:pt-0">
+            <h1 className="text-2xl font-extrabold group-data-[dense=true]/dense:text-lg sm:text-3xl sm:group-data-[dense=true]/dense:text-lg">
+              {community.name}
+            </h1>
+            {community.tagline && (
+              <p className="text-muted group-data-[dense=true]/dense:hidden">{community.tagline}</p>
+            )}
             <ul
-              className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted"
+              className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted group-data-[dense=true]/dense:sr-only"
               aria-label={t('details')}
             >
               {game && (

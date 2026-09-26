@@ -1,5 +1,5 @@
 import type { Job } from 'bullmq';
-import { logger, processFanout, type FanoutJob } from '@magnox/core';
+import { logger, processFanout, processLinkPreviews, type FanoutJob } from '@magnox/core';
 import { pollEndpoint, pollTick, wakeHotDormant } from './poll';
 
 const log = logger('jobs');
@@ -21,6 +21,10 @@ export const handlers: Record<string, Handler> = {
   fanout: async (job) => {
     await processFanout(job.data as FanoutJob);
     return null;
+  },
+  'link-preview': async (job) => {
+    const { messageId } = job.data as { messageId: string };
+    return processLinkPreviews(messageId);
   },
   'maintenance-hourly': async () => {
     await wakeHotDormant();

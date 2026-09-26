@@ -11,16 +11,17 @@ import { Field } from '@/components/ui/field';
 import { Textarea } from '@/components/ui/input';
 import { resolveReportAction } from '@/app/actions/moderation';
 import { deletePostAction } from '@/app/actions/forum';
+import { deleteMessageAction } from '@/app/actions/chat';
 
 export function ReportActions({
   communityId,
   reportId,
-  deletablePostId,
+  deletable,
 }: {
   communityId: string;
   reportId: string;
-  /** Set when the report is about a post that still exists and the moderator may remove it. */
-  deletablePostId: string | null;
+  /** Set when the report is about content that still exists and the moderator may remove it. */
+  deletable: { type: 'post' | 'message'; id: string } | null;
 }) {
   const t = useTranslations('reports');
   const router = useRouter();
@@ -32,8 +33,11 @@ export function ReportActions({
   async function submit() {
     if (!mode) return;
     setPending(true);
-    if (removeContent && deletablePostId) {
-      const d = await deletePostAction(communityId, deletablePostId);
+    if (removeContent && deletable) {
+      const d =
+        deletable.type === 'post'
+          ? await deletePostAction(communityId, deletable.id)
+          : await deleteMessageAction(communityId, deletable.id);
       if (!d.ok) {
         setPending(false);
         toast.error(d.error);
@@ -54,7 +58,7 @@ export function ReportActions({
   return (
     <>
       <div className="flex flex-wrap gap-2">
-        {deletablePostId && (
+        {deletable && (
           <Button
             size="sm"
             variant="danger"

@@ -10,6 +10,7 @@ export const UPLOAD_PURPOSES = {
   gallery: { maxBytes: 10_000_000, width: 2560, height: 2560, fit: 'inside' as const },
   content: { maxBytes: 10_000_000, width: 2560, height: 2560, fit: 'inside' as const },
   emoji: { maxBytes: 1_000_000, width: 128, height: 128, fit: 'contain' as const },
+  preview: { maxBytes: 5_000_000, width: 640, height: 640, fit: 'inside' as const },
 } as const;
 
 export type UploadPurpose = keyof typeof UPLOAD_PURPOSES;

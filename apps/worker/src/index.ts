@@ -28,6 +28,7 @@ function start(name: string, concurrency: number) {
 start(QUEUES.poll, 32);
 start(QUEUES.maintenance, 1);
 start(QUEUES.notify, 8);
+start(QUEUES.previews, 4);
 
 // Recurring schedules. upsertJobScheduler is idempotent across restarts and replicas.
 await queue(QUEUES.poll).upsertJobScheduler('poll-tick', { every: 5_000 }, { name: 'poll-tick' });

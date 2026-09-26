@@ -23,7 +23,7 @@ export interface TemplateBlock {
 }
 
 export interface TemplateChannel {
-  type: 'forum' | 'announcement';
+  type: 'forum' | 'announcement' | 'text';
   name: string;
   topic: string;
   settings?: {
@@ -76,6 +76,13 @@ function nav(order: string[]): NavConfig {
 export const TEMPLATES: Record<CommunityTemplate, TemplateDef> = {
   server: {
     channels: [
+      {
+        category: 'Chat',
+        channels: [
+          { type: 'text', name: 'lounge', topic: 'Say hi and hang out.' },
+          { type: 'text', name: 'looking-for-group', topic: 'Find people to play with right now.' },
+        ],
+      },
       {
         category: 'Server',
         channels: [
@@ -150,6 +157,13 @@ export const TEMPLATES: Record<CommunityTemplate, TemplateDef> = {
   clan: {
     channels: [
       {
+        category: 'Chat',
+        channels: [
+          { type: 'text', name: 'squad-chat', topic: 'Day-to-day clan chat.' },
+          { type: 'text', name: 'match-day', topic: 'Coordinate during scrims and matches.' },
+        ],
+      },
+      {
         category: 'Clan',
         channels: [
           { type: 'announcement', name: 'announcements', topic: 'News from leadership.' },
@@ -194,6 +208,13 @@ export const TEMPLATES: Record<CommunityTemplate, TemplateDef> = {
   },
   fanhub: {
     channels: [
+      {
+        category: 'Chat',
+        channels: [
+          { type: 'text', name: 'hangout', topic: 'Casual chat about the game.' },
+          { type: 'text', name: 'screenshots', topic: 'Share your best moments.' },
+        ],
+      },
       {
         category: 'Discussion',
         channels: [
@@ -250,6 +271,13 @@ export const TEMPLATES: Record<CommunityTemplate, TemplateDef> = {
   },
   creator: {
     channels: [
+      {
+        category: 'Chat',
+        channels: [
+          { type: 'text', name: 'stream-chat', topic: 'Chat along during streams.' },
+          { type: 'text', name: 'off-topic', topic: 'Anything goes (within the rules).' },
+        ],
+      },
       {
         category: 'Community',
         channels: [

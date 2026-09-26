@@ -90,3 +90,59 @@ export function useUserEvents(handlers: Handlers, enabled = true): void {
     };
   }, [enabled]);
 }
+
+/** Subscribe to several rooms at once (e.g. every chat channel in the sidebar). */
+export function useRooms(roomList: string[], handlers: Handlers): void {
+  const ref = React.useRef(handlers);
+  React.useEffect(() => {
+    ref.current = handlers;
+  });
+  const key = roomList.join(',');
+  React.useEffect(() => {
+    const list = key ? key.split(',') : [];
+    if (!list.length) return;
+    const s = getSocket();
+    list.forEach(subscribe);
+    const listeners = Object.keys(ref.current).map((name) => {
+      const fn = (payload: unknown) =>
+        (ref.current[name] as ((p: unknown) => void) | undefined)?.(payload);
+      s.on(name, fn);
+      return [name, fn] as const;
+    });
+    return () => {
+      for (const [name, fn] of listeners) s.off(name, fn);
+      list.forEach(unsubscribe);
+    };
+  }, [key]);
+}
+
+/** Run a callback whenever the socket reconnects (to refetch what was missed). */
+export function useReconnect(fn: () => void): void {
+  const ref = React.useRef(fn);
+  React.useEffect(() => {
+    ref.current = fn;
+  });
+  React.useEffect(() => {
+    const s = getSocket();
+    let first = true;
+    const onConnect = () => {
+      if (first && s.connected) {
+        first = false;
+        return;
+      }
+      ref.current();
+    };
+    // The initial connect isn't a reconnect.
+    if (s.connected) first = false;
+    s.on('connect', onConnect);
+    return () => {
+      s.off('connect', onConnect);
+    };
+  }, []);
+}
+
+/** Send an ephemeral event (typing indicators). */
+export function emitSocket(event: string, payload: unknown): void {
+  const s = getSocket();
+  if (s.connected) s.emit(event, payload);
+}

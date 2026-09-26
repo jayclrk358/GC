@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   const file = form.get('file');
   const purpose = String(form.get('purpose') ?? '');
   const communityId = form.get('communityId') ? String(form.get('communityId')) : null;
-  if (!(file instanceof File) || !isUploadPurpose(purpose)) {
+  if (!(file instanceof File) || !isUploadPurpose(purpose) || purpose === 'preview') {
     return Response.json({ error: 'Choose an image to upload.' }, { status: 400 });
   }
   try {

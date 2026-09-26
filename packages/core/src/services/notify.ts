@@ -26,13 +26,20 @@ const log = logger('notify');
 
 export type FanoutJob =
   | { kind: 'post'; postId: string }
+  | { kind: 'message'; messageId: string }
   | { kind: 'report'; reportId: string }
   | { kind: 'wiki_edit'; pageId: string; revisionId: string };
 
 /** Queue notification fan-out; the worker does the heavy lifting. */
 export async function queueFanout(job: FanoutJob): Promise<void> {
   const id =
-    job.kind === 'post' ? job.postId : job.kind === 'report' ? job.reportId : job.revisionId;
+    job.kind === 'post'
+      ? job.postId
+      : job.kind === 'message'
+        ? job.messageId
+        : job.kind === 'report'
+          ? job.reportId
+          : job.revisionId;
   await enqueue(QUEUES.notify, 'fanout', job, {
     jobId: `fanout-${job.kind}-${id}`,
     attempts: 3,
@@ -478,8 +485,102 @@ async function fanoutWikiEdit(pageId: string, revisionId: string): Promise<void>
 }
 
 /** Entry point for the worker's `fanout` jobs. */
+/** Mentions and reply pings in chat. Direct mentions and replies ignore mutes. */
+async function fanoutMessage(messageId: string): Promise<void> {
+  const msg = await db.query.messages.findFirst({ where: eq(schema.messages.id, messageId) });
+  if (!msg || msg.deletedAt || !msg.authorId) return;
+  const [channel, community, author, parent] = await Promise.all([
+    db.query.channels.findFirst({ where: eq(schema.channels.id, msg.channelId) }),
+    db.query.communities.findFirst({ where: eq(schema.communities.id, msg.communityId) }),
+    db.query.users.findFirst({ where: eq(schema.users.id, msg.authorId) }),
+    msg.replyToId
+      ? db.query.messages.findFirst({ where: eq(schema.messages.id, msg.replyToId) })
+      : null,
+  ]);
+  if (!channel || !community || !author) return;
+  const inBody = new Set(
+    collectMentions(msg.body)
+      .filter((m) => m.kind === 'user')
+      .map((m) => m.id),
+  );
+  const type = new Map<string, NotificationType>();
+  const direct = new Set<string>();
+  for (const id of msg.mentionUserIds) {
+    type.set(id, id === parent?.authorId && !inBody.has(id) ? 'reply' : 'mention');
+    direct.add(id);
+  }
+  if (msg.mentionRoleIds.length) {
+    const rows = await db
+      .selectDistinct({ userId: schema.memberRoles.userId })
+      .from(schema.memberRoles)
+      .where(
+        and(
+          eq(schema.memberRoles.communityId, community.id),
+          inArray(schema.memberRoles.roleId, msg.mentionRoleIds),
+        ),
+      );
+    for (const r of rows) if (!type.has(r.userId)) type.set(r.userId, 'mention');
+  }
+  if (msg.mentionEveryone) {
+    const all = await db
+      .select({ userId: schema.members.userId })
+      .from(schema.members)
+      .where(eq(schema.members.communityId, community.id))
+      .limit(5000);
+    for (const m of all) if (!type.has(m.userId)) type.set(m.userId, 'mention');
+  }
+  type.delete(msg.authorId);
+  let recipients = [...type.keys()];
+  if (!recipients.length) return;
+  const [blocked, muted, canView] = await Promise.all([
+    blockedBy(recipients, msg.authorId),
+    mutedFor(recipients, [
+      { type: 'community', id: community.id },
+      { type: 'channel', id: channel.id },
+    ]),
+    usersWhoCanView(community.id, channel, recipients),
+  ]);
+  recipients = recipients.filter(
+    (id) => canView.has(id) && !blocked.has(id) && (direct.has(id) || !muted.has(id)),
+  );
+  const url = `/c/${community.slug}/m/${msg.id}`;
+  const data = {
+    title: `#${channel.name}`,
+    excerpt: excerpt(msg.content),
+    community: community.name,
+  };
+  await deliver(
+    recipients.map((userId) => ({
+      userId,
+      type: type.get(userId)!,
+      communityId: community.id,
+      actorId: msg.authorId,
+      targetType: 'message',
+      targetId: msg.id,
+      url,
+      data,
+    })),
+  );
+  for (const userId of recipients.filter((id) => direct.has(id)).slice(0, 200)) {
+    const t = type.get(userId)!;
+    const subject =
+      t === 'reply'
+        ? `${author.name} replied to you in #${channel.name}`
+        : `${author.name} mentioned you in #${channel.name}`;
+    await maybeEmail(
+      userId,
+      t,
+      subject,
+      excerpt(msg.content, 400),
+      url,
+      `message:${channel.id}`,
+    ).catch((err) => log.warn({ err }, 'email failed'));
+  }
+}
+
 export async function processFanout(job: FanoutJob): Promise<void> {
   if (job.kind === 'post') await fanoutPost(job.postId);
+  else if (job.kind === 'message') await fanoutMessage(job.messageId);
   else if (job.kind === 'report') await fanoutReport(job.reportId);
   else await fanoutWikiEdit(job.pageId, job.revisionId);
 }

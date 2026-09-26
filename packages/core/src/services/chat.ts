@@ -1,0 +1,1031 @@
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gt,
+  gte,
+  inArray,
+  isNotNull,
+  isNull,
+  lt,
+  ne,
+  or,
+  sql,
+  type SQL,
+} from 'drizzle-orm';
+import { db, schema, type MessageAttachment, type MessageEmbed } from '@magnox/db';
+import {
+  collectMentions,
+  docToText,
+  extractLinks,
+  has,
+  isChatReaction,
+  MAX_MESSAGE_CHARS,
+  messageEditSchema,
+  messageInputSchema,
+  newId,
+  parseSearchQuery,
+  Permission,
+  sanitizeDoc,
+  toChatDoc,
+  uuidAtTime,
+  type RichNode,
+} from '@magnox/shared';
+import { z } from 'zod';
+import type { MemberContext } from '../access';
+import { AppError, forbidden, notFound, unauthorized } from '../errors';
+import { realtime } from '../emitter';
+import { QUEUES, enqueue } from '../queues';
+import { enforceRateLimit } from '../ratelimit';
+import { cacheRedis } from '../redis';
+import { rooms } from '../rooms';
+import { audit } from './audit';
+import { getChannelById, listVisibleChannels, type ChannelView } from './channels';
+import { queueFanout } from './notify';
+
+// ── Views ──────────────────────────────────────────────────────────────────
+
+export interface ChatAuthor {
+  id: string;
+  name: string;
+  username: string | null;
+  image: string | null;
+  nickname: string | null;
+  roleColor: string | null;
+  roleName: string | null;
+}
+
+export interface ReplyPreview {
+  id: string;
+  authorId: string | null;
+  authorName: string;
+  excerpt: string;
+  deleted: boolean;
+}
+
+/** A message as sent to clients. Dates are ISO strings so it can go over a socket as-is. */
+export interface MessageView {
+  id: string;
+  channelId: string;
+  authorId: string | null;
+  author: ChatAuthor | null;
+  body: RichNode;
+  content: string;
+  replyTo: ReplyPreview | null;
+  mentionUserIds: string[];
+  mentionRoleIds: string[];
+  mentionEveryone: boolean;
+  attachments: MessageAttachment[];
+  embeds: MessageEmbed[];
+  reactions: { emoji: string; count: number; mine: boolean }[];
+  pinned: boolean;
+  editedAt: string | null;
+  createdAt: string;
+  nonce: string | null;
+}
+
+type MessageRow = typeof schema.messages.$inferSelect;
+
+/** Display info for authors: nickname in this community and their highest role. */
+export async function loadAuthors(
+  communityId: string,
+  ids: string[],
+): Promise<Map<string, ChatAuthor>> {
+  const unique = [...new Set(ids)];
+  const out = new Map<string, ChatAuthor>();
+  if (!unique.length) return out;
+  const [users, members, roles] = await Promise.all([
+    db
+      .select({
+        id: schema.users.id,
+        name: schema.users.name,
+        username: schema.users.username,
+        image: schema.users.image,
+      })
+      .from(schema.users)
+      .where(inArray(schema.users.id, unique)),
+    db
+      .select({ userId: schema.members.userId, nickname: schema.members.nickname })
+      .from(schema.members)
+      .where(
+        and(eq(schema.members.communityId, communityId), inArray(schema.members.userId, unique)),
+      ),
+    db
+      .select({
+        userId: schema.memberRoles.userId,
+        name: schema.roles.name,
+        color: schema.roles.color,
+        position: schema.roles.position,
+      })
+      .from(schema.memberRoles)
+      .innerJoin(schema.roles, eq(schema.roles.id, schema.memberRoles.roleId))
+      .where(
+        and(
+          eq(schema.memberRoles.communityId, communityId),
+          inArray(schema.memberRoles.userId, unique),
+        ),
+      ),
+  ]);
+  const nick = new Map(members.map((m) => [m.userId, m.nickname]));
+  const top = new Map<string, { name: string; color: string | null; position: number }>();
+  for (const r of roles) {
+    const cur = top.get(r.userId);
+    if (!cur || r.position > cur.position) top.set(r.userId, r);
+  }
+  for (const u of users) {
+    const role = top.get(u.id);
+    out.set(u.id, {
+      id: u.id,
+      name: u.name,
+      username: u.username,
+      image: u.image,
+      nickname: nick.get(u.id) ?? null,
+      roleColor: role?.color ?? null,
+      roleName: role?.name ?? null,
+    });
+  }
+  return out;
+}
+
+const displayName = (a: ChatAuthor | undefined | null) => a?.nickname || a?.name || 'Deleted user';
+
+function excerpt(text: string, max = 120) {
+  const t = text.replace(/\s+/g, ' ').trim();
+  return t.length > max ? `${t.slice(0, max - 1)}…` : t;
+}
+
+async function toViews(
+  communityId: string,
+  viewerId: string | null,
+  rows: MessageRow[],
+): Promise<MessageView[]> {
+  if (!rows.length) return [];
+  const ids = rows.map((r) => r.id);
+  const parentIds = [
+    ...new Set(rows.map((r) => r.replyToId).filter((x): x is string => Boolean(x))),
+  ];
+  const [reactions, parents] = await Promise.all([
+    db
+      .select({
+        messageId: schema.messageReactions.messageId,
+        emoji: schema.messageReactions.emoji,
+        userId: schema.messageReactions.userId,
+      })
+      .from(schema.messageReactions)
+      .where(inArray(schema.messageReactions.messageId, ids))
+      .orderBy(asc(schema.messageReactions.createdAt)),
+    parentIds.length
+      ? db
+          .select({
+            id: schema.messages.id,
+            authorId: schema.messages.authorId,
+            content: schema.messages.content,
+            deletedAt: schema.messages.deletedAt,
+          })
+          .from(schema.messages)
+          .where(inArray(schema.messages.id, parentIds))
+      : [],
+  ]);
+  const authorIds = [...rows.map((r) => r.authorId), ...parents.map((p) => p.authorId)].filter(
+    (x): x is string => Boolean(x),
+  );
+  const authors = await loadAuthors(communityId, authorIds);
+  const parentById = new Map(parents.map((p) => [p.id, p]));
+  const byMessage = new Map<string, Map<string, { count: number; mine: boolean }>>();
+  for (const r of reactions) {
+    const m = byMessage.get(r.messageId) ?? new Map<string, { count: number; mine: boolean }>();
+    const e = m.get(r.emoji) ?? { count: 0, mine: false };
+    e.count++;
+    if (viewerId && r.userId === viewerId) e.mine = true;
+    m.set(r.emoji, e);
+    byMessage.set(r.messageId, m);
+  }
+  return rows.map((r) => {
+    const parent = r.replyToId ? parentById.get(r.replyToId) : undefined;
+    return {
+      id: r.id,
+      channelId: r.channelId,
+      authorId: r.authorId,
+      author: r.authorId ? (authors.get(r.authorId) ?? null) : null,
+      body: r.body,
+      content: r.content,
+      replyTo: r.replyToId
+        ? {
+            id: r.replyToId,
+            authorId: parent?.authorId ?? null,
+            authorName: displayName(parent?.authorId ? authors.get(parent.authorId) : null),
+            excerpt: parent && !parent.deletedAt ? excerpt(parent.content) : '',
+            deleted: !parent || Boolean(parent.deletedAt),
+          }
+        : null,
+      mentionUserIds: r.mentionUserIds,
+      mentionRoleIds: r.mentionRoleIds,
+      mentionEveryone: r.mentionEveryone,
+      attachments: r.attachments,
+      embeds: r.embeds,
+      reactions: [...(byMessage.get(r.id) ?? new Map()).entries()].map(([emoji, v]) => ({
+        emoji,
+        ...v,
+      })),
+      pinned: Boolean(r.pinnedAt),
+      editedAt: r.editedAt?.toISOString() ?? null,
+      createdAt: r.createdAt.toISOString(),
+      nonce: r.nonce,
+    };
+  });
+}
+
+// ── Channels ───────────────────────────────────────────────────────────────
+
+/** A text channel the viewer can see. */
+export async function getChatChannel(ctx: MemberContext, channelId: string): Promise<ChannelView> {
+  const channel = await getChannelById(ctx, channelId);
+  if (channel.type !== 'text') throw notFound('Channel');
+  return channel;
+}
+
+export async function getChatChannelByName(ctx: MemberContext, name: string): Promise<ChannelView> {
+  const { channels } = await listVisibleChannels(ctx, { types: ['text'] });
+  const channel = channels.find((c) => c.name === name.toLowerCase());
+  if (!channel) throw notFound('Channel');
+  return channel;
+}
+
+const perm = (channel: ChannelView, flag: bigint) => has(BigInt(channel.perms), flag);
+
+// ── Reading ────────────────────────────────────────────────────────────────
+
+const pageSchema = z.object({
+  before: z.string().uuid().optional(),
+  after: z.string().uuid().optional(),
+  around: z.string().uuid().optional(),
+  limit: z.number().int().min(1).max(100).default(50),
+});
+
+export interface MessagePage {
+  messages: MessageView[];
+  hasMoreBefore: boolean;
+  hasMoreAfter: boolean;
+  /** False when the viewer lacks Read message history: they only see messages live. */
+  history: boolean;
+}
+
+export async function listMessages(
+  ctx: MemberContext,
+  channelId: string,
+  rawOpts: unknown = {},
+): Promise<MessagePage> {
+  const opts = pageSchema.parse(rawOpts);
+  const channel = await getChatChannel(ctx, channelId);
+  if (!perm(channel, Permission.READ_HISTORY)) {
+    return { messages: [], hasMoreBefore: false, hasMoreAfter: false, history: false };
+  }
+  const base = and(eq(schema.messages.channelId, channel.id), isNull(schema.messages.deletedAt));
+  const older = async (bound: SQL | undefined, n: number) =>
+    db
+      .select()
+      .from(schema.messages)
+      .where(and(base, bound))
+      .orderBy(desc(schema.messages.id))
+      .limit(n + 1);
+  const newer = async (bound: SQL | undefined, n: number) =>
+    db
+      .select()
+      .from(schema.messages)
+      .where(and(base, bound))
+      .orderBy(asc(schema.messages.id))
+      .limit(n + 1);
+
+  let rows: MessageRow[];
+  let hasMoreBefore = false;
+  let hasMoreAfter = false;
+  if (opts.around) {
+    const half = Math.floor(opts.limit / 2);
+    const [b, a] = await Promise.all([
+      older(lt(schema.messages.id, opts.around), half),
+      newer(gte(schema.messages.id, opts.around), opts.limit - half),
+    ]);
+    hasMoreBefore = b.length > half;
+    hasMoreAfter = a.length > opts.limit - half;
+    rows = [...b.slice(0, half).reverse(), ...a.slice(0, opts.limit - half)];
+  } else if (opts.after) {
+    const a = await newer(gt(schema.messages.id, opts.after), opts.limit);
+    hasMoreAfter = a.length > opts.limit;
+    hasMoreBefore = true;
+    rows = a.slice(0, opts.limit);
+  } else {
+    const b = await older(
+      opts.before ? lt(schema.messages.id, opts.before) : undefined,
+      opts.limit,
+    );
+    hasMoreBefore = b.length > opts.limit;
+    hasMoreAfter = Boolean(opts.before);
+    rows = b.slice(0, opts.limit).reverse();
+  }
+  return {
+    messages: await toViews(ctx.community.id, ctx.userId, rows),
+    hasMoreBefore,
+    hasMoreAfter,
+    history: true,
+  };
+}
+
+/** One message, for jump links and notifications. */
+export async function getMessage(
+  ctx: MemberContext,
+  messageId: string,
+): Promise<{ message: MessageView; channel: ChannelView }> {
+  const row = await db.query.messages.findFirst({
+    where: and(
+      eq(schema.messages.id, messageId),
+      eq(schema.messages.communityId, ctx.community.id),
+      isNull(schema.messages.deletedAt),
+    ),
+  });
+  if (!row) throw notFound('Message');
+  const channel = await getChatChannel(ctx, row.channelId);
+  if (!perm(channel, Permission.READ_HISTORY)) throw notFound('Message');
+  const [message] = await toViews(ctx.community.id, ctx.userId, [row]);
+  return { message: message!, channel };
+}
+
+// ── Writing ────────────────────────────────────────────────────────────────
+
+function prepareChatBody(raw: unknown): { body: RichNode; content: string } {
+  const body = toChatDoc(sanitizeDoc(raw));
+  const content = docToText(body, MAX_MESSAGE_CHARS + 100);
+  if (content.length > MAX_MESSAGE_CHARS) {
+    throw new AppError('validation', `Messages can be up to ${MAX_MESSAGE_CHARS} characters.`, {
+      fields: { body: 'Too long' },
+    });
+  }
+  return { body, content };
+}
+
+/** Mentions the author is allowed to make, as stored ids. */
+async function resolveChatMentions(ctx: MemberContext, channel: ChannelView, body: RichNode) {
+  const mentions = collectMentions(body);
+  const canEveryone = perm(channel, Permission.MENTION_EVERYONE);
+  const userIds = [...new Set(mentions.filter((m) => m.kind === 'user').map((m) => m.id))].slice(
+    0,
+    50,
+  );
+  const roleIds = [...new Set(mentions.filter((m) => m.kind === 'role').map((m) => m.id))]
+    .filter((id) => /^[0-9a-f-]{36}$/.test(id))
+    .slice(0, 10);
+  const [members, roles] = await Promise.all([
+    userIds.length
+      ? db
+          .select({ userId: schema.members.userId })
+          .from(schema.members)
+          .where(
+            and(
+              eq(schema.members.communityId, ctx.community.id),
+              inArray(schema.members.userId, userIds),
+            ),
+          )
+      : [],
+    roleIds.length
+      ? db
+          .select({
+            id: schema.roles.id,
+            mentionable: schema.roles.mentionable,
+            isDefault: schema.roles.isDefault,
+          })
+          .from(schema.roles)
+          .where(
+            and(eq(schema.roles.communityId, ctx.community.id), inArray(schema.roles.id, roleIds)),
+          )
+      : [],
+  ]);
+  return {
+    mentionUserIds: members.map((m) => m.userId),
+    mentionRoleIds: roles
+      .filter((r) => !r.isDefault && (r.mentionable || canEveryone))
+      .map((r) => r.id),
+    mentionEveryone: canEveryone && mentions.some((m) => m.kind === 'everyone'),
+  };
+}
+
+async function loadAttachments(
+  ctx: MemberContext,
+  input: { key: string; alt: string }[],
+): Promise<MessageAttachment[]> {
+  if (!input.length) return [];
+  const rows = await db
+    .select()
+    .from(schema.uploads)
+    .where(
+      and(
+        inArray(
+          schema.uploads.key,
+          input.map((a) => a.key),
+        ),
+        eq(schema.uploads.ownerId, ctx.userId!),
+      ),
+    );
+  const byKey = new Map(rows.map((r) => [r.key, r]));
+  const community = await db.query.communities.findFirst({
+    where: eq(schema.communities.id, ctx.community.id),
+  });
+  return input.map((a) => {
+    const up = byKey.get(a.key);
+    if (!up) throw new AppError('validation', 'An attachment is missing. Try uploading it again.');
+    const alt = (a.alt || up.alt || '').trim();
+    if (!alt && community?.settings.requireAltText) {
+      throw new AppError(
+        'validation',
+        'This community asks for a description (alt text) on every image.',
+        {
+          fields: { attachments: 'Alt text required' },
+        },
+      );
+    }
+    return {
+      key: up.key,
+      alt,
+      width: up.width ?? 0,
+      height: up.height ?? 0,
+      animated: up.animated,
+      posterKey: up.posterKey,
+    };
+  });
+}
+
+async function enforceChatSlowmode(ctx: MemberContext, channel: ChannelView) {
+  if (!channel.slowmodeSeconds || perm(channel, Permission.MANAGE_MESSAGES)) return;
+  await enforceRateLimit(
+    `slowmode:${channel.id}:${ctx.userId}`,
+    1,
+    channel.slowmodeSeconds,
+    `Slow mode is on: you can send one message every ${channel.slowmodeSeconds} seconds here.`,
+  );
+}
+
+async function queuePreviews(messageId: string) {
+  await enqueue(
+    QUEUES.previews,
+    'link-preview',
+    { messageId },
+    {
+      jobId: `preview-${messageId}-${Date.now()}`,
+      attempts: 2,
+      backoff: { type: 'fixed', delay: 3000 },
+    },
+  );
+}
+
+export async function sendMessage(
+  ctx: MemberContext,
+  channelId: string,
+  raw: unknown,
+): Promise<MessageView> {
+  if (!ctx.userId) throw unauthorized();
+  const input = messageInputSchema.parse(raw);
+  const channel = await getChatChannel(ctx, channelId);
+  if (!ctx.isMember) throw forbidden('Join the community to chat.');
+  if (!perm(channel, Permission.SEND_MESSAGES)) {
+    throw forbidden(
+      ctx.timedOut
+        ? "You're timed out and can't send messages right now."
+        : "You can't send messages in this channel.",
+    );
+  }
+  if (input.nonce) {
+    const existing = await db.query.messages.findFirst({
+      where: and(eq(schema.messages.authorId, ctx.userId), eq(schema.messages.nonce, input.nonce)),
+    });
+    if (existing) return (await toViews(ctx.community.id, ctx.userId, [existing]))[0]!;
+  }
+  if (input.attachments.length && !perm(channel, Permission.ATTACH_FILES)) {
+    throw forbidden("You can't attach files in this channel.");
+  }
+  const { body, content } = prepareChatBody(input.body);
+  if (!content.trim() && !input.attachments.length) {
+    throw new AppError('validation', 'Write something first.', { fields: { body: 'Empty' } });
+  }
+  await enforceRateLimit(`chat:${ctx.userId}`, 10, 10, "You're sending messages too quickly.");
+  await enforceChatSlowmode(ctx, channel);
+
+  let replyAuthor: string | null = null;
+  if (input.replyToId) {
+    const parent = await db.query.messages.findFirst({
+      where: and(
+        eq(schema.messages.id, input.replyToId),
+        eq(schema.messages.channelId, channel.id),
+      ),
+    });
+    if (!parent || parent.deletedAt)
+      throw new AppError('validation', 'The message you replied to was deleted.');
+    replyAuthor = parent.authorId;
+  }
+  const attachments = await loadAttachments(ctx, input.attachments);
+  const mentions = await resolveChatMentions(ctx, channel, body);
+  // Replying pings the person replied to, unless the author turned that off.
+  if (
+    input.mentionReplied &&
+    replyAuthor &&
+    replyAuthor !== ctx.userId &&
+    !mentions.mentionUserIds.includes(replyAuthor)
+  ) {
+    mentions.mentionUserIds.push(replyAuthor);
+  }
+
+  const id = newId();
+  const now = new Date();
+  const [row] = await db
+    .insert(schema.messages)
+    .values({
+      id,
+      channelId: channel.id,
+      communityId: ctx.community.id,
+      authorId: ctx.userId,
+      body,
+      content,
+      replyToId: input.replyToId,
+      ...mentions,
+      attachments,
+      nonce: input.nonce ?? null,
+      createdAt: now,
+    })
+    .onConflictDoNothing()
+    .returning();
+  if (!row) {
+    // Lost a race with a retry carrying the same nonce.
+    const existing = await db.query.messages.findFirst({
+      where: and(
+        eq(schema.messages.authorId, ctx.userId),
+        eq(schema.messages.nonce, input.nonce ?? ''),
+      ),
+    });
+    if (!existing) throw new AppError('conflict', 'Message could not be sent. Try again.');
+    return (await toViews(ctx.community.id, ctx.userId, [existing]))[0]!;
+  }
+  await Promise.all([
+    db
+      .update(schema.channels)
+      .set({ lastMessageId: id, lastActivityAt: now })
+      .where(eq(schema.channels.id, channel.id)),
+    markRead(ctx.userId, channel.id, id),
+  ]);
+  const [view] = await toViews(ctx.community.id, ctx.userId, [row]);
+  realtime()
+    .to(rooms.channel(channel.id))
+    .emit('message:new', { channelId: channel.id, message: view });
+  if (
+    mentions.mentionUserIds.length ||
+    mentions.mentionRoleIds.length ||
+    mentions.mentionEveryone
+  ) {
+    await queueFanout({ kind: 'message', messageId: id });
+  }
+  if (perm(channel, Permission.EMBED_LINKS) && extractLinks(body).length) await queuePreviews(id);
+  return view!;
+}
+
+async function loadOwnMessage(ctx: MemberContext, messageId: string) {
+  const row = await db.query.messages.findFirst({
+    where: and(
+      eq(schema.messages.id, messageId),
+      eq(schema.messages.communityId, ctx.community.id),
+      isNull(schema.messages.deletedAt),
+    ),
+  });
+  if (!row) throw notFound('Message');
+  const channel = await getChatChannel(ctx, row.channelId);
+  return { row, channel };
+}
+
+export async function editMessage(
+  ctx: MemberContext,
+  messageId: string,
+  raw: unknown,
+): Promise<void> {
+  if (!ctx.userId) throw unauthorized();
+  const { row, channel } = await loadOwnMessage(ctx, messageId);
+  if (row.authorId !== ctx.userId) throw forbidden('You can only edit your own messages.');
+  if (!perm(channel, Permission.SEND_MESSAGES))
+    throw forbidden("You can't send messages in this channel.");
+  const input = messageEditSchema.parse(raw);
+  const { body, content } = prepareChatBody(input.body);
+  if (!content.trim() && !row.attachments.length) {
+    throw new AppError('validation', 'A message needs some text. Delete it instead.');
+  }
+  await enforceRateLimit(`chat-edit:${ctx.userId}`, 20, 60);
+  const mentions = await resolveChatMentions(ctx, channel, body);
+  // Keep a reply ping that was already there.
+  const replyPing = row.mentionUserIds.filter(
+    (id) => !collectMentions(row.body).some((m) => m.id === id),
+  );
+  const editedAt = new Date();
+  const linksChanged = extractLinks(body).join(' ') !== extractLinks(row.body).join(' ');
+  const patch = {
+    body,
+    content,
+    editedAt,
+    mentionUserIds: [...new Set([...mentions.mentionUserIds, ...replyPing])],
+    mentionRoleIds: mentions.mentionRoleIds,
+    mentionEveryone: mentions.mentionEveryone,
+    ...(linksChanged ? { embeds: [] as MessageEmbed[] } : {}),
+  };
+  await db.update(schema.messages).set(patch).where(eq(schema.messages.id, row.id));
+  realtime()
+    .to(rooms.channel(channel.id))
+    .emit('message:updated', {
+      channelId: channel.id,
+      id: row.id,
+      patch: { ...patch, editedAt: editedAt.toISOString() },
+    });
+  if (linksChanged && perm(channel, Permission.EMBED_LINKS) && extractLinks(body).length)
+    await queuePreviews(row.id);
+}
+
+export async function deleteMessage(ctx: MemberContext, messageId: string): Promise<void> {
+  if (!ctx.userId) throw unauthorized();
+  const { row, channel } = await loadOwnMessage(ctx, messageId);
+  const own = row.authorId === ctx.userId;
+  if (!own && !perm(channel, Permission.MANAGE_MESSAGES)) throw forbidden();
+  await db.transaction(async (tx) => {
+    await tx
+      .update(schema.messages)
+      .set({ deletedAt: new Date(), pinnedAt: null })
+      .where(eq(schema.messages.id, row.id));
+    if (!own) {
+      await audit(tx, {
+        communityId: ctx.community.id,
+        actorId: ctx.userId,
+        action: 'message.delete',
+        targetType: 'message',
+        targetId: row.id,
+        diff: { channel: channel.name, excerpt: excerpt(row.content, 200) },
+      });
+    }
+  });
+  realtime()
+    .to(rooms.channel(channel.id))
+    .emit('message:deleted', { channelId: channel.id, id: row.id });
+}
+
+export async function toggleMessageReaction(
+  ctx: MemberContext,
+  messageId: string,
+  emoji: string,
+): Promise<{ added: boolean }> {
+  if (!ctx.userId) throw unauthorized();
+  if (!isChatReaction(emoji))
+    throw new AppError('validation', 'Pick one of the available reactions.');
+  const { row, channel } = await loadOwnMessage(ctx, messageId);
+  await enforceRateLimit(`react:${ctx.userId}`, 60, 60);
+  const key = and(
+    eq(schema.messageReactions.messageId, row.id),
+    eq(schema.messageReactions.userId, ctx.userId),
+    eq(schema.messageReactions.emoji, emoji),
+  );
+  const existing = await db.query.messageReactions.findFirst({ where: key });
+  if (existing) await db.delete(schema.messageReactions).where(key);
+  else {
+    if (!perm(channel, Permission.ADD_REACTIONS))
+      throw forbidden("You can't react in this channel.");
+    const distinct = await db
+      .selectDistinct({ emoji: schema.messageReactions.emoji })
+      .from(schema.messageReactions)
+      .where(eq(schema.messageReactions.messageId, row.id));
+    if (distinct.length >= 20 && !distinct.some((d) => d.emoji === emoji)) {
+      throw new AppError(
+        'validation',
+        'This message has as many different reactions as it can hold.',
+      );
+    }
+    await db
+      .insert(schema.messageReactions)
+      .values({ messageId: row.id, userId: ctx.userId, emoji })
+      .onConflictDoNothing();
+  }
+  const counts = await db
+    .select({
+      emoji: schema.messageReactions.emoji,
+      count: sql<number>`count(*)::int`,
+      first: sql<Date>`min(${schema.messageReactions.createdAt})`,
+    })
+    .from(schema.messageReactions)
+    .where(eq(schema.messageReactions.messageId, row.id))
+    .groupBy(schema.messageReactions.emoji)
+    .orderBy(sql`min(${schema.messageReactions.createdAt})`);
+  realtime()
+    .to(rooms.channel(channel.id))
+    .emit('message:reactions', {
+      channelId: channel.id,
+      id: row.id,
+      reactions: counts.map((c) => ({ emoji: c.emoji, count: c.count })),
+      actorId: ctx.userId,
+      emoji,
+      added: !existing,
+    });
+  return { added: !existing };
+}
+
+const MAX_PINS = 50;
+
+export async function setMessagePinned(
+  ctx: MemberContext,
+  messageId: string,
+  pinned: boolean,
+): Promise<void> {
+  if (!ctx.userId) throw unauthorized();
+  const { row, channel } = await loadOwnMessage(ctx, messageId);
+  if (!perm(channel, Permission.MANAGE_MESSAGES))
+    throw forbidden('Only moderators can pin messages.');
+  if (pinned && !row.pinnedAt) {
+    const [n] = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(schema.messages)
+      .where(
+        and(
+          eq(schema.messages.channelId, channel.id),
+          isNotNull(schema.messages.pinnedAt),
+          isNull(schema.messages.deletedAt),
+        ),
+      );
+    if ((n?.n ?? 0) >= MAX_PINS)
+      throw new AppError(
+        'validation',
+        `A channel can have up to ${MAX_PINS} pins. Unpin one first.`,
+      );
+  }
+  await db
+    .update(schema.messages)
+    .set({ pinnedAt: pinned ? new Date() : null, pinnedBy: pinned ? ctx.userId : null })
+    .where(eq(schema.messages.id, row.id));
+  realtime()
+    .to(rooms.channel(channel.id))
+    .emit('message:updated', { channelId: channel.id, id: row.id, patch: { pinned } });
+}
+
+export async function listPins(ctx: MemberContext, channelId: string): Promise<MessageView[]> {
+  const channel = await getChatChannel(ctx, channelId);
+  if (!perm(channel, Permission.READ_HISTORY)) return [];
+  const rows = await db
+    .select()
+    .from(schema.messages)
+    .where(
+      and(
+        eq(schema.messages.channelId, channel.id),
+        isNotNull(schema.messages.pinnedAt),
+        isNull(schema.messages.deletedAt),
+      ),
+    )
+    .orderBy(desc(schema.messages.pinnedAt))
+    .limit(MAX_PINS);
+  return toViews(ctx.community.id, ctx.userId, rows);
+}
+
+// ── Read state ─────────────────────────────────────────────────────────────
+
+async function markRead(userId: string, channelId: string, messageId: string) {
+  await db
+    .insert(schema.readStates)
+    .values({ userId, channelId, lastReadId: messageId, updatedAt: new Date() })
+    .onConflictDoUpdate({
+      target: [schema.readStates.userId, schema.readStates.channelId],
+      set: {
+        lastReadId: sql`greatest(${schema.readStates.lastReadId}, excluded.last_read_id)`,
+        updatedAt: new Date(),
+      },
+    });
+}
+
+/** Mark a channel read up to a message; other tabs and devices hear about it too. */
+export async function ackChannel(
+  ctx: MemberContext,
+  channelId: string,
+  messageId: string,
+): Promise<void> {
+  if (!ctx.userId || !ctx.isMember) return;
+  z.string().uuid().parse(messageId);
+  const channel = await getChatChannel(ctx, channelId);
+  await markRead(ctx.userId, channel.id, messageId);
+  realtime()
+    .to(rooms.user(ctx.userId))
+    .emit('channel:read', { channelId: channel.id, lastReadId: messageId });
+}
+
+export interface ChannelUnread {
+  unread: boolean;
+  mentions: number;
+  /** Everything after this id is new to the viewer. */
+  lastReadId: string;
+}
+
+const uuidArray = (ids: string[]) =>
+  ids.length
+    ? sql`ARRAY[${sql.join(
+        ids.map((i) => sql`${i}`),
+        sql`, `,
+      )}]::uuid[]`
+    : sql`'{}'::uuid[]`;
+
+/**
+ * Unread state for text channels. Messages from before the viewer joined never count, and
+ * mention counts stop at 100 (the UI shows "99+").
+ */
+export async function channelUnreads(
+  ctx: MemberContext,
+  channelIds: string[],
+): Promise<Map<string, ChannelUnread>> {
+  const out = new Map<string, ChannelUnread>();
+  if (!ctx.userId || !ctx.isMember || !channelIds.length) return out;
+  const member = await db.query.members.findFirst({
+    where: and(
+      eq(schema.members.communityId, ctx.community.id),
+      eq(schema.members.userId, ctx.userId),
+    ),
+  });
+  const joined = uuidAtTime(member?.joinedAt ?? new Date());
+  const roles = uuidArray(ctx.roleIds);
+  const rows = await db.execute<{
+    id: string;
+    last_message_id: string | null;
+    baseline: string;
+    mentions: number;
+  }>(sql`
+    select c.id, c.last_message_id,
+      greatest(coalesce(rs.last_read_id, ${joined}::uuid), ${joined}::uuid)::text as baseline,
+      (select count(*)::int from (
+        select 1 from messages m
+        where m.channel_id = c.id
+          and m.id > greatest(coalesce(rs.last_read_id, ${joined}::uuid), ${joined}::uuid)
+          and m.deleted_at is null
+          and m.author_id is distinct from ${ctx.userId}
+          and (m.mention_everyone or ${ctx.userId} = any(m.mention_user_ids) or m.mention_role_ids && ${roles})
+        limit 100
+      ) x) as mentions
+    from channels c
+    left join read_states rs on rs.channel_id = c.id and rs.user_id = ${ctx.userId}
+    where c.id in (${sql.join(
+      channelIds.map((i) => sql`${i}::uuid`),
+      sql`, `,
+    )})
+  `);
+  for (const r of rows) {
+    out.set(r.id, {
+      unread: Boolean(r.last_message_id && r.last_message_id > r.baseline),
+      mentions: Number(r.mentions),
+      lastReadId: r.baseline,
+    });
+  }
+  return out;
+}
+
+// ── Search, mentions, presence ─────────────────────────────────────────────
+
+async function readableChannels(ctx: MemberContext) {
+  const { channels } = await listVisibleChannels(ctx, { types: ['text'] });
+  return channels.filter((c) => perm(c, Permission.READ_HISTORY));
+}
+
+export interface MessageSearchHit {
+  message: MessageView;
+  channelName: string;
+  snippet: string;
+}
+
+/** Full-text search across the text channels the viewer can read. Supports from: and in:. */
+export async function searchMessages(
+  ctx: MemberContext,
+  rawQ: string,
+  limit = 25,
+): Promise<MessageSearchHit[]> {
+  const parsed = parseSearchQuery(rawQ.slice(0, 200));
+  if (parsed.text.length < 2 && !parsed.from) return [];
+  let channels = await readableChannels(ctx);
+  if (parsed.in) channels = channels.filter((c) => c.name === parsed.in);
+  if (!channels.length) return [];
+  const where: (SQL | undefined)[] = [
+    eq(schema.messages.communityId, ctx.community.id),
+    inArray(
+      schema.messages.channelId,
+      channels.map((c) => c.id),
+    ),
+    isNull(schema.messages.deletedAt),
+  ];
+  const tsq = sql`websearch_to_tsquery('simple', ${parsed.text || ''})`;
+  if (parsed.text.length >= 2) where.push(sql`${schema.messages.search} @@ ${tsq}`);
+  if (parsed.from) {
+    const author = await db.query.users.findFirst({
+      where: eq(schema.users.username, parsed.from),
+    });
+    if (!author) return [];
+    where.push(eq(schema.messages.authorId, author.id));
+  }
+  const rows = await db
+    .select({
+      row: schema.messages,
+      snippet:
+        parsed.text.length >= 2
+          ? sql<string>`ts_headline('simple', ${schema.messages.content}, ${tsq}, 'MaxFragments=1,MaxWords=30,MinWords=10,StartSel=«,StopSel=»')`
+          : sql<string>`left(${schema.messages.content}, 200)`,
+    })
+    .from(schema.messages)
+    .where(and(...where))
+    .orderBy(desc(schema.messages.id))
+    .limit(Math.min(50, limit));
+  const views = await toViews(
+    ctx.community.id,
+    ctx.userId,
+    rows.map((r) => r.row),
+  );
+  const names = new Map(channels.map((c) => [c.id, c.name]));
+  return views.map((m, i) => ({
+    message: m,
+    channelName: names.get(m.channelId) ?? '',
+    snippet: rows[i]!.snippet,
+  }));
+}
+
+/** Recent messages that mention the viewer, across the channels they can read. */
+export async function mentionsInbox(
+  ctx: MemberContext,
+  limit = 30,
+): Promise<{ message: MessageView; channelName: string }[]> {
+  if (!ctx.userId || !ctx.isMember) return [];
+  const channels = await readableChannels(ctx);
+  if (!channels.length) return [];
+  const rows = await db
+    .select()
+    .from(schema.messages)
+    .where(
+      and(
+        eq(schema.messages.communityId, ctx.community.id),
+        inArray(
+          schema.messages.channelId,
+          channels.map((c) => c.id),
+        ),
+        isNull(schema.messages.deletedAt),
+        ne(schema.messages.authorId, ctx.userId),
+        or(
+          eq(schema.messages.mentionEveryone, true),
+          sql`${ctx.userId} = any(${schema.messages.mentionUserIds})`,
+          sql`${schema.messages.mentionRoleIds} && ${uuidArray(ctx.roleIds)}`,
+        ),
+      ),
+    )
+    .orderBy(desc(schema.messages.id))
+    .limit(Math.min(50, limit));
+  const names = new Map(channels.map((c) => [c.id, c.name]));
+  const views = await toViews(ctx.community.id, ctx.userId, rows);
+  return views.map((m) => ({ message: m, channelName: names.get(m.channelId) ?? '' }));
+}
+
+/** Members who are connected right now (up to 100), highest role first. */
+export async function onlineMembers(
+  ctx: MemberContext,
+): Promise<{ members: (ChatAuthor & { rolePosition: number })[]; total: number }> {
+  const all = await db
+    .select({ userId: schema.members.userId })
+    .from(schema.members)
+    .where(eq(schema.members.communityId, ctx.community.id))
+    .limit(2000);
+  if (!all.length) return { members: [], total: 0 };
+  const flags = await cacheRedis().mget(...all.map((m) => `presence:${m.userId}`));
+  const online = all.filter((_, i) => flags[i]).map((m) => m.userId);
+  const authors = await loadAuthors(ctx.community.id, online.slice(0, 100));
+  const positions = online.length
+    ? await db
+        .select({
+          userId: schema.memberRoles.userId,
+          position: sql<number>`max(${schema.roles.position})::int`,
+        })
+        .from(schema.memberRoles)
+        .innerJoin(schema.roles, eq(schema.roles.id, schema.memberRoles.roleId))
+        .where(
+          and(
+            eq(schema.memberRoles.communityId, ctx.community.id),
+            inArray(schema.memberRoles.userId, online.slice(0, 100)),
+          ),
+        )
+        .groupBy(schema.memberRoles.userId)
+    : [];
+  const pos = new Map(positions.map((p) => [p.userId, p.position]));
+  const members = [...authors.values()]
+    .map((a) => ({ ...a, rolePosition: pos.get(a.id) ?? 0 }))
+    .sort(
+      (a, b) => b.rolePosition - a.rolePosition || displayName(a).localeCompare(displayName(b)),
+    );
+  return { members, total: online.length };
+}
+
+// ── Worker: link previews ──────────────────────────────────────────────────
+
+/** Replace a message's embeds (from the preview worker) and tell viewers. */
+export async function setMessageEmbeds(messageId: string, embeds: MessageEmbed[]): Promise<void> {
+  const [row] = await db
+    .update(schema.messages)
+    .set({ embeds })
+    .where(and(eq(schema.messages.id, messageId), isNull(schema.messages.deletedAt)))
+    .returning({ channelId: schema.messages.channelId });
+  if (row)
+    realtime()
+      .to(rooms.channel(row.channelId))
+      .emit('message:updated', { channelId: row.channelId, id: messageId, patch: { embeds } });
+}

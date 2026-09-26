@@ -10,6 +10,7 @@ import {
   FolderPlus,
   Hash,
   Megaphone,
+  MessageCircle,
   Pencil,
   Plus,
   ShieldCheck,
@@ -123,7 +124,7 @@ export function ChannelManager({
   }
 
   const row = (c: ChannelData, list: ChannelData[], i: number) => {
-    const Icon = c.type === 'announcement' ? Megaphone : Hash;
+    const Icon = c.type === 'announcement' ? Megaphone : c.type === 'text' ? MessageCircle : Hash;
     return (
       <li key={c.id} className="flex flex-wrap items-center gap-3 px-3 py-2">
         <Icon className="size-4 shrink-0 text-muted" aria-hidden />
@@ -131,6 +132,7 @@ export function ChannelManager({
           <p className="flex flex-wrap items-center gap-2 font-semibold">
             {c.name}
             {c.type === 'announcement' && <Badge>{t('types.announcement')}</Badge>}
+            {c.type === 'text' && <Badge>{t('types.text')}</Badge>}
             {c.settings.qa && <Badge tone="success">{t('qaBadge')}</Badge>}
             {c.settings.voting && <Badge tone="primary">{t('votingBadge')}</Badge>}
           </p>

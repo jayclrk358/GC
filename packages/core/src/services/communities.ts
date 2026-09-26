@@ -514,3 +514,60 @@ export async function ensureStarterContent(communityId: string): Promise<boolean
   );
   return true;
 }
+
+/**
+ * Add the template's chat channels to a community that has none (communities created before
+ * chat existed). Used by the demo seed. Returns how many channels were added.
+ */
+export async function ensureChatChannels(communityId: string): Promise<number> {
+  const community = await db.query.communities.findFirst({
+    where: eq(schema.communities.id, communityId),
+  });
+  if (!community) return 0;
+  const existing = await db
+    .select({
+      id: schema.channels.id,
+      name: schema.channels.name,
+      type: schema.channels.type,
+      position: schema.channels.position,
+    })
+    .from(schema.channels)
+    .where(eq(schema.channels.communityId, communityId));
+  if (existing.some((c) => c.type === 'text')) return 0;
+  const template =
+    TEMPLATES[
+      (community.template in TEMPLATES ? community.template : 'fanhub') as CommunityTemplate
+    ];
+  const taken = new Set(existing.map((c) => c.name));
+  let added = 0;
+  await db.transaction(async (tx) => {
+    let position = Math.max(0, ...existing.map((c) => c.position)) + 1;
+    for (const group of template.channels) {
+      const text = group.channels.filter((c) => c.type === 'text' && !taken.has(c.name));
+      if (!text.length) continue;
+      const categoryId = newId();
+      await tx
+        .insert(schema.channels)
+        .values({
+          id: categoryId,
+          communityId,
+          type: 'category',
+          name: group.category,
+          position: position++,
+        });
+      for (const ch of text) {
+        await tx.insert(schema.channels).values({
+          id: newId(),
+          communityId,
+          parentId: categoryId,
+          type: 'text',
+          name: ch.name,
+          topic: ch.topic,
+          position: position++,
+        });
+        added++;
+      }
+    }
+  });
+  return added;
+}

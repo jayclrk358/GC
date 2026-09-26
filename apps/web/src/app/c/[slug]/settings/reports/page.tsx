@@ -60,7 +60,9 @@ export default async function ReportsPage({
                 ? `/c/${community.slug}/t/${r.threadId}/p/${r.targetId}`
                 : r.targetType === 'thread'
                   ? `/c/${community.slug}/t/${r.targetId}`
-                  : null;
+                  : r.targetType === 'message'
+                    ? `/c/${community.slug}/m/${r.targetId}`
+                    : null;
             return (
               <li key={r.id}>
                 <article
@@ -124,8 +126,14 @@ export default async function ReportsPage({
                       <ReportActions
                         communityId={community.id}
                         reportId={r.id}
-                        deletablePostId={
-                          canDelete && r.targetType === 'post' && r.threadId ? r.targetId : null
+                        deletable={
+                          !canDelete
+                            ? null
+                            : r.targetType === 'post' && r.threadId
+                              ? { type: 'post', id: r.targetId }
+                              : r.targetType === 'message'
+                                ? { type: 'message', id: r.targetId }
+                                : null
                         }
                       />
                     )}

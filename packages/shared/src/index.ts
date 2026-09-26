@@ -9,3 +9,4 @@ export * from './slug';
 export * from './community';
 export * from './game-server';
 export * from './forum';
+export * from './chat';

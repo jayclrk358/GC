@@ -23,7 +23,7 @@ const SLOWMODES = [0, 10, 30, 60, 300, 900, 3600];
 const SORTS = ['latest', 'new', 'top', 'hot', 'unanswered'] as const;
 
 export type ChannelFormValues = {
-  type: 'forum' | 'announcement';
+  type: 'forum' | 'announcement' | 'text';
   name: string;
   topic: string;
   parentId: string | null;
@@ -54,7 +54,7 @@ export function ChannelForm({
 }) {
   const t = useTranslations('channels');
   const [v, setV] = React.useState<ChannelFormValues>({
-    type: initial?.type === 'announcement' ? 'announcement' : 'forum',
+    type: initial?.type === 'announcement' || initial?.type === 'text' ? initial.type : 'forum',
     name: initial?.name ?? '',
     topic: initial?.topic ?? '',
     parentId: initial?.parentId ?? categories[0]?.id ?? null,
@@ -101,6 +101,7 @@ export function ChannelForm({
             >
               <option value="forum">{t('types.forum')}</option>
               <option value="announcement">{t('types.announcement')}</option>
+              <option value="text">{t('types.text')}</option>
             </Select>
           )}
         </Field>
@@ -142,46 +143,48 @@ export function ChannelForm({
           </Select>
         )}
       </Field>
-      <fieldset className="flex flex-col rounded-ui border border-border px-4 py-2">
-        <legend className="px-1 text-sm font-semibold">{t('forumOptions')}</legend>
-        <SwitchField
-          label={t('voting')}
-          description={t('votingHint')}
-          checked={v.settings.voting}
-          onCheckedChange={(x) => setS({ voting: x })}
-        />
-        <SwitchField
-          label={t('qa')}
-          description={t('qaHint')}
-          checked={v.settings.qa}
-          onCheckedChange={(x) => setS({ qa: x })}
-        />
-        <SwitchField
-          label={t('requireFlair')}
-          description={t('requireFlairHint')}
-          checked={v.settings.requireFlair}
-          onCheckedChange={(x) => setS({ requireFlair: x })}
-        />
-        <Field label={t('defaultSort')} className="py-2">
-          {(p) => (
-            <Select
-              {...p}
-              value={v.settings.defaultSort}
-              onChange={(e) =>
-                setS({
-                  defaultSort: e.target.value as ChannelFormValues['settings']['defaultSort'],
-                })
-              }
-            >
-              {SORTS.filter((s) => s !== 'unanswered' || v.settings.qa).map((s) => (
-                <option key={s} value={s}>
-                  {t(`sorts.${s}`)}
-                </option>
-              ))}
-            </Select>
-          )}
-        </Field>
-      </fieldset>
+      {v.type !== 'text' && (
+        <fieldset className="flex flex-col rounded-ui border border-border px-4 py-2">
+          <legend className="px-1 text-sm font-semibold">{t('forumOptions')}</legend>
+          <SwitchField
+            label={t('voting')}
+            description={t('votingHint')}
+            checked={v.settings.voting}
+            onCheckedChange={(x) => setS({ voting: x })}
+          />
+          <SwitchField
+            label={t('qa')}
+            description={t('qaHint')}
+            checked={v.settings.qa}
+            onCheckedChange={(x) => setS({ qa: x })}
+          />
+          <SwitchField
+            label={t('requireFlair')}
+            description={t('requireFlairHint')}
+            checked={v.settings.requireFlair}
+            onCheckedChange={(x) => setS({ requireFlair: x })}
+          />
+          <Field label={t('defaultSort')} className="py-2">
+            {(p) => (
+              <Select
+                {...p}
+                value={v.settings.defaultSort}
+                onChange={(e) =>
+                  setS({
+                    defaultSort: e.target.value as ChannelFormValues['settings']['defaultSort'],
+                  })
+                }
+              >
+                {SORTS.filter((s) => s !== 'unanswered' || v.settings.qa).map((s) => (
+                  <option key={s} value={s}>
+                    {t(`sorts.${s}`)}
+                  </option>
+                ))}
+              </Select>
+            )}
+          </Field>
+        </fieldset>
+      )}
       <Field label={t('slowmode')} description={t('slowmodeHint')}>
         {(p) => (
           <Select

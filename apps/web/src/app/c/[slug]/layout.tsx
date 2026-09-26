@@ -4,6 +4,7 @@ import { loadCommunity } from '@/lib/community';
 import { mediaUrl } from '@/lib/media';
 import { CommunityHeader } from '@/components/community/community-header';
 import { CommunityThemeStyle } from '@/components/community/theme-style';
+import { DenseOnChat } from '@/components/community/dense-on-chat';
 
 export async function generateMetadata({
   params,
@@ -48,8 +49,12 @@ export default async function CommunityLayout({
           />
         </div>
       )}
-      <CommunityHeader data={data} online={online} />
-      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-8">{children}</div>
+      <DenseOnChat slug={data.community.slug}>
+        <CommunityHeader data={data} online={online} />
+        <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-8 group-data-[dense=true]/dense:max-w-7xl group-data-[dense=true]/dense:px-2 group-data-[dense=true]/dense:py-2 sm:group-data-[dense=true]/dense:px-4">
+          {children}
+        </div>
+      </DenseOnChat>
     </div>
   );
 }

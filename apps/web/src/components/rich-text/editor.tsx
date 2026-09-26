@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { EditorContent, Mark, mergeAttributes, useEditor, type Editor } from '@tiptap/react';
+import { EditorContent, mergeAttributes, useEditor, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import { Placeholder } from '@tiptap/extensions';
@@ -34,37 +34,7 @@ import { uploadImage } from '@/components/upload/image-upload';
 import { mediaUrl } from '@/lib/media';
 import { cn } from '@/lib/utils';
 import { mentionExtension } from './mentions';
-
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    spoiler: { toggleSpoiler: () => ReturnType };
-  }
-}
-
-const Spoiler = Mark.create({
-  name: 'spoiler',
-  parseHTML() {
-    return [{ tag: 'span[data-spoiler]' }];
-  },
-  renderHTML({ HTMLAttributes }) {
-    return [
-      'span',
-      mergeAttributes(HTMLAttributes, {
-        'data-spoiler': '',
-        class: 'rounded bg-surface-2 px-1 outline-1 outline-dashed outline-muted',
-      }),
-      0,
-    ];
-  },
-  addCommands() {
-    return {
-      toggleSpoiler:
-        () =>
-        ({ commands }) =>
-          commands.toggleMark(this.name),
-    };
-  },
-});
+import { Spoiler } from './extensions';
 
 /** Images reference upload keys; the editor maps them to URLs only for display. */
 const UploadImage = Image.extend({

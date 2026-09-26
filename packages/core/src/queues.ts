@@ -8,6 +8,8 @@ export const QUEUES = {
   maintenance: 'maintenance',
   /** Fan-out of notifications and emails. */
   notify: 'notifications',
+  /** Link previews for chat messages (outbound fetches behind the SSRF guard). */
+  previews: 'link-previews',
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];

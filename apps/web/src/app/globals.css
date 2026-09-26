@@ -85,6 +85,20 @@
 }
 
 @layer components {
+  /* Chat messages are dense: tighter blocks than long-form posts. */
+  .prose-mx.chat-body > * + * {
+    margin-top: 0.25em;
+  }
+  .chat-body pre {
+    margin-block: 0.25em;
+  }
+  .ProseMirror p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+    color: var(--c-text-muted);
+  }
   /* Wiki diffs: colour plus underline/strike so changes don't rely on colour alone. */
   .diff-ins {
     background: color-mix(in srgb, var(--c-success) 22%, transparent);
