@@ -30,6 +30,7 @@ import { ThreadProvider } from '@/components/forum/thread-context';
 import { ThreadLiveBanner } from '@/components/forum/live-banners';
 import { FollowButton, ModTools, ReadMarker } from '@/components/forum/thread-tools';
 import { StyledName } from '@/components/community/role-decor';
+import { UserLink } from '@/components/profile/user-hover-card';
 import { BackLink } from '@/components/ui/back-link';
 
 type Params = Promise<{ slug: string; threadId: string }>;
@@ -219,13 +220,14 @@ export default async function ThreadPage({
                     <div className="min-w-0">
                       <p className="flex flex-wrap items-center gap-2">
                         {p.author.username ? (
-                          <Link
+                          <UserLink
                             id={`post-${p.id}-author`}
-                            href={`/u/${p.author.username}`}
+                            username={p.author.username}
+                            communityId={data.community.id}
                             className="font-semibold hover:underline"
                           >
                             <StyledName name={authorName(p)} style={p.author.nameStyle} />
-                          </Link>
+                          </UserLink>
                         ) : (
                           <span id={`post-${p.id}-author`} className="font-semibold">
                             <StyledName name={authorName(p)} style={p.author.nameStyle} />

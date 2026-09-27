@@ -34,6 +34,7 @@ import { ReactionBar, ReactionPicker } from './reaction-bar';
 import { formatTime, fullDateTime } from './format';
 import type { ChatMessage } from './types';
 import { RoleIcon, StyledName } from '@/components/community/role-decor';
+import { UserLink } from '@/components/profile/user-hover-card';
 
 export function authorName(m: ChatMessage): string {
   if (m.kind !== 'user') return 'Magnox';
@@ -119,7 +120,18 @@ export const MessageItem = React.memo(function MessageItem({
             id={headerId}
             className={grouped ? 'sr-only' : 'flex flex-wrap items-baseline gap-x-2 leading-tight'}
           >
-            <StyledName name={name} style={m.author?.nameStyle} className="font-semibold" />
+            {m.author?.username ? (
+              <UserLink
+                username={m.author.username}
+                communityId={communityId}
+                tabIndex={ctl}
+                className="hover:underline"
+              >
+                <StyledName name={name} style={m.author.nameStyle} className="font-semibold" />
+              </UserLink>
+            ) : (
+              <StyledName name={name} style={m.author?.nameStyle} className="font-semibold" />
+            )}
             {m.author?.roleName && (
               <span className="inline-flex items-center gap-1 text-xs text-muted">
                 {m.author.roleIcon ? (

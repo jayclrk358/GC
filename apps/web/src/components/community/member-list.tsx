@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { Crown, Users } from 'lucide-react';
 import type { MemberRow, RoleSummary } from '@magnox/core';
@@ -6,14 +5,17 @@ import { pickRoleDecor, type NameBackdrops } from '@magnox/shared';
 import { Avatar, EmptyState } from '@/components/ui/misc';
 import { RoleBadge } from './role-badge';
 import { StyledName } from './role-decor';
+import { UserLink } from '@/components/profile/user-hover-card';
 
 export async function MemberList({
+  communityId,
   members,
   roles,
   colorblind,
   query,
   backdrops,
 }: {
+  communityId: string;
   members: MemberRow[];
   roles: RoleSummary[];
   colorblind: boolean;
@@ -65,9 +67,13 @@ export async function MemberList({
                     <div className="min-w-0 flex-1">
                       <p className="flex items-center gap-1 truncate font-semibold">
                         {m.username ? (
-                          <Link href={`/u/${m.username}`} className="hover:underline">
+                          <UserLink
+                            username={m.username}
+                            communityId={communityId}
+                            className="hover:underline"
+                          >
                             <StyledName name={m.nickname || m.name} style={decor.nameStyle} />
-                          </Link>
+                          </UserLink>
                         ) : (
                           <StyledName name={m.nickname || m.name} style={decor.nameStyle} />
                         )}

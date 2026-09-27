@@ -2120,5 +2120,17 @@
     "video": "Video",
     "viewNoAlt": "View image",
     "cantPlay": "This video can't be played in your browser."
+  },
+  "profileCard": {
+    "loading": "Loading profile…",
+    "unavailable": "This profile isn't available.",
+    "owner": "Community owner",
+    "playing": "Playing {game}",
+    "lookingForGroup": "Looking for a group",
+    "roles": "Roles",
+    "rolesIn": "Roles in {community}",
+    "memberSince": "In {community} since",
+    "joined": "Joined Magnox",
+    "viewProfile": "View full profile"
   }
 }

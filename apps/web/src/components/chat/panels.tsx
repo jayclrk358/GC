@@ -7,6 +7,7 @@ import type { ChatAuthor, MessageSearchHit, MessageView } from '@magnox/core';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, Spinner } from '@/components/ui/misc';
+import { UserLink } from '@/components/profile/user-hover-card';
 import { RichText } from '@/components/rich-text/rich-text';
 import { useChat } from './chat-context';
 import { formatDay, formatTime } from './format';
@@ -306,7 +307,17 @@ function MembersPanel() {
               />
             </span>
             <span className="min-w-0">
-              <span className="block truncate text-sm font-semibold">{m.nickname || m.name}</span>
+              {m.username ? (
+                <UserLink
+                  username={m.username}
+                  communityId={communityId}
+                  className="block truncate text-sm font-semibold hover:underline"
+                >
+                  {m.nickname || m.name}
+                </UserLink>
+              ) : (
+                <span className="block truncate text-sm font-semibold">{m.nickname || m.name}</span>
+              )}
               {m.roleName && (
                 <span className="block truncate text-xs text-muted">{m.roleName}</span>
               )}

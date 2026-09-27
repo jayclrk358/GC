@@ -12,6 +12,7 @@ import {
   PLAYSTYLES,
 } from '@magnox/shared';
 import { z } from 'zod';
+import { getMemberContext } from '../access';
 import { AppError } from '../errors';
 import { mediaUrl } from '../storage';
 import { communitiesForUser } from './communities';
@@ -233,3 +234,78 @@ export async function getPublicProfile(username: string, viewerId?: string | nul
     shared,
   };
 }
+
+/** Where someone stands in a community, for their profile card. Null if the viewer can't see it. */
+async function cardMembership(communityId: string, userId: string, viewerId: string | null) {
+  const ctx = await getMemberContext({ id: communityId }, viewerId).catch(() => null);
+  if (!ctx) return null;
+  const [member] = await db
+    .select({ joinedAt: schema.members.joinedAt, nickname: schema.members.nickname })
+    .from(schema.members)
+    .where(and(eq(schema.members.communityId, communityId), eq(schema.members.userId, userId)))
+    .limit(1);
+  if (!member) return null;
+  const roles = await db
+    .select({
+      name: schema.roles.name,
+      color: schema.roles.color,
+      iconKey: schema.roles.iconKey,
+    })
+    .from(schema.memberRoles)
+    .innerJoin(schema.roles, eq(schema.roles.id, schema.memberRoles.roleId))
+    .where(
+      and(
+        eq(schema.memberRoles.communityId, communityId),
+        eq(schema.memberRoles.userId, userId),
+        eq(schema.roles.isDefault, false),
+      ),
+    )
+    .orderBy(sql`${schema.roles.position} desc`)
+    .limit(6);
+  return {
+    community: ctx.community.name,
+    joinedAt: member.joinedAt.toISOString(),
+    nickname: member.nickname,
+    owner: ctx.community.ownerId === userId,
+    roles: roles.map((r) => ({ name: r.name, color: r.color, iconUrl: mediaUrl(r.iconKey) })),
+  };
+}
+
+/**
+ * A slice of someone's profile for the card shown when hovering their name: who they are, what
+ * they're up to and, inside a community the viewer can see, their roles there.
+ */
+export async function getProfileCard(
+  username: string,
+  opts: { communityId?: string | null; viewerId?: string | null } = {},
+) {
+  const user = await db.query.users.findFirst({
+    where: eq(schema.users.username, username.toLowerCase()),
+  });
+  if (!user || user.banned) return null;
+  const profile = await db.query.userProfiles.findFirst({
+    where: eq(schema.userProfiles.userId, user.id),
+  });
+  const [game, member] = await Promise.all([
+    profile?.nowPlaying
+      ? db.query.games.findFirst({ where: eq(schema.games.id, profile.nowPlaying) })
+      : null,
+    opts.communityId ? cardMembership(opts.communityId, user.id, opts.viewerId ?? null) : null,
+  ]);
+  const bio = profile?.bio ?? '';
+  return {
+    name: user.name,
+    username: user.username!,
+    image: user.image,
+    joinedAt: user.createdAt.toISOString(),
+    pronouns: profile?.pronouns ?? '',
+    status: profile?.status ?? '',
+    bio: bio.length > 200 ? `${bio.slice(0, 199).trimEnd()}…` : bio,
+    accentColor: profile?.accentColor ?? null,
+    bannerUrl: mediaUrl(profile?.bannerKey),
+    nowPlaying: profile?.nowPlaying ? (game?.name ?? profile.nowPlaying) : null,
+    lookingForGroup: profile?.lookingForGroup ?? false,
+    member,
+  };
+}
+export type ProfileCard = NonNullable<Awaited<ReturnType<typeof getProfileCard>>>;

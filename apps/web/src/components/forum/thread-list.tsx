@@ -6,6 +6,7 @@ import { relativeTime } from '@/lib/format';
 import { Avatar, Badge } from '@/components/ui/misc';
 import { VoteButtons } from './vote-buttons';
 import { FlairBadge } from './flair-badge';
+import { UserLink } from '@/components/profile/user-hover-card';
 
 export async function ThreadList({
   communityId,
@@ -75,7 +76,17 @@ export async function ThreadList({
               {th.author && (
                 <span className="inline-flex items-center gap-1.5">
                   <Avatar src={th.author.image} name={th.author.name} size={18} />
-                  {th.author.name}
+                  {th.author.username ? (
+                    <UserLink
+                      username={th.author.username}
+                      communityId={communityId}
+                      className="hover:text-fg hover:underline"
+                    >
+                      {th.author.name}
+                    </UserLink>
+                  ) : (
+                    th.author.name
+                  )}
                 </span>
               )}
               <span aria-hidden>·</span>

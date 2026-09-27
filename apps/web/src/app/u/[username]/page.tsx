@@ -97,13 +97,16 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
         </div>
       </div>
       <div className="mx-auto w-full max-w-5xl px-4">
-        <div className="-mt-12 flex flex-wrap items-end gap-4">
-          <Avatar
-            src={profile.image}
-            name={profile.name}
-            size={112}
-            className="border-4 border-bg"
-          />
+        {/* Positioned (like the banner above it) so the avatar draws over the banner. */}
+        <div className="relative -mt-12 flex flex-wrap items-end gap-4">
+          <div className="shrink-0 rounded-full bg-bg" data-profile-avatar>
+            <Avatar
+              src={profile.image}
+              name={profile.name}
+              size={112}
+              className="border-4 border-bg"
+            />
+          </div>
           <div className="flex min-w-0 flex-col gap-1 pb-2">
             <h1 className="text-3xl font-extrabold">{profile.name}</h1>
             <p className="text-muted">

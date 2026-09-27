@@ -31,6 +31,7 @@ export default async function MembersPage({
         <MemberSearch defaultValue={q ?? ''} />
       </div>
       <MemberList
+        communityId={data.community.id}
         members={members}
         roles={roles.map(roleSummary)}
         colorblind={prefs.colorblindRoleColors}
