@@ -165,6 +165,10 @@ test.describe('chat', () => {
     await member.page.goto(`/c/${slug}/m/${id}`);
     await member.page.waitForURL(new RegExp(`/chat/lounge\\?m=${id}`));
     await expect(member.page.locator(`#msg-${id}`)).toBeVisible();
+    // Let the page finish hydrating: a click during hydration is replayed afterwards and can land
+    // on the menu it just opened.
+    await member.page.waitForFunction(() => document.readyState === 'complete');
+    await member.page.waitForTimeout(500);
 
     // Chat messages can be reported; moderators see them in the queue with a link back.
     const reported = message(member.page, 'First announcement');
