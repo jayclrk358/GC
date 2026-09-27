@@ -1,5 +1,12 @@
 import { z } from 'zod';
-import { COMMUNITY_TEMPLATES, JOIN_MODES, LANGUAGES, REGIONS, VISIBILITY } from './community';
+import {
+  COMMUNITY_TEMPLATES,
+  isPlayUrl,
+  JOIN_MODES,
+  LANGUAGES,
+  REGIONS,
+  VISIBILITY,
+} from './community';
 import { isValidSlug } from './slug';
 
 // Input validation for communities, roles and invites (constants are in community.ts).
@@ -16,11 +23,21 @@ export const slugSchema = z
   .toLowerCase()
   .refine(isValidSlug, 'Use 3–32 lowercase letters, numbers or dashes (and not a reserved word)');
 
+/** An optional https link where people can play; blank clears it. */
+export const playUrlSchema = z
+  .string()
+  .trim()
+  .max(300)
+  .transform((v) => v || null)
+  .refine((v) => v === null || isPlayUrl(v), 'Use a link that starts with https://')
+  .nullable();
+
 export const communityBasicsSchema = z.object({
   name: z.string().trim().min(3, 'At least 3 characters').max(60),
   slug: slugSchema,
   tagline: z.string().trim().max(140).default(''),
   gameId: z.string().max(64).nullable().default(null),
+  playUrl: playUrlSchema.default(null),
   tags: z.array(tagSchema).max(8).default([]),
   region: z.enum(REGIONS).default('global'),
   language: z.enum(LANGUAGES).default('en'),

@@ -13,6 +13,8 @@ export const buttonVariants = cva(
         outline: 'border border-border bg-transparent text-fg hover:bg-surface-2',
         ghost: 'bg-transparent text-fg hover:bg-surface-2',
         danger: 'bg-danger text-bg hover:bg-danger/90',
+        /** Launching a game: green, like a play button in a game launcher. */
+        play: 'bg-success text-bg hover:bg-success/90',
         link: 'bg-transparent text-primary underline underline-offset-2 hover:no-underline px-0',
       },
       size: {

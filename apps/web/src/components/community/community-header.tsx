@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
-import { Globe2, Settings, Users } from 'lucide-react';
+import { Globe2, Play, Settings, Users } from 'lucide-react';
+import { playLink } from '@magnox/shared';
 import type { LoadedCommunity } from '@/lib/community';
 import { mediaUrl } from '@/lib/media';
 import { formatCount } from '@/lib/utils';
@@ -28,6 +29,7 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
   const theme = community.theme;
   const banner = mediaUrl(theme.bannerKey);
   const icon = mediaUrl(theme.iconKey);
+  const play = playLink(community.playUrl);
   const base = `/c/${community.slug}`;
   const compact = theme.headerStyle === 'compact';
   const showMembers = community.settings.showMemberCount !== false;
@@ -138,6 +140,23 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
             </ul>
           </div>
           <div className="flex flex-wrap items-center gap-2 pb-1">
+            {play && (
+              <Button asChild variant="play" className="mx-press">
+                <a
+                  href={play.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={play.host}
+                  aria-label={
+                    play.platform === 'roblox'
+                      ? t('playOnRoblox')
+                      : t('playOnSite', { host: play.host })
+                  }
+                >
+                  <Play aria-hidden className="fill-current" /> {t('play')}
+                </a>
+              </Button>
+            )}
             <JoinButton
               communityId={community.id}
               signedIn={Boolean(user)}

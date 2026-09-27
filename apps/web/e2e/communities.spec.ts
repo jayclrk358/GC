@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test';
-import { createCommunity, expectAccessible, FIXTURE_CTL, signUp, uniqueUser } from './helpers';
+import {
+  choose,
+  createCommunity,
+  expectAccessible,
+  FIXTURE_CTL,
+  signUp,
+  uniqueUser,
+} from './helpers';
 
 test.describe('community hubs', () => {
   test('create a community with the wizard', async ({ page }) => {
@@ -128,6 +135,29 @@ test.describe('community hubs', () => {
     await page.goto(`/c/${slug}/servers`);
     const card = page.getByRole('article').filter({ hasText: 'Fixture Survival' });
     await expect(card).toContainText('21 / 120');
+  });
+
+  test('a Roblox community gets a Play button', async ({ page }) => {
+    await signUp(page, uniqueUser('roblox'), '/new');
+    const { slug } = await createCommunity(page);
+    await page.goto(`/c/${slug}/settings`);
+    await choose(page.getByLabel('Game', { exact: true }), 'Roblox');
+    await page.getByLabel('Play link').fill('http://example.com/game');
+    await page.getByRole('button', { name: 'Save changes' }).click();
+    await expect(page.getByText('Use a link that starts with https://').first()).toBeVisible();
+    await page.getByLabel('Play link').fill('https://www.roblox.com/games/920587237/Adopt-Me');
+    await page.getByRole('button', { name: 'Save changes' }).click();
+    await expect(page.getByText('Changes saved')).toBeVisible();
+
+    await page.goto(`/c/${slug}`);
+    const play = page.getByRole('link', { name: 'Play on Roblox (opens in a new tab)' });
+    await expect(play).toHaveAttribute(
+      'href',
+      'https://www.roblox.com/games/start?placeId=920587237',
+    );
+    await expect(play).toHaveAttribute('target', '_blank');
+    await expect(page.getByRole('list', { name: 'Community details' })).toContainText('Roblox');
+    await expectAccessible(page, 'community with a Play button');
   });
 
   test('private community: invite link lets a second user join', async ({ page, browser }) => {

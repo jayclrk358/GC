@@ -33,6 +33,8 @@ export const communities = pgTable(
     name: text('name').notNull(),
     tagline: text('tagline').notNull().default(''),
     gameId: text('game_id').references(() => games.id, { onDelete: 'set null' }),
+    /** Where people can play the game (e.g. a Roblox experience); shown as a Play button. */
+    playUrl: text('play_url'),
     ownerId: text('owner_id')
       .notNull()
       .references(() => users.id, { onDelete: 'restrict' }),

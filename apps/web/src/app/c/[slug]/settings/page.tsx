@@ -38,6 +38,7 @@ export default async function GeneralSettingsPage({
           slug: community.slug,
           tagline: community.tagline,
           gameId: community.gameId ?? '',
+          playUrl: community.playUrl ?? '',
           tags: community.tags.join(', '),
           region: community.region,
           language: community.language,

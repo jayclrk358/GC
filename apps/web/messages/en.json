@@ -381,7 +381,10 @@
     "owner": "Owner",
     "roles": "Roles",
     "created": "Your community is ready!",
-    "customise": "Customise its look and page"
+    "customise": "Customise its look and page",
+    "play": "Play",
+    "playOnRoblox": "Play on Roblox (opens in a new tab)",
+    "playOnSite": "Play on {host} (opens in a new tab)"
   },
   "servers": {
     "copyAddress": "Copy server address {address}",
@@ -682,7 +685,9 @@
       "confirmLabel": "Type {slug} to confirm",
       "deleteButton": "Delete this community"
     },
-    "openReports": "open reports"
+    "openReports": "open reports",
+    "playUrl": "Play link",
+    "playUrlHint": "Where people can play, such as your Roblox experience page. Shows a Play button on your community. Leave blank for none."
   },
   "theme": {
     "title": "Appearance",

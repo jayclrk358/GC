@@ -22,6 +22,7 @@ interface Initial {
   slug: string;
   tagline: string;
   gameId: string;
+  playUrl: string;
   tags: string;
   region: string;
   language: string;
@@ -63,6 +64,7 @@ export function GeneralSettings({
       name: v.name,
       tagline: v.tagline,
       gameId: v.gameId || null,
+      playUrl: v.playUrl,
       tags: v.tags
         .split(',')
         .map((s) => s.trim().toLowerCase())
@@ -139,6 +141,24 @@ export function GeneralSettings({
                     </option>
                   ))}
                 </Select>
+              )}
+            </Field>
+            <Field
+              label={t('playUrl')}
+              description={t('playUrlHint')}
+              error={fields.playUrl}
+              className="sm:col-span-2"
+            >
+              {(p) => (
+                <Input
+                  {...p}
+                  type="url"
+                  inputMode="url"
+                  value={v.playUrl}
+                  maxLength={300}
+                  placeholder="https://www.roblox.com/games/…"
+                  onChange={(e) => set('playUrl', e.target.value)}
+                />
               )}
             </Field>
             <Field label={tcr('tags')} description={tcr('tagsHint')} error={fields.tags}>

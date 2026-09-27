@@ -8,6 +8,7 @@ export const GAMES: {
   aliases?: string[];
 }[] = [
   { id: 'minecraft', name: 'Minecraft', protocol: 'minecraft', color: '#5b8731', aliases: ['mc'] },
+  { id: 'roblox', name: 'Roblox', color: '#e2231a', aliases: ['rblx'] },
   { id: 'rust', name: 'Rust', protocol: 'rust', steamAppId: 252490, color: '#cd412b' },
   {
     id: 'cs2',
