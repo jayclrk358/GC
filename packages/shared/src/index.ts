@@ -17,3 +17,4 @@ export * from './forum-schema';
 export * from './chat';
 export * from './chat-schema';
 export * from './profile';
+export * from './name-style';

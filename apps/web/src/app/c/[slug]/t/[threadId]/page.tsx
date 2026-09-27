@@ -29,6 +29,7 @@ import { ReplyComposer } from '@/components/forum/reply-composer';
 import { ThreadProvider } from '@/components/forum/thread-context';
 import { ThreadLiveBanner } from '@/components/forum/live-banners';
 import { FollowButton, ModTools, ReadMarker } from '@/components/forum/thread-tools';
+import { StyledName } from '@/components/community/role-decor';
 
 type Params = Promise<{ slug: string; threadId: string }>;
 
@@ -216,17 +217,18 @@ export default async function ThreadPage({
                             href={`/u/${p.author.username}`}
                             className="font-semibold hover:underline"
                           >
-                            {authorName(p)}
+                            <StyledName name={authorName(p)} style={p.author.nameStyle} />
                           </Link>
                         ) : (
                           <span id={`post-${p.id}-author`} className="font-semibold">
-                            {authorName(p)}
+                            <StyledName name={authorName(p)} style={p.author.nameStyle} />
                           </span>
                         )}
                         {p.author.roleName && (
                           <RoleBadge
                             name={p.author.roleName}
                             color={p.author.roleColor}
+                            iconUrl={p.author.roleIcon?.url}
                             colorblind={prefs.colorblindRoleColors}
                           />
                         )}

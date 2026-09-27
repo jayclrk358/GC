@@ -31,6 +31,9 @@ import {
   toChatDoc,
   uuidAtTime,
   type RichNode,
+  pickRoleDecor,
+  themeBackdrops,
+  type NameStyleView,
 } from '@magnox/shared';
 import { z } from 'zod';
 import type { MemberContext } from '../access';
@@ -40,6 +43,7 @@ import { QUEUES, enqueue } from '../queues';
 import { enforceRateLimit } from '../ratelimit';
 import { cacheRedis } from '../redis';
 import { rooms } from '../rooms';
+import { mediaUrl } from '../storage';
 import { audit } from './audit';
 import { getChannelById, listVisibleChannels, type ChannelView } from './channels';
 import { queueFanout } from './notify';
@@ -54,6 +58,10 @@ export interface ChatAuthor {
   nickname: string | null;
   roleColor: string | null;
   roleName: string | null;
+  /** Nametag effect from their highest styled role, if any. */
+  nameStyle: NameStyleView | null;
+  /** Icon image of their highest role that has one. */
+  roleIcon: { url: string; roleName: string } | null;
 }
 
 export interface ReplyPreview {
@@ -99,7 +107,7 @@ export async function loadAuthors(
   const unique = [...new Set(ids)];
   const out = new Map<string, ChatAuthor>();
   if (!unique.length) return out;
-  const [users, members, roles] = await Promise.all([
+  const [users, members, roles, [community]] = await Promise.all([
     db
       .select({
         id: schema.users.id,
@@ -121,6 +129,8 @@ export async function loadAuthors(
         name: schema.roles.name,
         color: schema.roles.color,
         position: schema.roles.position,
+        iconKey: schema.roles.iconKey,
+        nameStyle: schema.roles.nameStyle,
       })
       .from(schema.memberRoles)
       .innerJoin(schema.roles, eq(schema.roles.id, schema.memberRoles.roleId))
@@ -130,15 +140,24 @@ export async function loadAuthors(
           inArray(schema.memberRoles.userId, unique),
         ),
       ),
+    db
+      .select({ theme: schema.communities.theme })
+      .from(schema.communities)
+      .where(eq(schema.communities.id, communityId))
+      .limit(1),
   ]);
+  const backdrops = community ? themeBackdrops(community.theme) : undefined;
   const nick = new Map(members.map((m) => [m.userId, m.nickname]));
   const top = new Map<string, { name: string; color: string | null; position: number }>();
+  const byUser = new Map<string, (typeof roles)[number][]>();
   for (const r of roles) {
     const cur = top.get(r.userId);
     if (!cur || r.position > cur.position) top.set(r.userId, r);
+    byUser.set(r.userId, [...(byUser.get(r.userId) ?? []), r]);
   }
   for (const u of users) {
     const role = top.get(u.id);
+    const decor = pickRoleDecor(byUser.get(u.id) ?? [], backdrops);
     out.set(u.id, {
       id: u.id,
       name: u.name,
@@ -147,6 +166,10 @@ export async function loadAuthors(
       nickname: nick.get(u.id) ?? null,
       roleColor: role?.color ?? null,
       roleName: role?.name ?? null,
+      nameStyle: decor.nameStyle,
+      roleIcon: decor.icon
+        ? { url: mediaUrl(decor.icon.key)!, roleName: decor.icon.roleName }
+        : null,
     });
   }
   return out;

@@ -10,6 +10,14 @@ export const UPLOAD_PURPOSES = {
   gallery: { maxBytes: 10_000_000, width: 2560, height: 2560, fit: 'inside' as const },
   content: { maxBytes: 10_000_000, width: 2560, height: 2560, fit: 'inside' as const },
   emoji: { maxBytes: 1_000_000, width: 128, height: 128, fit: 'contain' as const },
+  // Shown beside every name, so always a still image (a GIF keeps its first frame).
+  'role-icon': {
+    maxBytes: 1_000_000,
+    width: 128,
+    height: 128,
+    fit: 'contain' as const,
+    still: true,
+  },
   preview: { maxBytes: 5_000_000, width: 640, height: 640, fit: 'inside' as const },
 } as const;
 
@@ -49,7 +57,7 @@ export async function processImage(input: Buffer, purpose: UploadPurpose): Promi
   if (!meta.format || !ALLOWED_FORMATS.has(meta.format)) {
     throw badRequest('Please upload a PNG, JPEG, WebP, AVIF or GIF image.');
   }
-  const animated = (meta.pages ?? 1) > 1;
+  const animated = (meta.pages ?? 1) > 1 && !('still' in spec && spec.still);
   const pipeline = sharp(input, { animated, limitInputPixels: 50_000_000 })
     .rotate()
     .resize({ width: spec.width, height: spec.height, fit: spec.fit, withoutEnlargement: true });

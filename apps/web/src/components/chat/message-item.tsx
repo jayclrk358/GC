@@ -33,6 +33,7 @@ import { Attachments, Embeds } from './attachments';
 import { ReactionBar, ReactionPicker } from './reaction-bar';
 import { formatTime, fullDateTime } from './format';
 import type { ChatMessage } from './types';
+import { RoleIcon, StyledName } from '@/components/community/role-decor';
 
 export function authorName(m: ChatMessage): string {
   if (m.kind !== 'user') return 'Magnox';
@@ -118,14 +119,18 @@ export const MessageItem = React.memo(function MessageItem({
             id={headerId}
             className={grouped ? 'sr-only' : 'flex flex-wrap items-baseline gap-x-2 leading-tight'}
           >
-            <span className="font-semibold">{name}</span>
+            <StyledName name={name} style={m.author?.nameStyle} className="font-semibold" />
             {m.author?.roleName && (
               <span className="inline-flex items-center gap-1 text-xs text-muted">
-                <span
-                  aria-hidden
-                  className="size-2 rounded-full"
-                  style={{ background: m.author.roleColor ?? 'var(--c-text-muted)' }}
-                />
+                {m.author.roleIcon ? (
+                  <RoleIcon url={m.author.roleIcon.url} />
+                ) : (
+                  <span
+                    aria-hidden
+                    className="size-2 rounded-full"
+                    style={{ background: m.author.roleColor ?? 'var(--c-text-muted)' }}
+                  />
+                )}
                 {m.author.roleName}
               </span>
             )}

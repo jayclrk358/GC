@@ -256,6 +256,12 @@ export function PrefsEditor() {
           onCheckedChange={(v) => update({ communityThemes: v })}
         />
         <SwitchField
+          label={t('nameEffects')}
+          description={t('nameEffectsDesc')}
+          checked={prefs.nameEffects}
+          onCheckedChange={(v) => update({ nameEffects: v })}
+        />
+        <SwitchField
           label={t('cbRoles')}
           description={t('cbRolesDesc')}
           checked={prefs.colorblindRoleColors}

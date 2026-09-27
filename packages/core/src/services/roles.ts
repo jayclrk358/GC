@@ -11,6 +11,7 @@ import {
 import { z } from 'zod';
 import { requirePerm, type MemberContext } from '../access';
 import { AppError, forbidden, notFound } from '../errors';
+import { mediaUrl } from '../storage';
 import { audit } from './audit';
 
 export type RoleRow = typeof schema.roles.$inferSelect;
@@ -52,11 +53,24 @@ function assertCanGrant(ctx: MemberContext, perms: bigint) {
   if ((perms & ~ctx.base) !== 0n) throw forbidden("You can't grant permissions you don't have.");
 }
 
+/** A role icon must be an image uploaded for this community as a role icon. */
+async function assertRoleIcon(ctx: MemberContext, key: string | null | undefined): Promise<void> {
+  if (!key) return;
+  const row = await db.query.uploads.findFirst({
+    where: and(eq(schema.uploads.key, key), eq(schema.uploads.communityId, ctx.community.id)),
+  });
+  if (!row || row.purpose !== 'role-icon')
+    throw new AppError('validation', 'That image could not be found.', {
+      fields: { iconKey: 'Upload the icon again' },
+    });
+}
+
 export async function createRole(ctx: MemberContext, raw: unknown): Promise<RoleRow> {
   requirePerm(ctx, Permission.MANAGE_ROLES);
   const input = roleInputSchema.parse(raw);
   const permissions = parsePermissions(input.permissions);
   assertCanGrant(ctx, permissions);
+  await assertRoleIcon(ctx, input.iconKey);
   const existing = await listRoles(ctx.community.id);
   if (existing.length >= 100)
     throw new AppError('forbidden', 'A community can have up to 100 roles.');
@@ -75,6 +89,8 @@ export async function createRole(ctx: MemberContext, raw: unknown): Promise<Role
         name: input.name,
         color: input.color,
         icon: input.icon,
+        iconKey: input.iconKey ?? null,
+        nameStyle: input.nameStyle,
         permissions,
         hoist: input.hoist,
         mentionable: input.mentionable,
@@ -104,6 +120,7 @@ export async function updateRole(ctx: MemberContext, roleId: string, raw: unknow
   const permissions = parsePermissions(input.permissions);
   // Only check newly added bits so an admin can still rename a role with bits they lack.
   assertCanGrant(ctx, permissions & ~role.permissions);
+  await assertRoleIcon(ctx, input.iconKey);
   await db.transaction(async (tx) => {
     await tx
       .update(schema.roles)
@@ -111,6 +128,13 @@ export async function updateRole(ctx: MemberContext, roleId: string, raw: unknow
         name: role.isDefault ? '@everyone' : input.name,
         color: role.isDefault ? null : input.color,
         icon: input.icon,
+        // @everyone never decorates names; everyone would have it.
+        ...(role.isDefault
+          ? {}
+          : {
+              nameStyle: input.nameStyle,
+              ...(input.iconKey !== undefined ? { iconKey: input.iconKey } : {}),
+            }),
         permissions,
         hoist: role.isDefault ? false : input.hoist,
         mentionable: input.mentionable,
@@ -260,6 +284,9 @@ export function roleSummary(role: RoleRow) {
     name: role.name,
     color: role.color,
     icon: role.icon,
+    iconKey: role.iconKey,
+    iconUrl: mediaUrl(role.iconKey),
+    nameStyle: role.nameStyle,
     position: role.position,
     permissions: role.permissions.toString(),
     isDefault: role.isDefault,

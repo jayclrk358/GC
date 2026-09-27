@@ -301,6 +301,8 @@ export function ChatView(props: Props) {
           image: me.image,
           nickname: null,
           roleColor: null,
+          nameStyle: null,
+          roleIcon: null,
           roleName: null,
         },
         body: input.body,

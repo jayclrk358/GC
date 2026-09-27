@@ -224,7 +224,9 @@
     "liveUpdatesOptions": {
       "auto": "Show them straight away",
       "announce": "Tell me, and wait until I load them"
-    }
+    },
+    "nameEffects": "Name effects",
+    "nameEffectsDesc": "Show role nametag effects such as gradients, glows and animations. Turn off to see every name as plain text."
   },
   "home": {
     "eyebrow": "Community hubs for gamers",
@@ -1282,7 +1284,34 @@
     "manageRoles": "Roles",
     "rolesFor": "Roles for {name}",
     "adminNotice": "Administrator is on, so this role has every permission below regardless of the individual switches.",
-    "timedOutUntil": "Timed out until {date}"
+    "timedOutUntil": "Timed out until {date}",
+    "nametag": "Nametag",
+    "iconImage": "Role icon",
+    "iconImageDesc": "A small image shown next to members’ names. Square images work best; animated images show their first frame.",
+    "nameEffect": "Name effect",
+    "nameEffectDesc": "How the names of members with this role look. Their highest role with an effect wins.",
+    "effects": {
+      "none": "None (plain name)",
+      "color": "Role colour",
+      "gradient": "Gradient",
+      "glow": "Glow",
+      "rainbow": "Rainbow"
+    },
+    "nameAnimation": "Animation",
+    "nameAnimationDesc": "Flow needs a gradient or rainbow.",
+    "animations": {
+      "none": "None",
+      "shimmer": "Shimmer",
+      "pulse": "Pulse",
+      "flow": "Flow"
+    },
+    "secondColor": "Second colour",
+    "secondColorDesc": "The gradient runs from the role colour to this one.",
+    "preview": "Preview",
+    "previewLight": "On a light background:",
+    "previewDark": "On a dark background:",
+    "previewName": "Member name",
+    "nametagNote": "Colours are adjusted so names stay readable. Animations play briefly when a name appears and while it’s hovered. People who turn off name effects, use high contrast or reduce motion see plain or still names."
   },
   "serverSettings": {
     "title": "Servers",

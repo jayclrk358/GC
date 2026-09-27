@@ -18,6 +18,8 @@ export const prefsSchema = z.object({
   animatedImages: z.boolean().default(true),
   underlineLinks: z.boolean().default(false),
   colorblindRoleColors: z.boolean().default(false),
+  /** Role name effects (gradients, glows, animations). Off shows plain names. */
+  nameEffects: z.boolean().default(true),
   density: z.enum(['compact', 'comfortable', 'spacious']).default('comfortable'),
   timeFormat: z.enum(['auto', '12h', '24h']).default('auto'),
   simplifiedLayout: z.boolean().default(false),

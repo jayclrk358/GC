@@ -2,19 +2,24 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { Crown, Users } from 'lucide-react';
 import type { MemberRow, RoleSummary } from '@magnox/core';
+import { pickRoleDecor, type NameBackdrops } from '@magnox/shared';
 import { Avatar, EmptyState } from '@/components/ui/misc';
 import { RoleBadge } from './role-badge';
+import { StyledName } from './role-decor';
 
 export async function MemberList({
   members,
   roles,
   colorblind,
   query,
+  backdrops,
 }: {
   members: MemberRow[];
   roles: RoleSummary[];
   colorblind: boolean;
   query: string;
+  /** The community theme's backgrounds, so name effects stay readable on them. */
+  backdrops: NameBackdrops;
 }) {
   const t = await getTranslations('community');
   if (members.length === 0) {
@@ -46,43 +51,58 @@ export async function MemberList({
               {role ? role.name : t('tabs.members')} — {list.length}
             </h3>
             <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {list.map((m) => (
-                <li
-                  key={m.userId}
-                  className="flex items-center gap-3 rounded-ui border border-border bg-surface p-3"
-                >
-                  <Avatar src={m.image} name={m.nickname || m.name} size={40} />
-                  <div className="min-w-0 flex-1">
-                    <p className="flex items-center gap-1 truncate font-semibold">
-                      {m.username ? (
-                        <Link href={`/u/${m.username}`} className="hover:underline">
-                          {m.nickname || m.name}
-                        </Link>
-                      ) : (
-                        m.nickname || m.name
+              {list.map((m) => {
+                const decor = pickRoleDecor(
+                  m.roleIds.map((id) => byId.get(id)).filter((r): r is RoleSummary => Boolean(r)),
+                  backdrops,
+                );
+                return (
+                  <li
+                    key={m.userId}
+                    className="flex items-center gap-3 rounded-ui border border-border bg-surface p-3"
+                  >
+                    <Avatar src={m.image} name={m.nickname || m.name} size={40} />
+                    <div className="min-w-0 flex-1">
+                      <p className="flex items-center gap-1 truncate font-semibold">
+                        {m.username ? (
+                          <Link href={`/u/${m.username}`} className="hover:underline">
+                            <StyledName name={m.nickname || m.name} style={decor.nameStyle} />
+                          </Link>
+                        ) : (
+                          <StyledName name={m.nickname || m.name} style={decor.nameStyle} />
+                        )}
+                        {m.isOwner && (
+                          <Crown
+                            className="size-4 text-warning"
+                            aria-label={t('owner')}
+                            role="img"
+                          />
+                        )}
+                      </p>
+                      {m.username && <p className="truncate text-sm text-muted">@{m.username}</p>}
+                      {m.roleIds.length > 0 && (
+                        <ul className="mt-1 flex flex-wrap gap-1" aria-label={t('roles')}>
+                          {m.roleIds
+                            .map((id) => byId.get(id))
+                            .filter((r): r is RoleSummary => Boolean(r))
+                            .sort((a, b) => b.position - a.position)
+                            .slice(0, 4)
+                            .map((r) => (
+                              <li key={r.id}>
+                                <RoleBadge
+                                  name={r.name}
+                                  color={r.color}
+                                  iconUrl={r.iconUrl}
+                                  colorblind={colorblind}
+                                />
+                              </li>
+                            ))}
+                        </ul>
                       )}
-                      {m.isOwner && (
-                        <Crown className="size-4 text-warning" aria-label={t('owner')} role="img" />
-                      )}
-                    </p>
-                    {m.username && <p className="truncate text-sm text-muted">@{m.username}</p>}
-                    {m.roleIds.length > 0 && (
-                      <ul className="mt-1 flex flex-wrap gap-1" aria-label={t('roles')}>
-                        {m.roleIds
-                          .map((id) => byId.get(id))
-                          .filter((r): r is RoleSummary => Boolean(r))
-                          .sort((a, b) => b.position - a.position)
-                          .slice(0, 4)
-                          .map((r) => (
-                            <li key={r.id}>
-                              <RoleBadge name={r.name} color={r.color} colorblind={colorblind} />
-                            </li>
-                          ))}
-                      </ul>
-                    )}
-                  </div>
-                </li>
-              ))}
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           </section>
         );

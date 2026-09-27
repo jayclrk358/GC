@@ -196,6 +196,118 @@
     }
   }
 
+  /*
+   * Role nametag effects. Colours arrive as variables already made readable on light (--mx-n1l,
+   * --mx-n2l) and dark (--mx-n1d, --mx-n2d) backgrounds. Animations play twice when a name
+   * appears (under five seconds) and again while it's hovered, so nothing keeps moving on its
+   * own. Preferences (plain names, high contrast, reduced motion) are applied in mx-prefs.
+   */
+  /*
+   * Which colour set is showing: "initial" marks the active one. Community themes set these
+   * with their tokens (a dark-first theme stays dark in light mode), so names follow the theme.
+   */
+  :root {
+    --mx-l: initial;
+    --mx-d: ;
+  }
+  html[data-scheme='dark'] {
+    --mx-l: ;
+    --mx-d: initial;
+  }
+  @media (prefers-color-scheme: dark) {
+    html[data-scheme='system'] {
+      --mx-l: ;
+      --mx-d: initial;
+    }
+  }
+  .mx-name {
+    /* Space toggles: exactly one half of each pair resolves, the other is empty. */
+    --mx-n1: var(--mx-l, var(--mx-n1l)) var(--mx-d, var(--mx-n1d));
+    --mx-n2: var(--mx-l, var(--mx-n2l)) var(--mx-d, var(--mx-n2d));
+    --mx-shine: var(--mx-l, rgb(255 255 255 / 0.6)) var(--mx-d, rgb(255 255 255 / 0.85));
+    /* Rainbow stops, made readable on the community's backgrounds (defaults suit white/black). */
+    --mx-rainbow: var(
+        --mx-l,
+        var(--mx-rbl, #c81e1e, #b45309, #15803d, #0369a1, #6d28d9, #be185d, #c81e1e)
+      )
+      var(--mx-d, var(--mx-rbd, #ff8a8a, #ffc266, #7ee787, #79c0ff, #d2a8ff, #ff9bd2, #ff8a8a));
+    --mx-name-fill: linear-gradient(var(--mx-n1), var(--mx-n1));
+    color: var(--mx-n1);
+    font-weight: 700;
+  }
+  .mx-name[data-effect='gradient'] {
+    --mx-name-fill: linear-gradient(90deg, var(--mx-n1), var(--mx-n2), var(--mx-n1));
+  }
+  .mx-name[data-effect='rainbow'] {
+    --mx-name-fill: linear-gradient(90deg, var(--mx-rainbow));
+  }
+  .mx-name[data-effect='glow'] {
+    text-shadow: 0 0 0.4em color-mix(in srgb, var(--mx-n1) 60%, transparent);
+  }
+  /* Filled names: the fill is painted through the letters. */
+  .mx-name:is(
+    [data-effect='gradient'],
+    [data-effect='rainbow'],
+    [data-anim='shimmer'],
+    [data-anim='flow']
+  ) {
+    background-image: var(--mx-name-fill);
+    background-size: 200% 100%;
+    background-repeat: repeat-x;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+  .mx-name[data-anim] {
+    animation-duration: 2.4s;
+    animation-iteration-count: 2;
+    animation-timing-function: linear;
+  }
+  .mx-name[data-anim]:hover {
+    animation-iteration-count: infinite;
+  }
+  .mx-name[data-anim='flow'] {
+    animation-name: mx-name-flow;
+  }
+  .mx-name[data-anim='shimmer'] {
+    background-image:
+      linear-gradient(100deg, transparent 35%, var(--mx-shine) 50%, transparent 65%),
+      var(--mx-name-fill);
+    background-size:
+      300% 100%,
+      200% 100%;
+    animation-name: mx-name-shimmer;
+  }
+  .mx-name[data-anim='pulse'] {
+    animation-name: mx-name-pulse;
+    animation-timing-function: ease-in-out;
+  }
+  @keyframes mx-name-flow {
+    to {
+      background-position: -200% 0;
+    }
+  }
+  @keyframes mx-name-shimmer {
+    from {
+      background-position:
+        100% 0,
+        0 0;
+    }
+    to {
+      background-position:
+        0% 0,
+        0 0;
+    }
+  }
+  @keyframes mx-name-pulse {
+    50% {
+      filter: brightness(1.3)
+        drop-shadow(0 0 0.3em color-mix(in srgb, var(--mx-n1) 70%, transparent));
+    }
+  }
+
   /* A quiet dot pattern that fades out, for hero areas. */
   .mx-dots {
     background-image: radial-gradient(
@@ -736,6 +848,25 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
+    }
+  }
+
+  /* Plain names when effects are turned off, in high contrast, and in forced colours. */
+  html[data-name-effects='off'] .mx-name,
+  html[data-contrast='high'] .mx-name {
+    color: inherit;
+    background: none;
+    text-shadow: none;
+    filter: none;
+    animation: none;
+  }
+  @media (forced-colors: active) {
+    .mx-name {
+      color: CanvasText;
+      background: none;
+      text-shadow: none;
+      filter: none;
+      animation: none;
     }
   }
 

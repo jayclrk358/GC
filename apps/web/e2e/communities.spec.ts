@@ -4,7 +4,9 @@ import {
   createCommunity,
   expectAccessible,
   FIXTURE_CTL,
+  joinAsMember,
   signUp,
+  startThread,
   uniqueUser,
 } from './helpers';
 
@@ -221,6 +223,68 @@ test.describe('community hubs', () => {
       'Event Host',
     );
     await memberContext.close();
+  });
+
+  test('roles: nametag effects, animations and a role icon', async ({ page, browser }) => {
+    await signUp(page, uniqueUser('decor'), '/new');
+    const { slug } = await createCommunity(page, { template: 'Game server' });
+    const member = await joinAsMember(browser, slug);
+
+    await page.goto(`/c/${slug}/settings/roles`);
+    await page.getByRole('button', { name: 'Create role' }).click();
+    await page.getByRole('button', { name: 'New role', exact: true }).click();
+    await page.getByLabel('Role name').fill('Legend');
+    const tag = page.getByRole('group', { name: 'Nametag' });
+    await tag.locator('input[type=file]').setInputFiles({
+      name: 'badge.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from(
+        'iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEElEQVQImWPQqLCBIwbiOABkgw3Be6BngQAAAABJRU5ErkJggg==',
+        'base64',
+      ),
+    });
+    await expect(tag.getByRole('img', { name: /Role icon/ })).toBeVisible();
+    await choose(tag.getByLabel('Name effect'), 'Gradient');
+    await choose(tag.getByLabel('Animation'), 'Flow');
+    await expect(
+      tag
+        .getByRole('group', { name: 'Preview' })
+        .locator('.mx-name[data-effect="gradient"][data-anim="flow"]'),
+    ).toHaveCount(2);
+    await expectAccessible(page, 'role nametag settings');
+    await page.getByRole('button', { name: 'Save role' }).click();
+    await expect(page.getByText('Role saved')).toBeVisible();
+
+    await page.goto(`/c/${slug}/settings/members`);
+    await page.getByRole('button', { name: `Roles ${member.user.name}` }).click();
+    const dialog = page.getByRole('dialog', { name: `Roles for ${member.user.name}` });
+    await dialog.getByRole('checkbox', { name: /Legend/ }).check();
+    await expect(dialog.getByRole('checkbox', { name: /Legend/ })).toBeChecked();
+    await page.keyboard.press('Escape');
+
+    // The member's name carries the effect, and the role badge shows the icon.
+    const threadUrl = await startThread(
+      member.page,
+      slug,
+      'general',
+      'Styled names',
+      'Look at my name.',
+    );
+    const op = member.page.locator('article[id^="post-"]').first();
+    const name = op.locator('.mx-name');
+    await expect(name).toHaveAttribute('data-effect', 'gradient');
+    await expect(name).toHaveAttribute('data-anim', 'flow');
+    await expect(op.locator('img[src*="/u/"]')).toBeVisible();
+    await expectAccessible(member.page, 'thread with name effects');
+
+    // People can turn name effects off: names go back to plain text.
+    await member.page.goto('/settings/accessibility');
+    await member.page.getByRole('switch', { name: 'Name effects' }).click();
+    await expect(member.page.locator('html')).toHaveAttribute('data-name-effects', 'off');
+    await member.page.goto(threadUrl);
+    await expect(name).toBeVisible();
+    expect(await name.evaluate((el) => getComputedStyle(el).backgroundImage)).toBe('none');
+    await member.context.close();
   });
 
   test('explore finds public communities and profiles render', async ({ page }) => {

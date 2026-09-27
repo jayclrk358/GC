@@ -13,6 +13,9 @@ import {
   THREAD_SORTS,
   type RichNode,
   type ThreadSort,
+  pickRoleDecor,
+  themeBackdrops,
+  type NameStyleView,
 } from '@magnox/shared';
 import { z } from 'zod';
 import { channelPermissions, requirePerm, type MemberContext } from '../access';
@@ -23,6 +26,7 @@ import { rooms } from '../rooms';
 import { audit } from './audit';
 import { getChannelById, listVisibleChannels, type ChannelView } from './channels';
 import { getNotificationSettings, notifyUser, queueFanout } from './notify';
+import { mediaUrl } from '../storage';
 
 export interface AuthorView {
   id: string | null;
@@ -32,6 +36,10 @@ export interface AuthorView {
   nickname: string | null;
   roleColor: string | null;
   roleName: string | null;
+  /** Nametag effect from their highest styled role, if any. */
+  nameStyle: NameStyleView | null;
+  /** Icon image of their highest role that has one. */
+  roleIcon: { url: string; roleName: string } | null;
 }
 
 export interface ThreadListItem {
@@ -300,7 +308,7 @@ export async function listPosts(
     ...new Set(rows.map((r) => r.authorId).filter((x): x is string => Boolean(x))),
   ];
 
-  const [reactions, members, topRoles, blocks] = await Promise.all([
+  const [reactions, members, topRoles, blocks, [community]] = await Promise.all([
     postIds.length
       ? db
           .select({
@@ -329,6 +337,8 @@ export async function listPosts(
             name: schema.roles.name,
             color: schema.roles.color,
             position: schema.roles.position,
+            iconKey: schema.roles.iconKey,
+            nameStyle: schema.roles.nameStyle,
           })
           .from(schema.memberRoles)
           .innerJoin(schema.roles, eq(schema.roles.id, schema.memberRoles.roleId))
@@ -350,13 +360,28 @@ export async function listPosts(
             ),
           )
       : [],
+    db
+      .select({ theme: schema.communities.theme })
+      .from(schema.communities)
+      .where(eq(schema.communities.id, ctx.community.id))
+      .limit(1),
   ]);
+  const backdrops = community ? themeBackdrops(community.theme) : undefined;
   const nick = new Map(members.map((m) => [m.userId, m.nickname]));
   const topRole = new Map<string, { name: string; color: string | null; position: number }>();
+  const rolesByUser = new Map<string, (typeof topRoles)[number][]>();
   for (const r of topRoles) {
     const cur = topRole.get(r.userId);
     if (!cur || r.position > cur.position) topRole.set(r.userId, r);
+    rolesByUser.set(r.userId, [...(rolesByUser.get(r.userId) ?? []), r]);
   }
+  const decorFor = (userId: string | null) => {
+    const d = pickRoleDecor(userId ? (rolesByUser.get(userId) ?? []) : [], backdrops);
+    return {
+      nameStyle: d.nameStyle,
+      roleIcon: d.icon ? { url: mediaUrl(d.icon.key)!, roleName: d.icon.roleName } : null,
+    };
+  };
   const blocked = new Set(blocks.map((b) => b.blockedId));
   const byPost = new Map<string, Map<string, { count: number; mine: boolean }>>();
   for (const r of reactions) {
@@ -387,6 +412,7 @@ export async function listPosts(
           nickname: r.authorId ? (nick.get(r.authorId) ?? null) : null,
           roleColor: role?.color ?? null,
           roleName: role?.name ?? null,
+          ...decorFor(r.authorId),
         },
         reactions: [...(byPost.get(r.id)?.entries() ?? [])]
           .map(([emoji, v]) => ({ emoji, ...v }))

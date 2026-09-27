@@ -22,6 +22,7 @@ const COMMUNITY_PURPOSES = new Set<UploadPurpose>([
   'background',
   'gallery',
   'emoji',
+  'role-icon',
 ]);
 
 export function isUploadPurpose(p: string): p is UploadPurpose {
@@ -46,7 +47,11 @@ export async function saveUpload(opts: {
     const ctx = await getMemberContext({ id: opts.communityId }, opts.userId);
     requirePerm(
       ctx,
-      opts.purpose === 'emoji' ? Permission.MANAGE_EMOJI : Permission.MANAGE_COMMUNITY,
+      opts.purpose === 'emoji'
+        ? Permission.MANAGE_EMOJI
+        : opts.purpose === 'role-icon'
+          ? Permission.MANAGE_ROLES
+          : Permission.MANAGE_COMMUNITY,
     );
   }
   const img = await processImage(opts.data, opts.purpose);

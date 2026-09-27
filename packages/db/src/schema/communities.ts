@@ -12,7 +12,7 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import type { NavConfig, Theme } from '@magnox/shared';
+import type { NameStyle, NavConfig, Theme } from '@magnox/shared';
 import { users } from './auth';
 import { games } from './games';
 import { createdAt, tsvector, tz, updatedAt } from './_helpers';
@@ -102,6 +102,13 @@ export const roles = pgTable(
     name: text('name').notNull(),
     color: text('color'),
     icon: text('icon'),
+    /** Uploaded role icon image, shown next to members' names. */
+    iconKey: text('icon_key'),
+    /** Nametag effect for members whose highest styled role this is. */
+    nameStyle: jsonb('name_style')
+      .$type<NameStyle>()
+      .notNull()
+      .default({ effect: 'none', color2: null, animation: 'none' }),
     position: integer('position').notNull().default(0),
     permissions: bigint('permissions', { mode: 'bigint' })
       .notNull()

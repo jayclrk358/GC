@@ -6,16 +6,25 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { ArrowDown, ArrowUp, Lock, Plus, Trash2 } from 'lucide-react';
 import {
+  DEFAULT_NAME_STYLE,
   has,
+  NAME_ANIMATIONS,
+  NAME_EFFECTS,
+  nameStyleView,
   Permission,
+  readableOn,
   PERMISSION_META,
+  type NameBackdrops,
+  type NameStyle,
   type PermissionGroup,
   type PermissionName,
 } from '@magnox/shared';
 import type { RoleSummary } from '@magnox/core';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
+import { Input, Select } from '@/components/ui/input';
+import { ImageUpload } from '@/components/upload/image-upload';
+import { RoleIcon, StyledName } from '@/components/community/role-decor';
 import { Alert } from '@/components/ui/misc';
 import { Switch, SwitchField } from '@/components/ui/switch';
 import { FormError } from '@/components/auth/form-error';
@@ -33,9 +42,12 @@ export function RoleEditor({
   communityId,
   roles: initialRoles,
   actor,
+  backdrops,
 }: {
   communityId: string;
   roles: RoleSummary[];
+  /** The community theme's backgrounds, for readable name colours and the preview. */
+  backdrops: NameBackdrops;
   actor: { isOwner: boolean; topPosition: number; perms: string };
 }) {
   const t = useTranslations('roles');
@@ -90,6 +102,8 @@ export function RoleEditor({
       name: draft.name,
       color: draft.color,
       icon: draft.icon,
+      iconKey: draft.iconKey,
+      nameStyle: draft.nameStyle,
       permissions: draft.permissions,
       hoist: draft.hoist,
       mentionable: draft.mentionable,
@@ -158,11 +172,15 @@ export function RoleEditor({
                     r.id === selected?.id && 'bg-surface-2 ring-2 ring-primary',
                   )}
                 >
-                  <span
-                    aria-hidden
-                    className="size-3 shrink-0 rounded-full"
-                    style={{ background: r.color ?? 'var(--c-text-muted)' }}
-                  />
+                  {r.iconUrl ? (
+                    <RoleIcon url={r.iconUrl} />
+                  ) : (
+                    <span
+                      aria-hidden
+                      className="size-3 shrink-0 rounded-full"
+                      style={{ background: r.color ?? 'var(--c-text-muted)' }}
+                    />
+                  )}
                   <span className="truncate">{r.name}</span>
                   {!canManage(r) && (
                     <Lock
@@ -242,6 +260,18 @@ export function RoleEditor({
             )}
             {draft.isDefault && <p className="text-sm text-muted">{t('everyoneHint')}</p>}
             {!draft.isDefault && (
+              <NametagFields
+                communityId={communityId}
+                name={draft.name || t('previewName')}
+                color={draft.color}
+                style={draft.nameStyle ?? DEFAULT_NAME_STYLE}
+                iconKey={draft.iconKey}
+                backdrops={backdrops}
+                onStyle={(nameStyle) => setDraft({ ...draft, nameStyle })}
+                onIcon={(iconKey) => setDraft({ ...draft, iconKey })}
+              />
+            )}
+            {!draft.isDefault && (
               <div className="flex flex-col">
                 <SwitchField
                   label={t('hoist')}
@@ -319,5 +349,121 @@ export function RoleEditor({
         </form>
       )}
     </div>
+  );
+}
+
+/** A role's icon image and nametag effect, with a live preview on light and dark. */
+function NametagFields({
+  communityId,
+  name,
+  color,
+  style,
+  iconKey,
+  backdrops,
+  onStyle,
+  onIcon,
+}: {
+  communityId: string;
+  name: string;
+  color: string | null;
+  style: NameStyle;
+  iconKey: string | null;
+  backdrops: NameBackdrops;
+  onStyle: (s: NameStyle) => void;
+  onIcon: (key: string | null) => void;
+}) {
+  const t = useTranslations('roles');
+  const view = nameStyleView(color, style, backdrops);
+  const flowing = style.effect === 'gradient' || style.effect === 'rainbow';
+  return (
+    <fieldset className="flex flex-col gap-4 rounded-ui border border-border p-4">
+      <legend className="px-1 text-sm font-bold tracking-wide text-muted uppercase">
+        {t('nametag')}
+      </legend>
+      <ImageUpload
+        label={t('iconImage')}
+        description={t('iconImageDesc')}
+        purpose="role-icon"
+        communityId={communityId}
+        value={iconKey}
+        onChange={onIcon}
+      />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label={t('nameEffect')} description={t('nameEffectDesc')}>
+          {(p) => (
+            <Select
+              {...p}
+              value={style.effect}
+              onValueChange={(value) => {
+                const effect = value as NameStyle['effect'];
+                const keepsFlow = effect === 'gradient' || effect === 'rainbow';
+                onStyle({
+                  ...style,
+                  effect,
+                  animation:
+                    effect === 'none' || (style.animation === 'flow' && !keepsFlow)
+                      ? 'none'
+                      : style.animation,
+                });
+              }}
+            >
+              {NAME_EFFECTS.map((e) => (
+                <option key={e} value={e}>
+                  {t(`effects.${e}`)}
+                </option>
+              ))}
+            </Select>
+          )}
+        </Field>
+        <Field label={t('nameAnimation')} description={t('nameAnimationDesc')}>
+          {(p) => (
+            <Select
+              {...p}
+              value={style.animation}
+              disabled={style.effect === 'none'}
+              onValueChange={(value) =>
+                onStyle({ ...style, animation: value as NameStyle['animation'] })
+              }
+            >
+              {NAME_ANIMATIONS.map((a) => (
+                <option key={a} value={a} disabled={a === 'flow' && !flowing}>
+                  {t(`animations.${a}`)}
+                </option>
+              ))}
+            </Select>
+          )}
+        </Field>
+      </div>
+      {style.effect === 'gradient' && (
+        <Field label={t('secondColor')} description={t('secondColorDesc')}>
+          {(p) => (
+            <input
+              {...p}
+              type="color"
+              value={style.color2 ?? '#22d3ee'}
+              onChange={(e) => onStyle({ ...style, color2: e.target.value })}
+              className="h-10 w-16 cursor-pointer rounded-ui border border-border bg-surface"
+            />
+          )}
+        </Field>
+      )}
+      <div role="group" aria-label={t('preview')} className="grid gap-2 sm:grid-cols-2">
+        {(['light', 'dark'] as const).map((scheme) => (
+          <div
+            key={scheme}
+            className="flex items-center gap-2 rounded-ui border border-border px-3 py-2 text-base"
+            // The community's own card colour for each colour set.
+            style={{
+              background: backdrops[scheme][1] ?? backdrops[scheme][0],
+              color: readableOn(backdrops[scheme][1] ?? backdrops[scheme][0]!),
+            }}
+          >
+            <span className="sr-only">{t(`preview${scheme === 'light' ? 'Light' : 'Dark'}`)}</span>
+            <StyledName name={name} style={view} scheme={scheme} className="font-semibold" />
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-muted">{t('nametagNote')}</p>
+    </fieldset>
   );
 }

@@ -8,6 +8,7 @@ import {
   VISIBILITY,
 } from './community';
 import { isValidSlug } from './slug';
+import { DEFAULT_NAME_STYLE, NAME_ANIMATIONS, NAME_EFFECTS } from './name-style';
 
 // Input validation for communities, roles and invites (constants are in community.ts).
 
@@ -53,6 +54,16 @@ export const createCommunitySchema = communityBasicsSchema.extend({
 });
 export type CreateCommunityInput = z.infer<typeof createCommunitySchema>;
 
+export const nameStyleSchema = z.object({
+  effect: z.enum(NAME_EFFECTS).default('none'),
+  color2: z
+    .string()
+    .regex(/^#[0-9a-f]{6}$/i)
+    .nullable()
+    .default(null),
+  animation: z.enum(NAME_ANIMATIONS).default('none'),
+});
+
 export const roleInputSchema = z.object({
   name: z.string().trim().min(1).max(40),
   color: z
@@ -62,6 +73,9 @@ export const roleInputSchema = z.object({
     .default(null),
   icon: z.string().max(40).nullable().default(null),
   permissions: z.string().regex(/^\d{1,20}$/),
+  nameStyle: nameStyleSchema.default(DEFAULT_NAME_STYLE),
+  /** Uploaded role icon image, or null for none. Omitted means "leave as is". */
+  iconKey: z.string().max(80).nullable().optional(),
   hoist: z.boolean().default(false),
   mentionable: z.boolean().default(false),
   selfAssignable: z.boolean().default(false),

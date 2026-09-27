@@ -32,7 +32,14 @@ import {
   updateWikiPage,
   voteThread,
 } from '@magnox/core';
-import { docFromText, newId, randomToken, themeFromPreset, type RichNode } from '@magnox/shared';
+import {
+  docFromText,
+  newId,
+  randomToken,
+  themeFromPreset,
+  type NameStyle,
+  type RichNode,
+} from '@magnox/shared';
 import { auth } from './index';
 
 const PASSWORD = 'magnox-demo-1234';
@@ -371,6 +378,21 @@ async function seedServerHistory(communityId: string, voters: string[]) {
   console.log('✔ server history for Blockhaven Survival');
 }
 
+/** Nametag effects on the template roles, so chat and the forum show them off. */
+async function seedRoleStyles(communityId: string) {
+  const styles: Record<string, NameStyle> = {
+    Admin: { effect: 'gradient', color2: '#f59e0b', animation: 'flow' },
+    Moderator: { effect: 'glow', color2: null, animation: 'pulse' },
+    Supporter: { effect: 'rainbow', color2: null, animation: 'shimmer' },
+  };
+  for (const [name, nameStyle] of Object.entries(styles)) {
+    await db
+      .update(schema.roles)
+      .set({ nameStyle })
+      .where(and(eq(schema.roles.communityId, communityId), eq(schema.roles.name, name)));
+  }
+}
+
 /** Filled-in profiles, so the profile page shows what it can do. */
 async function seedProfiles(users: { alice: string; bob: string; carol: string }) {
   await updateProfile(users.alice, {
@@ -476,6 +498,7 @@ async function main() {
       await ensureChatChannels(exists.id);
       await seedContent(exists.id, exists.name, { alice: alice!, bob: bob!, carol: carol! });
       await seedServerHistory(exists.id, [bob!, carol!]);
+      await seedRoleStyles(exists.id);
       continue;
     }
     const { id } = await createCommunity(alice!, { ...c, visibility: 'public', joinMode: 'open' });
@@ -484,6 +507,7 @@ async function main() {
     for (const u of [bob, carol]) await joinCommunity(await getMemberContext({ id }, u!));
     const roles = (await listRoles(id)).filter((r) => !r.isDefault);
     if (roles[1]) await setMemberRole(ownerCtx, bob!, roles[1].id, true);
+    await seedRoleStyles(id);
     await addBlock(ownerCtx, 'richText', {
       heading: 'Getting started',
       doc: docFromText(`Welcome to ${c.name}! Introduce yourself, read the rules and say hi.`),

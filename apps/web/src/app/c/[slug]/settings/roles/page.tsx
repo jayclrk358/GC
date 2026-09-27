@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { listRoles, roleSummary } from '@magnox/core';
-import { ALL_PERMISSIONS } from '@magnox/shared';
+import { ALL_PERMISSIONS, themeBackdrops } from '@magnox/shared';
 import { loadCommunityForSettings } from '@/lib/community';
 import { PageHeader } from '@/components/ui/misc';
 import { RoleEditor } from '@/components/community-settings/role-editor';
@@ -19,6 +19,7 @@ export default async function RolesPage({ params }: { params: Promise<{ slug: st
       <RoleEditor
         communityId={community.id}
         roles={roles.map(roleSummary)}
+        backdrops={themeBackdrops(community.theme)}
         actor={{
           isOwner: ctx.isOwner,
           topPosition: Number.isFinite(ctx.topPosition) ? ctx.topPosition : 1_000_000,

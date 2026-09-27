@@ -64,6 +64,13 @@
       "when": 1790527445618,
       "tag": "0008_profile_details",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790529120270,
+      "tag": "0009_role_decor",
+      "breakpoints": true
     }
   ]
 }

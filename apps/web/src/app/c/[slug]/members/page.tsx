@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { listMembers, listRoles, roleSummary } from '@magnox/core';
+import { themeBackdrops } from '@magnox/shared';
 import { loadCommunity } from '@/lib/community';
 import { getPrefs } from '@/lib/prefs';
 import { MemberList } from '@/components/community/member-list';
@@ -34,6 +35,7 @@ export default async function MembersPage({
         roles={roles.map(roleSummary)}
         colorblind={prefs.colorblindRoleColors}
         query={q ?? ''}
+        backdrops={themeBackdrops(data.community.theme)}
       />
       <nav aria-label={t('pagination')} className="flex justify-between">
         {pageNum > 0 ? (

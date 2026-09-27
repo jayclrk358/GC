@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { RoleIcon } from './role-decor';
 
 /**
  * Role label with its colour. In colour-blind mode the dot becomes a lettered marker so roles can
@@ -7,11 +8,14 @@ import { cn } from '@/lib/utils';
 export function RoleBadge({
   name,
   color,
+  iconUrl,
   colorblind,
   className,
 }: {
   name: string;
   color: string | null;
+  /** The role's icon image; it replaces the colour dot (and tells roles apart on its own). */
+  iconUrl?: string | null;
   colorblind?: boolean;
   className?: string;
 }) {
@@ -22,7 +26,9 @@ export function RoleBadge({
         className,
       )}
     >
-      {colorblind ? (
+      {iconUrl ? (
+        <RoleIcon url={iconUrl} />
+      ) : colorblind ? (
         <span
           aria-hidden
           className="grid size-4 place-items-center rounded-full text-[10px] font-bold text-white"

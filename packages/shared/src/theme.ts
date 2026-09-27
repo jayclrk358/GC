@@ -206,8 +206,10 @@ export function themeToCss(
   layer: ThemeLayer = 'mx-community',
 ): string {
   const theme = themeSchema.parse(input);
-  const light = `color-scheme:light;${colorSetToDeclarations(theme.light)}`;
-  const dark = `color-scheme:dark;${colorSetToDeclarations(theme.dark)}`;
+  // --mx-l / --mx-d say which colour set is showing ("initial" = this one), so things drawn
+  // for both sets (like role name effects) can pick theirs. See .mx-name in globals.css.
+  const light = `color-scheme:light;--mx-l:initial;--mx-d: ;${colorSetToDeclarations(theme.light)}`;
+  const dark = `color-scheme:dark;--mx-l: ;--mx-d:initial;${colorSetToDeclarations(theme.dark)}`;
   const shared = [
     `--mx-radius:${RADIUS_VALUES[theme.radius]}`,
     `--mx-font-body:${FONT_STACKS[theme.fontBody]}`,
