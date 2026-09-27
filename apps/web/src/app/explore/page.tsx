@@ -6,6 +6,7 @@ import { LANGUAGES, REGIONS } from '@magnox/shared';
 import { CommunityCard } from '@/components/community/community-card';
 import { EmptyState, PageHeader } from '@/components/ui/misc';
 import { ExploreFilters } from '@/components/community/explore-filters';
+import { AutoRefresh } from '@/components/live/live';
 
 export const metadata = { title: 'Explore communities' };
 
@@ -44,6 +45,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
+      <AutoRefresh every={60} away={60} />
       <PageHeader title={t('title')} description={t('description')} />
       <div className="grid gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start">
         <ExploreFilters games={games} values={sp} />

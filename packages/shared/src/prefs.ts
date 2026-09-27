@@ -25,6 +25,8 @@ export const prefsSchema = z.object({
   communityThemes: z.boolean().default(true),
   focusRing: z.enum(['default', 'bold']).default('default'),
   chatAnnouncements: z.enum(['all', 'mentions', 'off']).default('mentions'),
+  /** New posts, replies and page updates: show them straight away, or announce and wait. */
+  liveUpdates: z.enum(['auto', 'announce']).default('auto'),
   shortcuts: z.boolean().default(true),
   singleKeyShortcuts: z.boolean().default(true),
   requireAltTextReminder: z.boolean().default(true),

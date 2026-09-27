@@ -18,6 +18,7 @@ import { CountUp } from '@/components/ui/count-up';
 import { CommunityCard } from '@/components/community/community-card';
 import { LiveServerRow } from '@/components/servers/live-server-row';
 import { getUser } from '@/lib/auth';
+import { AutoRefresh } from '@/components/live/live';
 import { cn, formatCount } from '@/lib/utils';
 
 interface Feature {
@@ -87,6 +88,7 @@ export default async function HomePage() {
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-16 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+      <AutoRefresh every={60} away={60} />
       <section
         aria-labelledby="hero-h"
         className="relative isolate overflow-hidden rounded-3xl border border-border bg-surface px-6 py-10 sm:px-10 sm:py-14"

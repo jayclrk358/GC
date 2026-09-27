@@ -5,6 +5,7 @@ import { browserGames, markEndpointsHot, searchServers } from '@magnox/core';
 import { EmptyState, PageHeader } from '@/components/ui/misc';
 import { ServerCard } from '@/components/servers/server-status';
 import { ServerFilters } from '@/components/servers/server-filters';
+import { AutoRefresh } from '@/components/live/live';
 
 export const metadata = { title: 'Server browser' };
 
@@ -26,6 +27,7 @@ export default async function ServersPage({ searchParams }: { searchParams: Prom
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
+      <AutoRefresh every={30} away={30} />
       <PageHeader title={t('browserTitle')} description={t('browserDescription')} />
       <div className="grid gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start">
         <ServerFilters games={games} values={sp} />

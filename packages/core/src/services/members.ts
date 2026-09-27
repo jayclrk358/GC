@@ -3,6 +3,7 @@ import { db, schema, type DbOrTx } from '@magnox/db';
 import { requireMember, type MemberContext } from '../access';
 import { AppError, forbidden } from '../errors';
 import { enforceRateLimit } from '../ratelimit';
+import { communityChanged } from '../emitter';
 import { cacheRedis } from '../redis';
 import { audit } from './audit';
 
@@ -68,6 +69,7 @@ export async function joinCommunity(ctx: MemberContext): Promise<void> {
   await db.transaction(async (tx) => {
     await addMember(tx, ctx.community.id, ctx.userId!);
   });
+  communityChanged(ctx.community.id, ctx.userId);
 }
 
 export async function leaveCommunity(ctx: MemberContext): Promise<void> {

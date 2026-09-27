@@ -15,6 +15,7 @@ import {
 import { z } from 'zod';
 import { requirePerm, type MemberContext } from '../access';
 import { AppError, forbidden, notFound } from '../errors';
+import { communityChanged } from '../emitter';
 import { enforceRateLimit } from '../ratelimit';
 import { audit } from './audit';
 import { queueFanout } from './notify';
@@ -145,6 +146,7 @@ export async function createWikiPage(ctx: MemberContext, raw: unknown): Promise<
       summary: input.summary || 'Created page',
     });
   });
+  communityChanged(ctx.community.id, ctx.userId);
   return { slug };
 }
 
@@ -197,6 +199,7 @@ export async function updateWikiPage(
       .where(eq(schema.wikiPages.id, page.id));
   });
   await queueFanout({ kind: 'wiki_edit', pageId: page.id, revisionId });
+  communityChanged(ctx.community.id, ctx.userId);
   return { slug };
 }
 
@@ -294,6 +297,7 @@ export async function restoreRevision(
       })
       .where(eq(schema.wikiPages.id, pageId));
   });
+  communityChanged(ctx.community.id, ctx.userId);
 }
 
 export async function setWikiProtected(

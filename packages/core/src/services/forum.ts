@@ -596,6 +596,10 @@ export async function createReply(
   realtime()
     .to(rooms.thread(thread.id))
     .emit('post:new', { threadId: thread.id, postId, authorId: ctx.userId });
+  // Thread lists show reply counts and sort by activity.
+  realtime()
+    .to(rooms.channel(channel.id))
+    .emit('thread:activity', { channelId: channel.id, threadId: thread.id });
   return { id: postId };
 }
 

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { CheckCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAutoUpdates, useLiveRefresh } from '@/lib/live';
 import { useUserEvents } from '@/lib/realtime';
 import { markReadAction } from '@/app/actions/notifications';
 import { NotificationItem, type NotificationData } from './notification-item';
@@ -33,8 +34,16 @@ export function NotificationList({
     setFresh(0);
   }
 
+  const auto = useAutoUpdates();
+  const refresh = useLiveRefresh();
+  // A refresh reloads the first page, so once older pages are loaded, offer it instead.
+  const paged = items.length > initial.length;
+
   useUserEvents({
-    'notification:new': () => setFresh((n) => n + 1),
+    'notification:new': () => {
+      if (auto && !paged) refresh();
+      else setFresh((n) => n + 1);
+    },
     'notification:read': (p: { ids: 'all' | string[] }) =>
       setItems((list) =>
         list.map((i) =>

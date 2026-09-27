@@ -1,33 +1,15 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import {
   createCommunity,
   expectAccessible,
   joinAsMember,
+  post,
+  reply,
   setScheme,
   signUp,
+  startThread,
   uniqueUser,
 } from './helpers';
-
-async function startThread(page: Page, slug: string, channel: string, title: string, body: string) {
-  await page.goto(`/c/${slug}/forum/${channel}/new`);
-  await page.getByLabel('Title').fill(title);
-  await page.getByRole('textbox', { name: 'Message' }).fill(body);
-  await page.getByRole('button', { name: 'Post thread' }).click();
-  await page.waitForURL(/\/t\/[0-9a-f-]{36}$/);
-  await expect(page.getByRole('heading', { level: 2, name: title })).toBeVisible();
-  return page.url();
-}
-
-/** One post in a thread (the thread itself is also an article, so match post ids). */
-function post(page: Page, text: string) {
-  return page.locator('article[id^="post-"]').filter({ hasText: text });
-}
-
-async function reply(page: Page, text: string) {
-  await page.getByRole('textbox', { name: 'Your reply' }).fill(text);
-  await page.getByRole('button', { name: 'Post reply' }).click();
-  await expect(post(page, text)).toBeVisible();
-}
 
 test.describe('forum', () => {
   test('thread with a poll, reactions, a reply and a live notification', async ({
@@ -81,10 +63,11 @@ test.describe('forum', () => {
     await member.page.goto(threadUrl);
     await reply(member.page, 'Taiga has the best wood.');
     await expect(page.getByRole('button', { name: 'Notifications, 1 unread' })).toBeVisible();
+    const name = new RegExp(`${member.user.name} replied in Which biome`);
+    // The open notifications page picks it up too, without a reload.
+    await expect(page.getByRole('main').getByRole('link', { name })).toBeVisible();
     await page.getByRole('button', { name: 'Notifications, 1 unread' }).click();
-    const item = page.getByRole('link', {
-      name: new RegExp(`${member.user.name} replied in Which biome`),
-    });
+    const item = page.getByRole('dialog').getByRole('link', { name });
     await expect(item).toBeVisible();
     await expectAccessible(page, 'notification popover');
     await item.click();

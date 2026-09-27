@@ -292,6 +292,21 @@ export function PrefsEditor() {
       </SettingsSection>
 
       <SettingsSection id="interaction" title={t('sections.interaction')}>
+        <Field label={t('liveUpdates')} description={t('liveUpdatesDesc')}>
+          {(p) => (
+            <Select
+              {...p}
+              value={prefs.liveUpdates}
+              onChange={(e) => update({ liveUpdates: e.target.value as Prefs['liveUpdates'] })}
+            >
+              {(['auto', 'announce'] as const).map((v) => (
+                <option key={v} value={v}>
+                  {t(`liveUpdatesOptions.${v}`)}
+                </option>
+              ))}
+            </Select>
+          )}
+        </Field>
         <SwitchField
           label={t('shortcuts')}
           description={t('shortcutsDesc')}

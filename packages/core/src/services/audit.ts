@@ -1,5 +1,6 @@
 import { schema, type DbOrTx } from '@magnox/db';
 import { newId } from '@magnox/shared';
+import { communityChanged } from '../emitter';
 
 export interface AuditEntry {
   communityId: string;
@@ -22,6 +23,8 @@ export async function audit(tx: DbOrTx, entry: AuditEntry): Promise<void> {
     diff: entry.diff ?? null,
     reason: entry.reason ?? null,
   });
+  // Chat deletions already reach open channels as message events.
+  if (!entry.action.startsWith('message.')) communityChanged(entry.communityId, entry.actorId);
 }
 
 /** Shallow diff of changed keys, for audit entries. */

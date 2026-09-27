@@ -5,6 +5,7 @@ import { mediaUrl } from '@/lib/media';
 import { CommunityHeader } from '@/components/community/community-header';
 import { CommunityThemeStyle } from '@/components/community/theme-style';
 import { DenseOnChat } from '@/components/community/dense-on-chat';
+import { CommunityLive } from '@/components/live/live';
 
 export async function generateMetadata({
   params,
@@ -35,6 +36,7 @@ export default async function CommunityLayout({
       className="relative isolate flex flex-1 flex-col bg-bg font-sans text-fg"
     >
       <CommunityThemeStyle theme={data.community.theme} />
+      <CommunityLive communityId={data.community.id} userId={data.user?.id ?? null} />
       {bg && (
         <div
           aria-hidden

@@ -218,7 +218,13 @@
     "keymapDesc": "Press a new key combination. Use Backspace to reset a shortcut.",
     "resetAll": "Reset to defaults",
     "saved": "Preferences saved",
-    "previewLink": "Links look like this."
+    "previewLink": "Links look like this.",
+    "liveUpdates": "New posts and updates",
+    "liveUpdatesDesc": "How new threads, replies, notifications and other changes appear while you're on a page.",
+    "liveUpdatesOptions": {
+      "auto": "Show them straight away",
+      "announce": "Tell me, and wait until I load them"
+    }
   },
   "home": {
     "eyebrow": "Community hubs for gamers",

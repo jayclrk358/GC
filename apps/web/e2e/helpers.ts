@@ -119,3 +119,30 @@ export async function joinAsMember(browser: Browser, slug: string, prefix = 'mem
   await expect(page.getByRole('button', { name: /Joined/ })).toBeVisible();
   return { user, page, context };
 }
+
+export async function startThread(
+  page: Page,
+  slug: string,
+  channel: string,
+  title: string,
+  body: string,
+) {
+  await page.goto(`/c/${slug}/forum/${channel}/new`);
+  await page.getByLabel('Title').fill(title);
+  await page.getByRole('textbox', { name: 'Message' }).fill(body);
+  await page.getByRole('button', { name: 'Post thread' }).click();
+  await page.waitForURL(/\/t\/[0-9a-f-]{36}$/);
+  await expect(page.getByRole('heading', { level: 2, name: title })).toBeVisible();
+  return page.url();
+}
+
+/** One post in a thread (the thread itself is also an article, so match post ids). */
+export function post(page: Page, text: string) {
+  return page.locator('article[id^="post-"]').filter({ hasText: text });
+}
+
+export async function reply(page: Page, text: string) {
+  await page.getByRole('textbox', { name: 'Your reply' }).fill(text);
+  await page.getByRole('button', { name: 'Post reply' }).click();
+  await expect(post(page, text)).toBeVisible();
+}

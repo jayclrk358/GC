@@ -22,6 +22,7 @@ import { getPrefs } from '@/lib/prefs';
 import { AppProviders } from '@/components/shell/app-providers';
 import { SiteHeader } from '@/components/shell/site-header';
 import { SiteFooter } from '@/components/shell/site-footer';
+import { AutoRefresh } from '@/components/live/live';
 import { AppSidebar, type SidebarCommunity } from '@/components/shell/app-sidebar';
 import { SIDEBAR_COOKIE } from '@/lib/sidebar';
 
@@ -78,6 +79,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="min-h-dvh">
         <NextIntlClientProvider>
           <AppProviders prefs={prefs} signedIn={Boolean(user)}>
+            <AutoRefresh />
             <a href="#main" className="skip-link">
               {t('skipToContent')}
             </a>
