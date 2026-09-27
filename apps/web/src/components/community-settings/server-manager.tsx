@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { BellRing, Pencil, Plus, RefreshCw, ShieldAlert, ShieldCheck, Trash2 } from 'lucide-react';
 import type { ServerView } from '@magnox/core';
-import { REGIONS, type ServerProtocol } from '@magnox/shared';
+import { isLinkProtocol, REGIONS, type ServerProtocol } from '@magnox/shared';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Field } from '@/components/ui/field';
@@ -110,30 +110,52 @@ function ServerForm({
           </Select>
         )}
       </Field>
-      <div className="grid gap-4 sm:grid-cols-[2fr_1fr]">
-        <Field label={t('host')} description={t('hostHint')} error={fields.host} required>
+      {isLinkProtocol(v.protocol) ? (
+        <Field
+          label={t('experienceLink')}
+          description={t('experienceLinkHint')}
+          error={fields.host}
+          required
+        >
           {(p) => (
             <Input
               {...p}
+              type="url"
+              inputMode="url"
               value={v.host}
               autoCapitalize="none"
               spellCheck={false}
-              placeholder="play.example.com"
+              placeholder="https://www.roblox.com/games/…"
               onChange={(e) => set('host', e.target.value)}
             />
           )}
         </Field>
-        <Field label={t('port')} description={t('portHint')} error={fields.port} required>
-          {(p) => (
-            <Input
-              {...p}
-              value={v.port}
-              inputMode="numeric"
-              onChange={(e) => set('port', e.target.value.replace(/\D/g, '').slice(0, 5))}
-            />
-          )}
-        </Field>
-      </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-[2fr_1fr]">
+          <Field label={t('host')} description={t('hostHint')} error={fields.host} required>
+            {(p) => (
+              <Input
+                {...p}
+                value={v.host}
+                autoCapitalize="none"
+                spellCheck={false}
+                placeholder="play.example.com"
+                onChange={(e) => set('host', e.target.value)}
+              />
+            )}
+          </Field>
+          <Field label={t('port')} description={t('portHint')} error={fields.port} required>
+            {(p) => (
+              <Input
+                {...p}
+                value={v.port}
+                inputMode="numeric"
+                onChange={(e) => set('port', e.target.value.replace(/\D/g, '').slice(0, 5))}
+              />
+            )}
+          </Field>
+        </div>
+      )}
       <Field label={t('descriptionLabel')} error={fields.description}>
         {(p) => (
           <Textarea
@@ -245,13 +267,17 @@ function ServerRow({
           {!status.checkedAt
             ? ts('checking')
             : status.online
-              ? `${ts('online')} · ${status.players ?? '?'}/${status.maxPlayers ?? '?'}`
+              ? `${ts('online')} · ${
+                  status.maxPlayers === null
+                    ? ts('playing', { count: status.players ?? 0 })
+                    : `${status.players ?? '?'}/${status.maxPlayers}`
+                }`
               : ts('offline')}
         </p>
       </div>
       {!server.verified && server.verifyToken && (
         <Alert tone="info" title={t('verifyTitle')}>
-          <p>{t('verifyBody')}</p>
+          <p>{isLinkProtocol(server.protocol) ? t('verifyBodyRoblox') : t('verifyBody')}</p>
           <p className="mt-2">
             <code className="rounded bg-surface-2 px-2 py-1 font-mono text-sm select-all">
               {server.verifyToken}

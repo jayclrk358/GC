@@ -2,10 +2,10 @@
 
 import { useTranslations } from 'next-intl';
 import { ExternalLink } from 'lucide-react';
-import type { ServerStatus } from '@magnox/shared';
+import { isLinkProtocol, type ServerStatus } from '@magnox/shared';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/misc';
-import { CopyAddress, StatusDot, useLiveStatus } from './server-status';
+import { CopyAddress, PlayButton, StatusDot, useLiveStatus } from './server-status';
 
 /** Status, players and join details, kept live over the socket. */
 export function LiveStatusPanel({
@@ -13,12 +13,17 @@ export function LiveStatusPanel({
   initial,
   address,
   connectUrl,
+  protocol,
+  name,
 }: {
   endpointId: string;
   initial: ServerStatus;
   address: string;
   connectUrl: string | null;
+  protocol: string;
+  name: string;
 }) {
+  const link = isLinkProtocol(protocol);
   const t = useTranslations('servers');
   const status = useLiveStatus(endpointId, initial);
   const checked = status.checkedAt !== null;
@@ -40,7 +45,15 @@ export function LiveStatusPanel({
           <span className="text-sm text-muted">{t('ping', { ms: status.pingMs })}</span>
         )}
       </div>
-      {status.online && (
+      {status.online && status.maxPlayers === null && (
+        <p className="flex items-baseline justify-between gap-2">
+          <span className="text-sm text-muted">{t('players')}</span>
+          <span className="font-heading text-2xl font-bold">
+            {t('playing', { count: status.players ?? 0 })}
+          </span>
+        </p>
+      )}
+      {status.online && status.maxPlayers !== null && (
         <div>
           <p className="flex items-baseline justify-between gap-2">
             <span className="text-sm text-muted">{t('players')}</span>
@@ -78,8 +91,12 @@ export function LiveStatusPanel({
         </dl>
       )}
       <div className="flex flex-wrap gap-2">
-        <CopyAddress address={address} />
-        {connectUrl && (
+        {link && connectUrl ? (
+          <PlayButton href={connectUrl} name={name} />
+        ) : (
+          <CopyAddress address={address} />
+        )}
+        {connectUrl && !link && (
           <Button asChild size="sm">
             <a href={connectUrl}>
               <ExternalLink aria-hidden /> {t('connect')}

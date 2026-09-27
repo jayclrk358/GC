@@ -39,6 +39,8 @@ const schema = z.object({
     .string()
     .url()
     .default('https://challenges.cloudflare.com/turnstile/v0/siteverify'),
+  /** Only for tests: a stand-in for Roblox's public APIs (apis. and games.roblox.com). */
+  ROBLOX_API_URL: z.string().default(''),
   PLATFORM_ADMIN_EMAILS: z.string().default(''),
   DISABLE_RATE_LIMITS: bool,
   WORKER_HEALTH_PORT: z.coerce.number().int().default(3002),

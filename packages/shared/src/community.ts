@@ -66,6 +66,17 @@ export function isPlayUrl(url: string): boolean {
   }
 }
 
+/** The place id from a Roblox experience link (or a bare id), else null. */
+export function robloxPlaceId(input: string): string | null {
+  const v = input.trim();
+  if (/^\d{1,20}$/.test(v)) return v;
+  return ROBLOX_GAME_RE.exec(v)?.[1] ?? null;
+}
+
+/** Roblox's launch link for a place: opens the game in the Roblox app (or offers to install it). */
+export const robloxLaunchUrl = (placeId: string) =>
+  `https://www.roblox.com/games/start?placeId=${placeId}`;
+
 /**
  * Turn a community's play link into the Play button's target. A Roblox experience page becomes
  * Roblox's launch link, which opens the game in the Roblox app (or offers to install it).
@@ -75,7 +86,7 @@ export function playLink(url: string | null | undefined): PlayLink | null {
   const roblox = ROBLOX_GAME_RE.exec(url);
   if (roblox) {
     return {
-      href: `https://www.roblox.com/games/start?placeId=${roblox[1]}`,
+      href: robloxLaunchUrl(roblox[1]!),
       platform: 'roblox',
       host: 'roblox.com',
     };

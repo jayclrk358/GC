@@ -80,7 +80,7 @@ export const GAMES: {
   { id: 'stardew-valley', name: 'Stardew Valley', steamAppId: 413150, color: '#6fa43a' },
   { id: 'rocket-league', name: 'Rocket League', steamAppId: 252950, color: '#1a73e8' },
   { id: 'among-us', name: 'Among Us', steamAppId: 945360, color: '#c51111' },
-  { id: 'roblox', name: 'Roblox', color: '#e2231a' },
+  { id: 'roblox', name: 'Roblox', protocol: 'roblox', color: '#e2231a' },
   { id: 'deep-rock-galactic', name: 'Deep Rock Galactic', steamAppId: 548430, color: '#d17d1b' },
   { id: 'satisfactory', name: 'Satisfactory', steamAppId: 526870, color: '#f39c12' },
   { id: 'other', name: 'Other / multiple games', color: '#6b7280' },

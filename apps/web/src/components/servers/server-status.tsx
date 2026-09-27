@@ -3,8 +3,8 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { Check, Copy, ExternalLink, ShieldCheck, ThumbsUp, Users } from 'lucide-react';
-import type { ServerStatus } from '@magnox/shared';
+import { Check, Copy, ExternalLink, Play, ShieldCheck, ThumbsUp, Users } from 'lucide-react';
+import { isLinkProtocol, type ServerStatus } from '@magnox/shared';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/misc';
 import { useRoom } from '@/lib/realtime';
@@ -48,6 +48,23 @@ export function StatusDot({ online, className }: { online: boolean; className?: 
       aria-hidden
       className={cn('inline-block size-2.5 rotate-45 border-2 border-danger', className)}
     />
+  );
+}
+
+/** Opens a Roblox experience in the Roblox app. */
+export function PlayButton({ href, name }: { href: string; name: string }) {
+  const t = useTranslations('servers');
+  return (
+    <Button asChild size="sm" variant="play">
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={t('playOnRoblox', { name })}
+      >
+        <Play aria-hidden className="fill-current" /> {t('play')}
+      </a>
+    </Button>
   );
 }
 
@@ -135,7 +152,15 @@ export function ServerCard({
         </Badge>
       </header>
 
-      {showPlayers && status.online && (
+      {showPlayers && status.online && status.maxPlayers === null && (
+        <p className="flex justify-between text-sm">
+          <span>{t('players')}</span>
+          <span className="font-semibold tabular-nums">
+            {t('playing', { count: status.players ?? 0 })}
+          </span>
+        </p>
+      )}
+      {showPlayers && status.online && status.maxPlayers !== null && (
         <div>
           <p className="flex justify-between text-sm">
             <span>{t('players')}</span>
@@ -213,8 +238,12 @@ export function ServerCard({
       )}
 
       <div className="mt-auto flex flex-wrap items-center gap-2">
-        <CopyAddress address={server.address} />
-        {server.connectUrl && (
+        {isLinkProtocol(server.protocol) && server.connectUrl ? (
+          <PlayButton href={server.connectUrl} name={server.name} />
+        ) : (
+          <CopyAddress address={server.address} />
+        )}
+        {server.connectUrl && !isLinkProtocol(server.protocol) && (
           <Button asChild size="sm" variant="outline">
             <a href={server.connectUrl}>
               <ExternalLink aria-hidden /> {t('connect')}

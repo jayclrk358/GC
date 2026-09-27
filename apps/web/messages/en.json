@@ -431,7 +431,10 @@
     "pagination": "Pagination",
     "previous": "Previous page",
     "next": "Next page",
-    "pageOf": "Page {page} of {pages}"
+    "pageOf": "Page {page} of {pages}",
+    "playing": "{count, plural, one {# playing} other {# playing}}",
+    "play": "Play",
+    "playOnRoblox": "Play {name} on Roblox (opens in a new tab)"
   },
   "invites": {
     "invite": "Invite",
@@ -1345,7 +1348,10 @@
     "testVoteName": "Minecraft username",
     "testVoteSend": "Send test vote",
     "testVoteSent": "Test vote delivered.",
-    "saveSettings": "Save settings"
+    "saveSettings": "Save settings",
+    "experienceLink": "Experience link",
+    "experienceLinkHint": "The link to your Roblox experience, like https://www.roblox.com/games/123456/My-Game.",
+    "verifyBodyRoblox": "Add this code anywhere in your experience’s description on Roblox, then press “Check now”:"
   },
   "themeToggle": {
     "label": "Colour scheme: {current}",

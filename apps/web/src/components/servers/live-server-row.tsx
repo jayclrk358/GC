@@ -30,10 +30,12 @@ export function LiveServerRow({
       </div>
       {status.online && (
         <p className="font-heading text-sm font-semibold tabular-nums">
-          {th('playersOf', {
-            players: status.players ?? 0,
-            max: status.maxPlayers ?? 0,
-          })}
+          {status.maxPlayers === null
+            ? t('playing', { count: status.players ?? 0 })
+            : th('playersOf', {
+                players: status.players ?? 0,
+                max: status.maxPlayers,
+              })}
         </p>
       )}
     </div>

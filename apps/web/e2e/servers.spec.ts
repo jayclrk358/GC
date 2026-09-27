@@ -140,6 +140,68 @@ test.describe('game servers', () => {
     await context.close();
   });
 
+  test('a Roblox experience is listed by its link, verified and playable', async ({
+    page,
+    request,
+  }) => {
+    test.setTimeout(150_000);
+    // A fresh place id each run, so the listing gets its own endpoint.
+    const placeId = String(900_000_000 + Math.floor(Math.random() * 90_000_000));
+    await request.post(`${FIXTURE_CTL}/roblox`, {
+      data: { name: 'Fixture Obby', description: 'An obby for tests.', playing: 42 },
+    });
+    await signUp(page, uniqueUser('roblox'), '/new');
+    const { slug } = await createCommunity(page, { template: 'Game server' });
+    await page.goto(`/c/${slug}/settings/servers`);
+    await page.getByRole('button', { name: 'Add server' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Add a game server' });
+    const name = `Obby ${Date.now().toString(36)}`;
+    await dialog.getByLabel('Display name').fill(name);
+    await choose(dialog.getByLabel('Game'), 'Roblox experience');
+    await expect(dialog.getByLabel('Address')).toHaveCount(0);
+    await dialog.getByLabel('Experience link').fill('https://example.com/not-roblox');
+    await dialog.getByRole('button', { name: 'Add server' }).click();
+    await expect(
+      dialog.getByText('Paste the link to your Roblox experience').first(),
+    ).toBeVisible();
+    await dialog
+      .getByLabel('Experience link')
+      .fill(`https://www.roblox.com/games/${placeId}/Fixture-Obby`);
+    await expectAccessible(page, 'Roblox listing form');
+    await dialog.getByRole('button', { name: 'Add server' }).click();
+    await expect(dialog).toBeHidden();
+    const row = page.getByRole('listitem').filter({ hasText: name });
+    await expect(row).toContainText('Online · 42 playing', { timeout: 20_000 });
+
+    // Ownership: the code goes in the experience's description.
+    await expect(row).toContainText('experience’s description');
+    const token = (await row.locator('code').innerText()).trim();
+    await request.post(`${FIXTURE_CTL}/roblox`, {
+      data: { description: `An obby for tests. ${token}`, playing: 57 },
+    });
+    await row.getByRole('button', { name: /Check now/ }).click();
+    await expect(async () => {
+      await page.reload();
+      await expect(page.getByRole('listitem').filter({ hasText: name })).toContainText('Verified', {
+        timeout: 2_000,
+      });
+    }).toPass({ timeout: 60_000 });
+
+    const play = `Play ${name} on Roblox (opens in a new tab)`;
+    await page.goto(`/servers?q=${encodeURIComponent(name)}`);
+    const card = page.getByRole('article').filter({ hasText: name });
+    await expect(card.getByRole('link', { name: play })).toHaveAttribute(
+      'href',
+      `https://www.roblox.com/games/start?placeId=${placeId}`,
+    );
+    await expect(card).toContainText('57 playing');
+    await expectAccessible(page, 'server browser with a Roblox listing');
+    await card.getByRole('link', { name, exact: true }).click();
+    await expect(page.getByRole('heading', { level: 1, name })).toBeVisible();
+    await expect(page.getByRole('link', { name: play })).toBeVisible();
+    await expectAccessible(page, 'Roblox listing page');
+  });
+
   test('down and back-up alerts are posted in chat', async ({ page, request }) => {
     test.setTimeout(240_000);
     await request.post(`${FIXTURE_CTL}/minecraft`, { data: { online: true, players: 5 } });

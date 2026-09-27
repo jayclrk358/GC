@@ -3,7 +3,9 @@ import { and, eq, gt, isNull } from 'drizzle-orm';
 import { db, schema, sql } from '@magnox/db';
 import {
   BlockedAddressError,
+  cacheRedis,
   cleanServerText,
+  env,
   declareDown,
   declareUp,
   POLL,
@@ -22,7 +24,7 @@ import {
   shouldGoDormant,
   UnresolvableHostError,
 } from '@magnox/core';
-import { SERVER_PROTOCOLS, type ServerProtocol } from '@magnox/shared';
+import { isLinkProtocol, SERVER_PROTOCOLS, type ServerProtocol } from '@magnox/shared';
 
 const log = logger('poll');
 
@@ -97,6 +99,67 @@ async function query(protocol: ServerProtocol, host: string, port: number): Prom
   }
 }
 
+/** Roblox's public APIs, or the test stand-in. */
+function robloxUrl(kind: 'universe' | 'games', id: string): string {
+  const base = env().ROBLOX_API_URL;
+  return kind === 'universe'
+    ? `${base || 'https://apis.roblox.com'}/universes/v1/places/${id}/universe`
+    : `${base || 'https://games.roblox.com'}/v1/games?universeIds=${id}`;
+}
+
+async function robloxJson<T>(url: string): Promise<T | null> {
+  const res = await fetch(url, {
+    redirect: 'error',
+    signal: AbortSignal.timeout(5000),
+    headers: { accept: 'application/json' },
+  });
+  if (res.status === 404 || res.status === 400) return null;
+  if (!res.ok) throw new Error(`roblox ${res.status}`);
+  return (await res.json()) as T;
+}
+
+/**
+ * A Roblox experience: name, description and how many people are playing right now, from
+ * Roblox's public games API. The description carries the ownership code, like a MOTD.
+ */
+async function queryRoblox(placeId: string): Promise<QueryOutcome> {
+  // Shared budget so a burst of listings can't hammer Roblox's API.
+  if (!(await rateLimit('poll-roblox', 120, 60)).ok) return { ok: false, error: 'rate_limited' };
+  try {
+    const key = `roblox-universe:${placeId}`;
+    let universeId = await cacheRedis().get(key);
+    if (!universeId) {
+      const u = await robloxJson<{ universeId: number | null }>(robloxUrl('universe', placeId));
+      if (!u?.universeId) return { ok: false, error: 'dns' };
+      universeId = String(u.universeId);
+      await cacheRedis().set(key, universeId, 'EX', 86_400);
+    }
+    const games = await robloxJson<{
+      data: { name?: string; description?: string | null; playing?: number }[];
+    }>(robloxUrl('games', universeId));
+    const game = games?.data?.[0];
+    if (!game) return { ok: false, error: 'dns' };
+    const result = {
+      name: game.name ?? '',
+      map: '',
+      password: false,
+      // Roblox runs many servers per experience; "max players" is per server, so it isn't shown.
+      numplayers: Number.isFinite(game.playing) ? game.playing! : 0,
+      maxplayers: Number.NaN,
+      players: [],
+      bots: [],
+      connect: '',
+      ping: Number.NaN,
+      version: '',
+      queryPort: 0,
+      raw: { description: game.description ?? '' },
+    } as unknown as QueryResult;
+    return { ok: true, result };
+  } catch {
+    return { ok: false, error: 'timeout' };
+  }
+}
+
 function extractMotd(result: QueryResult): string {
   const raw = result.raw as Record<string, unknown> | undefined;
   const desc =
@@ -135,7 +198,9 @@ export async function pollEndpoint(endpointId: string): Promise<void> {
   const protocol = (
     endpoint.protocol in SERVER_PROTOCOLS ? endpoint.protocol : 'source'
   ) as ServerProtocol;
-  const outcome = await query(protocol, endpoint.host, endpoint.port);
+  const outcome = isLinkProtocol(protocol)
+    ? await queryRoblox(endpoint.host)
+    : await query(protocol, endpoint.host, endpoint.port);
   const now = new Date();
   const hot = Boolean(endpoint.hotUntil && endpoint.hotUntil > now);
   const important = listings.some((l) => l.listed || l.verifiedAt);

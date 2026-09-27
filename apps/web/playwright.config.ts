@@ -1,7 +1,12 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const prod = Boolean(process.env.E2E_PROD);
-const env = { DISABLE_RATE_LIMITS: 'true', SERVER_QUERY_ALLOW_PRIVATE: 'true' };
+const env = {
+  DISABLE_RATE_LIMITS: 'true',
+  SERVER_QUERY_ALLOW_PRIVATE: 'true',
+  // The fixture server stands in for Roblox's public APIs.
+  ROBLOX_API_URL: 'http://127.0.0.1:25591/roblox',
+};
 const chromiumPath = process.env.PW_CHROMIUM_PATH;
 
 export default defineConfig({

@@ -1,3 +1,5 @@
+import { robloxLaunchUrl } from './community';
+
 /** Protocols we know how to query, mapped to GameDig types. */
 export const SERVER_PROTOCOLS = {
   minecraft: { label: 'Minecraft (Java)', gamedig: 'minecraft', defaultPort: 25565, steam: false },
@@ -29,6 +31,9 @@ export const SERVER_PROTOCOLS = {
   sevendays: { label: '7 Days to Die', gamedig: 'sdtd', defaultPort: 26900, steam: true },
   dayz: { label: 'DayZ', gamedig: 'dayz', defaultPort: 27016, steam: true },
   squad: { label: 'Squad', gamedig: 'squad', defaultPort: 27165, steam: true },
+  // Not a server you connect to: a Roblox experience, listed by its link and polled through
+  // Roblox's public games API. Its "host" is the place id and its port is 0.
+  roblox: { label: 'Roblox experience', gamedig: '', defaultPort: 0, steam: false },
 } as const;
 
 export type ServerProtocol = keyof typeof SERVER_PROTOCOLS;
@@ -45,13 +50,20 @@ export interface ServerStatus {
   checkedAt: string | null;
 }
 
+/** Listings found by a link (a Roblox experience) rather than an address to connect to. */
+export function isLinkProtocol(protocol: string): protocol is 'roblox' {
+  return protocol === 'roblox';
+}
+
 export function connectLink(protocol: ServerProtocol, host: string, port: number): string | null {
+  if (isLinkProtocol(protocol)) return robloxLaunchUrl(host);
   if (!SERVER_PROTOCOLS[protocol].steam) return null;
   const h = host.includes(':') ? `[${host}]` : host;
   return `steam://connect/${h}:${port}`;
 }
 
 export function displayAddress(protocol: ServerProtocol, host: string, port: number): string {
+  if (isLinkProtocol(protocol)) return `roblox.com/games/${host}`;
   const h = host.includes(':') ? `[${host}]` : host;
   return port === SERVER_PROTOCOLS[protocol].defaultPort ? h : `${h}:${port}`;
 }

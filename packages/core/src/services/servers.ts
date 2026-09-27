@@ -3,6 +3,7 @@ import { db, schema } from '@magnox/db';
 import {
   connectLink,
   displayAddress,
+  isLinkProtocol,
   newId,
   Permission,
   randomToken,
@@ -207,9 +208,12 @@ function mapResolveError(e: unknown): never {
 }
 
 async function findOrCreateEndpoint(protocol: ServerProtocol, host: string, port: number) {
-  const target = await resolveTarget(host, port, {
-    srvService: protocol === 'minecraft' ? '_minecraft._tcp' : undefined,
-  }).catch(mapResolveError);
+  // A Roblox experience has no address to resolve: it's polled through Roblox's API.
+  const target = isLinkProtocol(protocol)
+    ? { ip: null }
+    : await resolveTarget(host, port, {
+        srvService: protocol === 'minecraft' ? '_minecraft._tcp' : undefined,
+      }).catch(mapResolveError);
 
   const existing = await db.query.serverEndpoints.findFirst({
     where: and(
@@ -227,12 +231,14 @@ async function findOrCreateEndpoint(protocol: ServerProtocol, host: string, port
     return existing.id;
   }
 
-  const [{ n } = { n: 0 }] = await db
-    .select({ n: sql<number>`count(distinct ${schema.serverEndpoints.port})::int` })
-    .from(schema.serverEndpoints)
-    .where(eq(schema.serverEndpoints.resolvedIp, target.ip));
-  if (n >= MAX_ENDPOINTS_PER_IP) {
-    throw new AppError('forbidden', 'Too many servers are registered at this address.');
+  if (target.ip) {
+    const [{ n } = { n: 0 }] = await db
+      .select({ n: sql<number>`count(distinct ${schema.serverEndpoints.port})::int` })
+      .from(schema.serverEndpoints)
+      .where(eq(schema.serverEndpoints.resolvedIp, target.ip));
+    if (n >= MAX_ENDPOINTS_PER_IP) {
+      throw new AppError('forbidden', 'Too many servers are registered at this address.');
+    }
   }
   const id = newId();
   await db

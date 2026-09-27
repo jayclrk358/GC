@@ -138,6 +138,8 @@ export default async function ServerPage({ params }: Params) {
             initial={server.status}
             address={server.address}
             connectUrl={server.connectUrl}
+            protocol={server.protocol}
+            name={server.name}
           />
           {!server.private && (
             <VotePanel

@@ -1,27 +1,53 @@
 import { z } from 'zod';
-import { PROTOCOL_KEYS, SERVER_SORTS } from './game-server';
+import { robloxPlaceId } from './community';
+import { isLinkProtocol, PROTOCOL_KEYS, SERVER_SORTS } from './game-server';
 
 // Input validation for game servers, the browser and votes (constants are in game-server.ts).
 
 const HOSTNAME_RE =
   /^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$|^\d{1,3}(?:\.\d{1,3}){3}$|^\[?[0-9a-f:]{2,39}\]?$/i;
 
-export const serverInputSchema = z.object({
-  name: z.string().trim().min(2).max(80),
-  protocol: z.enum(PROTOCOL_KEYS),
-  host: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .max(253)
-    .regex(HOSTNAME_RE, 'Enter a hostname like play.example.com or an IP address')
-    .transform((h) => h.replace(/^\[|\]$/g, '')),
-  port: z.number().int().min(1).max(65535),
-  description: z.string().trim().max(500).default(''),
-  tags: z.array(z.string().trim().toLowerCase().max(24)).max(8).default([]),
-  region: z.string().max(32).default('global'),
-  listed: z.boolean().default(true),
-});
+export const serverInputSchema = z
+  .object({
+    name: z.string().trim().min(2).max(80),
+    protocol: z.enum(PROTOCOL_KEYS),
+    /** Hostname or IP, or for a Roblox experience its link (or place id). */
+    host: z.string().trim().max(300),
+    port: z.number().int().min(0).max(65535),
+    description: z.string().trim().max(500).default(''),
+    tags: z.array(z.string().trim().toLowerCase().max(24)).max(8).default([]),
+    region: z.string().max(32).default('global'),
+    listed: z.boolean().default(true),
+  })
+  .transform((v, ctx) => {
+    if (isLinkProtocol(v.protocol)) {
+      const placeId = robloxPlaceId(v.host);
+      if (!placeId) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['host'],
+          message: 'Paste the link to your Roblox experience (roblox.com/games/…)',
+        });
+        return z.NEVER;
+      }
+      return { ...v, host: placeId, port: 0 };
+    }
+    const host = v.host.toLowerCase();
+    let ok = true;
+    if (host.length > 253 || !HOSTNAME_RE.test(host)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['host'],
+        message: 'Enter a hostname like play.example.com or an IP address',
+      });
+      ok = false;
+    }
+    if (v.port < 1) {
+      ctx.addIssue({ code: 'custom', path: ['port'], message: 'Enter a port from 1 to 65535' });
+      ok = false;
+    }
+    return ok ? { ...v, host: host.replace(/^\[|\]$/g, '') } : z.NEVER;
+  });
 export type ServerInput = z.infer<typeof serverInputSchema>;
 
 const optionalText = (max: number) =>

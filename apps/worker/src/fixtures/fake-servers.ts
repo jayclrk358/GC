@@ -4,6 +4,8 @@
  *   Source A2S query (UDP)            : FAKE_A2S_PORT  (default 27090)
  *   Control API (HTTP)                : FAKE_CTL_PORT  (default 25591)
  *   NuVotifier v2 (TCP)               : FAKE_VOTIFIER_PORT (default 25592), token "fixture-token"
+ *   Roblox public APIs (HTTP)         : control port under /roblox (set ROBLOX_API_URL to
+ *                                       http://127.0.0.1:25591/roblox); place 404 doesn't exist
  *
  * The control API lets tests change what the servers report:
  *   POST /minecraft {"motd":"...","online":true,"players":12,"max":100}
@@ -35,6 +37,7 @@ const state = {
     version: '1.21.4',
   },
   source: { name: 'Fixture Source Server', online: true, players: 9, max: 24, map: 'de_dust2' },
+  roblox: { name: 'Fixture Obby', description: 'An obby for tests.', playing: 42 },
 };
 
 // ── Minecraft Server List Ping ──────────────────────────────────────────────
@@ -250,13 +253,38 @@ const ctl = createHttpServer((req, res) => {
     res.writeHead(200, { 'content-type': 'image/png' }).end(OG_PNG);
     return;
   }
-  if (req.method === 'POST' && (req.url === '/minecraft' || req.url === '/source')) {
+  // Roblox: place id → universe id (place + 1000), then the game's details.
+  const universe = req.url?.match(/^\/roblox\/universes\/v1\/places\/(\d+)\/universe$/);
+  if (req.method === 'GET' && universe) {
+    if (universe[1] === '404') {
+      res.writeHead(404).end();
+      return;
+    }
+    res
+      .writeHead(200, { 'content-type': 'application/json' })
+      .end(JSON.stringify({ universeId: Number(universe[1]) + 1000 }));
+    return;
+  }
+  const games = req.url?.match(/^\/roblox\/v1\/games\?universeIds=(\d+)$/);
+  if (req.method === 'GET' && games) {
+    const id = Number(games[1]);
+    res.writeHead(200, { 'content-type': 'application/json' }).end(
+      JSON.stringify({
+        data: [{ id, rootPlaceId: id - 1000, maxPlayers: 30, visits: 123456, ...state.roblox }],
+      }),
+    );
+    return;
+  }
+  if (
+    req.method === 'POST' &&
+    (req.url === '/minecraft' || req.url === '/source' || req.url === '/roblox')
+  ) {
     let body = '';
     req.on('data', (c) => (body += c));
     req.on('end', () => {
       try {
         const patch = JSON.parse(body || '{}');
-        const key = req.url === '/minecraft' ? 'minecraft' : 'source';
+        const key = req.url!.slice(1) as keyof typeof state;
         Object.assign(state[key], patch);
         res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify(state[key]));
       } catch {
