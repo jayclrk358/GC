@@ -4,6 +4,11 @@ import { db, schema, sql } from '@magnox/db';
 import {
   BlockedAddressError,
   cleanServerText,
+  declareDown,
+  declareUp,
+  POLL,
+  postServerAlerts,
+  recordSample,
   endpointStatus,
   logger,
   networkKey,
@@ -207,11 +212,31 @@ export async function pollEndpoint(endpointId: string): Promise<void> {
     .set(update)
     .where(eq(schema.serverEndpoints.id, endpointId))
     .returning();
-  if (row) {
-    realtime()
-      .to(rooms.server(endpointId))
-      .emit('server:status', { endpointId, status: endpointStatus(row) });
-    log.debug({ endpointId, online: row.online, players: row.players }, 'status published');
+  if (!row) return;
+  realtime()
+    .to(rooms.server(endpointId))
+    .emit('server:status', { endpointId, status: endpointStatus(row) });
+  log.debug({ endpointId, online: row.online, players: row.players }, 'status published');
+
+  await recordSample({
+    endpointId,
+    ts: now,
+    online: row.online,
+    players: row.players,
+    pingMs: row.pingMs,
+  }).catch((err) => log.warn({ err: (err as Error).message, endpointId }, 'sample not recorded'));
+
+  // Chat alerts: "down" only after repeated failures (one missed poll is noise), "back up" once
+  // it answers again. declareDown/Up are conditional updates, so overlapping polls alert once.
+  if (row.online && endpoint.downSince) {
+    if (await declareUp(endpointId)) {
+      const since = endpoint.lastOnlineAt ?? endpoint.downSince;
+      await postServerAlerts(endpointId, 'server_up', {
+        downtimeMs: now.getTime() - since.getTime(),
+      });
+    }
+  } else if (!row.online && row.failCount >= POLL.alertAfterFailures && !endpoint.downSince) {
+    if (await declareDown(endpointId, now)) await postServerAlerts(endpointId, 'server_down');
   }
 }
 

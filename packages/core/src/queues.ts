@@ -10,6 +10,8 @@ export const QUEUES = {
   notify: 'notifications',
   /** Link previews for chat messages (outbound fetches behind the SSRF guard). */
   previews: 'link-previews',
+  /** Calls out to other systems on users' behalf, e.g. Votifier vote rewards. */
+  integrations: 'integrations',
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];

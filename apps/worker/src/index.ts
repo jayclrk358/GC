@@ -1,6 +1,6 @@
 import { createServer } from 'node:http';
 import { Worker, type Job } from 'bullmq';
-import { closeRedis, env, logger, QUEUES, queue, queueRedis } from '@magnox/core';
+import { backfillHistory, closeRedis, env, logger, QUEUES, queue, queueRedis } from '@magnox/core';
 import { sql } from '@magnox/db';
 import { handlers } from './handlers';
 
@@ -29,9 +29,18 @@ start(QUEUES.poll, 32);
 start(QUEUES.maintenance, 1);
 start(QUEUES.notify, 8);
 start(QUEUES.previews, 4);
+start(QUEUES.integrations, 4);
+
+// Sample partitions must exist before the first poll lands; rollups catch up after downtime.
+await backfillHistory().catch((err) => log.error({ err }, 'history backfill failed'));
 
 // Recurring schedules. upsertJobScheduler is idempotent across restarts and replicas.
 await queue(QUEUES.poll).upsertJobScheduler('poll-tick', { every: 5_000 }, { name: 'poll-tick' });
+await queue(QUEUES.maintenance).upsertJobScheduler(
+  'history-maintenance',
+  { every: 10 * 60 * 1000 },
+  { name: 'history-maintenance' },
+);
 await queue(QUEUES.maintenance).upsertJobScheduler(
   'maintenance-hourly',
   { every: 60 * 60 * 1000 },

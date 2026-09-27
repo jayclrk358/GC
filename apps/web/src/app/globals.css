@@ -35,6 +35,16 @@
     --mx-focus: var(--c-primary);
     --mx-focus-width: 2px;
     --mx-focus-offset: 2px;
+    /* Chart series colour, checked for lightness, chroma and 3:1 contrast on each surface. */
+    --mx-chart-1: #5b21b6;
+  }
+  html[data-scheme='dark'] {
+    --mx-chart-1: #9878f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    html[data-scheme='system'] {
+      --mx-chart-1: #9878f5;
+    }
   }
 }
 
@@ -292,6 +302,10 @@
 
 /* ─────────────────────────── User preferences ─────────────────────────── */
 @layer mx-prefs {
+  html[data-contrast='high'] {
+    --mx-chart-1: var(--c-text);
+  }
+
   /* High contrast replaces every colour token, including community themes. */
   html[data-contrast='high'],
   html[data-contrast='high'] [data-community-theme],

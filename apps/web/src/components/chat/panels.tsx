@@ -10,6 +10,7 @@ import { Avatar, Spinner } from '@/components/ui/misc';
 import { RichText } from '@/components/rich-text/rich-text';
 import { useChat } from './chat-context';
 import { formatDay, formatTime } from './format';
+import { systemText } from './system-message';
 
 export type PanelKind = 'pins' | 'search' | 'mentions' | 'members';
 
@@ -94,7 +95,8 @@ function MessageCard({
 }) {
   const t = useTranslations('chat');
   const { prefs } = useChat();
-  const name = m.author?.nickname || m.author?.name || t('deletedUser');
+  const name =
+    m.kind !== 'user' ? 'Magnox' : m.author?.nickname || m.author?.name || t('deletedUser');
   return (
     <article
       className="rounded-ui border border-border bg-surface p-2 text-sm"
@@ -108,7 +110,9 @@ function MessageCard({
           {formatTime(m.createdAt, prefs.timeFormat)}
         </time>
       </p>
-      {snippet ? (
+      {m.kind !== 'user' ? (
+        <p className="mt-1">{systemText(m, t)}</p>
+      ) : snippet ? (
         <p className="mt-1 line-clamp-4">
           {snippet
             .split(/(«[^»]*»)/g)

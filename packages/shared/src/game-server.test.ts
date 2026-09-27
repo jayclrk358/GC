@@ -31,10 +31,19 @@ describe('serverSearchSchema', () => {
 });
 
 describe('serverIntegrationsSchema', () => {
-  it('needs a token or key when Votifier is configured', () => {
+  it('normalises Votifier settings; a blank secret means "keep the saved one"', () => {
     expect(
-      serverIntegrationsSchema.safeParse({ votifierHost: 'play.example.com', votifierPort: 8192 })
+      serverIntegrationsSchema.parse({ votifierHost: 'Play.Example.com', votifierPort: 8192 }),
+    ).toMatchObject({ votifierHost: 'play.example.com', votifierToken: null });
+    expect(
+      serverIntegrationsSchema.safeParse({ votifierHost: 'not a host!', votifierToken: 'x' })
         .success,
+    ).toBe(false);
+    expect(
+      serverIntegrationsSchema.safeParse({
+        votifierHost: 'play.example.com',
+        votifierPublicKey: 'short',
+      }).success,
     ).toBe(false);
     expect(
       serverIntegrationsSchema.parse({

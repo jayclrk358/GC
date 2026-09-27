@@ -1,8 +1,9 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { Check, Copy, ExternalLink, ShieldCheck } from 'lucide-react';
+import { Check, Copy, ExternalLink, ShieldCheck, ThumbsUp, Users } from 'lucide-react';
 import type { ServerStatus } from '@magnox/shared';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/misc';
@@ -77,9 +78,19 @@ export function CopyAddress({ address }: { address: string }) {
 export function ServerCard({
   server,
   showPlayers = true,
+  href,
+  community,
+  votes,
+  tagHrefs,
 }: {
   server: ServerCardData;
   showPlayers?: boolean;
+  /** Link the name to the server's page. */
+  href?: string;
+  community?: { slug: string; name: string } | null;
+  votes?: number;
+  /** Filter links for the tags, by tag (plain data, so server pages can pass it). */
+  tagHrefs?: Record<string, string>;
 }) {
   const t = useTranslations('servers');
   const status = useLiveStatus(server.endpointId, server.status);
@@ -93,12 +104,18 @@ export function ServerCard({
   return (
     <article
       aria-labelledby={`srv-${server.id}`}
-      className="flex flex-col gap-3 rounded-ui-lg border border-border bg-surface p-4"
+      className="mx-card-glow flex h-full flex-col gap-3 rounded-ui-lg border border-border bg-surface p-4"
     >
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 id={`srv-${server.id}`} className="flex items-center gap-1.5 truncate font-bold">
-            {server.name}
+            {href ? (
+              <Link href={href} className="truncate hover:underline">
+                {server.name}
+              </Link>
+            ) : (
+              server.name
+            )}
             {server.verified && (
               <ShieldCheck
                 className="size-4 shrink-0 text-success"
@@ -160,6 +177,40 @@ export function ServerCard({
       )}
 
       {server.description && <p className="text-sm text-muted">{server.description}</p>}
+
+      {(community || votes !== undefined || (tagHrefs && server.tags.length > 0)) && (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted">
+          {community && (
+            <Link
+              href={`/c/${community.slug}`}
+              className="flex items-center gap-1 font-medium text-fg hover:underline"
+            >
+              <Users className="size-4" aria-hidden />
+              {community.name}
+            </Link>
+          )}
+          {votes !== undefined && (
+            <span className="flex items-center gap-1">
+              <ThumbsUp className="size-4" aria-hidden />
+              {t('votes', { count: votes })}
+            </span>
+          )}
+          {tagHrefs && server.tags.length > 0 && (
+            <ul className="flex flex-wrap gap-1" aria-label={t('tags')}>
+              {server.tags.map((tag) => (
+                <li key={tag}>
+                  <Link
+                    href={tagHrefs[tag] ?? `/servers?tag=${encodeURIComponent(tag)}`}
+                    className="rounded-full border border-border px-2 py-0.5 text-xs hover:border-primary hover:text-fg"
+                  >
+                    #{tag}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       <div className="mt-auto flex flex-wrap items-center gap-2">
         <CopyAddress address={server.address} />

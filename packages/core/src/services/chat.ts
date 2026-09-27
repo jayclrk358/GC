@@ -68,6 +68,10 @@ export interface ReplyPreview {
 export interface MessageView {
   id: string;
   channelId: string;
+  /** 'user', or a system notice such as 'server_down' / 'server_up' (no author). */
+  kind: string;
+  /** Details for system notices; null for normal messages. */
+  meta: Record<string, unknown> | null;
   authorId: string | null;
   author: ChatAuthor | null;
   body: RichNode;
@@ -206,6 +210,8 @@ async function toViews(
     return {
       id: r.id,
       channelId: r.channelId,
+      kind: r.kind,
+      meta: r.meta ?? null,
       authorId: r.authorId,
       author: r.authorId ? (authors.get(r.authorId) ?? null) : null,
       body: r.body,
@@ -581,6 +587,44 @@ export async function sendMessage(
     await queueFanout({ kind: 'message', messageId: id });
   }
   if (perm(channel, Permission.EMBED_LINKS) && extractLinks(body).length) await queuePreviews(id);
+  return view!;
+}
+
+/**
+ * Post a notice from Magnox itself (no author), e.g. "Survival is down". It goes out live like any
+ * other message but doesn't ping anyone.
+ */
+export async function postSystemMessage(
+  communityId: string,
+  channelId: string,
+  notice: { kind: string; text: string; meta: object },
+): Promise<MessageView> {
+  const id = newId();
+  const now = new Date();
+  const body: RichNode = {
+    type: 'doc',
+    content: [{ type: 'paragraph', content: [{ type: 'text', text: notice.text }] }],
+  };
+  const [row] = await db
+    .insert(schema.messages)
+    .values({
+      id,
+      channelId,
+      communityId,
+      authorId: null,
+      kind: notice.kind,
+      body,
+      content: notice.text,
+      meta: notice.meta as Record<string, unknown>,
+      createdAt: now,
+    })
+    .returning();
+  await db
+    .update(schema.channels)
+    .set({ lastMessageId: id, lastActivityAt: now })
+    .where(eq(schema.channels.id, channelId));
+  const [view] = await toViews(communityId, null, [row!]);
+  realtime().to(rooms.channel(channelId)).emit('message:new', { channelId, message: view });
   return view!;
 }
 

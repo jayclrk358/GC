@@ -134,9 +134,9 @@ function toView(r: ViewRow, opts: { showToken: boolean }): ServerView {
   };
 }
 
-async function queryViews(
+export async function queryServerViews(
   where: SQL,
-  opts: { showToken: boolean; order?: SQL[]; limit?: number },
+  opts: { showToken: boolean; order?: SQL[]; limit?: number; offset?: number },
 ): Promise<ServerView[]> {
   const rows = await db
     .select(selectView)
@@ -144,7 +144,8 @@ async function queryViews(
     .innerJoin(schema.serverEndpoints, eq(schema.serverEndpoints.id, schema.gameServers.endpointId))
     .where(and(where, isNull(schema.gameServers.deletedAt)))
     .orderBy(...(opts.order ?? [asc(schema.gameServers.createdAt)]))
-    .limit(opts.limit ?? 100);
+    .limit(opts.limit ?? 100)
+    .offset(opts.offset ?? 0);
   return rows.map((r) => toView(r as ViewRow, opts));
 }
 
@@ -152,14 +153,14 @@ export async function listCommunityServers(
   communityId: string,
   opts: { manage?: boolean } = {},
 ): Promise<ServerView[]> {
-  return queryViews(eq(schema.gameServers.communityId, communityId), {
+  return queryServerViews(eq(schema.gameServers.communityId, communityId), {
     showToken: Boolean(opts.manage),
   });
 }
 
 export async function getServersByIds(communityId: string, ids: string[]): Promise<ServerView[]> {
   if (!ids.length) return [];
-  const views = await queryViews(
+  const views = await queryServerViews(
     and(eq(schema.gameServers.communityId, communityId), inArray(schema.gameServers.id, ids))!,
     { showToken: false },
   );
@@ -186,7 +187,7 @@ export async function listPublicServers(
       )!,
     );
   }
-  return queryViews(and(...where)!, {
+  return queryServerViews(and(...where)!, {
     showToken: false,
     order: [
       desc(schema.serverEndpoints.online),
@@ -294,7 +295,18 @@ export async function addServer(ctx: MemberContext, raw: unknown): Promise<Serve
   }
 
   const endpointId = await findOrCreateEndpoint(input.protocol, input.host, input.port);
-  const game = await db.query.games.findFirst({ where: eq(schema.games.protocol, input.protocol) });
+  // The community's own game if it uses this protocol, else the first game that does.
+  const community = await db.query.communities.findFirst({
+    where: eq(schema.communities.id, ctx.community.id),
+    columns: { gameId: true },
+  });
+  const own = community?.gameId
+    ? await db.query.games.findFirst({ where: eq(schema.games.id, community.gameId) })
+    : undefined;
+  const game =
+    own?.protocol === input.protocol
+      ? own
+      : await db.query.games.findFirst({ where: eq(schema.games.protocol, input.protocol) });
   const id = newId();
   await db.transaction(async (tx) => {
     await tx.insert(schema.gameServers).values({
@@ -325,7 +337,7 @@ export async function addServer(ctx: MemberContext, raw: unknown): Promise<Serve
     { endpointId },
     { jobId: `poll-${endpointId}-${Date.now()}` },
   );
-  const [view] = await queryViews(eq(schema.gameServers.id, id), { showToken: true });
+  const [view] = await queryServerViews(eq(schema.gameServers.id, id), { showToken: true });
   return view!;
 }
 

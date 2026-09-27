@@ -35,6 +35,7 @@ import { formatTime, fullDateTime } from './format';
 import type { ChatMessage } from './types';
 
 export function authorName(m: ChatMessage): string {
+  if (m.kind !== 'user') return 'Magnox';
   return m.author?.nickname || m.author?.name || 'Deleted user';
 }
 

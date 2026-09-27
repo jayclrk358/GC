@@ -26,7 +26,8 @@ export function proxy(request: NextRequest) {
     `media-src 'self' ${media}`.trim(),
     `font-src 'self' data:`,
     `connect-src 'self' ${rt} ${rtWs}${dev ? ' ws: http://localhost:*' : ''}`.trim(),
-    `frame-src https://www.youtube-nocookie.com https://player.twitch.tv`,
+    // Turnstile (vote CAPTCHA) runs its challenge in an iframe, when it's configured.
+    `frame-src https://www.youtube-nocookie.com https://player.twitch.tv${process.env.TURNSTILE_SITE_KEY ? ' https://challenges.cloudflare.com' : ''}`,
     `frame-ancestors 'none'`,
     `base-uri 'self'`,
     `form-action 'self'`,

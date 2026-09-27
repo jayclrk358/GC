@@ -10,8 +10,10 @@ Magnox is built around two ideas: **deep customisation** and **first-class acces
 
 - **Customisable hubs:** themes (with a built-in WCAG contrast checker), fonts, banners and a
   drag-and-drop page builder with keyboard support.
-- **Game servers:** link Minecraft, Rust, CS2, FiveM, ARK, Valheim and more. Status, player
-  counts and history update live. Includes a global server browser.
+- **Game servers:** link Minecraft, Rust, CS2, FiveM, ARK, Valheim and more. Status and player
+  counts update live, with 24-hour, 7-day and 30-day player and uptime charts. A global server
+  browser with filters, daily voting (with Minecraft Votifier rewards), and "server down" / "back
+  up" alerts posted in chat.
 - **Forum, wiki, events and chat:** persistent, searchable discussions plus real-time channels.
 - **Roles and permissions:** Discord-style permission bits with category and channel overrides.
 - **Light, dark or system colour scheme** from a toggle in the header, saved per browser and to
@@ -145,6 +147,11 @@ Found a barrier? Please open an issue. Accessibility bugs are treated as high pr
       behind the SSRF guard, typing indicators, who's online, read states with unread and
       mention badges, jump to unread, a mentions inbox, pins, slow mode and message search; an
       accessible log with arrow-key navigation and throttled screen reader announcements
-- [ ] **Phase 4 — Server browser, history charts, voting**
+- [x] **Phase 4 — Game servers:** a server browser with search, game, tag, region, player and
+      online filters; server pages with accessible player and uptime charts (keyboard read-out
+      and a table view); status samples in daily partitions with hourly and daily rollups;
+      voting once a day with a verified email, optional Cloudflare Turnstile, and NuVotifier /
+      Votifier v1 rewards; down and back-up alerts in a chosen chat channel; dormant servers
+      paused after a week offline; steam:// connect links and copy-address buttons
 - [ ] **Phase 5 — Events, applications, automod, analytics**
 - [ ] **Phase 6 — Admin console, data export, SEO, PWA, public API, Discord integration**

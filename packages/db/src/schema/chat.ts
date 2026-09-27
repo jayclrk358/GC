@@ -64,6 +64,9 @@ export const messages = pgTable(
     mentionEveryone: boolean('mention_everyone').notNull().default(false),
     attachments: jsonb('attachments').$type<MessageAttachment[]>().notNull().default([]),
     embeds: jsonb('embeds').$type<MessageEmbed[]>().notNull().default([]),
+    /** Structured details for system notices (e.g. which server went down), so they can be
+     *  shown in the reader's language. Null for normal messages. */
+    meta: jsonb('meta').$type<Record<string, unknown>>(),
     /** Client-generated id so a retried send isn't posted twice. */
     nonce: text('nonce'),
     pinnedAt: tz('pinned_at'),

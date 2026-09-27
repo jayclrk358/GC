@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { Pencil, Plus, RefreshCw, ShieldAlert, ShieldCheck, Trash2 } from 'lucide-react';
+import { BellRing, Pencil, Plus, RefreshCw, ShieldAlert, ShieldCheck, Trash2 } from 'lucide-react';
 import type { ServerView } from '@magnox/core';
 import { REGIONS, type ServerProtocol } from '@magnox/shared';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ import { Alert, Badge, EmptyState } from '@/components/ui/misc';
 import { SwitchField } from '@/components/ui/switch';
 import { FormError } from '@/components/auth/form-error';
 import { StatusDot, useLiveStatus } from '@/components/servers/server-status';
+import { ServerIntegrationsForm } from './server-integrations';
 import {
   addServerAction,
   refreshServerAction,
@@ -202,11 +203,13 @@ function ServerRow({
   server,
   communityId,
   onEdit,
+  onIntegrations,
   onRemove,
 }: {
   server: ServerView;
   communityId: string;
   onEdit: () => void;
+  onIntegrations: () => void;
   onRemove: () => void;
 }) {
   const t = useTranslations('serverSettings');
@@ -282,6 +285,10 @@ function ServerRow({
           <Pencil aria-hidden /> {t('edit')}
           <span className="sr-only"> {server.name}</span>
         </Button>
+        <Button size="sm" variant="outline" onClick={onIntegrations}>
+          <BellRing aria-hidden /> {t('integrations')}
+          <span className="sr-only"> {server.name}</span>
+        </Button>
         <Button size="sm" variant="ghost" onClick={onRemove}>
           <Trash2 aria-hidden /> {t('remove')}
           <span className="sr-only"> {server.name}</span>
@@ -305,6 +312,7 @@ export function ServerManager({
   const [adding, setAdding] = React.useState(false);
   const [editing, setEditing] = React.useState<ServerView | null>(null);
   const [removing, setRemoving] = React.useState<ServerView | null>(null);
+  const [integrating, setIntegrating] = React.useState<ServerView | null>(null);
 
   const blank: FormState = {
     name: '',
@@ -334,6 +342,7 @@ export function ServerManager({
               server={s}
               communityId={communityId}
               onEdit={() => setEditing(s)}
+              onIntegrations={() => setIntegrating(s)}
               onRemove={() => setRemoving(s)}
             />
           ))}
@@ -380,6 +389,23 @@ export function ServerManager({
                 toast.success(t('saved'));
                 router.refresh();
               }}
+            />
+          </DialogContent>
+        )}
+      </Dialog>
+
+      <Dialog open={Boolean(integrating)} onOpenChange={(o) => !o && setIntegrating(null)}>
+        {integrating && (
+          <DialogContent
+            title={t('integrationsTitle', { name: integrating.name })}
+            description={t('integrationsDesc')}
+            size="lg"
+          >
+            <ServerIntegrationsForm
+              communityId={communityId}
+              serverId={integrating.id}
+              minecraft={integrating.protocol === 'minecraft'}
+              onSaved={() => setIntegrating(null)}
             />
           </DialogContent>
         )}

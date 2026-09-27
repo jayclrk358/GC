@@ -39,7 +39,10 @@ export default async function CommunityServersPage({
           {servers.map((s) => (
             <li key={s.id} className="flex">
               <div className="flex-1">
-                <ServerCard server={s} />
+                <ServerCard
+                  server={s}
+                  href={s.listed && s.verified ? `/servers/${s.id}` : undefined}
+                />
               </div>
             </li>
           ))}

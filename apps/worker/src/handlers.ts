@@ -1,5 +1,13 @@
 import type { Job } from 'bullmq';
-import { logger, processFanout, processLinkPreviews, type FanoutJob } from '@magnox/core';
+import {
+  cleanupUnverifiedServers,
+  deliverVotifierVote,
+  logger,
+  maintainHistory,
+  processFanout,
+  processLinkPreviews,
+  type FanoutJob,
+} from '@magnox/core';
 import { pollEndpoint, pollTick, wakeHotDormant } from './poll';
 
 const log = logger('jobs');
@@ -26,8 +34,15 @@ export const handlers: Record<string, Handler> = {
     const { messageId } = job.data as { messageId: string };
     return processLinkPreviews(messageId);
   },
+  votifier: async (job) => {
+    const { voteId, address } = job.data as { voteId: string; address: string };
+    const final = job.attemptsMade + 1 >= (job.opts.attempts ?? 1);
+    return deliverVotifierVote(voteId, address, final);
+  },
+  'history-maintenance': async () => maintainHistory(),
   'maintenance-hourly': async () => {
     await wakeHotDormant();
-    return null;
+    const removed = await cleanupUnverifiedServers();
+    return { removed };
   },
 };

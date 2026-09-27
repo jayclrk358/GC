@@ -35,6 +35,7 @@ import { ChatProvider, type ChatActions } from './chat-context';
 import { chatReducer, type ChatState } from './chat-state';
 import { MessageList, type ScrollRequest } from './message-list';
 import { authorName } from './message-item';
+import { systemText } from './system-message';
 import { Composer, type ComposerHandle, type SendInput } from './composer';
 import { ChatAnnouncer, TypingIndicator, type AnnouncerHandle } from './announcer';
 import { ChatPanel, type PanelKind } from './panels';
@@ -165,7 +166,10 @@ export function ChatView(props: Props) {
       if (m.authorId && blocked.has(m.authorId)) return;
       announcer.current?.push({
         authorName: authorName(m),
-        text: docToText(m.body).slice(0, 280) || (m.attachments.length ? t('imageOnly') : ''),
+        text:
+          m.kind !== 'user'
+            ? systemText(m, t)
+            : docToText(m.body).slice(0, 280) || (m.attachments.length ? t('imageOnly') : ''),
         mentionsMe: mentionsMe(m, me?.id ?? null, me?.roleIds ?? []),
         own,
       });
@@ -287,6 +291,8 @@ export function ChatView(props: Props) {
       message: {
         id: `pending-${nonce}`,
         channelId: channel.id,
+        kind: 'user',
+        meta: null,
         authorId: me.id,
         author: {
           id: me.id,

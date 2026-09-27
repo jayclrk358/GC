@@ -47,7 +47,11 @@ export async function ServerStatusBlock({
         {servers.map((s) => (
           <li key={s.id} className="flex">
             <div className="flex-1">
-              <ServerCard server={s} showPlayers={config.showPlayers} />
+              <ServerCard
+                server={s}
+                showPlayers={config.showPlayers}
+                href={s.listed && s.verified ? `/servers/${s.id}` : undefined}
+              />
             </div>
           </li>
         ))}

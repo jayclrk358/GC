@@ -24,3 +24,16 @@ export async function communityJson<T>(
     return Response.json({ error: 'Something went wrong' }, { status: 500 });
   }
 }
+
+/** Same error handling as communityJson, for endpoints outside a community. */
+export async function publicJson<T>(fn: (userId: string | null) => Promise<T>): Promise<Response> {
+  try {
+    const user = await getUser();
+    return Response.json(await fn(user?.id ?? null), { headers: { 'cache-control': 'no-store' } });
+  } catch (e) {
+    if (isAppError(e)) return Response.json({ error: e.message }, { status: e.status });
+    if (e instanceof ZodError) return Response.json({ error: 'Invalid request' }, { status: 400 });
+    log.error({ err: e }, 'api error');
+    return Response.json({ error: 'Something went wrong' }, { status: 500 });
+  }
+}

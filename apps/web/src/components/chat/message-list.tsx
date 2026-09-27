@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/misc';
 import { useChat } from './chat-context';
 import { MessageItem } from './message-item';
+import { SystemMessage } from './system-message';
 import { formatDay } from './format';
 import type { ChatMessage } from './types';
 
@@ -219,9 +220,22 @@ export function MessageList(props: Props) {
         </div>,
       );
     }
+    if (m.kind !== 'user') {
+      rows.push(
+        <SystemMessage
+          key={m.id}
+          message={m}
+          highlighted={props.highlightId === m.id}
+          tabIndex={m.id === activeId ? 0 : -1}
+          onFocus={setFocusedId}
+        />,
+      );
+      return;
+    }
     const grouped =
       !newDay &&
       m.id !== props.unreadDividerId &&
+      prev?.kind === 'user' &&
       !startsNewGroup(prev, {
         authorId: m.authorId,
         createdAt: m.createdAt,

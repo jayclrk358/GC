@@ -3,6 +3,7 @@
  *   Minecraft Server List Ping (TCP)  : FAKE_MC_PORT   (default 25590)
  *   Source A2S query (UDP)            : FAKE_A2S_PORT  (default 27090)
  *   Control API (HTTP)                : FAKE_CTL_PORT  (default 25591)
+ *   NuVotifier v2 (TCP)               : FAKE_VOTIFIER_PORT (default 25592), token "fixture-token"
  *
  * The control API lets tests change what the servers report:
  *   POST /minecraft {"motd":"...","online":true,"players":12,"max":100}
@@ -11,15 +12,19 @@
  *   GET  /page/:name   an HTML page with OpenGraph tags (link preview tests)
  *   GET  /go/:name     a redirect to /page/:name
  *   GET  /og.png       the preview image
+ *   GET  /votes        votes the fake NuVotifier accepted, newest last
  * Requires SERVER_QUERY_ALLOW_PRIVATE=true in the app, because these listen on localhost.
  */
 import { createServer as createHttpServer } from 'node:http';
 import { createServer as createTcpServer } from 'node:net';
 import { createSocket } from 'node:dgram';
+import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 
 const MC_PORT = Number(process.env.FAKE_MC_PORT ?? 25590);
 const A2S_PORT = Number(process.env.FAKE_A2S_PORT ?? 27090);
 const CTL_PORT = Number(process.env.FAKE_CTL_PORT ?? 25591);
+const VOTIFIER_PORT = Number(process.env.FAKE_VOTIFIER_PORT ?? 25592);
+const VOTIFIER_TOKEN = 'fixture-token';
 
 const state = {
   minecraft: {
@@ -160,6 +165,51 @@ a2s.on('message', (msg, rinfo) => {
   if (reply) a2s.send(reply, rinfo.port, rinfo.address);
 });
 
+// ── NuVotifier v2 ───────────────────────────────────────────────────────────
+interface ReceivedVote {
+  serviceName: string;
+  username: string;
+  address: string;
+  timestamp: number;
+}
+const votes: ReceivedVote[] = [];
+
+const votifier = createTcpServer((socket) => {
+  const challenge = randomBytes(12).toString('hex');
+  let buffer = Buffer.alloc(0);
+  socket.on('error', () => socket.destroy());
+  socket.write(`VOTIFIER 2.9 ${challenge}\n`);
+  socket.on('data', (chunk) => {
+    buffer = Buffer.concat([buffer, chunk]);
+    if (buffer.length < 4) return;
+    if (buffer.readUInt16BE(0) !== 0x733a) return void socket.destroy();
+    const length = buffer.readUInt16BE(2);
+    if (buffer.length < 4 + length) return;
+    const reply = (body: object) => socket.end(JSON.stringify(body) + '\r\n');
+    try {
+      const { payload, signature } = JSON.parse(buffer.subarray(4, 4 + length).toString('utf8'));
+      const expected = createHmac('sha256', VOTIFIER_TOKEN).update(payload).digest();
+      const given = Buffer.from(String(signature), 'base64');
+      if (given.length !== expected.length || !timingSafeEqual(given, expected)) {
+        return reply({ status: 'error', cause: 'Signature is not valid (invalid token?)' });
+      }
+      const vote = JSON.parse(payload) as ReceivedVote & { challenge: string };
+      if (vote.challenge !== challenge) {
+        return reply({ status: 'error', cause: 'Challenge is not valid' });
+      }
+      votes.push({
+        serviceName: vote.serviceName,
+        username: vote.username,
+        address: vote.address,
+        timestamp: vote.timestamp,
+      });
+      reply({ status: 'ok' });
+    } catch {
+      reply({ status: 'error', cause: 'Malformed vote' });
+    }
+  });
+});
+
 // ── Control API ─────────────────────────────────────────────────────────────
 // A 4x4 PNG for link preview images.
 const OG_PNG = Buffer.from(
@@ -192,6 +242,10 @@ const ctl = createHttpServer((req, res) => {
     res.writeHead(302, { location: `/page/${go[1]}` }).end();
     return;
   }
+  if (req.method === 'GET' && req.url === '/votes') {
+    res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ votes }));
+    return;
+  }
   if (req.method === 'GET' && req.url === '/og.png') {
     res.writeHead(200, { 'content-type': 'image/png' }).end(OG_PNG);
     return;
@@ -217,14 +271,16 @@ const ctl = createHttpServer((req, res) => {
 mc.listen(MC_PORT, '127.0.0.1');
 a2s.bind(A2S_PORT, '127.0.0.1');
 ctl.listen(CTL_PORT, '127.0.0.1');
+votifier.listen(VOTIFIER_PORT, '127.0.0.1');
 console.log(
-  `fake servers: minecraft tcp/${MC_PORT}, source udp/${A2S_PORT}, control http/${CTL_PORT}`,
+  `fake servers: minecraft tcp/${MC_PORT}, source udp/${A2S_PORT}, control http/${CTL_PORT}, votifier tcp/${VOTIFIER_PORT}`,
 );
 
 const stop = () => {
   mc.close();
   a2s.close();
   ctl.close();
+  votifier.close();
   process.exit(0);
 };
 process.on('SIGINT', stop);

@@ -135,40 +135,48 @@ export const voteInputSchema = z.object({
 });
 
 /** Chat alerts and Votifier settings for a server listing. */
-export const serverIntegrationsSchema = z
-  .object({
-    alertChannelId: z.string().uuid().nullable().default(null),
-    votifierHost: z
-      .string()
-      .trim()
-      .toLowerCase()
-      .max(253)
-      .optional()
-      .transform((v) => v || null)
-      .refine((v) => v === null || HOSTNAME_RE.test(v), 'Enter a hostname or IP address'),
-    votifierPort: z.number().int().min(1).max(65535).nullable().default(null),
-    votifierToken: z
-      .string()
-      .trim()
-      .max(200)
-      .optional()
-      .transform((v) => v || null),
-    votifierPublicKey: z
-      .string()
-      .trim()
-      .max(2000)
-      .optional()
-      .transform((v) => (v ? v.replace(/-----(BEGIN|END) PUBLIC KEY-----|\s+/g, '') : null))
-      .refine(
-        (v) => v === null || /^[A-Za-z0-9+/=]{200,1000}$/.test(v),
-        'Paste the public.key contents',
-      ),
-  })
-  .refine((v) => !v.votifierHost || v.votifierToken || v.votifierPublicKey, {
-    message: 'Add a NuVotifier token or a Votifier public key',
-    path: ['votifierToken'],
-  });
+export const serverIntegrationsSchema = z.object({
+  alertChannelId: z.string().uuid().nullable().default(null),
+  votifierHost: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .max(253)
+    .optional()
+    .transform((v) => v || null)
+    .refine((v) => v === null || HOSTNAME_RE.test(v), 'Enter a hostname or IP address'),
+  votifierPort: z.number().int().min(1).max(65535).nullable().default(null),
+  votifierToken: z
+    .string()
+    .trim()
+    .max(200)
+    .optional()
+    .transform((v) => v || null),
+  votifierPublicKey: z
+    .string()
+    .trim()
+    .max(2000)
+    .optional()
+    .transform((v) => (v ? v.replace(/-----(BEGIN|END) PUBLIC KEY-----|\s+/g, '') : null))
+    .refine(
+      (v) => v === null || /^[A-Za-z0-9+/=]{200,1000}$/.test(v),
+      'Paste the public.key contents',
+    ),
+});
+// A blank token or key means "keep the saved one", so "one of them is required" is checked by the
+// service against what's stored.
 export type ServerIntegrations = z.infer<typeof serverIntegrationsSchema>;
+
+/** Details carried by "server down" / "back up" chat notices. */
+export interface ServerAlertMeta {
+  serverId: string;
+  serverName: string;
+  /** How long it was down (back-up notices only). */
+  downtimeMs?: number;
+}
+
+export const SERVER_ALERT_KINDS = ['server_down', 'server_up'] as const;
+export type ServerAlertKind = (typeof SERVER_ALERT_KINDS)[number];
 
 /** "2 h 5 min", "45 min", "1 day 3 h": short, human durations for alerts and cooldowns. */
 export function formatDuration(ms: number): string {

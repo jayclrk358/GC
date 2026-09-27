@@ -2,16 +2,18 @@
  * Demo users, communities and servers for local development and screenshots.
  * Skipped in production and when SEED_DEMO=false. Idempotent: existing demo data is left alone.
  */
-import { eq } from 'drizzle-orm';
+import { and, eq, lt, sql as dsql } from 'drizzle-orm';
 import { db, schema, sql } from '@magnox/db';
 import {
   addBlock,
+  backfillHistory,
   closeRedis,
   createCommunity,
   createReply,
   createThread,
   createWikiPage,
   ensureChatChannels,
+  ensureSamplePartitions,
   ensureStarterContent,
   env,
   getMemberContext,
@@ -272,6 +274,102 @@ async function seedWiki(communityId: string, name: string, a: Ctx, b: Ctx) {
   });
 }
 
+/**
+ * A week of believable status history for the demo server (busy evenings, one short outage), plus
+ * older hourly rollups so the 30-day chart has something to show. Skipped once it has history.
+ */
+async function seedServerHistory(communityId: string, voters: string[]) {
+  const server = await db.query.gameServers.findFirst({
+    where: and(
+      eq(schema.gameServers.communityId, communityId),
+      eq(schema.gameServers.name, 'Blockhaven Survival'),
+    ),
+  });
+  if (!server) return;
+  const endpointId = server.endpointId;
+  const now = Date.now();
+  const HOUR = 3600_000;
+  const seeded = await db.query.serverRollupsHourly.findFirst({
+    where: and(
+      eq(schema.serverRollupsHourly.endpointId, endpointId),
+      lt(schema.serverRollupsHourly.hour, new Date(now - 8 * 24 * HOUR)),
+    ),
+  });
+  if (seeded) return;
+
+  // Players follow the (UTC) evening: quiet mornings, a peak around 20:00, weekends busier.
+  const players = (t: number) => {
+    const d = new Date(t);
+    const h = d.getUTCHours() + d.getUTCMinutes() / 60;
+    const fromPeak = Math.min(Math.abs(h - 20), 24 - Math.abs(h - 20));
+    const evening = Math.exp(-(fromPeak ** 2) / 12);
+    const weekend = [0, 6].includes(d.getUTCDay()) ? 1.35 : 1;
+    const wobble = Math.sin(t / 1_700_000) * 2;
+    return Math.max(0, Math.round((4 + 38 * evening) * weekend + wobble));
+  };
+  const outageStart = now - 3 * 24 * HOUR - 5 * HOUR;
+  const down = (t: number) => t >= outageStart && t < outageStart + 1.5 * HOUR;
+
+  await ensureSamplePartitions(3, now, 8);
+  const rows = [];
+  for (let t = now - 7 * 24 * HOUR; t < now - 10 * 60_000; t += 5 * 60_000) {
+    const online = !down(t);
+    rows.push({
+      endpointId,
+      ts: new Date(t),
+      online,
+      players: online ? players(t) : null,
+      pingMs: online ? 28 + Math.round(Math.random() * 12) : null,
+    });
+  }
+  for (let i = 0; i < rows.length; i += 1000) {
+    await db
+      .insert(schema.serverSamples)
+      .values(rows.slice(i, i + 1000))
+      .onConflictDoNothing();
+  }
+  await backfillHistory(now);
+
+  // Days 8-30 only exist as rollups (raw samples are kept a week).
+  const hourly = [];
+  const firstRaw = Math.floor((now - 7 * 24 * HOUR) / HOUR) * HOUR;
+  for (let t = firstRaw - 23 * 24 * HOUR; t < firstRaw; t += HOUR) {
+    const p = players(t + HOUR / 2);
+    hourly.push({
+      endpointId,
+      hour: new Date(t),
+      samples: 12,
+      onlineSamples: 12,
+      avgPlayers: p,
+      peakPlayers: p + 3,
+    });
+  }
+  await db.insert(schema.serverRollupsHourly).values(hourly).onConflictDoNothing();
+  await backfillHistory(now);
+
+  // Chat alerts go to the first chat channel, and a couple of friendly votes from last week.
+  const channel = await db.query.channels.findFirst({
+    where: and(eq(schema.channels.communityId, communityId), eq(schema.channels.type, 'text')),
+    orderBy: (c, { asc }) => [asc(c.position)],
+  });
+  await db
+    .update(schema.gameServers)
+    .set({
+      alertChannelId: channel?.id ?? null,
+      voteCount: dsql`${schema.gameServers.voteCount} + ${voters.length}`,
+    })
+    .where(eq(schema.gameServers.id, server.id));
+  for (const [i, userId] of voters.entries()) {
+    await db.insert(schema.serverVotes).values({
+      id: newId(),
+      serverId: server.id,
+      userId,
+      createdAt: new Date(now - (2 + i) * 24 * HOUR),
+    });
+  }
+  console.log('✔ server history for Blockhaven Survival');
+}
+
 async function main() {
   if (env().NODE_ENV === 'production' || process.env.SEED_DEMO === 'false') {
     console.log('– demo seed skipped');
@@ -331,6 +429,7 @@ async function main() {
       await ensureStarterContent(exists.id);
       await ensureChatChannels(exists.id);
       await seedContent(exists.id, exists.name, { alice: alice!, bob: bob!, carol: carol! });
+      await seedServerHistory(exists.id, [bob!, carol!]);
       continue;
     }
     const { id } = await createCommunity(alice!, { ...c, visibility: 'public', joinMode: 'open' });
@@ -376,6 +475,7 @@ async function main() {
       });
     }
     await seedContent(id, c.name, { alice: alice!, bob: bob!, carol: carol! });
+    await seedServerHistory(id, [bob!, carol!]);
     console.log(`✔ community /c/${c.slug}`);
   }
 }
