@@ -117,7 +117,7 @@ export function ChannelPermissions({
     <div className="flex flex-col gap-4">
       <Field label={t('permsRole')} description={t('permsRoleHint')}>
         {(p) => (
-          <Select {...p} value={roleId} onChange={(e) => setRoleId(e.target.value)}>
+          <Select {...p} value={roleId} onValueChange={(v) => setRoleId(v)}>
             {roles.map((r) => (
               <option key={r.id} value={r.id}>
                 {r.isDefault ? '@everyone' : r.name}

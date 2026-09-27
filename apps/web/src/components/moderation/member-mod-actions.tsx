@@ -132,7 +132,7 @@ export function MemberModActions({
               {mode !== 'kick' && (
                 <Field label={t('duration')}>
                   {(p) => (
-                    <Select {...p} value={duration} onChange={(e) => setDuration(e.target.value)}>
+                    <Select {...p} value={duration} onValueChange={(v) => setDuration(v)}>
                       {Object.keys(mode === 'ban' ? BAN_DURATIONS : TIMEOUT_DURATIONS).map((k) => (
                         <option key={k} value={k}>
                           {t(`durations.${k}`)}
@@ -148,9 +148,7 @@ export function MemberModActions({
                     <Select
                       {...p}
                       value={deleteWindow}
-                      onChange={(e) =>
-                        setDeleteWindow(e.target.value as keyof typeof DELETE_WINDOWS)
-                      }
+                      onValueChange={(v) => setDeleteWindow(v as keyof typeof DELETE_WINDOWS)}
                     >
                       {Object.keys(DELETE_WINDOWS).map((k) => (
                         <option key={k} value={k}>

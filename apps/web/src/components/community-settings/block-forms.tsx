@@ -181,11 +181,7 @@ export function BlockForm({
             </Field>
             <Field label={t('hero.ctaTarget')}>
               {(p) => (
-                <Select
-                  {...p}
-                  value={c.ctaTarget}
-                  onChange={(e) => set({ ctaTarget: e.target.value })}
-                >
+                <Select {...p} value={c.ctaTarget} onValueChange={(v) => set({ ctaTarget: v })}>
                   {(['join', 'servers', 'forum', 'chat', 'events', 'url'] as const).map((k) => (
                     <option key={k} value={k}>
                       {t(`hero.targets.${k}`)}
@@ -209,7 +205,7 @@ export function BlockForm({
             )}
             <Field label={t('hero.align')}>
               {(p) => (
-                <Select {...p} value={c.align} onChange={(e) => set({ align: e.target.value })}>
+                <Select {...p} value={c.align} onValueChange={(v) => set({ align: v })}>
                   <option value="start">{t('hero.alignStart')}</option>
                   <option value="center">{t('hero.alignCenter')}</option>
                 </Select>
@@ -319,9 +315,7 @@ export function BlockForm({
                     <Select
                       {...p}
                       value={l.kind}
-                      onChange={(e) =>
-                        update({ kind: e.target.value as (typeof LINK_KINDS)[number] })
-                      }
+                      onValueChange={(v) => update({ kind: v as (typeof LINK_KINDS)[number] })}
                     >
                       {LINK_KINDS.map((k) => (
                         <option key={k} value={k}>
@@ -383,7 +377,7 @@ export function BlockForm({
           <Heading value={c.heading} onChange={(v) => set({ heading: v })} />
           <Field label={t('gallery.layout')}>
             {(p) => (
-              <Select {...p} value={c.layout} onChange={(e) => set({ layout: e.target.value })}>
+              <Select {...p} value={c.layout} onValueChange={(v) => set({ layout: v })}>
                 <option value="grid">{t('gallery.grid')}</option>
                 <option value="masonry">{t('gallery.masonry')}</option>
               </Select>
@@ -517,11 +511,7 @@ export function BlockForm({
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label={t('embed.provider')}>
               {(p) => (
-                <Select
-                  {...p}
-                  value={c.provider}
-                  onChange={(e) => set({ provider: e.target.value })}
-                >
+                <Select {...p} value={c.provider} onValueChange={(v) => set({ provider: v })}>
                   <option value="youtube">YouTube</option>
                   <option value="twitch">Twitch</option>
                 </Select>
@@ -601,7 +591,7 @@ export function BlockForm({
           />
           <Field label={t('serverStatus.layout')}>
             {(p) => (
-              <Select {...p} value={c.layout} onChange={(e) => set({ layout: e.target.value })}>
+              <Select {...p} value={c.layout} onValueChange={(v) => set({ layout: v })}>
                 <option value="cards">{t('serverStatus.cards')}</option>
                 <option value="list">{t('serverStatus.list')}</option>
               </Select>

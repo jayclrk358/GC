@@ -102,7 +102,7 @@ export function PrefsEditor() {
             <Select
               {...p}
               value={prefs.density}
-              onChange={(e) => update({ density: e.target.value as Prefs['density'] })}
+              onValueChange={(v) => update({ density: v as Prefs['density'] })}
             >
               {(['compact', 'comfortable', 'spacious'] as const).map((d) => (
                 <option key={d} value={d}>
@@ -144,7 +144,7 @@ export function PrefsEditor() {
             <Select
               {...p}
               value={prefs.font}
-              onChange={(e) => update({ font: e.target.value as Prefs['font'] })}
+              onValueChange={(v) => update({ font: v as Prefs['font'] })}
             >
               {(['default', 'atkinson', 'opendyslexic', 'system'] as const).map((f) => (
                 <option key={f} value={f}>
@@ -160,9 +160,7 @@ export function PrefsEditor() {
               <Select
                 {...p}
                 value={prefs.letterSpacing}
-                onChange={(e) =>
-                  update({ letterSpacing: e.target.value as Prefs['letterSpacing'] })
-                }
+                onValueChange={(v) => update({ letterSpacing: v as Prefs['letterSpacing'] })}
               >
                 {(['normal', 'wide', 'wider'] as const).map((v) => (
                   <option key={v} value={v}>
@@ -177,7 +175,7 @@ export function PrefsEditor() {
               <Select
                 {...p}
                 value={prefs.lineHeight}
-                onChange={(e) => update({ lineHeight: e.target.value as Prefs['lineHeight'] })}
+                onValueChange={(v) => update({ lineHeight: v as Prefs['lineHeight'] })}
               >
                 {(['normal', 'relaxed', 'loose'] as const).map((v) => (
                   <option key={v} value={v}>
@@ -199,7 +197,7 @@ export function PrefsEditor() {
             <Select
               {...p}
               value={prefs.timeFormat}
-              onChange={(e) => update({ timeFormat: e.target.value as Prefs['timeFormat'] })}
+              onValueChange={(v) => update({ timeFormat: v as Prefs['timeFormat'] })}
             >
               {(['auto', '12h', '24h'] as const).map((v) => (
                 <option key={v} value={v}>
@@ -226,7 +224,7 @@ export function PrefsEditor() {
             <Select
               {...p}
               value={prefs.motion}
-              onChange={(e) => update({ motion: e.target.value as Prefs['motion'] })}
+              onValueChange={(v) => update({ motion: v as Prefs['motion'] })}
             >
               {(['system', 'reduce', 'full'] as const).map((v) => (
                 <option key={v} value={v}>
@@ -271,9 +269,7 @@ export function PrefsEditor() {
             <Select
               {...p}
               value={prefs.chatAnnouncements}
-              onChange={(e) =>
-                update({ chatAnnouncements: e.target.value as Prefs['chatAnnouncements'] })
-              }
+              onValueChange={(v) => update({ chatAnnouncements: v as Prefs['chatAnnouncements'] })}
             >
               {(['all', 'mentions', 'off'] as const).map((v) => (
                 <option key={v} value={v}>
@@ -297,7 +293,7 @@ export function PrefsEditor() {
             <Select
               {...p}
               value={prefs.liveUpdates}
-              onChange={(e) => update({ liveUpdates: e.target.value as Prefs['liveUpdates'] })}
+              onValueChange={(v) => update({ liveUpdates: v as Prefs['liveUpdates'] })}
             >
               {(['auto', 'announce'] as const).map((v) => (
                 <option key={v} value={v}>

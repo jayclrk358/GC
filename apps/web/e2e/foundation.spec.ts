@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { expectAccessible, setScheme, signIn, signUp, uniqueUser } from './helpers';
+import { choose, expectAccessible, setScheme, signIn, signUp, uniqueUser } from './helpers';
 
 test.describe('foundation', () => {
   test('home page is accessible in every colour mode', async ({ page }) => {
@@ -45,7 +45,7 @@ test.describe('foundation', () => {
     await expectAccessible(page, 'accessibility settings');
     await page.getByRole('switch', { name: 'High contrast' }).click();
     await expect(page.locator('html')).toHaveAttribute('data-contrast', 'high');
-    await page.getByLabel('Font', { exact: true }).selectOption('atkinson');
+    await choose(page.getByLabel('Font', { exact: true }), 'Atkinson Hyperlegible');
     await expect(page.locator('html')).toHaveAttribute('data-font', 'atkinson');
     await expect(page.getByRole('status').filter({ hasText: 'Preferences saved' })).toBeAttached();
     await page.reload();

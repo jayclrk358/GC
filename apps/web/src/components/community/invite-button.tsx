@@ -57,7 +57,7 @@ export function InviteButton({ communityId }: { communityId: string }) {
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label={t('expiresAfter')}>
             {(p) => (
-              <Select {...p} value={expires} onChange={(e) => setExpires(e.target.value)}>
+              <Select {...p} value={expires} onValueChange={(v) => setExpires(v)}>
                 <option value="1">{t('hours', { count: 1 })}</option>
                 <option value="24">{t('days', { count: 1 })}</option>
                 <option value="168">{t('days', { count: 7 })}</option>
@@ -68,7 +68,7 @@ export function InviteButton({ communityId }: { communityId: string }) {
           </Field>
           <Field label={t('maxUses')}>
             {(p) => (
-              <Select {...p} value={maxUses} onChange={(e) => setMaxUses(e.target.value)}>
+              <Select {...p} value={maxUses} onValueChange={(v) => setMaxUses(v)}>
                 <option value="0">{t('unlimited')}</option>
                 <option value="1">1</option>
                 <option value="5">5</option>

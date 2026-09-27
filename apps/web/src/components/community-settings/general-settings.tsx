@@ -131,7 +131,7 @@ export function GeneralSettings({
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label={tcr('game')}>
               {(p) => (
-                <Select {...p} value={v.gameId} onChange={(e) => set('gameId', e.target.value)}>
+                <Select {...p} value={v.gameId} onValueChange={(value) => set('gameId', value)}>
                   <option value="">{tcr('noGame')}</option>
                   {games.map((g) => (
                     <option key={g.id} value={g.id}>
@@ -146,7 +146,7 @@ export function GeneralSettings({
             </Field>
             <Field label={tcr('region')}>
               {(p) => (
-                <Select {...p} value={v.region} onChange={(e) => set('region', e.target.value)}>
+                <Select {...p} value={v.region} onValueChange={(value) => set('region', value)}>
                   {REGIONS.map((r) => (
                     <option key={r} value={r}>
                       {tc(`regions.${r}`)}
@@ -157,7 +157,7 @@ export function GeneralSettings({
             </Field>
             <Field label={tcr('language')}>
               {(p) => (
-                <Select {...p} value={v.language} onChange={(e) => set('language', e.target.value)}>
+                <Select {...p} value={v.language} onValueChange={(value) => set('language', value)}>
                   {LANGUAGES.map((l) => (
                     <option key={l} value={l}>
                       {tc(`languages.${l}`)}
@@ -176,7 +176,7 @@ export function GeneralSettings({
                 <Select
                   {...p}
                   value={v.visibility}
-                  onChange={(e) => set('visibility', e.target.value as Initial['visibility'])}
+                  onValueChange={(value) => set('visibility', value as Initial['visibility'])}
                 >
                   {(['public', 'unlisted', 'private'] as const).map((k) => (
                     <option key={k} value={k}>
@@ -191,7 +191,7 @@ export function GeneralSettings({
                 <Select
                   {...p}
                   value={v.joinMode}
-                  onChange={(e) => set('joinMode', e.target.value as Initial['joinMode'])}
+                  onValueChange={(value) => set('joinMode', value as Initial['joinMode'])}
                 >
                   <option value="open">{tcr('joinModes.open.name')}</option>
                   <option value="invite">{tcr('joinModes.invite.name')}</option>

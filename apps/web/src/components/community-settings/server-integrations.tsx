@@ -98,11 +98,7 @@ export function ServerIntegrationsForm({
         <p className="text-sm text-muted">{t('alertsDesc')}</p>
         <Field label={t('alertChannel')} error={fields.alertChannelId}>
           {(p) => (
-            <Select
-              {...p}
-              value={alertChannelId}
-              onChange={(e) => setAlertChannelId(e.target.value)}
-            >
+            <Select {...p} value={alertChannelId} onValueChange={(v) => setAlertChannelId(v)}>
               <option value="">{t('alertsOff')}</option>
               {data.channels.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -148,11 +144,7 @@ export function ServerIntegrationsForm({
           </div>
           <Field label={t('votifierVersion')}>
             {(p) => (
-              <Select
-                {...p}
-                value={mode}
-                onChange={(e) => setMode(e.target.value === 'v1' ? 'v1' : 'v2')}
-              >
+              <Select {...p} value={mode} onValueChange={(v) => setMode(v === 'v1' ? 'v1' : 'v2')}>
                 <option value="v2">{t('votifierV2')}</option>
                 <option value="v1">{t('votifierV1')}</option>
               </Select>

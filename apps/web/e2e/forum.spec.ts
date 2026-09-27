@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import {
+  choose,
   createCommunity,
   expectAccessible,
   joinAsMember,
@@ -258,7 +259,7 @@ test.describe('forum', () => {
     await page.getByRole('button', { name: `Moderate ${member.user.name}` }).click();
     await page.getByRole('menuitem', { name: 'Time out…' }).click();
     const timeout = page.getByRole('dialog', { name: `Time out ${member.user.name}` });
-    await timeout.getByLabel('Duration').selectOption('1h');
+    await choose(timeout.getByLabel('Duration'), '1 hour');
     await timeout.getByLabel('Reason').fill('Cooling off');
     await timeout.getByRole('button', { name: 'Time out' }).click();
     await expect(page.getByText(/Timed out until/)).toBeVisible();

@@ -262,7 +262,7 @@ export function CreateWizard({ games }: { games: { id: string; name: string }[] 
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label={t('game')} error={fields.gameId}>
                 {(p) => (
-                  <Select {...p} value={v.gameId} onChange={(e) => set('gameId', e.target.value)}>
+                  <Select {...p} value={v.gameId} onValueChange={(value) => set('gameId', value)}>
                     <option value="">{t('noGame')}</option>
                     {games.map((g) => (
                       <option key={g.id} value={g.id}>
@@ -353,7 +353,7 @@ export function CreateWizard({ games }: { games: { id: string; name: string }[] 
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label={t('region')}>
                 {(p) => (
-                  <Select {...p} value={v.region} onChange={(e) => set('region', e.target.value)}>
+                  <Select {...p} value={v.region} onValueChange={(value) => set('region', value)}>
                     {REGIONS.map((r) => (
                       <option key={r} value={r}>
                         {tc(`regions.${r}`)}
@@ -367,7 +367,7 @@ export function CreateWizard({ games }: { games: { id: string; name: string }[] 
                   <Select
                     {...p}
                     value={v.language}
-                    onChange={(e) => set('language', e.target.value)}
+                    onValueChange={(value) => set('language', value)}
                   >
                     {LANGUAGES.map((l) => (
                       <option key={l} value={l}>

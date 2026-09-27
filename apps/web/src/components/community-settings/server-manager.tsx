@@ -91,8 +91,8 @@ function ServerForm({
           <Select
             {...p}
             value={v.protocol}
-            onChange={(e) => {
-              const proto = protocols.find((x) => x.key === e.target.value)!;
+            onValueChange={(key) => {
+              const proto = protocols.find((x) => x.key === key)!;
               const prevDefault = protocols.find((x) => x.key === v.protocol)?.defaultPort;
               setV((s) => ({
                 ...s,
@@ -157,7 +157,7 @@ function ServerForm({
         </Field>
         <Field label={t('region')}>
           {(p) => (
-            <Select {...p} value={v.region} onChange={(e) => set('region', e.target.value)}>
+            <Select {...p} value={v.region} onValueChange={(value) => set('region', value)}>
               {REGIONS.map((r) => (
                 <option key={r} value={r}>
                   {tc(`regions.${r}`)}

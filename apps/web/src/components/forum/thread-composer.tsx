@@ -189,7 +189,7 @@ export function ThreadComposer({
       {flairs.length > 0 && (
         <Field label={t('flair')} error={fields.flairId} required={requireFlair}>
           {(p) => (
-            <Select {...p} value={flairId} onChange={(e) => edit(setFlairId)(e.target.value)}>
+            <Select {...p} value={flairId} onValueChange={(v) => edit(setFlairId)(v)}>
               <option value="">{requireFlair ? t('chooseFlair') : t('noFlair')}</option>
               {flairs.map((f) => (
                 <option key={f.id} value={f.id}>
@@ -296,7 +296,7 @@ export function ThreadComposer({
                 <Select
                   {...p}
                   value={poll.closesInHours}
-                  onChange={(e) => setPoll({ ...poll, closesInHours: Number(e.target.value) })}
+                  onValueChange={(v) => setPoll({ ...poll, closesInHours: Number(v) })}
                 >
                   <option value={0}>{t('pollNever')}</option>
                   <option value={24}>{t('pollDays', { count: 1 })}</option>

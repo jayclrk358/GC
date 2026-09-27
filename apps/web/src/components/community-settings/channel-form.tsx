@@ -97,7 +97,7 @@ export function ChannelForm({
             <Select
               {...p}
               value={v.type}
-              onChange={(e) => set({ type: e.target.value as ChannelFormValues['type'] })}
+              onValueChange={(value) => set({ type: value as ChannelFormValues['type'] })}
             >
               <option value="forum">{t('types.forum')}</option>
               <option value="announcement">{t('types.announcement')}</option>
@@ -132,7 +132,7 @@ export function ChannelForm({
           <Select
             {...p}
             value={v.parentId ?? ''}
-            onChange={(e) => set({ parentId: e.target.value || null })}
+            onValueChange={(value) => set({ parentId: value || null })}
           >
             <option value="">{t('noCategory')}</option>
             {categories.map((c) => (
@@ -169,9 +169,9 @@ export function ChannelForm({
               <Select
                 {...p}
                 value={v.settings.defaultSort}
-                onChange={(e) =>
+                onValueChange={(value) =>
                   setS({
-                    defaultSort: e.target.value as ChannelFormValues['settings']['defaultSort'],
+                    defaultSort: value as ChannelFormValues['settings']['defaultSort'],
                   })
                 }
               >
@@ -190,7 +190,7 @@ export function ChannelForm({
           <Select
             {...p}
             value={v.slowmodeSeconds}
-            onChange={(e) => set({ slowmodeSeconds: Number(e.target.value) })}
+            onValueChange={(value) => set({ slowmodeSeconds: Number(value) })}
           >
             {SLOWMODES.map((s) => (
               <option key={s} value={s}>

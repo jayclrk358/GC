@@ -275,9 +275,7 @@ export function ThemeEditor({
                 <Select
                   {...p}
                   value={theme.fontBody}
-                  onChange={(e) =>
-                    setTheme({ ...theme, fontBody: e.target.value as Theme['fontBody'] })
-                  }
+                  onValueChange={(v) => setTheme({ ...theme, fontBody: v as Theme['fontBody'] })}
                 >
                   {FONT_KEYS.map((f) => (
                     <option key={f} value={f}>
@@ -292,8 +290,8 @@ export function ThemeEditor({
                 <Select
                   {...p}
                   value={theme.fontHeading}
-                  onChange={(e) =>
-                    setTheme({ ...theme, fontHeading: e.target.value as Theme['fontHeading'] })
+                  onValueChange={(v) =>
+                    setTheme({ ...theme, fontHeading: v as Theme['fontHeading'] })
                   }
                 >
                   {FONT_KEYS.map((f) => (
@@ -309,9 +307,7 @@ export function ThemeEditor({
                 <Select
                   {...p}
                   value={theme.radius}
-                  onChange={(e) =>
-                    setTheme({ ...theme, radius: e.target.value as Theme['radius'] })
-                  }
+                  onValueChange={(v) => setTheme({ ...theme, radius: v as Theme['radius'] })}
                 >
                   {(Object.keys(RADIUS_VALUES) as Theme['radius'][]).map((r) => (
                     <option key={r} value={r}>
@@ -326,8 +322,8 @@ export function ThemeEditor({
                 <Select
                   {...p}
                   value={theme.defaultScheme}
-                  onChange={(e) =>
-                    setTheme({ ...theme, defaultScheme: e.target.value as Theme['defaultScheme'] })
+                  onValueChange={(v) =>
+                    setTheme({ ...theme, defaultScheme: v as Theme['defaultScheme'] })
                   }
                 >
                   <option value="auto">{t('schemeAuto')}</option>
@@ -341,8 +337,8 @@ export function ThemeEditor({
                 <Select
                   {...p}
                   value={theme.headerStyle}
-                  onChange={(e) =>
-                    setTheme({ ...theme, headerStyle: e.target.value as Theme['headerStyle'] })
+                  onValueChange={(v) =>
+                    setTheme({ ...theme, headerStyle: v as Theme['headerStyle'] })
                   }
                 >
                   <option value="banner">{t('headerBanner')}</option>

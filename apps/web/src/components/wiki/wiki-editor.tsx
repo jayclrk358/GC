@@ -109,7 +109,7 @@ export function WikiEditor({
       </Field>
       <Field label={t('parent')} error={fields.parentId} description={t('parentHint')}>
         {(p) => (
-          <Select {...p} value={parentId} onChange={(e) => touch(setParentId)(e.target.value)}>
+          <Select {...p} value={parentId} onValueChange={(v) => touch(setParentId)(v)}>
             <option value="">{t('noParent')}</option>
             {parents.map((o) => (
               <option key={o.id} value={o.id}>

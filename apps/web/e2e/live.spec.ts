@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import {
+  choose,
   createCommunity,
   joinAsMember,
   post,
@@ -78,7 +79,10 @@ test.describe('live updates', () => {
     const member = await joinAsMember(browser, slug);
 
     await member.page.goto('/settings/accessibility');
-    await member.page.getByLabel('New posts and updates').selectOption('announce');
+    await choose(
+      member.page.getByLabel('New posts and updates'),
+      'Tell me, and wait until I load them',
+    );
     await expect(
       member.page.getByRole('status').filter({ hasText: 'Preferences saved' }),
     ).toBeAttached();

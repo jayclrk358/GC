@@ -89,6 +89,86 @@
     border-radius: 2px;
   }
 
+  /*
+   * Checkboxes and radio buttons: drawn by us (so they follow the theme), but still the native
+   * inputs, so forms, keyboard use and screen readers work as usual. The border uses the muted
+   * text colour, which keeps the box at 3:1 or better against the page.
+   */
+  input[type='checkbox'],
+  input[type='radio'] {
+    appearance: none;
+    display: inline-grid;
+    flex-shrink: 0;
+    place-content: center;
+    width: 1.125rem;
+    height: 1.125rem;
+    margin: 0;
+    border: 2px solid var(--c-text-muted);
+    border-radius: calc(var(--mx-radius) * 0.45);
+    background-color: var(--c-surface);
+    cursor: pointer;
+    vertical-align: middle;
+    transition:
+      background-color 150ms var(--mx-ease),
+      border-color 150ms var(--mx-ease);
+  }
+  input[type='radio'] {
+    border-radius: 50%;
+  }
+  input[type='checkbox']::before,
+  input[type='radio']::before {
+    content: '';
+    width: 0.625rem;
+    height: 0.625rem;
+    scale: 0;
+    transition: scale 150ms var(--mx-ease);
+  }
+  input[type='checkbox']::before {
+    background-color: var(--c-on-primary);
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M1.5 6.2 4.6 9.2 10.5 2.8' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+      center / contain no-repeat;
+  }
+  input[type='radio']::before {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background-color: var(--c-primary);
+  }
+  input[type='checkbox']:hover:not(:disabled),
+  input[type='radio']:hover:not(:disabled) {
+    border-color: var(--c-primary);
+  }
+  input[type='checkbox']:checked,
+  input[type='checkbox']:indeterminate {
+    border-color: var(--c-primary);
+    background-color: var(--c-primary);
+  }
+  input[type='radio']:checked {
+    border-color: var(--c-primary);
+  }
+  input[type='checkbox']:checked::before,
+  input[type='checkbox']:indeterminate::before,
+  input[type='radio']:checked::before {
+    scale: 1;
+  }
+  input[type='checkbox']:indeterminate::before {
+    height: 2px;
+    mask: none;
+    border-radius: 1px;
+  }
+  input[type='checkbox']:disabled,
+  input[type='radio']:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  /* Windows High Contrast and similar modes: hand drawing back to the system. */
+  @media (forced-colors: active) {
+    input[type='checkbox'],
+    input[type='radio'] {
+      appearance: auto;
+    }
+  }
+
   ::selection {
     background: color-mix(in srgb, var(--c-primary) 30%, transparent);
   }

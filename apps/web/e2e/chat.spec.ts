@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import {
+  choose,
   createCommunity,
   expectAccessible,
   FIXTURE_CTL,
@@ -267,7 +268,7 @@ test.describe('chat', () => {
     await page.goto(`/c/${slug}/settings/channels`);
     await page.getByRole('button', { name: 'Edit lounge' }).click();
     const form = page.getByRole('dialog', { name: 'Edit #lounge' });
-    await form.getByLabel('Slow mode').selectOption('30');
+    await choose(form.getByLabel('Slow mode'), '30 seconds');
     await form.getByRole('button', { name: 'Save' }).click();
     await expect(page.getByText('#lounge saved.')).toBeVisible();
     const member = await joinAsMember(browser, slug, 'slow');

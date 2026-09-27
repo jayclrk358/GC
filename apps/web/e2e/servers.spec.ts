@@ -1,5 +1,6 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 import {
+  choose,
   createCommunity,
   expectAccessible,
   FIXTURE_CTL,
@@ -150,7 +151,7 @@ test.describe('game servers', () => {
 
       await row.getByRole('button', { name: /Alerts & votes/ }).click();
       const dialog = page.getByRole('dialog', { name: `Alerts and votes for ${name}` });
-      await dialog.getByLabel('Alert channel').selectOption({ label: '#lounge' });
+      await choose(dialog.getByLabel('Alert channel'), '#lounge');
       await dialog.getByRole('button', { name: 'Save settings' }).click();
       await expect(dialog).toBeHidden();
 

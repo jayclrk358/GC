@@ -121,7 +121,7 @@ export function ModTools({
             {isMod && (
               <Field label={t('moveTo')}>
                 {(p) => (
-                  <Select {...p} value={target} onChange={(e) => setTarget(e.target.value)}>
+                  <Select {...p} value={target} onValueChange={(v) => setTarget(v)}>
                     {channels.map((c) => (
                       <option key={c.id} value={c.id}>
                         #{c.name}
@@ -133,7 +133,7 @@ export function ModTools({
             )}
             <Field label={t('flair')}>
               {(p) => (
-                <Select {...p} value={flair} onChange={(e) => setFlair(e.target.value)}>
+                <Select {...p} value={flair} onValueChange={(v) => setFlair(v)}>
                   <option value="">{t('noFlair')}</option>
                   {flairs.map((f) => (
                     <option key={f.id} value={f.id}>

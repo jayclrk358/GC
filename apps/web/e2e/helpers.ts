@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, type Browser, type Page } from '@playwright/test';
+import { expect, type Browser, type Locator, type Page } from '@playwright/test';
 
 export const PASSWORD = 'correct-horse-battery-staple';
 
@@ -145,4 +145,12 @@ export async function reply(page: Page, text: string) {
   await page.getByRole('textbox', { name: 'Your reply' }).fill(text);
   await page.getByRole('button', { name: 'Post reply' }).click();
   await expect(post(page, text)).toBeVisible();
+}
+
+/** Pick an option from one of our dropdowns (a button that opens a listbox, not a native select). */
+export async function choose(dropdown: Locator, option: string | RegExp) {
+  await dropdown.click();
+  const listbox = dropdown.page().getByRole('listbox');
+  await listbox.getByRole('option', { name: option, exact: typeof option === 'string' }).click();
+  await expect(listbox).toBeHidden();
 }

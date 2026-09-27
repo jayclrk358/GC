@@ -116,7 +116,7 @@ export function FlairManager({
         </Field>
         <Field label={t('flairChannel')}>
           {(p) => (
-            <Select {...p} value={channelId} onChange={(e) => setChannelId(e.target.value)}>
+            <Select {...p} value={channelId} onValueChange={(v) => setChannelId(v)}>
               <option value="">{t('allChannels')}</option>
               {channels.map((c) => (
                 <option key={c.id} value={c.id}>
