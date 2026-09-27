@@ -15,3 +15,6 @@ screenshots/
 .DS_Store
 *.log
 next-env.d.ts
+
+# Redis snapshots from running redis-server in the repo folder
+dump.rdb

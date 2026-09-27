@@ -4,8 +4,14 @@
 #   docker build --target app .      realtime / worker / migrate (run from source with tsx)
 
 FROM node:22-bookworm-slim AS base
-ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH NEXT_TELEMETRY_DISABLED=1
-RUN corepack enable
+# pnpm is installed into a shared folder at build time, so the unprivileged runtime user can run
+# it without downloading anything.
+ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH NEXT_TELEMETRY_DISABLED=1 \
+    COREPACK_HOME=/opt/corepack COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+COPY package.json /tmp/package.json
+RUN corepack enable \
+ && corepack install -g "$(node -p "require('/tmp/package.json').packageManager")" \
+ && chmod -R a+rX /opt/corepack
 WORKDIR /repo
 
 FROM base AS deps
@@ -28,7 +34,8 @@ RUN pnpm --filter @magnox/web build
 FROM node:22-bookworm-slim AS web
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0
 WORKDIR /srv
-RUN useradd --system --uid 1001 magnox
+# The upload volume mounts at /data/media; a new volume takes this folder's owner.
+RUN useradd --system --uid 1001 magnox && mkdir -p /data/media && chown magnox /data/media
 COPY --from=build --chown=magnox /repo/apps/web/.next/standalone ./
 COPY --from=build --chown=magnox /repo/apps/web/.next/static ./apps/web/.next/static
 COPY --from=build --chown=magnox /repo/apps/web/public ./apps/web/public
@@ -40,6 +47,6 @@ CMD ["node", "apps/web/server.js"]
 FROM deps AS app
 ENV NODE_ENV=production
 COPY . .
-RUN useradd --system --uid 1001 magnox && chown -R magnox /repo/storage 2>/dev/null || true
+RUN useradd --system --uid 1001 magnox && mkdir -p /data/media && chown magnox /data/media
 USER magnox
 CMD ["pnpm", "--filter", "@magnox/realtime", "start"]

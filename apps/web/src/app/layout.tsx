@@ -17,7 +17,7 @@ import '@fontsource/opendyslexic/400.css';
 import '@fontsource/opendyslexic/700.css';
 import './globals.css';
 import { getUser } from '@/lib/auth';
-import { mediaUrl } from '@/lib/media';
+import { mediaBase, mediaUrl } from '@/lib/media';
 import { getPrefs } from '@/lib/prefs';
 import { AppProviders } from '@/components/shell/app-providers';
 import { SiteHeader } from '@/components/shell/site-header';
@@ -73,6 +73,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     >
       <head>
         <style nonce={nonce} dangerouslySetInnerHTML={{ __html: SITE_TOKENS }} />
+        <meta name="mx-media-base" content={mediaBase()} />
       </head>
       <body className="min-h-dvh">
         <NextIntlClientProvider>

@@ -85,15 +85,38 @@ The scripts live in `scripts/windows/`. To do the same by hand in PowerShell: co
 `pnpm db:seed` and `pnpm dev`. If port 5432 is taken, a native Postgres install is running:
 stop it, or change the port in `docker-compose.yml` and `DATABASE_URL`.
 
-### Full stack with Docker
+### Hosting on Linux (Docker)
+
+Everything runs in containers: Postgres, Redis, the three apps, Mailpit, and Caddy in front. Caddy
+handles HTTPS and serves uploads from a separate, cookie-less address. You need
+[Docker Engine with the Compose plugin](https://docs.docker.com/engine/install/), `git` and
+`openssl`.
 
 ```bash
-docker compose up --build
+git clone -b claude/nice-davinci-h3tk5l https://github.com/jayclrk358/Magnox.git magnox
+cd magnox
+scripts/linux/server-env.sh                     # just this machine: https://localhost
+scripts/linux/server-env.sh 192.168.1.50        # or: other devices on your network (your IP)
+scripts/linux/server-env.sh magnox.example.com  # or: a domain on the internet
+docker compose up -d --build                    # first build takes a few minutes
 ```
 
-This runs Postgres, both Redis instances, MinIO (uploads), Mailpit, a one-off migration job, the
-three apps, and Caddy on https://localhost. Caddy serves the app and Socket.IO on one origin and
-uploads from a separate cookie-less `media.localhost` origin.
+Then open the address the script printed. The script writes `.env` with random secrets (run it
+once, before the first start) and makes `docker compose` include `docker-compose.prod.yml`, which
+keeps the databases off the network and restarts everything after a reboot.
+
+- **By IP address:** Caddy signs its own certificate, so each browser warns once; continue past
+  the warning, or install Caddy's root certificate on your devices
+  (`docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt .`). Uploads use port 8443.
+- **With a domain:** point DNS records for `magnox.example.com` and `media.magnox.example.com` at
+  the server and open ports 80 and 443. Caddy gets Let's Encrypt certificates automatically.
+- **Email:** with `SMTP_URL` empty, mail (sign-up confirmations, password resets) lands in
+  Mailpit at http://localhost:8025 on the server. Set `SMTP_URL` in `.env` for real email.
+- **Update:** `git pull && docker compose up -d --build` (migrations run automatically).
+- **Logs / stop:** `docker compose logs -f web worker`, `docker compose down` (data stays in
+  Docker volumes).
+- **Backup:** `docker compose exec postgres pg_dump -U magnox magnox > magnox.sql`, plus the
+  `magnox_media` volume (uploads).
 
 ## Scripts
 

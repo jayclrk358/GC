@@ -1,3 +1,8 @@
+{
+	# Browsers send no server name (SNI) when the site is reached by IP address; use the site's.
+	default_sni {$SITE_ADDRESS}
+}
+
 # App and realtime share one origin so the session cookie reaches Socket.IO with no CORS setup.
 {$SITE_ADDRESS} {
 	encode zstd gzip
@@ -19,8 +24,8 @@
 	}
 	@allowed path_regexp ^/u/[a-z0-9]{8,40}\.(webp|png|jpg|gif)$
 	handle @allowed {
-		rewrite * /magnox{uri}
-		reverse_proxy minio:9000
+		root * /srv/media
+		file_server
 	}
 	respond 404
 }

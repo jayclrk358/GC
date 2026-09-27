@@ -51,7 +51,10 @@ export function env(): Env {
   if (!parsed.success) {
     throw new Error(`Invalid environment: ${z.prettifyError(parsed.error)}`);
   }
-  if (parsed.data.NODE_ENV === 'production') {
+  // `next build` loads route modules to collect page data, but secrets are only provided when
+  // the server runs (e.g. in Docker), so the production checks wait until then.
+  const building = process.env.NEXT_PHASE === 'phase-production-build';
+  if (parsed.data.NODE_ENV === 'production' && !building) {
     if (parsed.data.BETTER_AUTH_SECRET.startsWith('dev-secret')) {
       throw new Error('BETTER_AUTH_SECRET must be set in production');
     }
