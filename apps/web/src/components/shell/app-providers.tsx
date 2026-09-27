@@ -7,8 +7,12 @@ import type { Prefs } from '@magnox/shared';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { PrefsProvider } from './prefs-provider';
 import { ShortcutsProvider, useShortcut } from './shortcuts-provider';
-import { CommandPalette } from './command-palette';
 import { ShortcutHelp } from './shortcut-help';
+
+// Only a few visitors open the palette, so its code (cmdk) loads the first time it's opened.
+const CommandPalette = React.lazy(() =>
+  import('./command-palette').then((m) => ({ default: m.CommandPalette })),
+);
 
 const PaletteContext = React.createContext<{ openPalette: () => void; openHelp: () => void }>({
   openPalette: () => {},
@@ -23,6 +27,8 @@ function GlobalShortcuts({ signedIn, children }: { signedIn: boolean; children: 
   const router = useRouter();
   const [paletteOpen, setPaletteOpen] = React.useState(false);
   const [helpOpen, setHelpOpen] = React.useState(false);
+  const [paletteUsed, setPaletteUsed] = React.useState(false);
+  if (paletteOpen && !paletteUsed) setPaletteUsed(true);
 
   useShortcut('palette', () => setPaletteOpen((o) => !o));
   useShortcut('search', () => setPaletteOpen(true));
@@ -41,12 +47,16 @@ function GlobalShortcuts({ signedIn, children }: { signedIn: boolean; children: 
   return (
     <PaletteContext.Provider value={ctx}>
       {children}
-      <CommandPalette
-        open={paletteOpen}
-        onOpenChange={setPaletteOpen}
-        onShowShortcuts={() => setHelpOpen(true)}
-        signedIn={signedIn}
-      />
+      {paletteUsed && (
+        <React.Suspense fallback={null}>
+          <CommandPalette
+            open={paletteOpen}
+            onOpenChange={setPaletteOpen}
+            onShowShortcuts={() => setHelpOpen(true)}
+            signedIn={signedIn}
+          />
+        </React.Suspense>
+      )}
       <ShortcutHelp open={helpOpen} onOpenChange={setHelpOpen} />
     </PaletteContext.Provider>
   );

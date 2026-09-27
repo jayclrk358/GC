@@ -45,6 +45,7 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
               <img
                 src={banner}
                 alt=""
+                fetchPriority="high"
                 className="mx-page-enter size-full object-cover"
                 style={{ objectPosition: `50% ${theme.bannerFocalY}%` }}
               />

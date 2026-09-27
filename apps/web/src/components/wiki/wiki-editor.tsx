@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Input, Select } from '@/components/ui/input';
 import { FormError } from '@/components/auth/form-error';
-import { RichTextEditor } from '@/components/rich-text/editor';
+import { RichTextEditor } from '@/components/rich-text/lazy-editor';
 import { createWikiPageAction, updateWikiPageAction } from '@/app/actions/wiki';
 
 export interface WikiEditorPage {

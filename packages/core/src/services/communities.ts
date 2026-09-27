@@ -25,6 +25,7 @@ import { enforceRateLimit } from '../ratelimit';
 import { TEMPLATES } from '../templates';
 import { Permission } from '@magnox/shared';
 import { audit, diffOf } from './audit';
+import { cached } from '../cache';
 
 const MAX_OWNED_COMMUNITIES = 10;
 
@@ -411,11 +412,14 @@ export async function communitiesForUser(userId: string, opts: { publicOnly?: bo
     .limit(100);
 }
 
+/** The game catalogue (it only changes with a deploy or seed, so it's cached briefly). */
 export async function listGames() {
-  return db
-    .select({ id: schema.games.id, name: schema.games.name, protocol: schema.games.protocol })
-    .from(schema.games)
-    .orderBy(schema.games.name);
+  return cached('games', 300, () =>
+    db
+      .select({ id: schema.games.id, name: schema.games.name, protocol: schema.games.protocol })
+      .from(schema.games)
+      .orderBy(schema.games.name),
+  );
 }
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];

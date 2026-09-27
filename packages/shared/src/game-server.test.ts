@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import {
-  fillSeries,
-  formatDuration,
-  serverIntegrationsSchema,
-  serverSearchSchema,
-  summariseHistory,
-} from './game-server';
+import { fillSeries, formatDuration, summariseHistory } from './game-server';
+import { serverIntegrationsSchema, serverSearchSchema } from './game-server-schema';
 
 describe('serverSearchSchema', () => {
   it('parses query strings leniently', () => {

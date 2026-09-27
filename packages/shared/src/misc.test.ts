@@ -9,7 +9,8 @@ import {
 } from './blocks';
 import { isValidSlug, slugify } from './slug';
 import { newId, randomToken, isUuid } from './ids';
-import { connectLink, displayAddress, serverInputSchema } from './game-server';
+import { connectLink, displayAddress } from './game-server';
+import { serverInputSchema } from './game-server-schema';
 
 describe('slugs', () => {
   it('slugifies names', () => {

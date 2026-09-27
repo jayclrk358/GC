@@ -6,10 +6,10 @@ import {
   parseOpenGraph,
   startsNewGroup,
   summariseForAnnouncement,
-  messageInputSchema,
   parseSearchQuery,
   toChatDoc,
 } from './chat';
+import { messageInputSchema } from './chat-schema';
 import { newId, timeOfUuid, uuidAtTime } from './ids';
 import type { RichNode } from './richtext';
 

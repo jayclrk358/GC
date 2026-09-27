@@ -1,13 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import {
-  collectMentions,
-  docHeadings,
-  docToText,
-  imagesMissingAlt,
-  isSafeHref,
-  RichTextError,
-  sanitizeDoc,
-} from './richtext';
+import { collectMentions, docHeadings, docToText, imagesMissingAlt, isSafeHref } from './richtext';
+import { RichTextError, sanitizeDoc } from './richtext-schema';
 
 const doc = (content: unknown[]) => ({ type: 'doc', content });
 const p = (...content: unknown[]) => ({ type: 'paragraph', content });

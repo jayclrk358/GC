@@ -18,6 +18,7 @@ import { notFound } from '../errors';
 import { queryServerViews, type ServerView } from './servers';
 import { recentVoteCount } from './history';
 import { voteStatus, type VoteStatus } from './votes';
+import { cached } from '../cache';
 
 export const BROWSER_PAGE_SIZE = 24;
 
@@ -138,6 +139,10 @@ export async function searchServers(raw: unknown): Promise<{
 
 /** Games that have at least one server in the browser, for the filter menu. */
 export async function browserGames(): Promise<{ id: string; name: string; count: number }[]> {
+  return cached('browser-games', 60, () => loadBrowserGames());
+}
+
+function loadBrowserGames() {
   return db
     .select({ id: schema.games.id, name: schema.games.name, count: count() })
     .from(schema.gameServers)

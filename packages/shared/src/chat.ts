@@ -1,30 +1,8 @@
-import { z } from 'zod';
-import { richDocSchema, type RichNode } from './richtext';
+import type { RichNode } from './richtext';
 import { REACTIONS, REACTION_NAMES } from './forum';
 
 export const MAX_ATTACHMENTS = 4;
 export const MAX_MESSAGE_CHARS = 4000;
-
-export const attachmentInputSchema = z.object({
-  key: z.string().regex(/^u\/[a-z0-9]{8,40}\.(webp|png|jpg|gif)$/),
-  alt: z.string().trim().max(1000).default(''),
-});
-
-export const messageInputSchema = z.object({
-  body: richDocSchema,
-  replyToId: z.string().uuid().nullable().default(null),
-  attachments: z.array(attachmentInputSchema).max(MAX_ATTACHMENTS).default([]),
-  /** Client-generated id; a retried send with the same nonce returns the first message. */
-  nonce: z
-    .string()
-    .regex(/^[a-zA-Z0-9-]{8,64}$/)
-    .optional(),
-  /** Whether replying should notify the person being replied to. */
-  mentionReplied: z.boolean().default(true),
-});
-export type MessageInput = z.infer<typeof messageInputSchema>;
-
-export const messageEditSchema = z.object({ body: richDocSchema });
 
 /** Reactions offered in chat: the forum set plus a few chat staples. */
 export const CHAT_REACTIONS = [

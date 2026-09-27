@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { richDocSchema, emptyDoc } from './richtext';
+import { emptyDoc } from './richtext';
+import { richDocSchema } from './richtext-schema';
 import { uploadKey } from './theme';
 
 const httpsUrl = z

@@ -11,7 +11,7 @@ import { Input, Select } from '@/components/ui/input';
 import { Alert } from '@/components/ui/misc';
 import { SwitchField } from '@/components/ui/switch';
 import { FormError } from '@/components/auth/form-error';
-import { RichTextEditor } from '@/components/rich-text/editor';
+import { RichTextEditor } from '@/components/rich-text/lazy-editor';
 import { createThreadAction } from '@/app/actions/forum';
 
 interface Draft {

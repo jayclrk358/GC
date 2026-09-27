@@ -18,7 +18,7 @@ import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { FormError } from '@/components/auth/form-error';
 import { RichText } from '@/components/rich-text/rich-text';
-import { RichTextEditor } from '@/components/rich-text/editor';
+import { RichTextEditor } from '@/components/rich-text/lazy-editor';
 import { ReportDialog } from '@/components/moderation/report-dialog';
 import {
   deletePostAction,

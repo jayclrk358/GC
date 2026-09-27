@@ -72,6 +72,8 @@ export function Avatar({
         alt={alt ?? ''}
         width={size}
         height={size}
+        loading="lazy"
+        decoding="async"
         style={style}
         className={cn('shrink-0 rounded-full bg-surface-2 object-cover', className)}
       />

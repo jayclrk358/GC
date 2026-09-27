@@ -112,6 +112,9 @@ keeps the databases off the network and restarts everything after a reboot.
   the server and open ports 80 and 443. Caddy gets Let's Encrypt certificates automatically.
 - **Email:** with `SMTP_URL` empty, mail (sign-up confirmations, password resets) lands in
   Mailpit at http://localhost:8025 on the server. Set `SMTP_URL` in `.env` for real email.
+- **Bot protection:** create a Cloudflare Turnstile widget for your domain and put its keys in
+  `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` in `.env`, then `docker compose up -d`. Sign-up,
+  sign-in, password resets and server votes then ask for the check.
 - **Update:** `git pull && docker compose up -d --build` (migrations run automatically).
 - **Logs / stop:** `docker compose logs -f web worker`, `docker compose down` (data stays in
   Docker volumes).

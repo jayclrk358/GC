@@ -18,6 +18,7 @@ import { QUEUES, enqueue } from '../queues';
 import { enforceRateLimit } from '../ratelimit';
 import { POLL } from '../servers/schedule';
 import { audit } from './audit';
+import { cached } from '../cache';
 
 const MAX_UNVERIFIED_PER_USER = 5;
 const MAX_ENDPOINTS_PER_IP = 20;
@@ -495,11 +496,18 @@ export async function countOnlineServers(
 }
 
 /** Headline numbers for the home page: public communities, listed servers online, players. */
-export async function platformStats(): Promise<{
+export interface PlatformStats {
   communities: number;
   serversOnline: number;
   players: number;
-}> {
+}
+
+/** Headline numbers for the home page, shared by everyone and refreshed every half minute. */
+export async function platformStats(): Promise<PlatformStats> {
+  return cached('platform-stats', 30, loadPlatformStats);
+}
+
+async function loadPlatformStats(): Promise<PlatformStats> {
   const [c, s] = await Promise.all([
     db
       .select({ n: sql<number>`count(*)::int` })

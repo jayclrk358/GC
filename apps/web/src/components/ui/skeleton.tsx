@@ -27,3 +27,39 @@ export function FilterGridSkeleton({ label }: { label: string }) {
     </div>
   );
 }
+
+/** Placeholder for an ordinary page (heading, then a column of content), while it loads. */
+export function PageSkeleton({ label, wide }: { label: string; wide?: boolean }) {
+  return (
+    <div
+      role="status"
+      aria-label={label}
+      className={cn(
+        'mx-auto flex w-full flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8',
+        wide ? 'max-w-7xl' : 'max-w-6xl',
+      )}
+    >
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-9 w-72 max-w-full" />
+        <Skeleton className="h-5 w-96 max-w-full" />
+      </div>
+      <div className="flex flex-col gap-3">
+        {Array.from({ length: 4 }, (_, i) => (
+          <Skeleton key={i} className="h-24 rounded-2xl" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Placeholder for a community tab, below the community's header (which stays in place). */
+export function CommunityTabSkeleton({ label }: { label: string }) {
+  return (
+    <div role="status" aria-label={label} className="flex flex-col gap-4">
+      <Skeleton className="h-8 w-56 max-w-full" />
+      {Array.from({ length: 4 }, (_, i) => (
+        <Skeleton key={i} className="h-20 rounded-2xl" />
+      ))}
+    </div>
+  );
+}

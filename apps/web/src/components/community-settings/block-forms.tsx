@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Input, Select, Textarea } from '@/components/ui/input';
 import { SwitchField } from '@/components/ui/switch';
-import { RichTextEditor } from '@/components/rich-text/editor';
+import { RichTextEditor } from '@/components/rich-text/lazy-editor';
 import { ImageUpload } from '@/components/upload/image-upload';
 
 export interface BlockFormContext {

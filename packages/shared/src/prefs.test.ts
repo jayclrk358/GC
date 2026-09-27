@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import {
-  decodePrefsCookie,
-  DEFAULT_PREFS,
-  encodePrefsCookie,
-  parsePrefs,
-  prefsToHtmlAttributes,
-} from './prefs';
+import { decodePrefsCookie, parsePrefs, prefsSchema } from './prefs';
+import { DEFAULT_PREFS, encodePrefsCookie, prefsToHtmlAttributes } from './prefs-values';
 
 describe('preferences', () => {
+  it('keeps the plain defaults in step with the schema', () => {
+    expect(prefsSchema.parse({})).toEqual(DEFAULT_PREFS);
+  });
+
   it('round-trips through the cookie', () => {
     const prefs = {
       ...DEFAULT_PREFS,

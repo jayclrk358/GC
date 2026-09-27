@@ -14,7 +14,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { authClient } from '@/lib/auth-client';
 import { formatCombo } from '@/lib/shortcuts';
 import { usePalette } from './app-providers';
 import { useShortcutCombos } from './shortcuts-provider';
@@ -86,6 +85,8 @@ export function UserMenu({
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onSelect={async () => {
+            // The auth client is only needed here, so it isn't part of every page's code.
+            const { authClient } = await import('@/lib/auth-client');
             await authClient.signOut();
             router.push('/');
             router.refresh();

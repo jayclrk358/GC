@@ -182,38 +182,42 @@
     }
   }
 
-  /* Each page fades up into place when you arrive. */
+  /* Each page rises into place when you arrive. It starts partly visible, so content is on
+     screen (and counts as painted) straight away rather than after the fade. */
   .mx-page-enter {
+    animation: mx-enter 280ms var(--mx-ease) backwards;
+  }
+  /* Children of a list arrive one after another, quickly. */
+  .mx-stagger > * {
     animation: mx-rise 360ms var(--mx-ease) backwards;
   }
-  /* Children of a list arrive one after another. */
-  .mx-stagger > * {
-    animation: mx-rise 480ms var(--mx-ease) backwards;
-  }
   .mx-stagger > :nth-child(2) {
-    animation-delay: 50ms;
+    animation-delay: 30ms;
   }
   .mx-stagger > :nth-child(3) {
-    animation-delay: 100ms;
+    animation-delay: 60ms;
   }
   .mx-stagger > :nth-child(4) {
-    animation-delay: 150ms;
+    animation-delay: 90ms;
   }
   .mx-stagger > :nth-child(5) {
-    animation-delay: 200ms;
+    animation-delay: 120ms;
   }
   .mx-stagger > :nth-child(6) {
-    animation-delay: 250ms;
+    animation-delay: 150ms;
   }
-  .mx-stagger > :nth-child(7) {
-    animation-delay: 300ms;
+  .mx-stagger > :nth-child(n + 7) {
+    animation-delay: 180ms;
   }
-  .mx-stagger > :nth-child(n + 8) {
-    animation-delay: 350ms;
+  @keyframes mx-enter {
+    from {
+      opacity: 0.4;
+      translate: 0 8px;
+    }
   }
   @keyframes mx-rise {
     from {
-      opacity: 0;
+      opacity: 0.15;
       translate: 0 10px;
     }
   }

@@ -20,6 +20,8 @@ export async function CommunityCard({ c }: { c: Card }) {
           <img
             src={banner}
             alt=""
+            loading="lazy"
+            decoding="async"
             className="mx-card-media size-full object-cover"
             style={{ objectPosition: `50% ${theme.bannerFocalY}%` }}
           />
@@ -40,6 +42,8 @@ export async function CommunityCard({ c }: { c: Card }) {
             <img
               src={icon}
               alt=""
+              loading="lazy"
+              decoding="async"
               className="size-14 rounded-xl border-4 border-surface bg-surface object-cover shadow-sm"
             />
           ) : (

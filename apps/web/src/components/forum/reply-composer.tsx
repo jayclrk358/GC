@@ -7,7 +7,7 @@ import { X } from 'lucide-react';
 import { docToText, emptyDoc, type RichNode } from '@magnox/shared';
 import { Button } from '@/components/ui/button';
 import { FormError } from '@/components/auth/form-error';
-import { RichTextEditor } from '@/components/rich-text/editor';
+import { RichTextEditor } from '@/components/rich-text/lazy-editor';
 import { createReplyAction } from '@/app/actions/forum';
 import { useThread } from './thread-context';
 
