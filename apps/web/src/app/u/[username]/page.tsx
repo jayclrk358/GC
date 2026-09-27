@@ -1,27 +1,81 @@
+import * as React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { CalendarDays, Link as LinkIcon, MapPin } from 'lucide-react';
+import {
+  CalendarDays,
+  Clock,
+  Gamepad2,
+  Glasses,
+  Languages,
+  Link as LinkIcon,
+  MapPin,
+  Monitor,
+  Smartphone,
+  Users,
+  type LucideIcon,
+} from 'lucide-react';
 import { getPublicProfile, hasBlocked } from '@magnox/core';
+import { ACCOUNT_KINDS, type Platform } from '@magnox/shared';
 import { getUser } from '@/lib/auth';
 import { BlockButton } from '@/components/moderation/block-button';
+import { CopyHandle, LocalTime } from '@/components/profile/profile-client';
 import { formatDate } from '@/lib/format';
 import { Avatar, Badge } from '@/components/ui/misc';
+
+const PLATFORM_ICONS: Record<Platform, LucideIcon> = {
+  pc: Monitor,
+  playstation: Gamepad2,
+  xbox: Gamepad2,
+  switch: Gamepad2,
+  mobile: Smartphone,
+  vr: Glasses,
+};
+
+const KINDS = new Map(ACCOUNT_KINDS.map((k) => [k.key, k]));
 
 export async function generateMetadata({ params }: { params: Promise<{ username: string }> }) {
   const profile = await getPublicProfile((await params).username);
   return { title: profile ? `${profile.name} (@${profile.username})` : 'Profile' };
 }
 
+function Section({
+  id,
+  title,
+  children,
+}: {
+  id: string;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section aria-labelledby={id} className="flex flex-col gap-2">
+      <h2 id={id} className="text-sm font-bold">
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
+}
+
 export default async function ProfilePage({ params }: { params: Promise<{ username: string }> }) {
-  const profile = await getPublicProfile((await params).username);
+  const viewer = await getUser();
+  const profile = await getPublicProfile((await params).username, viewer?.id);
   if (!profile) notFound();
   const t = await getTranslations('profile');
-  const viewer = await getUser();
+  const tc = await getTranslations('community');
   const blocked =
     viewer && viewer.id !== profile.id ? await hasBlocked(viewer.id, profile.id) : false;
+  const stats = [
+    { value: profile.stats.threads, label: t('statThreads', { count: profile.stats.threads }) },
+    { value: profile.stats.replies, label: t('statReplies', { count: profile.stats.replies }) },
+    {
+      value: profile.stats.communities,
+      label: t('statCommunities', { count: profile.stats.communities }),
+    },
+  ];
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col pb-12">
       <div className="h-40 sm:h-56" data-decorative aria-hidden>
         {profile.bannerUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -35,7 +89,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
           />
         )}
       </div>
-      <div className="mx-auto w-full max-w-4xl px-4">
+      <div className="mx-auto w-full max-w-5xl px-4">
         <div className="-mt-12 flex flex-wrap items-end gap-4">
           <Avatar
             src={profile.image}
@@ -43,7 +97,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
             size={112}
             className="border-4 border-bg"
           />
-          <div className="pb-2">
+          <div className="flex min-w-0 flex-col gap-1 pb-2">
             <h1 className="text-3xl font-extrabold">{profile.name}</h1>
             <p className="text-muted">
               @{profile.username}
@@ -56,9 +110,50 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
             </div>
           )}
         </div>
-        <div className="mt-6 grid gap-8 md:grid-cols-[2fr_1fr]">
-          <div className="flex flex-col gap-6">
+
+        {(profile.status || profile.lookingForGroup || profile.nowPlaying) && (
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            {profile.status && (
+              <p className="rounded-ui border border-border bg-surface px-3 py-1.5 text-sm">
+                {profile.status}
+              </p>
+            )}
+            {profile.nowPlaying && (
+              <Badge tone="primary" className="py-1 text-sm">
+                <Gamepad2 aria-hidden className="size-4" />
+                {t('nowPlaying')}: {profile.nowPlaying.name}
+              </Badge>
+            )}
+            {profile.lookingForGroup && (
+              <Badge tone="success" className="py-1 text-sm">
+                <Users aria-hidden className="size-4" />
+                {t('lookingForGroup')}
+              </Badge>
+            )}
+          </div>
+        )}
+
+        <div className="mt-8 grid gap-8 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+          <div className="flex flex-col gap-8">
             {profile.bio && <p className="text-lg whitespace-pre-line">{profile.bio}</p>}
+
+            <section aria-labelledby="stats-h">
+              <h2 id="stats-h" className="sr-only">
+                {t('stats')}
+              </h2>
+              <dl className="grid grid-cols-3 gap-3">
+                {stats.map((s) => (
+                  <div
+                    key={s.label}
+                    className="flex flex-col-reverse rounded-ui-lg border border-border bg-surface p-4"
+                  >
+                    <dt className="text-sm text-muted">{s.label}</dt>
+                    <dd className="font-heading text-2xl font-bold">{s.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+
             <section aria-labelledby="communities-h">
               <h2 id="communities-h" className="mb-3 text-lg font-bold">
                 {t('communities')}
@@ -71,7 +166,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
                     <li key={c.id}>
                       <Link
                         href={`/c/${c.slug}`}
-                        className="flex items-center gap-3 rounded-ui border border-border bg-surface p-3 hover:border-primary"
+                        className="mx-press flex items-center gap-3 rounded-ui border border-border bg-surface p-3 hover:border-primary"
                       >
                         <span
                           aria-hidden
@@ -95,37 +190,142 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
                 </ul>
               )}
             </section>
+
+            {profile.shared.length > 0 && (
+              <section aria-labelledby="shared-h">
+                <h2 id="shared-h" className="mb-3 text-lg font-bold">
+                  {t('sharedCommunities')}
+                </h2>
+                <ul className="flex flex-wrap gap-2">
+                  {profile.shared.map((c) => (
+                    <li key={c.id}>
+                      <Link
+                        href={`/c/${c.slug}`}
+                        className="mx-press inline-flex rounded-full border border-border bg-surface px-3 py-1 text-sm font-semibold hover:border-primary"
+                      >
+                        {c.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
           </div>
-          <aside className="flex flex-col gap-4" aria-label={t('details')}>
+
+          <aside className="flex flex-col gap-6" aria-label={t('details')}>
             <ul className="flex flex-col gap-2 text-sm text-muted">
               {profile.location && (
                 <li className="flex items-center gap-2">
-                  <MapPin className="size-4" aria-hidden /> {profile.location}
+                  <MapPin className="size-4 shrink-0" aria-hidden /> {profile.location}
+                </li>
+              )}
+              {profile.timezone && (
+                <li className="flex items-center gap-2">
+                  <Clock className="size-4 shrink-0" aria-hidden />
+                  <LocalTime timeZone={profile.timezone} />
+                </li>
+              )}
+              {profile.languages.length > 0 && (
+                <li className="flex items-center gap-2">
+                  <Languages className="size-4 shrink-0" aria-hidden />
+                  <span>
+                    {t('speaks')}{' '}
+                    {profile.languages.map((l, i) => (
+                      <React.Fragment key={l}>
+                        {i > 0 && ', '}
+                        <span lang={l}>{tc(`languages.${l}`)}</span>
+                      </React.Fragment>
+                    ))}
+                  </span>
                 </li>
               )}
               <li className="flex items-center gap-2">
-                <CalendarDays className="size-4" aria-hidden />{' '}
+                <CalendarDays className="size-4 shrink-0" aria-hidden />
                 {t('joined', { date: formatDate(profile.createdAt) })}
               </li>
             </ul>
-            {profile.links.length > 0 && (
-              <ul className="flex flex-col gap-1">
-                {profile.links.map((l, i) => (
-                  <li key={i}>
-                    <a
-                      href={l.url}
-                      rel="noopener noreferrer nofollow me"
-                      className="flex items-center gap-2 text-primary underline"
-                    >
-                      <LinkIcon className="size-4" aria-hidden /> {l.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
+
+            {profile.platforms.length > 0 && (
+              <Section id="platforms-h" title={t('playsOn')}>
+                <ul className="flex flex-wrap gap-1.5">
+                  {profile.platforms.map((p) => {
+                    const Icon = PLATFORM_ICONS[p as Platform] ?? Gamepad2;
+                    return (
+                      <li key={p}>
+                        <Badge>
+                          <Icon aria-hidden className="size-3.5" />
+                          {t(`platformOptions.${p}`)}
+                        </Badge>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </Section>
             )}
+
+            {profile.playstyles.length > 0 && (
+              <Section id="playstyles-h" title={t('playstyles')}>
+                <ul className="flex flex-wrap gap-1.5">
+                  {profile.playstyles.map((p) => (
+                    <li key={p}>
+                      <Badge tone="accent">{t(`playstyleOptions.${p}`)}</Badge>
+                    </li>
+                  ))}
+                </ul>
+              </Section>
+            )}
+
+            {profile.accounts.length > 0 && (
+              <Section id="accounts-h" title={t('accounts')}>
+                <dl className="flex flex-col gap-1.5 text-sm">
+                  {profile.accounts.map((a) => {
+                    const kind = KINDS.get(a.key)!;
+                    const url = kind.url?.(a.handle);
+                    return (
+                      <div key={a.key} className="flex items-center justify-between gap-3">
+                        <dt className="shrink-0 text-muted">{kind.label}</dt>
+                        <dd className="min-w-0">
+                          {url ? (
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer nofollow"
+                              className="block truncate font-mono text-primary underline underline-offset-2"
+                            >
+                              {a.handle}
+                              <span className="sr-only"> {t('opensNewTab')}</span>
+                            </a>
+                          ) : (
+                            <CopyHandle service={kind.label} handle={a.handle} />
+                          )}
+                        </dd>
+                      </div>
+                    );
+                  })}
+                </dl>
+              </Section>
+            )}
+
+            {profile.links.length > 0 && (
+              <Section id="links-h" title={t('links')}>
+                <ul className="flex flex-col gap-1">
+                  {profile.links.map((l, i) => (
+                    <li key={i}>
+                      <a
+                        href={l.url}
+                        rel="noopener noreferrer nofollow me"
+                        className="flex items-center gap-2 text-primary underline"
+                      >
+                        <LinkIcon className="size-4" aria-hidden /> {l.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </Section>
+            )}
+
             {profile.games.length > 0 && (
-              <div>
-                <h2 className="mb-2 text-sm font-bold">{t('favoriteGames')}</h2>
+              <Section id="games-h" title={t('favoriteGames')}>
                 <ul className="flex flex-wrap gap-1">
                   {profile.games.map((g) => (
                     <li key={g.id}>
@@ -133,7 +333,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
                     </li>
                   ))}
                 </ul>
-              </div>
+              </Section>
             )}
           </aside>
         </div>

@@ -235,10 +235,38 @@ test.describe('community hubs', () => {
     await page.goto('/settings/profile');
     await page.getByLabel('Bio').fill('I build castles.');
     await page.getByLabel('Pronouns').fill('they/them');
+    await page.getByLabel('Custom status').fill('Building a moat');
+    await choose(page.getByLabel('Currently playing'), 'Roblox');
+    await page.getByRole('switch', { name: 'Looking for group' }).click();
+    await page.getByRole('button', { name: 'Use my time zone' }).click();
+    await page.getByRole('group', { name: 'Languages you speak' }).getByLabel('Español').check();
+    await page.getByRole('group', { name: 'Platforms' }).getByLabel('Xbox').check();
+    await page.getByRole('group', { name: 'Play style' }).getByLabel('Building').check();
+    await page.getByRole('textbox', { name: 'Roblox', exact: true }).fill('not a valid name!');
+    await page.getByRole('textbox', { name: 'Discord', exact: true }).fill('castle.builder');
+    await expectAccessible(page, 'profile settings');
+    await page.getByRole('button', { name: 'Save profile' }).click();
+    await expect(page.getByText("That doesn't look like a Roblox name")).toBeVisible();
+    await page.getByRole('textbox', { name: 'Roblox', exact: true }).fill('CastleBuilder');
     await page.getByRole('button', { name: 'Save profile' }).click();
     await expect(page.getByText('Profile saved')).toBeVisible();
+
     await page.goto(`/u/${user.username}`);
     await expect(page.getByText('I build castles.')).toBeVisible();
+    await expect(page.getByText('Building a moat')).toBeVisible();
+    await expect(page.getByText('Currently playing: Roblox')).toBeVisible();
+    await expect(page.getByText('Looking for group')).toBeVisible();
+    await expect(page.getByText(/^Local time: /)).toBeVisible();
+    const details = page.getByRole('complementary', { name: 'Profile details' });
+    await expect(details).toContainText('Speaks Español');
+    await expect(details.getByText('Xbox')).toBeVisible();
+    await expect(details.getByText('Building')).toBeVisible();
+    await expect(
+      details.getByRole('link', { name: 'CastleBuilder (opens in a new tab)' }),
+    ).toHaveAttribute('href', 'https://www.roblox.com/users/profile?username=CastleBuilder');
+    await expect(
+      details.getByRole('button', { name: 'Copy Discord name castle.builder' }),
+    ).toBeVisible();
     await expect(page.getByRole('main').getByRole('link', { name })).toBeVisible();
     await expectAccessible(page, 'profile page');
   });

@@ -25,6 +25,14 @@ export default async function ProfileSettingsPage() {
           favoriteGames: profile?.favoriteGames ?? [],
           avatarKey: profile?.avatarKey ?? null,
           bannerKey: profile?.bannerKey ?? null,
+          status: profile?.status ?? '',
+          timezone: profile?.timezone ?? '',
+          languages: profile?.languages ?? [],
+          platforms: profile?.platforms ?? [],
+          playstyles: profile?.playstyles ?? [],
+          lookingForGroup: profile?.lookingForGroup ?? false,
+          nowPlaying: profile?.nowPlaying ?? null,
+          accounts: profile?.accounts ?? {},
         }}
       />
     </div>

@@ -28,6 +28,7 @@ import {
   setMemberRole,
   toggleReaction,
   updateCommunityTheme,
+  updateProfile,
   updateWikiPage,
   voteThread,
 } from '@magnox/core';
@@ -370,6 +371,50 @@ async function seedServerHistory(communityId: string, voters: string[]) {
   console.log('✔ server history for Blockhaven Survival');
 }
 
+/** Filled-in profiles, so the profile page shows what it can do. */
+async function seedProfiles(users: { alice: string; bob: string; carol: string }) {
+  await updateProfile(users.alice, {
+    bio: 'Builder and wiki gardener for Blockhaven. Ask me about redstone.',
+    pronouns: 'she/her',
+    location: 'Lisbon',
+    status: 'Planning the next build contest 🧱',
+    timezone: 'Europe/Lisbon',
+    languages: ['en', 'pt'],
+    platforms: ['pc', 'switch'],
+    playstyles: ['building', 'creative', 'social'],
+    nowPlaying: 'minecraft',
+    favoriteGames: ['minecraft', 'stardew-valley', 'satisfactory'],
+    accounts: { discord: 'alice.builds', minecraft: 'AliceBuilds', twitch: 'alicebuilds' },
+  });
+  await updateProfile(users.bob, {
+    bio: 'Entry fragger for Neon Arcade. Scrims Tue/Thu, always up for a duo queue.',
+    pronouns: 'he/him',
+    location: 'Lagos',
+    status: 'Grinding ranked tonight 🎯',
+    timezone: 'Africa/Lagos',
+    languages: ['en', 'fr'],
+    platforms: ['pc', 'playstation'],
+    playstyles: ['competitive', 'pvp'],
+    lookingForGroup: true,
+    nowPlaying: 'cs2',
+    favoriteGames: ['cs2', 'valorant', 'rocket-league'],
+    accounts: { steam: 'bob-okafor', playstation: 'BobOkafor', discord: 'bob.ok' },
+  });
+  await updateProfile(users.carol, {
+    bio: 'Cosy games, farming sims and the occasional Roblox obby.',
+    pronouns: 'they/them',
+    location: 'Hanoi',
+    timezone: 'Asia/Ho_Chi_Minh',
+    languages: ['en', 'ja'],
+    platforms: ['switch', 'mobile', 'pc'],
+    playstyles: ['casual', 'exploring', 'completionist'],
+    nowPlaying: 'stardew-valley',
+    favoriteGames: ['stardew-valley', 'roblox', 'terraria'],
+    accounts: { nintendo: 'SW-1234-5678-9012', roblox: 'CarolPlays' },
+  });
+  console.log('✔ demo profiles');
+}
+
 async function main() {
   if (env().NODE_ENV === 'production' || process.env.SEED_DEMO === 'false') {
     console.log('– demo seed skipped');
@@ -377,6 +422,7 @@ async function main() {
   }
   const [alice, bob, carol] = await Promise.all(USERS.map(ensureUser));
   console.log('✔ demo users (password: %s): alice, bob, carol', PASSWORD);
+  await seedProfiles({ alice, bob, carol });
 
   const communities = [
     {

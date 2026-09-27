@@ -5,10 +5,19 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { Plus, Trash2 } from 'lucide-react';
+import { LocateFixed, Plus, Trash2 } from 'lucide-react';
+import {
+  ACCOUNT_KINDS,
+  LANGUAGES,
+  MAX_PLAYSTYLES,
+  MAX_PROFILE_LANGUAGES,
+  PLATFORMS,
+  PLAYSTYLES,
+} from '@magnox/shared';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
-import { Input, Textarea } from '@/components/ui/input';
+import { Input, Select, Textarea } from '@/components/ui/input';
+import { SwitchField } from '@/components/ui/switch';
 import { ImageUpload } from '@/components/upload/image-upload';
 import { FormError } from '@/components/auth/form-error';
 import { authClient } from '@/lib/auth-client';
@@ -24,6 +33,100 @@ interface ProfileState {
   favoriteGames: string[];
   avatarKey: string | null;
   bannerKey: string | null;
+  status: string;
+  timezone: string;
+  languages: string[];
+  platforms: string[];
+  playstyles: string[];
+  lookingForGroup: boolean;
+  nowPlaying: string | null;
+  accounts: Record<string, string>;
+}
+
+/** A wrapping set of checkbox "chips", e.g. platforms or languages. */
+function ChipChecks({
+  legend,
+  description,
+  options,
+  value,
+  onChange,
+  max,
+  error,
+}: {
+  legend: string;
+  description?: string;
+  options: { value: string; label: string; lang?: string }[];
+  value: string[];
+  onChange: (next: string[]) => void;
+  max?: number;
+  error?: string;
+}) {
+  const id = React.useId();
+  const full = max !== undefined && value.length >= max;
+  return (
+    <fieldset aria-describedby={description ? `${id}-d` : undefined}>
+      <legend className="text-sm font-semibold">{legend}</legend>
+      {description && (
+        <p id={`${id}-d`} className="mt-1 text-sm text-muted">
+          {description}
+        </p>
+      )}
+      <ul className="mt-2 flex flex-wrap gap-2">
+        {options.map((o) => {
+          const checked = value.includes(o.value);
+          return (
+            <li key={o.value}>
+              <label className="mx-press flex cursor-pointer items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5 text-sm has-[:checked]:border-primary has-[:checked]:bg-primary/8 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60">
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  disabled={!checked && full}
+                  onChange={(e) =>
+                    onChange(
+                      e.target.checked ? [...value, o.value] : value.filter((x) => x !== o.value),
+                    )
+                  }
+                />
+                <span lang={o.lang}>{o.label}</span>
+              </label>
+            </li>
+          );
+        })}
+      </ul>
+      {error && <p className="mt-1 text-sm font-semibold text-danger">{error}</p>}
+    </fieldset>
+  );
+}
+
+function zoneLabel(tz: string, now: Date): string {
+  const offset =
+    new Intl.DateTimeFormat('en', { timeZone: tz, timeZoneName: 'shortOffset' })
+      .formatToParts(now)
+      .find((p) => p.type === 'timeZoneName')?.value ?? '';
+  const [, ...rest] = tz.split('/');
+  return `${(rest.length ? rest.join(' / ') : tz).replace(/_/g, ' ')} (${offset})`;
+}
+
+/**
+ * Time zones grouped by region, labelled with their current UTC offset. Browsers and the server
+ * can name a zone differently (Asia/Saigon vs Asia/Ho_Chi_Minh), so the saved one is always listed.
+ */
+function useTimeZones(saved: string) {
+  return React.useMemo(() => {
+    const zones =
+      typeof Intl.supportedValuesOf === 'function' ? Intl.supportedValuesOf('timeZone') : ['UTC'];
+    const groups = new Map<string, { value: string; label: string }[]>();
+    const now = new Date();
+    const all = saved && !zones.includes(saved) ? [...zones, saved].sort() : zones;
+    for (const tz of all) {
+      const [region, ...rest] = tz.split('/');
+      const key = rest.length ? region! : 'Other';
+      const list = groups.get(key) ?? [];
+      list.push({ value: tz, label: zoneLabel(tz, now) });
+      groups.set(key, list);
+    }
+    return [...groups.entries()];
+  }, [saved]);
 }
 
 export function ProfileForm({
@@ -36,7 +139,9 @@ export function ProfileForm({
   username: string;
 }) {
   const t = useTranslations('profile');
+  const tc = useTranslations('community');
   const router = useRouter();
+  const zones = useTimeZones(initial.timezone);
   const [state, setState] = React.useState(initial);
   const [error, setError] = React.useState<string | null>(null);
   const [fields, setFields] = React.useState<Record<string, string>>({});
@@ -123,6 +228,42 @@ export function ProfileForm({
           />
         </SettingsSection>
 
+        <SettingsSection id="status" title={t('statusSection')}>
+          <Field label={t('status')} description={t('statusDesc')} error={fields.status}>
+            {(p) => (
+              <Input
+                {...p}
+                value={state.status}
+                maxLength={80}
+                placeholder={t('statusPlaceholder')}
+                onChange={(e) => set('status', e.target.value)}
+              />
+            )}
+          </Field>
+          <Field label={t('nowPlaying')} error={fields.nowPlaying}>
+            {(p) => (
+              <Select
+                {...p}
+                value={state.nowPlaying ?? ''}
+                onValueChange={(value) => set('nowPlaying', value || null)}
+              >
+                <option value="">{t('nothingPlaying')}</option>
+                {games.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </Select>
+            )}
+          </Field>
+          <SwitchField
+            label={t('lfg')}
+            description={t('lfgDesc')}
+            checked={state.lookingForGroup}
+            onCheckedChange={(v) => set('lookingForGroup', v)}
+          />
+        </SettingsSection>
+
         <SettingsSection id="about" title={t('about')}>
           <Field label={t('bio')} description={t('bioDesc')} error={fields.bio}>
             {(p) => (
@@ -156,6 +297,51 @@ export function ProfileForm({
               )}
             </Field>
           </div>
+          <Field label={t('timezone')} description={t('timezoneDesc')} error={fields.timezone}>
+            {(p) => (
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Select
+                  {...p}
+                  value={state.timezone}
+                  onValueChange={(value) => set('timezone', value)}
+                  className="flex-1"
+                >
+                  <option value="">{t('timezoneNone')}</option>
+                  {zones.map(([region, list]) => (
+                    <optgroup key={region} label={region}>
+                      {list.map((z) => (
+                        <option key={z.value} value={z.value}>
+                          {z.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </Select>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() =>
+                    set('timezone', Intl.DateTimeFormat().resolvedOptions().timeZone ?? '')
+                  }
+                >
+                  <LocateFixed aria-hidden /> {t('detectTimezone')}
+                </Button>
+              </div>
+            )}
+          </Field>
+          <ChipChecks
+            legend={t('languages')}
+            description={t('languagesDesc', { max: MAX_PROFILE_LANGUAGES })}
+            options={LANGUAGES.filter((l) => l !== 'other').map((l) => ({
+              value: l,
+              label: tc(`languages.${l}`),
+              lang: l,
+            }))}
+            value={state.languages}
+            onChange={(v) => set('languages', v)}
+            max={MAX_PROFILE_LANGUAGES}
+            error={fields.languages}
+          />
           <Field label={t('accent')} description={t('accentDesc')}>
             {(p) => (
               <div className="flex items-center gap-3">
@@ -249,6 +435,48 @@ export function ProfileForm({
           )}
         </SettingsSection>
 
+        <SettingsSection id="play" title={t('howYouPlay')}>
+          <ChipChecks
+            legend={t('platforms')}
+            options={PLATFORMS.map((v) => ({ value: v, label: t(`platformOptions.${v}`) }))}
+            value={state.platforms}
+            onChange={(v) => set('platforms', v)}
+            error={fields.platforms}
+          />
+          <ChipChecks
+            legend={t('playstyles')}
+            description={t('playstylesDesc', { max: MAX_PLAYSTYLES })}
+            options={PLAYSTYLES.map((v) => ({ value: v, label: t(`playstyleOptions.${v}`) }))}
+            value={state.playstyles}
+            onChange={(v) => set('playstyles', v)}
+            max={MAX_PLAYSTYLES}
+            error={fields.playstyles}
+          />
+        </SettingsSection>
+
+        <SettingsSection id="accounts" title={t('accounts')} description={t('accountsDesc')}>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {ACCOUNT_KINDS.map((k) => (
+              <Field key={k.key} label={k.label} error={fields[`accounts.${k.key}`]}>
+                {(p) => (
+                  <Input
+                    {...p}
+                    value={state.accounts[k.key] ?? ''}
+                    maxLength={64}
+                    placeholder={k.example}
+                    autoCapitalize="none"
+                    autoComplete="off"
+                    spellCheck={false}
+                    onChange={(e) =>
+                      set('accounts', { ...state.accounts, [k.key]: e.target.value })
+                    }
+                  />
+                )}
+              </Field>
+            ))}
+          </div>
+        </SettingsSection>
+
         <SettingsSection id="games" title={t('favoriteGames')} description={t('favoriteGamesDesc')}>
           <fieldset>
             <legend className="sr-only">{t('favoriteGames')}</legend>
@@ -270,7 +498,6 @@ export function ProfileForm({
                               : state.favoriteGames.filter((x) => x !== g.id),
                           )
                         }
-                        className="size-4 accent-[var(--c-primary)]"
                       />
                       {g.name}
                     </label>
