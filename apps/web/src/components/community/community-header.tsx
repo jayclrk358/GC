@@ -67,11 +67,13 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
               : 'flex flex-wrap items-end gap-4 pb-4 group-data-[dense=true]/dense:items-center group-data-[dense=true]/dense:gap-3 group-data-[dense=true]/dense:py-2'
           }
         >
+          {/* The logo overlaps the banner. The banner is positioned, so without its own
+              stacking context here the banner would paint over the top of the logo. */}
           <div
             className={
               compact
-                ? ''
-                : '-mt-10 group-data-[dense=true]/dense:mt-0 sm:-mt-12 sm:group-data-[dense=true]/dense:mt-0'
+                ? 'relative z-10'
+                : 'relative z-10 -mt-10 group-data-[dense=true]/dense:mt-0 sm:-mt-12 sm:group-data-[dense=true]/dense:mt-0'
             }
           >
             {icon ? (
@@ -81,12 +83,12 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
                 alt=""
                 width={96}
                 height={96}
-                className="size-20 rounded-ui-lg border-4 border-surface bg-surface object-cover group-data-[dense=true]/dense:size-10 group-data-[dense=true]/dense:border-2 sm:size-24 sm:group-data-[dense=true]/dense:size-10"
+                className="size-20 rounded-ui-lg border-4 border-surface bg-surface object-cover shadow-[0_10px_30px_-12px_var(--c-primary)] group-data-[dense=true]/dense:size-10 group-data-[dense=true]/dense:border-2 sm:size-24 sm:group-data-[dense=true]/dense:size-10"
               />
             ) : (
               <span
                 aria-hidden
-                className="grid size-20 place-items-center rounded-ui-lg border-4 border-surface bg-primary font-heading text-3xl font-extrabold text-on-primary group-data-[dense=true]/dense:size-10 group-data-[dense=true]/dense:border-2 group-data-[dense=true]/dense:text-lg sm:size-24 sm:group-data-[dense=true]/dense:size-10"
+                className="grid size-20 place-items-center rounded-ui-lg border-4 border-surface bg-primary font-heading text-3xl font-extrabold text-on-primary shadow-[0_10px_30px_-12px_var(--c-primary)] group-data-[dense=true]/dense:size-10 group-data-[dense=true]/dense:border-2 group-data-[dense=true]/dense:text-lg sm:size-24 sm:group-data-[dense=true]/dense:size-10"
               >
                 {community.name.slice(0, 1).toUpperCase()}
               </span>

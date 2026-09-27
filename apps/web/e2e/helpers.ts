@@ -60,8 +60,13 @@ export async function setScheme(
     [scheme, contrast],
   );
   // Buttons transition their colours; measure contrast only once they have settled.
+  // Looping decoration (the "live" ping) never settles, so it is left out.
   await page.waitForFunction(() =>
-    document.getAnimations().every((a) => a.playState !== 'running'),
+    document
+      .getAnimations()
+      .every(
+        (a) => a.playState !== 'running' || a.effect?.getComputedTiming().iterations === Infinity,
+      ),
   );
 }
 

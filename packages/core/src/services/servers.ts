@@ -481,3 +481,34 @@ export async function countOnlineServers(
     players: views.reduce((acc, v) => acc + (v.status.online ? (v.status.players ?? 0) : 0), 0),
   };
 }
+
+/** Headline numbers for the home page: public communities, listed servers online, players. */
+export async function platformStats(): Promise<{
+  communities: number;
+  serversOnline: number;
+  players: number;
+}> {
+  const [c, s] = await Promise.all([
+    db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(schema.communities)
+      .where(
+        and(eq(schema.communities.visibility, 'public'), isNull(schema.communities.deletedAt)),
+      ),
+    // Each endpoint counts once, however many listings point at it.
+    db.execute<{ online: number; players: number }>(sql`
+      select count(*) filter (where e.online)::int as online,
+             coalesce(sum(e.players) filter (where e.online), 0)::int as players
+      from server_endpoints e
+      where exists (
+        select 1 from game_servers g
+        where g.endpoint_id = e.id and g.listed and g.verified_at is not null and g.deleted_at is null
+      )`),
+  ]);
+  const row = [...s][0];
+  return {
+    communities: c[0]?.n ?? 0,
+    serversOnline: Number(row?.online ?? 0),
+    players: Number(row?.players ?? 0),
+  };
+}

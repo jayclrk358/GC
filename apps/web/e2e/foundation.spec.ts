@@ -60,7 +60,7 @@ test.describe('foundation', () => {
     await page.getByRole('menuitemradio', { name: 'Dark' }).click();
     await expect(page.locator('html')).toHaveAttribute('data-scheme', 'dark');
     const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-    expect(bg).toBe('rgb(15, 16, 23)');
+    expect(bg).toBe('rgb(7, 8, 15)');
     await page.reload();
     await expect(page.locator('html')).toHaveAttribute('data-scheme', 'dark');
     await expect(page.getByRole('button', { name: 'Colour scheme: Dark' })).toBeVisible();

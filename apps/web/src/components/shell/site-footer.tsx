@@ -5,12 +5,14 @@ import { Logo } from './logo';
 export async function SiteFooter() {
   const t = await getTranslations('shell');
   return (
-    <footer className="mt-16 border-t border-border bg-surface">
+    <footer className="mt-16 bg-surface">
+      <div aria-hidden className="mx-neon-line" />
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
-          <Logo size={20} />
+          <Logo size={20} id="mx-logo-footer" />
           <span>
-            <span className="font-semibold text-fg">Magnox</span> · {t('footerTagline')}
+            <span className="font-heading font-bold tracking-wider text-fg uppercase">Magnox</span>{' '}
+            · {t('footerTagline')}
           </span>
         </div>
         <nav aria-label="Footer">

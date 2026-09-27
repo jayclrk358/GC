@@ -208,12 +208,27 @@
     "previewLink": "Links look like this."
   },
   "home": {
-    "heroTitle": "Your game community, your way.",
-    "heroBody": "Magnox gives every game, clan and server a fully customisable hub with a landing page, forum, wiki, events, live chat and real-time server status. Built to be accessible from day one.",
+    "eyebrow": "Community hubs for gamers",
+    "heroTitle": "Level up <hl>your community</hl>",
+    "heroBody": "Give your game, clan or server a hub that feels like home: a custom landing page, forum, wiki, events, live chat and real-time server status. Accessible from day one.",
     "getStarted": "Create a community",
+    "findServers": "Find servers",
     "explore": "Explore communities",
-    "featured": "Popular communities",
+    "statCommunities": "Communities",
+    "statServers": "Servers online",
+    "statPlayers": "Players now",
+    "liveNow": "Live now",
+    "liveEmpty": "No servers are listed yet. Add yours from your community's settings.",
+    "seeAllServers": "All servers",
+    "playersOf": "{players} / {max}",
+    "trendingEyebrow": "Trending",
+    "trendingTitle": "Popular communities",
+    "exploreAll": "Explore all",
+    "featuresEyebrow": "Loadout",
     "features": "Everything a community needs",
+    "ctaTitle": "Ready to build your base?",
+    "ctaBody": "Set up a themed hub in minutes, link your servers and invite your squad.",
+    "ctaButton": "Start your community",
     "noCommunities": "No communities yet. Be the first to create one!"
   },
   "errors": {
@@ -705,7 +720,9 @@
       "nunito": "Nunito (rounded)",
       "space-grotesk": "Space Grotesk",
       "lora": "Lora (serif)",
-      "jetbrains-mono": "JetBrains Mono"
+      "jetbrains-mono": "JetBrains Mono",
+      "oxanium": "Oxanium (techy)",
+      "exo-2": "Exo 2 (sporty)"
     },
     "radius": "Corner rounding",
     "radii": {

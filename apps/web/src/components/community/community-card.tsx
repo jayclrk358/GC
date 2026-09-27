@@ -13,7 +13,7 @@ export async function CommunityCard({ c }: { c: Card }) {
   const icon = mediaUrl(theme.iconKey);
   const banner = mediaUrl(theme.bannerKey);
   return (
-    <article className="group relative flex h-full flex-col overflow-hidden rounded-ui-lg border border-border bg-surface transition-shadow hover:shadow-lg">
+    <article className="group mx-card-glow relative flex h-full flex-col overflow-hidden rounded-ui-lg border border-border bg-surface">
       <div className="relative h-24" data-decorative aria-hidden>
         {banner ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -33,7 +33,8 @@ export async function CommunityCard({ c }: { c: Card }) {
         )}
       </div>
       <div className="flex flex-1 flex-col gap-2 p-4 pt-0">
-        <div className="-mt-7">
+        {/* Above the (positioned) banner so the logo isn't cut off. */}
+        <div className="relative z-10 -mt-7">
           {icon ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img

@@ -7,6 +7,8 @@ import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
 import '@fontsource-variable/lora';
 import '@fontsource-variable/nunito';
+import '@fontsource-variable/oxanium';
+import '@fontsource-variable/exo-2';
 import '@fontsource-variable/space-grotesk';
 import '@fontsource/atkinson-hyperlegible/400.css';
 import '@fontsource/atkinson-hyperlegible/700.css';
@@ -31,8 +33,8 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f7f7fb' },
-    { media: '(prefers-color-scheme: dark)', color: '#0f1017' },
+    { media: '(prefers-color-scheme: light)', color: '#f3f4fb' },
+    { media: '(prefers-color-scheme: dark)', color: '#07080f' },
   ],
 };
 

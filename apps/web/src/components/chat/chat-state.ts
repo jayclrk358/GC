@@ -99,8 +99,12 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
     case 'pending':
       return { ...state, messages: [...state.messages, action.message].sort(byId) };
     case 'sent': {
-      // The socket event may already have replaced the optimistic copy; upsert handles both.
-      const messages = upsert(state.messages, action.message);
+      // The socket event may already have replaced the optimistic copy. That copy is at least as
+      // new as this HTTP reply (it may already carry link previews), so it wins.
+      const confirmed = state.messages.some((m) => m.id === action.message.id && !m.pending);
+      const messages = confirmed
+        ? state.messages.filter((m) => !(m.nonce === action.nonce && m.pending))
+        : upsert(state.messages, action.message);
       return {
         ...state,
         messages: messages.filter((m, i) => messages.findIndex((x) => x.id === m.id) === i),

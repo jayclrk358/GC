@@ -20,14 +20,15 @@ export async function SiteHeader({
   const t = await getTranslations('shell');
   const unread = user ? await unreadCount(user.id).catch(() => 0) : 0;
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-surface/95 backdrop-blur supports-[backdrop-filter]:bg-surface/85">
-      <div className="mx-auto flex h-14 max-w-7xl items-center gap-3 px-4">
+    <header className="sticky top-0 z-40 bg-surface/95 backdrop-blur supports-[backdrop-filter]:bg-surface/80">
+      <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-4 sm:gap-3">
         <Link
           href="/"
-          className="flex shrink-0 items-center gap-2 rounded-ui font-heading text-lg font-bold"
+          className="flex shrink-0 items-center gap-2 rounded-ui font-heading text-lg font-bold tracking-wider uppercase"
         >
-          <Logo />
-          <span>Magnox</span>
+          <Logo id="mx-logo-header" />
+          {/* On the narrowest phones the tile alone carries the brand. */}
+          <span className="max-[359px]:sr-only">Magnox</span>
         </Link>
         <nav aria-label={t('mainNav')} className="hidden md:block">
           <ul className="flex items-center gap-1">
@@ -64,7 +65,8 @@ export async function SiteHeader({
           )}
         </div>
       </div>
-      <nav aria-label={t('mainNav')} className="border-t border-border md:hidden">
+      <div aria-hidden className="mx-neon-line" />
+      <nav aria-label={t('mainNav')} className="border-b border-border md:hidden">
         <ul className="mx-auto flex max-w-7xl items-center gap-1 overflow-x-auto px-2 py-1">
           <li>
             <NavLink href="/explore">{t('explore')}</NavLink>
