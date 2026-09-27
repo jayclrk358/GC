@@ -48,6 +48,8 @@ export const messages = pgTable(
       .notNull()
       .references(() => communities.id, { onDelete: 'cascade' }),
     authorId: text('author_id').references(() => users.id, { onDelete: 'set null' }),
+    /** 'user' for people; system notices such as 'server_down' and 'server_up' have no author. */
+    kind: text('kind').notNull().default('user'),
     body: jsonb('body').$type<RichNode>().notNull(),
     content: text('content').notNull().default(''),
     replyToId: uuid('reply_to_id'),
