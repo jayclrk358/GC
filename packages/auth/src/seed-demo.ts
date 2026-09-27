@@ -422,7 +422,7 @@ async function main() {
   }
   const [alice, bob, carol] = await Promise.all(USERS.map(ensureUser));
   console.log('✔ demo users (password: %s): alice, bob, carol', PASSWORD);
-  await seedProfiles({ alice, bob, carol });
+  await seedProfiles({ alice: alice!, bob: bob!, carol: carol! });
 
   const communities = [
     {

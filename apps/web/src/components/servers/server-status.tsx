@@ -15,6 +15,7 @@ export interface ServerCardData {
   endpointId: string;
   name: string;
   description: string;
+  protocol: string;
   protocolLabel: string;
   address: string;
   connectUrl: string | null;
