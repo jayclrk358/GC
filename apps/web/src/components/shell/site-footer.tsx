@@ -8,7 +8,7 @@ export async function SiteFooter() {
     <footer className="mt-16 border-t border-border">
       <div className="flex flex-col gap-4 px-4 py-6 text-sm text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div className="flex items-center gap-2">
-          <Logo size={20} id="mx-logo-footer" />
+          <Logo size={20} />
           <span>
             <span className="font-heading font-bold text-fg">Magnox</span> · {t('footerTagline')}
           </span>

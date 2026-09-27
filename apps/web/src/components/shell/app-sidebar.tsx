@@ -17,7 +17,7 @@ import {
 import { Tooltip } from '@/components/ui/tooltip';
 import { SIDEBAR_COOKIE } from '@/lib/sidebar';
 import { cn } from '@/lib/utils';
-import { Logo } from './logo';
+import { Logo, Wordmark } from './logo';
 
 export interface SidebarCommunity {
   slug: string;
@@ -106,13 +106,10 @@ export function SidebarContent({
   collapsed,
   onToggle,
   onNavigate,
-  logoId,
 }: {
   communities: SidebarCommunity[];
   signedIn: boolean;
   collapsed: boolean;
-  /** SVG gradient ids must be unique on the page, and both copies of the sidebar exist. */
-  logoId: string;
   /** Shown only where the sidebar can collapse (desktop). */
   onToggle?: () => void;
   onNavigate?: () => void;
@@ -125,14 +122,13 @@ export function SidebarContent({
         <Link
           href="/"
           onClick={onNavigate}
-          aria-label={collapsed ? 'Magnox' : undefined}
+          aria-label={collapsed ? 'Magnox Resources' : undefined}
           className={cn(
-            'mx-press flex min-w-0 items-center gap-2.5 rounded-ui px-1 font-heading text-lg font-bold',
+            'mx-press flex min-w-0 items-center rounded-ui px-1 py-1',
             collapsed && 'mx-auto',
           )}
         >
-          <Logo id={logoId} size={28} />
-          {!collapsed && <span>Magnox</span>}
+          {collapsed ? <Logo size={32} /> : <Wordmark className="h-5" />}
         </Link>
       </div>
 
@@ -287,7 +283,6 @@ export function AppSidebar({
         communities={communities}
         signedIn={signedIn}
         collapsed={collapsed}
-        logoId="mx-logo-sidebar"
         onToggle={() => {
           const next = !collapsed;
           setCollapsed(next);

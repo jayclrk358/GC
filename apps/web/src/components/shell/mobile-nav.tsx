@@ -35,7 +35,6 @@ export function MobileNav({
             communities={communities}
             signedIn={signedIn}
             collapsed={false}
-            logoId="mx-logo-drawer"
             onNavigate={() => setOpen(false)}
           />
           <D.Close

@@ -4,7 +4,7 @@ import { Plus } from 'lucide-react';
 import { unreadCount } from '@magnox/core';
 import type { SessionUser } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
-import { Logo } from './logo';
+import { Logo, Wordmark } from './logo';
 import { PaletteButton, SignInButtons, UserMenu } from './header-client';
 import { MobileNav } from './mobile-nav';
 import { ThemeToggle } from './theme-toggle';
@@ -27,11 +27,12 @@ export async function SiteHeader({
         <MobileNav communities={communities} signedIn={Boolean(user)} />
         <Link
           href="/"
-          className="mx-press flex shrink-0 items-center gap-2 rounded-ui font-heading text-lg font-bold lg:hidden"
+          aria-label="Magnox Resources"
+          className="mx-press flex shrink-0 items-center gap-2 rounded-ui lg:hidden"
         >
-          <Logo id="mx-logo-header" />
-          {/* On the narrowest phones the tile alone carries the brand. */}
-          <span className="max-[359px]:sr-only">Magnox</span>
+          <Logo size={28} />
+          {/* Phones show the mark alone; the full logo needs a bit more room. */}
+          <Wordmark className="hidden h-4 sm:block" label="" />
         </Link>
         <div className="flex min-w-0 flex-1 justify-end sm:justify-center">
           <PaletteButton />

@@ -1,1 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#4338ca"/><path d="M8 23V9.5l8 7 8-7V23" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <rect width="32" height="32" rx="8" fill="#2e1065"/>
+  <g transform="translate(6,6) scale(0.2)">
+    <polygon points="50,50 44,8 74,4 68,44" fill="#c9a3ff"/>
+    <polygon points="50,50 44,8 74,4 68,44" fill="#9b6bff" transform="rotate(90,50,50)"/>
+    <polygon points="50,50 44,8 74,4 68,44" fill="#6f3fd1" transform="rotate(180,50,50)"/>
+    <polygon points="50,50 44,8 74,4 68,44" fill="#3d1a78" transform="rotate(270,50,50)"/>
+  </g>
+</svg>

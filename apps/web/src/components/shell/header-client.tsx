@@ -34,7 +34,7 @@ export function PaletteButton() {
       <span className="hidden truncate sm:inline">{t('openPalette')}</span>
       <span className="sr-only sm:hidden">{t('openPalette')}</span>
       {combo && (
-        <Kbd className="ms-auto hidden whitespace-nowrap sm:inline-flex" aria-hidden>
+        <Kbd className="ms-auto hidden whitespace-nowrap md:inline-flex" aria-hidden>
           {formatCombo(combo).join(' ')}
         </Kbd>
       )}
