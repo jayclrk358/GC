@@ -6,6 +6,7 @@ import { loadCommunity } from '@/lib/community';
 import { relativeTime } from '@/lib/format';
 import { EmptyState } from '@/components/ui/misc';
 import { ForumSearch } from '@/components/forum/forum-search';
+import { BackLink } from '@/components/ui/back-link';
 
 export const metadata = { title: 'Search the forum' };
 
@@ -37,16 +38,20 @@ export default async function ForumSearchPage({
   const data = await loadCommunity((await params).slug);
   const { q = '' } = await searchParams;
   const t = await getTranslations('forum');
+  const tBack = await getTranslations('common');
   const results = await searchForum(data.ctx, q);
   const base = `/c/${data.community.slug}`;
   return (
     <div className="flex flex-col gap-6">
-      <nav aria-label={t('breadcrumb')} className="text-sm text-muted">
-        <Link href={`${base}/forum`} className="hover:underline">
-          {t('title')}
-        </Link>{' '}
-        › {t('search')}
-      </nav>
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+        <BackLink href={`${base}/forum`}>{tBack('backTo', { name: t('title') })}</BackLink>
+        <nav aria-label={t('breadcrumb')} className="text-sm text-muted">
+          <Link href={`${base}/forum`} className="hover:underline">
+            {t('title')}
+          </Link>{' '}
+          › {t('search')}
+        </nav>
+      </div>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <h2 className="text-2xl font-bold">{q ? t('resultsFor', { q }) : t('search')}</h2>
         <ForumSearch slug={data.community.slug} defaultValue={q} />

@@ -10,6 +10,7 @@ import { ThreadList } from '@/components/forum/thread-list';
 import { ChannelLiveBanner } from '@/components/forum/live-banners';
 import { MuteMenu } from '@/components/notifications/mute-menu';
 import { cn } from '@/lib/utils';
+import { BackLink } from '@/components/ui/back-link';
 
 export async function generateMetadata({ params }: { params: Promise<{ channel: string }> }) {
   return { title: `#${(await params).channel}` };
@@ -26,6 +27,7 @@ export default async function ChannelPage({
   const sp = await searchParams;
   const data = await loadCommunity(slug);
   const t = await getTranslations('forum');
+  const tBack = await getTranslations('common');
   const channel = await loadForumChannel(data.ctx, channelName);
   const perms = BigInt(channel.perms);
   const sort = (THREAD_SORTS as readonly string[]).includes(sp.sort ?? '')
@@ -58,12 +60,15 @@ export default async function ChannelPage({
 
   return (
     <div className="flex flex-col gap-5">
-      <nav aria-label={t('breadcrumb')} className="text-sm text-muted">
-        <Link href={`/c/${slug}/forum`} className="hover:underline">
-          {t('title')}
-        </Link>{' '}
-        › {channel.name}
-      </nav>
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+        <BackLink href={`/c/${slug}/forum`}>{tBack('backTo', { name: t('title') })}</BackLink>
+        <nav aria-label={t('breadcrumb')} className="text-sm text-muted">
+          <Link href={`/c/${slug}/forum`} className="hover:underline">
+            {t('title')}
+          </Link>{' '}
+          › {channel.name}
+        </nav>
+      </div>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="flex items-center gap-2 text-2xl font-bold">

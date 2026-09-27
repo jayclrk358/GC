@@ -5,6 +5,7 @@ import { formatDateTime, relativeTime } from '@/lib/format';
 import { Badge } from '@/components/ui/misc';
 import { RestoreRevisionButton } from '@/components/wiki/wiki-page-tools';
 import { loadWikiPage } from '../../_load';
+import { BackLink } from '@/components/ui/back-link';
 
 type Params = Promise<{ slug: string; page: string }>;
 
@@ -17,17 +18,21 @@ export default async function WikiHistoryPage({ params }: { params: Params }) {
   const { slug, page: pageSlug } = await params;
   const { data, page } = await loadWikiPage(slug, pageSlug);
   const t = await getTranslations('wiki');
+  const tBack = await getTranslations('common');
   const revisions = await wikiHistory(data.ctx, page.id);
   const canEdit = canEditWiki(data.ctx, page);
   const pageHref = `/c/${slug}/wiki/${page.slug}`;
   return (
     <div className="flex flex-col gap-5">
-      <nav aria-label={t('breadcrumb')} className="text-sm text-muted">
-        <Link href={pageHref} className="hover:underline">
-          {page.title}
-        </Link>{' '}
-        › {t('history')}
-      </nav>
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+        <BackLink href={pageHref}>{tBack('backTo', { name: page.title })}</BackLink>
+        <nav aria-label={t('breadcrumb')} className="text-sm text-muted">
+          <Link href={pageHref} className="hover:underline">
+            {page.title}
+          </Link>{' '}
+          › {t('history')}
+        </nav>
+      </div>
       <h2 className="text-2xl font-bold">{t('historyOf', { title: page.title })}</h2>
       <div className="overflow-x-auto rounded-ui-lg border border-border bg-surface">
         <table className="w-full text-sm">

@@ -8,6 +8,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { PrefsProvider } from './prefs-provider';
 import { ShortcutsProvider, useShortcut } from './shortcuts-provider';
 import { ShortcutHelp } from './shortcut-help';
+import { NavigationTracker } from '@/components/ui/history-back';
 
 // Only a few visitors open the palette, so its code (cmdk) loads the first time it's opened.
 const CommandPalette = React.lazy(() =>
@@ -73,6 +74,7 @@ export function AppProviders({
 }) {
   return (
     <PrefsProvider initial={prefs}>
+      <NavigationTracker />
       <ShortcutsProvider>
         <TooltipProvider>
           <GlobalShortcuts signedIn={signedIn}>{children}</GlobalShortcuts>

@@ -6,6 +6,7 @@ import { requireUser } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/ui/misc';
 import { NotificationList } from '@/components/notifications/notification-list';
+import { HistoryBack } from '@/components/ui/history-back';
 
 export const metadata = { title: 'Notifications' };
 
@@ -24,6 +25,7 @@ export default async function NotificationsPage({
   ];
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8">
+      <HistoryBack fallback="/" />
       <PageHeader
         title={t('title')}
         description={t('description')}

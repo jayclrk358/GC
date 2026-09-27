@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { searchWiki } from '@magnox/core';
 import { loadCommunity } from '@/lib/community';
+import { BackLink } from '@/components/ui/back-link';
 
 export const metadata = { title: 'Search the wiki' };
 
@@ -33,9 +34,11 @@ export default async function WikiSearch({
   const q = ((await searchParams).q ?? '').trim();
   const data = await loadCommunity(slug);
   const t = await getTranslations('wiki');
+  const tBack = await getTranslations('common');
   const results = q ? await searchWiki(data.ctx, q) : [];
   return (
     <div className="flex flex-col gap-4">
+      <BackLink href={`/c/${slug}/wiki`}>{tBack('backTo', { name: t('title') })}</BackLink>
       <h2 className="text-2xl font-bold">{q ? t('resultsFor', { q }) : t('search')}</h2>
       <p role="status" className="text-sm text-muted">
         {q ? t('resultCount', { count: results.length }) : t('searchHint')}

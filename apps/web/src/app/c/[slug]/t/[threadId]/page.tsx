@@ -30,6 +30,7 @@ import { ThreadProvider } from '@/components/forum/thread-context';
 import { ThreadLiveBanner } from '@/components/forum/live-banners';
 import { FollowButton, ModTools, ReadMarker } from '@/components/forum/thread-tools';
 import { StyledName } from '@/components/community/role-decor';
+import { BackLink } from '@/components/ui/back-link';
 
 type Params = Promise<{ slug: string; threadId: string }>;
 
@@ -59,6 +60,7 @@ export default async function ThreadPage({
   const { slug, threadId } = await params;
   const { data, thread, channel, flair, poll, myVote, following } = await load(slug, threadId);
   const t = await getTranslations('forum');
+  const tBack = await getTranslations('common');
   const perms = BigInt(channel.perms);
   const userId = data.user?.id ?? null;
   const isMod = has(perms, Permission.MANAGE_THREADS);
@@ -96,15 +98,20 @@ export default async function ThreadPage({
         aria-labelledby="thread-title"
         className="mx-auto flex w-full max-w-4xl flex-col gap-5"
       >
-        <nav aria-label={t('breadcrumb')} className="text-sm text-muted">
-          <Link href={`${base}/forum`} className="hover:underline">
-            {t('title')}
-          </Link>{' '}
-          ›{' '}
-          <Link href={`${base}/forum/${channel.name}`} className="hover:underline">
-            {channel.name}
-          </Link>
-        </nav>
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+          <BackLink href={`${base}/forum/${channel.name}`}>
+            {tBack('backTo', { name: `#${channel.name}` })}
+          </BackLink>
+          <nav aria-label={t('breadcrumb')} className="text-sm text-muted">
+            <Link href={`${base}/forum`} className="hover:underline">
+              {t('title')}
+            </Link>{' '}
+            ›{' '}
+            <Link href={`${base}/forum/${channel.name}`} className="hover:underline">
+              {channel.name}
+            </Link>
+          </nav>
+        </div>
 
         <header className="flex flex-col gap-3">
           <div className="flex items-start gap-3">

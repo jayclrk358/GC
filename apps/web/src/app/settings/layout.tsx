@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { NavLink } from '@/components/shell/nav-link';
+import { HistoryBack } from '@/components/ui/history-back';
 
 export default async function SettingsLayout({ children }: { children: React.ReactNode }) {
   const t = await getTranslations('settings');
@@ -12,20 +13,23 @@ export default async function SettingsLayout({ children }: { children: React.Rea
     { href: '/settings/security', label: t('security') },
   ];
   return (
-    <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-8 md:grid-cols-[14rem_1fr]">
-      <nav aria-label={t('nav')}>
-        <p className="mb-3 px-3 text-xs font-bold tracking-wide text-muted uppercase">
-          {t('title')}
-        </p>
-        <ul className="flex gap-1 overflow-x-auto md:flex-col">
-          {links.map((l) => (
-            <li key={l.href}>
-              <NavLink href={l.href}>{l.label}</NavLink>
-            </li>
-          ))}
-        </ul>
-      </nav>
-      <div className="min-w-0">{children}</div>
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8">
+      <HistoryBack fallback="/" />
+      <div className="grid gap-8 md:grid-cols-[14rem_1fr]">
+        <nav aria-label={t('nav')}>
+          <p className="mb-3 px-3 text-xs font-bold tracking-wide text-muted uppercase">
+            {t('title')}
+          </p>
+          <ul className="flex gap-1 overflow-x-auto md:flex-col">
+            {links.map((l) => (
+              <li key={l.href}>
+                <NavLink href={l.href}>{l.label}</NavLink>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <div className="min-w-0">{children}</div>
+      </div>
     </div>
   );
 }

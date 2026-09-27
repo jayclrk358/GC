@@ -21,7 +21,8 @@
     "copy": "Copy",
     "copied": "Copied",
     "somethingWrong": "Something went wrong. Please try again.",
-    "moreFilters": "More filters"
+    "moreFilters": "More filters",
+    "backTo": "Back to {name}"
   },
   "shell": {
     "skipToContent": "Skip to main content",
@@ -2040,7 +2041,6 @@
     "viewServer": "View server"
   },
   "serverPage": {
-    "back": "All servers",
     "verified": "Verified",
     "privateTitle": "Only you can see this page",
     "privateBody": "This server isn't listed, or hasn't been verified yet, so it's hidden from the server browser and can't receive votes.",

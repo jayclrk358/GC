@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { openReportCount } from '@magnox/core';
 import { loadCommunityForSettings } from '@/lib/community';
 import { NavLink } from '@/components/shell/nav-link';
+import { BackLink } from '@/components/ui/back-link';
 
 export default async function CommunitySettingsLayout({
   children,
@@ -11,8 +12,9 @@ export default async function CommunitySettingsLayout({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const { perms, ctx } = await loadCommunityForSettings(slug);
+  const { perms, ctx, community } = await loadCommunityForSettings(slug);
   const t = await getTranslations('csettings');
+  const tBack = await getTranslations('common');
   const reports = perms.manageReports ? await openReportCount(ctx) : 0;
   const base = `/c/${slug}/settings`;
   const links = [
@@ -39,27 +41,30 @@ export default async function CommunitySettingsLayout({
     { href: `${base}/danger`, label: t('nav.danger'), show: ctx.isOwner },
   ].filter((l) => l.show);
   return (
-    <div className="grid gap-8 md:grid-cols-[13rem_1fr]">
-      <nav aria-label={t('navLabel')}>
-        <ul className="flex gap-1 overflow-x-auto md:flex-col">
-          {links.map((l) => (
-            <li key={l.href}>
-              <NavLink href={l.href} exact={l.exact}>
-                <span className="flex items-center justify-between gap-2">
-                  {l.label}
-                  {'badge' in l && l.badge ? (
-                    <span className="rounded-full bg-danger px-1.5 text-xs text-bg">
-                      {l.badge}
-                      <span className="sr-only"> {t('openReports')}</span>
-                    </span>
-                  ) : null}
-                </span>
-              </NavLink>
-            </li>
-          ))}
-        </ul>
-      </nav>
-      <div className="min-w-0">{children}</div>
+    <div className="flex flex-col gap-6">
+      <BackLink href={`/c/${slug}`}>{tBack('backTo', { name: community.name })}</BackLink>
+      <div className="grid gap-8 md:grid-cols-[13rem_1fr]">
+        <nav aria-label={t('navLabel')}>
+          <ul className="flex gap-1 overflow-x-auto md:flex-col">
+            {links.map((l) => (
+              <li key={l.href}>
+                <NavLink href={l.href} exact={l.exact}>
+                  <span className="flex items-center justify-between gap-2">
+                    {l.label}
+                    {'badge' in l && l.badge ? (
+                      <span className="rounded-full bg-danger px-1.5 text-xs text-bg">
+                        {l.badge}
+                        <span className="sr-only"> {t('openReports')}</span>
+                      </span>
+                    ) : null}
+                  </span>
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <div className="min-w-0">{children}</div>
+      </div>
     </div>
   );
 }

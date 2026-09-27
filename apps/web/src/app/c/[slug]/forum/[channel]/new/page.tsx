@@ -5,6 +5,7 @@ import { listFlairs } from '@magnox/core';
 import { has, Permission } from '@magnox/shared';
 import { loadCommunity, loadForumChannel } from '@/lib/community';
 import { ThreadComposer } from '@/components/forum/thread-composer';
+import { BackLink } from '@/components/ui/back-link';
 
 export const metadata = { title: 'New thread' };
 
@@ -23,21 +24,27 @@ export default async function NewThreadPage({
   if (!has(perms, Permission.CREATE_THREADS) || (channel.type === 'announcement' && !isMod))
     notFound();
   const t = await getTranslations('forum');
+  const tBack = await getTranslations('common');
   const flairs = (await listFlairs(data.community.id, channel.id)).filter(
     (f) => isMod || !f.modOnly,
   );
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
-      <nav aria-label={t('breadcrumb')} className="text-sm text-muted">
-        <Link href={`/c/${slug}/forum`} className="hover:underline">
-          {t('title')}
-        </Link>{' '}
-        ›{' '}
-        <Link href={`/c/${slug}/forum/${channel.name}`} className="hover:underline">
-          {channel.name}
-        </Link>{' '}
-        › {t('newThread')}
-      </nav>
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+        <BackLink href={`/c/${slug}/forum/${channel.name}`}>
+          {tBack('backTo', { name: `#${channel.name}` })}
+        </BackLink>
+        <nav aria-label={t('breadcrumb')} className="text-sm text-muted">
+          <Link href={`/c/${slug}/forum`} className="hover:underline">
+            {t('title')}
+          </Link>{' '}
+          ›{' '}
+          <Link href={`/c/${slug}/forum/${channel.name}`} className="hover:underline">
+            {channel.name}
+          </Link>{' '}
+          › {t('newThread')}
+        </nav>
+      </div>
       <h2 className="text-2xl font-bold">{t('newThreadIn', { channel: channel.name })}</h2>
       <ThreadComposer
         communityId={data.community.id}

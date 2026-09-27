@@ -6,6 +6,7 @@ import { formatDateTime } from '@/lib/format';
 import { RichText } from '@/components/rich-text/rich-text';
 import { RestoreRevisionButton } from '@/components/wiki/wiki-page-tools';
 import { loadWikiPage } from '../../../_load';
+import { BackLink } from '@/components/ui/back-link';
 
 type Params = Promise<{ slug: string; page: string; revisionId: string }>;
 
@@ -15,6 +16,7 @@ export default async function WikiRevisionPage({ params }: { params: Params }) {
   const { slug, page: pageSlug, revisionId } = await params;
   const { data, page } = await loadWikiPage(slug, pageSlug);
   const t = await getTranslations('wiki');
+  const tBack = await getTranslations('common');
   let cmp: Awaited<ReturnType<typeof compareRevision>>;
   try {
     cmp = await compareRevision(data.ctx, page.id, revisionId);
@@ -30,16 +32,19 @@ export default async function WikiRevisionPage({ params }: { params: Params }) {
   const current = revision.id === page.currentRevisionId;
   return (
     <div className="flex flex-col gap-5">
-      <nav aria-label={t('breadcrumb')} className="text-sm text-muted">
-        <Link href={pageHref} className="hover:underline">
-          {page.title}
-        </Link>{' '}
-        ›{' '}
-        <Link href={`${pageHref}/history`} className="hover:underline">
-          {t('history')}
-        </Link>{' '}
-        › {when}
-      </nav>
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+        <BackLink href={`${pageHref}/history`}>{tBack('backTo', { name: t('history') })}</BackLink>
+        <nav aria-label={t('breadcrumb')} className="text-sm text-muted">
+          <Link href={pageHref} className="hover:underline">
+            {page.title}
+          </Link>{' '}
+          ›{' '}
+          <Link href={`${pageHref}/history`} className="hover:underline">
+            {t('history')}
+          </Link>{' '}
+          › {when}
+        </nav>
+      </div>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold">{t('revisionFrom', { date: when })}</h2>

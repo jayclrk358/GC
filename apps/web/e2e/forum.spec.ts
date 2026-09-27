@@ -344,6 +344,28 @@ test.describe('forum', () => {
     await member.context.close();
   });
 
+  test('back buttons go to the page above, or back where you came from', async ({ page }) => {
+    const user = await signUp(page, uniqueUser('back'), '/new');
+    const { slug } = await createCommunity(page, { template: 'Game server' });
+    await startThread(page, slug, 'general', 'Where does Back go?', 'Testing back buttons.');
+    await page.getByRole('link', { name: 'Back to #general' }).click();
+    await page.waitForURL(new RegExp(`/c/${slug}/forum/general$`));
+    await page.getByRole('link', { name: 'Back to Forum' }).click();
+    await page.waitForURL(new RegExp(`/c/${slug}/forum$`));
+
+    // Within the site, Back returns to the previous page...
+    await page.getByRole('link', { name: 'Members', exact: true }).click();
+    await page.waitForURL(new RegExp(`/c/${slug}/members$`));
+    await page.getByRole('main').getByRole('link', { name: user.name }).click();
+    await page.waitForURL(new RegExp(`/u/${user.username}$`));
+    await page.getByRole('link', { name: 'Back', exact: true }).click();
+    await page.waitForURL(new RegExp(`/c/${slug}/members$`));
+    // ...and opened directly, it goes home instead of leaving the site.
+    await page.goto(`/u/${user.username}`);
+    await page.getByRole('link', { name: 'Back', exact: true }).click();
+    await page.waitForURL((url) => url.pathname === '/');
+  });
+
   test('thread and wiki pages are accessible in every colour mode', async ({ page }) => {
     await signUp(page, uniqueUser('modes'), '/new');
     const { slug } = await createCommunity(page, { template: 'Game server' });

@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { listGames } from '@magnox/core';
 import { requireUser } from '@/lib/auth';
 import { CreateWizard } from '@/components/community/create-wizard';
+import { HistoryBack } from '@/components/ui/history-back';
 
 export const metadata = { title: 'Create a community' };
 
@@ -16,6 +17,7 @@ export default async function NewCommunityPage({
   const { welcome } = await searchParams;
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10">
+      <HistoryBack fallback="/" className="mb-4" />
       {welcome && (
         <p className="mb-4 rounded-ui bg-primary/10 px-4 py-3 font-semibold text-primary">
           {t('welcome')}

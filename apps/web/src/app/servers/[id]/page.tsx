@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { ArrowLeft, Globe2, ShieldCheck, Users } from 'lucide-react';
+import { Globe2, ShieldCheck, Users } from 'lucide-react';
 import {
   endpointHistory,
   getServerDetail,
@@ -17,6 +17,7 @@ import { ServerHistoryCharts } from '@/components/servers/history-charts';
 import { LiveStatusPanel } from '@/components/servers/live-status-panel';
 import { VotePanel } from '@/components/servers/server-detail';
 import { AutoRefresh } from '@/components/live/live';
+import { HistoryBack } from '@/components/ui/history-back';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -61,13 +62,7 @@ export default async function ServerPage({ params }: Params) {
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8">
       <AutoRefresh every={60} away={60} />
-      <Link
-        href="/servers"
-        className="flex w-fit items-center gap-1 text-sm font-semibold text-muted hover:text-fg"
-      >
-        <ArrowLeft className="size-4" aria-hidden />
-        {t('back')}
-      </Link>
+      <HistoryBack fallback="/servers" />
 
       <header className="flex flex-col gap-3">
         <p className="mx-eyebrow">

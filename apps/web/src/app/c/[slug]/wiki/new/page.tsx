@@ -4,6 +4,7 @@ import { canEditWiki, listWikiTree } from '@magnox/core';
 import { loadCommunity } from '@/lib/community';
 import { WikiEditor } from '@/components/wiki/wiki-editor';
 import { parentOptions } from '@/components/wiki/tree-utils';
+import { BackLink } from '@/components/ui/back-link';
 
 export const metadata = { title: 'New wiki page' };
 
@@ -19,10 +20,12 @@ export default async function NewWikiPage({
   if (!data.user) redirect(`/sign-in?next=${encodeURIComponent(`/c/${slug}/wiki/new`)}`);
   if (!canEditWiki(data.ctx)) notFound();
   const t = await getTranslations('wiki');
+  const tBack = await getTranslations('common');
   const parents = parentOptions(await listWikiTree(data.ctx));
   const parent = (await searchParams).parent;
   return (
     <div className="flex flex-col gap-5">
+      <BackLink href={`/c/${slug}/wiki`}>{tBack('backTo', { name: t('title') })}</BackLink>
       <h2 className="text-2xl font-bold">{t('newPage')}</h2>
       <WikiEditor
         communityId={data.community.id}

@@ -22,6 +22,7 @@ import { BlockButton } from '@/components/moderation/block-button';
 import { CopyHandle, LocalTime } from '@/components/profile/profile-client';
 import { formatDate } from '@/lib/format';
 import { Avatar, Badge } from '@/components/ui/misc';
+import { HistoryBack } from '@/components/ui/history-back';
 
 const PLATFORM_ICONS: Record<Platform, LucideIcon> = {
   pc: Monitor,
@@ -76,18 +77,24 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
   ];
   return (
     <div className="flex flex-col pb-12">
-      <div className="h-40 sm:h-56" data-decorative aria-hidden>
-        {profile.bannerUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={profile.bannerUrl} alt="" className="size-full object-cover" />
-        ) : (
-          <div
-            className="size-full"
-            style={{
-              background: `linear-gradient(135deg, ${profile.accentColor ?? 'var(--c-primary)'}, var(--c-accent))`,
-            }}
-          />
-        )}
+      <div className="relative">
+        <HistoryBack
+          fallback="/"
+          className="absolute start-4 top-4 z-10 rounded-full bg-surface/90 px-3 text-fg shadow-sm backdrop-blur"
+        />
+        <div className="h-40 sm:h-56" data-decorative aria-hidden>
+          {profile.bannerUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={profile.bannerUrl} alt="" className="size-full object-cover" />
+          ) : (
+            <div
+              className="size-full"
+              style={{
+                background: `linear-gradient(135deg, ${profile.accentColor ?? 'var(--c-primary)'}, var(--c-accent))`,
+              }}
+            />
+          )}
+        </div>
       </div>
       <div className="mx-auto w-full max-w-5xl px-4">
         <div className="-mt-12 flex flex-wrap items-end gap-4">
