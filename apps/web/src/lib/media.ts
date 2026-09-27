@@ -1,4 +1,4 @@
-const KEY_RE = /^u\/[a-z0-9]{8,40}\.(webp|png|jpg|gif)$/;
+const KEY_RE = /^u\/[a-z0-9]{8,40}\.(webp|png|jpg|gif|mp4|webm)$/;
 
 let clientBase: string | undefined;
 

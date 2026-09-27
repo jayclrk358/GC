@@ -16,6 +16,7 @@ export function DialogContent({
   className,
   size = 'md',
   hideTitle,
+  onSubmit,
   ...props
 }: React.ComponentPropsWithoutRef<typeof D.Content> & {
   title: React.ReactNode;
@@ -35,6 +36,12 @@ export function DialogContent({
         )}
         {...(description ? {} : { 'aria-describedby': undefined })}
         {...props}
+        // React bubbles events through portals, so a form in a dialog would also submit a form
+        // the dialog was opened from (e.g. inserting an image would post the thread).
+        onSubmit={(e) => {
+          onSubmit?.(e);
+          e.stopPropagation();
+        }}
       >
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col gap-1">

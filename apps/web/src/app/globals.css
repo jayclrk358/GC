@@ -664,6 +664,10 @@
     border-radius: var(--mx-radius);
     max-height: 32rem;
   }
+  .prose-mx .mx-view {
+    max-width: 100%;
+    border-radius: var(--mx-radius);
+  }
 
   .spoiler {
     background: var(--c-text);

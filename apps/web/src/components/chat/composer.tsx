@@ -2,8 +2,15 @@
 
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
-import { AtSign, ImagePlus, Loader2, SendHorizontal, Type, X } from 'lucide-react';
-import { docToText, MAX_ATTACHMENTS, MAX_MESSAGE_CHARS, type RichNode } from '@magnox/shared';
+import { AtSign, Film, ImagePlus, Loader2, SendHorizontal, Type, X } from 'lucide-react';
+import {
+  docToText,
+  MAX_ATTACHMENTS,
+  MAX_MESSAGE_CHARS,
+  MAX_VIDEO_BYTES,
+  VIDEO_TYPES,
+  type RichNode,
+} from '@magnox/shared';
 import { Button } from '@/components/ui/button';
 import { uploadImage } from '@/components/upload/image-upload';
 import { emitSocket } from '@/lib/realtime';
@@ -16,6 +23,7 @@ import type { ChatMessage } from './types';
 interface PendingAttachment {
   id: string;
   previewUrl: string;
+  video: boolean;
   key: string | null;
   alt: string;
   error: string | null;
@@ -85,12 +93,23 @@ export const Composer = React.forwardRef<
     setError(null);
     for (const file of files.slice(0, room)) {
       const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const video = (VIDEO_TYPES as readonly string[]).includes(file.type);
+      // Checked here too so an oversized video fails before it uploads.
+      const tooBig = video && file.size > MAX_VIDEO_BYTES;
       setAttachments((list) => [
         ...list,
-        { id, previewUrl: URL.createObjectURL(file), key: null, alt: '', error: null },
+        {
+          id,
+          previewUrl: URL.createObjectURL(file),
+          video,
+          key: null,
+          alt: '',
+          error: tooBig ? t('videoTooLarge', { max: MAX_VIDEO_BYTES / 1_000_000 }) : null,
+        },
       ]);
+      if (tooBig) continue;
       try {
-        const up = await uploadImage(file, 'content', communityId);
+        const up = await uploadImage(file, video ? 'video' : 'content', communityId);
         setAttachments((list) => list.map((a) => (a.id === id ? { ...a, key: up.key } : a)));
       } catch (e) {
         setAttachments((list) =>
@@ -195,12 +214,36 @@ export const Composer = React.forwardRef<
             {attachments.map((a, i) => (
               <li key={a.id} className="flex w-44 flex-col gap-1">
                 <div className="relative">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={a.previewUrl}
-                    alt=""
-                    className={cn('h-24 w-full rounded-ui-sm object-cover', !a.key && 'opacity-50')}
-                  />
+                  {a.video ? (
+                    <video
+                      src={a.previewUrl}
+                      muted
+                      playsInline
+                      preload="metadata"
+                      aria-hidden
+                      tabIndex={-1}
+                      className={cn(
+                        'h-24 w-full rounded-ui-sm bg-black object-cover',
+                        !a.key && 'opacity-50',
+                      )}
+                    />
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={a.previewUrl}
+                      alt=""
+                      className={cn(
+                        'h-24 w-full rounded-ui-sm object-cover',
+                        !a.key && 'opacity-50',
+                      )}
+                    />
+                  )}
+                  {a.video && (
+                    <span className="absolute start-1 bottom-1 inline-flex items-center gap-1 rounded-full bg-black/75 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                      <Film className="size-3" aria-hidden />
+                      {t('videoBadge')}
+                    </span>
+                  )}
                   {!a.key && !a.error && (
                     <Loader2
                       className="absolute inset-0 m-auto size-6 animate-spin text-fg motion-reduce:animate-none"
@@ -223,13 +266,13 @@ export const Composer = React.forwardRef<
                 ) : (
                   <>
                     <label htmlFor={`alt-${a.id}`} className="text-xs font-semibold">
-                      {t('altLabel', { n: i + 1 })}
+                      {t(a.video ? 'altLabelVideo' : 'altLabel', { n: i + 1 })}
                     </label>
                     <input
                       id={`alt-${a.id}`}
                       value={a.alt}
                       maxLength={1000}
-                      placeholder={t('altPlaceholder')}
+                      placeholder={t(a.video ? 'altPlaceholderVideo' : 'altPlaceholder')}
                       onChange={(e) =>
                         setAttachments((list) =>
                           list.map((x) => (x.id === a.id ? { ...x, alt: e.target.value } : x)),
@@ -258,7 +301,9 @@ export const Composer = React.forwardRef<
               <input
                 id={fileInputId}
                 type="file"
-                accept="image/png,image/jpeg,image/webp,image/gif"
+                accept={['image/png', 'image/jpeg', 'image/webp', 'image/gif', ...VIDEO_TYPES].join(
+                  ',',
+                )}
                 multiple
                 className="hidden"
                 tabIndex={-1}

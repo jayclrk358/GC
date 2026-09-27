@@ -1970,16 +1970,16 @@
     "messageLabel": "Message #{channel}",
     "placeholder": "Message #{channel}",
     "composerHint": "Enter to send · Shift+Enter for a new line · ↑ to edit your last message",
-    "attach": "Attach images",
-    "attachmentsLabel": "Images to send",
+    "attach": "Attach images or videos",
+    "attachmentsLabel": "Files to send",
     "altLabel": "Description of image {n}",
     "altPlaceholder": "What's in the image?",
-    "altRequired": "Add a short description (alt text) to each image before sending.",
-    "removeAttachment": "Remove image {n}",
+    "altRequired": "Add a short description (alt text) to each image or video before sending.",
+    "removeAttachment": "Remove attachment {n}",
     "uploading": "Uploading",
-    "stillUploading": "Wait for your images to finish uploading.",
-    "noAttach": "You can't attach images in this channel.",
-    "tooManyAttachments": "You can attach up to {max} images.",
+    "stillUploading": "Wait for your files to finish uploading.",
+    "noAttach": "You can't attach files in this channel.",
+    "tooManyAttachments": "You can attach up to {max} files.",
     "tooLong": "Messages can be up to {max} characters.",
     "charsLeft": "{count, plural, one {# character left} other {# characters left}}",
     "formatting": "Formatting options",
@@ -2003,7 +2003,7 @@
       "mentions": "Only mentions",
       "off": "Off"
     },
-    "imageOnly": "(image)",
+    "imageOnly": "(attachment)",
     "pinsTitle": "Pinned messages",
     "searchTitle": "Search messages",
     "mentionsTitle": "Mentions",
@@ -2038,7 +2038,12 @@
     "serverUp": "{name} is back up.",
     "serverUpAfter": "{name} is back up after {duration}.",
     "systemNotice": "Magnox notice",
-    "viewServer": "View server"
+    "viewServer": "View server",
+    "altLabelVideo": "Description of video {n}",
+    "altPlaceholderVideo": "What happens in the video?",
+    "expandVideo": "Open video in viewer",
+    "videoTooLarge": "That video is too large (max {max} MB).",
+    "videoBadge": "Video"
   },
   "serverPage": {
     "verified": "Verified",
@@ -2096,5 +2101,20 @@
     "mcName": "Minecraft username",
     "mcNameHint": "For your in-game reward. Leave blank to vote without one.",
     "voteButton": "Vote for this server"
+  },
+  "media": {
+    "imageTitle": "Image {n} of {total}",
+    "videoTitle": "Video {n} of {total}",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "play": "Play",
+    "pause": "Pause",
+    "download": "Download",
+    "openOriginal": "Open original in a new tab",
+    "close": "Close",
+    "previous": "Previous",
+    "next": "Next",
+    "video": "Video",
+    "viewNoAlt": "View image"
   }
 }

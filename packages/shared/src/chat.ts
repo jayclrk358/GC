@@ -2,6 +2,15 @@ import type { RichNode } from './richtext';
 import { REACTIONS, REACTION_NAMES } from './forum';
 
 export const MAX_ATTACHMENTS = 4;
+
+/** Video attachments are MP4 or WebM uploads, stored as uploaded (see core's video.ts). */
+export const VIDEO_TYPES = ['video/mp4', 'video/webm'] as const;
+export const MAX_VIDEO_BYTES = 50_000_000;
+
+export function isVideoKey(key: string): boolean {
+  return /\.(mp4|webm)$/.test(key);
+}
+
 export const MAX_MESSAGE_CHARS = 4000;
 
 /** Reactions offered in chat: the forum set plus a few chat staples. */

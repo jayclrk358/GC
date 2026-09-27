@@ -1,7 +1,9 @@
 import * as React from 'react';
+import { useTranslations } from 'next-intl';
 import { docHeadings, isSafeHref, type RichMark, type RichNode } from '@magnox/shared';
 import { mediaUrl } from '@/lib/media';
 import { cn } from '@/lib/utils';
+import { MediaScope } from '@/components/media/media-scope';
 import { Spoiler } from './spoiler';
 
 function renderText(text: string, marks: RichMark[] | undefined, key: React.Key): React.ReactNode {
@@ -43,6 +45,8 @@ interface RenderOpts {
   headingOffset: number;
   /** Heading anchor ids in document order, consumed as headings render. */
   anchors?: { ids: string[]; next: number };
+  /** Name for an image button whose image has no alt text. */
+  viewLabel: string;
 }
 
 function renderNode(n: RichNode, key: React.Key, opts: RenderOpts): React.ReactNode {
@@ -85,10 +89,23 @@ function renderNode(n: RichNode, key: React.Key, opts: RenderOpts): React.ReactN
     case 'hardBreak':
       return <br key={key} />;
     case 'image': {
-      const src = mediaUrl(String(n.attrs?.src ?? ''));
+      const imgKey = String(n.attrs?.src ?? '');
+      const src = mediaUrl(imgKey);
       if (!src) return null;
-      // eslint-disable-next-line @next/next/no-img-element
-      return <img key={key} src={src} alt={String(n.attrs?.alt ?? '')} loading="lazy" />;
+      const alt = String(n.attrs?.alt ?? '');
+      // Opens in the media viewer (see MediaScope); the image's alt text names the button.
+      return (
+        <button
+          key={key}
+          type="button"
+          data-mx-view={imgKey}
+          aria-label={alt ? undefined : opts.viewLabel}
+          className="mx-view block cursor-zoom-in"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={src} alt={alt} loading="lazy" />
+        </button>
+      );
     }
     case 'mention': {
       const label = String(n.attrs?.label ?? n.attrs?.id ?? '');
@@ -114,6 +131,10 @@ function renderNode(n: RichNode, key: React.Key, opts: RenderOpts): React.ReactN
   }
 }
 
+function hasImage(n: RichNode): boolean {
+  return n.type === 'image' || Boolean(n.content?.some(hasImage));
+}
+
 /**
  * Render sanitized rich text. The document must already have passed `sanitizeDoc` on the server;
  * this renderer still only emits allowlisted elements, never raw HTML.
@@ -131,10 +152,17 @@ export function RichText({
   /** Give headings ids (from `docHeadings`) so a table of contents can link to them. */
   anchors?: boolean;
 }) {
+  const t = useTranslations('media');
   if (!doc) return null;
   const opts: RenderOpts = {
     headingOffset,
     anchors: anchors ? { ids: docHeadings(doc).map((h) => h.id), next: 0 } : undefined,
+    viewLabel: t('viewNoAlt'),
   };
-  return <div className={cn('prose-mx', className)}>{renderNode(doc, 'root', opts)}</div>;
+  const body = renderNode(doc, 'root', opts);
+  return hasImage(doc) ? (
+    <MediaScope className={cn('prose-mx', className)}>{body}</MediaScope>
+  ) : (
+    <div className={cn('prose-mx', className)}>{body}</div>
+  );
 }

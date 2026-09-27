@@ -10,7 +10,7 @@ export interface StorageDriver {
   delete(key: string): Promise<void>;
 }
 
-const KEY_RE = /^u\/[a-z0-9]{8,40}\.(webp|png|jpg|gif)$/;
+const KEY_RE = /^u\/[a-z0-9]{8,40}\.(webp|png|jpg|gif|mp4|webm)$/;
 
 export function assertKey(key: string): void {
   if (!KEY_RE.test(key)) throw new Error('Invalid storage key');

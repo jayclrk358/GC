@@ -15,7 +15,10 @@ import { channels } from './channels';
 import { communities } from './communities';
 import { createdAt, tsvector, tz } from './_helpers';
 
-/** An image attached to a chat message (always an upload re-encoded by the image pipeline). */
+/**
+ * An image or video attached to a chat message. Images are re-encoded by the image pipeline;
+ * videos (MP4/WebM) are stored as uploaded and have no poster.
+ */
 export interface MessageAttachment {
   key: string;
   alt: string;

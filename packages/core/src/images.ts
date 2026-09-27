@@ -1,5 +1,5 @@
 import sharp, { type Metadata } from 'sharp';
-import { randomToken } from '@magnox/shared';
+import { MAX_VIDEO_BYTES, randomToken } from '@magnox/shared';
 import { badRequest } from './errors';
 
 export const UPLOAD_PURPOSES = {
@@ -19,6 +19,8 @@ export const UPLOAD_PURPOSES = {
     still: true,
   },
   preview: { maxBytes: 5_000_000, width: 640, height: 640, fit: 'inside' as const },
+  // Chat videos: stored as uploaded (see video.ts); the size fields don't apply.
+  video: { maxBytes: MAX_VIDEO_BYTES, width: 0, height: 0, fit: 'inside' as const },
 } as const;
 
 export type UploadPurpose = keyof typeof UPLOAD_PURPOSES;

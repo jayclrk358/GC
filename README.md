@@ -169,7 +169,8 @@ Found a barrier? Please open an issue. Accessibility bugs are treated as high pr
       drafts and full-text search; a wiki with revisions, diffs and restore; live and email
       notifications with mutes; reports, blocks, kick/ban/timeout and an audit trail.
 - [x] **Phase 3 — Real-time chat:** chat channels with replies, reactions, mentions (@user,
-      @role, @everyone), edits, deletes, image attachments with alt text, link previews fetched
+      @role, @everyone), edits, deletes, image and video (MP4/WebM, up to 50 MB) attachments
+      with alt text, a full-screen media viewer (zoom, play/pause, download), link previews fetched
       behind the SSRF guard, typing indicators, who's online, read states with unread and
       mention badges, jump to unread, a mentions inbox, pins, slow mode and message search; an
       accessible log with arrow-key navigation and throttled screen reader announcements

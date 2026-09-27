@@ -5,7 +5,7 @@ import { richDocSchema } from './richtext-schema';
 // Input validation for chat messages (constants and helpers are in chat.ts).
 
 export const attachmentInputSchema = z.object({
-  key: z.string().regex(/^u\/[a-z0-9]{8,40}\.(webp|png|jpg|gif)$/),
+  key: z.string().regex(/^u\/[a-z0-9]{8,40}\.(webp|png|jpg|gif|mp4|webm)$/),
   alt: z.string().trim().max(1000).default(''),
 });
 

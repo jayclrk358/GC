@@ -437,6 +437,9 @@ async function resolveChatMentions(ctx: MemberContext, channel: ChannelView, bod
   };
 }
 
+/** Uploads that can be attached to a message (not avatars, banners and the like). */
+const CHAT_UPLOAD_PURPOSES = new Set(['content', 'video']);
+
 async function loadAttachments(
   ctx: MemberContext,
   input: { key: string; alt: string }[],
@@ -460,7 +463,9 @@ async function loadAttachments(
   });
   return input.map((a) => {
     const up = byKey.get(a.key);
-    if (!up) throw new AppError('validation', 'An attachment is missing. Try uploading it again.');
+    if (!up || !CHAT_UPLOAD_PURPOSES.has(up.purpose)) {
+      throw new AppError('validation', 'An attachment is missing. Try uploading it again.');
+    }
     const alt = (a.alt || up.alt || '').trim();
     if (!alt && community?.settings.requireAltText) {
       throw new AppError(

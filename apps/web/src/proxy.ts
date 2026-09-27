@@ -25,7 +25,7 @@ export function proxy(request: NextRequest) {
     // Community themes are emitted as validated inline <style>; Radix also sets inline styles.
     `style-src 'self' 'unsafe-inline'`,
     `img-src 'self' data: blob: ${media}`.trim(),
-    `media-src 'self' ${media}`.trim(),
+    `media-src 'self' blob: ${media}`.trim(),
     `font-src 'self' data:`,
     `connect-src 'self' ${rt} ${rtWs}${dev ? ' ws: http://localhost:*' : ''}`.trim(),
     `frame-src https://www.youtube-nocookie.com https://player.twitch.tv${turnstile}`,

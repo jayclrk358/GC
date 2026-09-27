@@ -2,44 +2,62 @@
 
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
-import { Play } from 'lucide-react';
+import { Maximize2, Play } from 'lucide-react';
 import type { MessageAttachment, MessageEmbed } from '@magnox/db';
+import { isVideoKey } from '@magnox/shared';
+import { useMediaViewer } from '@/components/media/media-viewer';
 import { mediaUrl } from '@/lib/media';
 import { cn } from '@/lib/utils';
 
-/** Image attachments. Animated images show a still frame until played when animation is off. */
+/**
+ * Image and video attachments. Images open in the media viewer; videos play inline and can be
+ * expanded. Animated images show a still frame until played when animation is off.
+ */
 export function Attachments({ items, animate }: { items: MessageAttachment[]; animate: boolean }) {
-  const t = useTranslations('chat');
+  const { show, viewer } = useMediaViewer(items);
   if (!items.length) return null;
   return (
-    <ul className={cn('mt-2 grid max-w-xl gap-2', items.length > 1 && 'grid-cols-2')}>
-      {items.map((a) => (
-        <li key={a.key}>
-          <AttachmentImage a={a} animate={animate} label={t('playAnimation')} />
-        </li>
-      ))}
-    </ul>
+    <>
+      <ul className={cn('mt-2 grid max-w-xl gap-2', items.length > 1 && 'grid-cols-2')}>
+        {items.map((a, i) => (
+          <li key={a.key}>
+            {isVideoKey(a.key) ? (
+              <AttachmentVideo a={a} onExpand={() => show(i)} />
+            ) : (
+              <AttachmentImage a={a} animate={animate} onOpen={() => show(i)} />
+            )}
+          </li>
+        ))}
+      </ul>
+      {viewer}
+    </>
   );
 }
 
 function AttachmentImage({
   a,
   animate,
-  label,
+  onOpen,
 }: {
   a: MessageAttachment;
   animate: boolean;
-  label: string;
+  onOpen: () => void;
 }) {
+  const t = useTranslations('chat');
+  const tm = useTranslations('media');
   const [playing, setPlaying] = React.useState(false);
   const still = a.animated && !animate && !playing && a.posterKey;
   const src = mediaUrl(still ? a.posterKey : a.key);
-  const full = mediaUrl(a.key);
-  if (!src || !full) return null;
+  if (!src) return null;
   const ratio = a.width && a.height ? `${a.width} / ${a.height}` : undefined;
   return (
     <div className="relative overflow-hidden rounded-ui border border-border bg-surface-2">
-      <a href={full} target="_blank" rel="noopener">
+      <button
+        type="button"
+        onClick={onOpen}
+        className="block w-full cursor-zoom-in"
+        aria-label={a.alt ? undefined : tm('viewNoAlt')}
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={src}
@@ -48,7 +66,7 @@ function AttachmentImage({
           className="max-h-80 w-full object-contain"
           style={{ aspectRatio: ratio }}
         />
-      </a>
+      </button>
       {still && (
         <button
           type="button"
@@ -56,10 +74,44 @@ function AttachmentImage({
           className="absolute start-2 bottom-2 inline-flex items-center gap-1 rounded-full bg-black/75 px-2 py-1 text-xs font-bold text-white"
         >
           <Play className="size-3" aria-hidden /> GIF
-          <span className="sr-only">: {label}</span>
+          <span className="sr-only">: {t('playAnimation')}</span>
         </button>
       )}
     </div>
+  );
+}
+
+function AttachmentVideo({ a, onExpand }: { a: MessageAttachment; onExpand: () => void }) {
+  const t = useTranslations('chat');
+  const tm = useTranslations('media');
+  const src = mediaUrl(a.key);
+  if (!src) return null;
+  const ratio = a.width && a.height ? `${a.width} / ${a.height}` : '16 / 9';
+  return (
+    <figure className="relative overflow-hidden rounded-ui border border-border bg-black">
+      {/* Chat videos have no caption tracks; the description below stands in. */}
+      <video
+        src={src}
+        controls
+        playsInline
+        preload="metadata"
+        aria-label={a.alt || tm('video')}
+        className="max-h-80 w-full bg-black"
+        style={{ aspectRatio: ratio }}
+      />
+      <button
+        type="button"
+        onClick={onExpand}
+        className="absolute end-2 top-2 inline-flex size-8 items-center justify-center rounded-full bg-black/75 text-white hover:bg-black"
+        aria-label={t('expandVideo')}
+        title={t('expandVideo')}
+      >
+        <Maximize2 className="size-4" aria-hidden />
+      </button>
+      {a.alt && (
+        <figcaption className="bg-surface-2 px-2 py-1 text-xs text-muted">{a.alt}</figcaption>
+      )}
+    </figure>
   );
 }
 
