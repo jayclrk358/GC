@@ -43,15 +43,26 @@ test('chat images and videos open in the media viewer', async ({ page }) => {
   await expect(composer).toBeVisible();
   await page.waitForFunction(() => document.readyState === 'complete');
 
-  // Attach an image and a video, each with a description.
+  // Attach an image and a video, each with a description. Hold the uploads back for a moment so
+  // their progress bars can be seen.
   const webm = await recordWebm(page);
+  let release = () => {};
+  const held = new Promise<void>((r) => (release = r));
+  await page.route('**/api/uploads', async (route) => {
+    await held;
+    await route.continue();
+  });
   await page.locator('input[type=file][multiple]').setInputFiles([
     { name: 'map.png', mimeType: 'image/png', buffer: PNG },
     { name: 'raid.webm', mimeType: 'video/webm', buffer: webm },
   ]);
+  await expect(page.getByRole('progressbar', { name: 'Uploading map.png' })).toBeVisible();
+  await expect(page.getByRole('progressbar', { name: 'Uploading raid.webm' })).toBeVisible();
+  release();
   await page.getByLabel('Description of image 1').fill('Map of the spawn area');
   await page.getByLabel('Description of video 2').fill('Clip of the boss fight');
-  await expect(page.getByRole('img', { name: 'Uploading' })).toHaveCount(0, { timeout: 20_000 });
+  await expect(page.getByRole('progressbar')).toHaveCount(0, { timeout: 20_000 });
+  await page.unroute('**/api/uploads');
   await composer.click();
   await composer.fill('Raid highlights');
   await composer.press('Enter');
@@ -175,4 +186,51 @@ test('gallery images step through the media viewer', async ({ page }) => {
   await page.getByRole('dialog').getByRole('button', { name: 'Close' }).click();
   await expect(page.getByRole('dialog')).toBeHidden();
   await expect(page.getByRole('button', { name: 'Castle at night' })).toBeFocused();
+});
+
+test('videos that browsers cannot play are caught before and after upload', async ({ page }) => {
+  await signUp(page, uniqueUser('badvid'), '/new');
+  const { slug } = await createCommunity(page, { template: 'Game server' });
+  await page.goto(`/c/${slug}/chat/lounge`);
+  const composer = page.getByRole('textbox', { name: 'Message #lounge' });
+  await expect(composer).toBeVisible();
+  await page.waitForFunction(() => document.readyState === 'complete');
+
+  // An MP4 whose picture can't be decoded is refused before it uploads.
+  const box = (type: string, body: Buffer) => {
+    const head = Buffer.alloc(8);
+    head.writeUInt32BE(8 + body.length, 0);
+    head.write(type, 4, 'latin1');
+    return Buffer.concat([head, body]);
+  };
+  const junk = Buffer.concat([
+    box('ftyp', Buffer.from('isom\0\0\0\0isomiso2', 'latin1')),
+    box('mdat', Buffer.alloc(2048, 7)),
+  ]);
+  await page
+    .locator('input[type=file][multiple]')
+    .setInputFiles({ name: 'hevc.mp4', mimeType: 'video/mp4', buffer: junk });
+  await expect(page.getByText("Your browser can't play this video")).toBeVisible();
+  await page.getByRole('button', { name: 'Remove attachment 1' }).click();
+
+  // A video that fails to load later (here: missing from the media server) offers a download.
+  const webm = await recordWebm(page);
+  await page
+    .locator('input[type=file][multiple]')
+    .setInputFiles({ name: 'clip.webm', mimeType: 'video/webm', buffer: webm });
+  await page.getByLabel('Description of video 1').fill('Short clip');
+  await expect(page.getByRole('progressbar')).toHaveCount(0, { timeout: 20_000 });
+  await composer.click();
+  await composer.fill('Watch this');
+  await composer.press('Enter');
+  const msg = page.locator('article[data-message-id]').filter({ hasText: 'Watch this' });
+  await expect(msg.locator('video')).toBeVisible();
+  await page.route(/\/u\/[a-z0-9]+\.webm/, (route) => route.fulfill({ status: 404 }));
+  await page.reload();
+  await expect(msg.getByText("This video can't be played in your browser.")).toBeVisible();
+  await expect(msg.getByRole('link', { name: 'Download' })).toHaveAttribute(
+    'href',
+    /\.webm\?download=1$/,
+  );
+  await expectAccessible(page, 'unplayable video');
 });

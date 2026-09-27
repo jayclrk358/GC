@@ -255,7 +255,7 @@ test.describe('chat', () => {
       .setInputFiles({ name: 'map.png', mimeType: 'image/png', buffer: png });
     const alt = page.getByLabel('Description of image 1');
     await expect(alt).toBeVisible();
-    await expect(page.getByRole('img', { name: 'Uploading' })).toBeHidden();
+    await expect(page.getByRole('progressbar', { name: 'Uploading map.png' })).toHaveCount(0);
     await alt.fill('Map of the spawn area');
     await composer(page).click();
     await composer(page).fill('Here is the map');

@@ -30,7 +30,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Field } from '@/components/ui/field';
 import { Input, Textarea } from '@/components/ui/input';
 import { usePrefs } from '@/components/shell/prefs-provider';
-import { uploadImage } from '@/components/upload/image-upload';
+import { uploadImage, UploadProgress } from '@/components/upload/image-upload';
 import { mediaUrl } from '@/lib/media';
 import { cn } from '@/lib/utils';
 import { mentionExtension } from './mentions';
@@ -94,6 +94,7 @@ export function RichTextEditor({
   const [alt, setAlt] = React.useState('');
   const [imageError, setImageError] = React.useState<string | null>(null);
   const [uploading, setUploading] = React.useState(false);
+  const [uploadProgress, setUploadProgress] = React.useState(0);
   const fileInputId = React.useId();
   const toolbarRef = React.useRef<HTMLDivElement>(null);
   const [, force] = React.useReducer((x: number) => x + 1, 0);
@@ -293,9 +294,10 @@ export function RichTextEditor({
     e.target.value = '';
     if (!file) return;
     setUploading(true);
+    setUploadProgress(0);
     setImageError(null);
     try {
-      const r = await uploadImage(file, 'content', communityId);
+      const r = await uploadImage(file, 'content', communityId, { onProgress: setUploadProgress });
       setAlt('');
       setPendingImage({ key: r.key, url: r.url });
     } catch (err) {
@@ -348,8 +350,9 @@ export function RichTextEditor({
           </React.Fragment>
         ))}
         {uploading && (
-          <span className="ms-2 text-xs text-muted" role="status">
-            {t('uploading')}
+          <span className="ms-2 flex w-44 items-center gap-2 text-xs text-muted" role="status">
+            <span className="sr-only">{t('uploading')}</span>
+            <UploadProgress value={uploadProgress} label={t('uploading')} className="flex-1" />
           </span>
         )}
       </div>

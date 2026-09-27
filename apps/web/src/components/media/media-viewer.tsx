@@ -12,6 +12,7 @@ import {
   Play,
   X,
   ZoomIn,
+  VideoOff,
   ZoomOut,
 } from 'lucide-react';
 import { isVideoKey } from '@magnox/shared';
@@ -31,6 +32,28 @@ export interface MediaItem {
 }
 
 const ZOOMS = [1, 1.5, 2, 3] as const;
+
+/** Shown in place of a video the browser can't load or decode, with a way to get the file. */
+export function VideoUnavailable({ src, style }: { src: string; style?: React.CSSProperties }) {
+  const t = useTranslations('media');
+  return (
+    <div
+      className="flex w-full flex-col items-center justify-center gap-2 bg-black p-4 text-center text-sm text-white"
+      style={style}
+    >
+      <VideoOff aria-hidden className="size-6" />
+      <p>{t('cantPlay')}</p>
+      <a
+        href={`${src}?download=1`}
+        download
+        className="inline-flex items-center gap-1.5 rounded-ui px-2 py-1 font-semibold underline hover:bg-white/15"
+      >
+        <Download aria-hidden className="size-4" />
+        {t('download')}
+      </a>
+    </div>
+  );
+}
 
 const toolClass =
   'inline-flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-ui px-2.5 text-sm font-semibold text-white hover:bg-white/15 disabled:opacity-40 focus-visible:outline-white';
@@ -59,6 +82,7 @@ export function MediaViewer({
   const pausable = Boolean(item && (video || (item.animated && item.posterKey)));
   const [zoom, setZoom] = React.useState(0);
   const [playing, setPlaying] = React.useState(prefs.animatedImages);
+  const [failed, setFailed] = React.useState(false);
   const videoRef = React.useRef<HTMLVideoElement>(null);
   // Radix only returns focus to a Dialog.Trigger; the viewer opens from anywhere, so remember.
   const returnFocus = React.useRef<HTMLElement | null>(null);
@@ -67,6 +91,7 @@ export function MediaViewer({
   if (shown.index !== index || shown.open !== open) {
     setShown({ index, open });
     setZoom(0);
+    setFailed(false);
     setPlaying(video ? false : prefs.animatedImages);
   }
   if (!item) return null;
@@ -145,7 +170,7 @@ export function MediaViewer({
                 </button>
               </>
             )}
-            {pausable && (
+            {pausable && !failed && (
               <button
                 type="button"
                 className={toolClass}
@@ -197,7 +222,9 @@ export function MediaViewer({
               if (e.target === e.currentTarget) onOpenChange(false);
             }}
           >
-            {video ? (
+            {video && failed ? (
+              <VideoUnavailable src={url} />
+            ) : video ? (
               <video
                 key={item.key}
                 ref={videoRef}
@@ -209,6 +236,7 @@ export function MediaViewer({
                 aria-label={item.alt || t('video')}
                 onPlay={() => setPlaying(true)}
                 onPause={() => setPlaying(false)}
+                onError={() => setFailed(true)}
                 // Videos scale up to fill the viewer (images keep their size until zoomed).
                 className="h-full w-full object-contain"
               />

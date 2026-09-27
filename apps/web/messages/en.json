@@ -677,7 +677,9 @@
     "uploading": "Uploading…",
     "replace": "Replace",
     "upload": "Upload image",
-    "remove": "Remove"
+    "remove": "Remove",
+    "processing": "Processing…",
+    "progressLabel": "Uploading {label}"
   },
   "csettings": {
     "navLabel": "Community settings sections",
@@ -1976,7 +1978,6 @@
     "altPlaceholder": "What's in the image?",
     "altRequired": "Add a short description (alt text) to each image or video before sending.",
     "removeAttachment": "Remove attachment {n}",
-    "uploading": "Uploading",
     "stillUploading": "Wait for your files to finish uploading.",
     "noAttach": "You can't attach files in this channel.",
     "tooManyAttachments": "You can attach up to {max} files.",
@@ -2043,7 +2044,9 @@
     "altPlaceholderVideo": "What happens in the video?",
     "expandVideo": "Open video in viewer",
     "videoTooLarge": "That video is too large (max {max} MB).",
-    "videoBadge": "Video"
+    "videoBadge": "Video",
+    "uploadingFile": "Uploading {name}",
+    "videoUnplayable": "Your browser can't play this video, so others probably can't either. Use an MP4 (H.264) or WebM file."
   },
   "serverPage": {
     "verified": "Verified",
@@ -2115,6 +2118,7 @@
     "previous": "Previous",
     "next": "Next",
     "video": "Video",
-    "viewNoAlt": "View image"
+    "viewNoAlt": "View image",
+    "cantPlay": "This video can't be played in your browser."
   }
 }

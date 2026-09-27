@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
-import { AtSign, Film, ImagePlus, Loader2, SendHorizontal, Type, X } from 'lucide-react';
+import { AtSign, Film, ImagePlus, SendHorizontal, Type, X } from 'lucide-react';
 import {
   docToText,
   MAX_ATTACHMENTS,
@@ -12,7 +12,7 @@ import {
   type RichNode,
 } from '@magnox/shared';
 import { Button } from '@/components/ui/button';
-import { uploadImage } from '@/components/upload/image-upload';
+import { uploadImage, UploadProgress } from '@/components/upload/image-upload';
 import { emitSocket } from '@/lib/realtime';
 import { cn } from '@/lib/utils';
 import { useChat } from './chat-context';
@@ -22,11 +22,39 @@ import type { ChatMessage } from './types';
 
 interface PendingAttachment {
   id: string;
+  name: string;
   previewUrl: string;
   video: boolean;
   key: string | null;
   alt: string;
   error: string | null;
+  /** How much has been sent, 0 to 1. */
+  progress: number;
+}
+
+/**
+ * Whether this browser can show the video's picture. Browsers skip streams they can't decode
+ * (e.g. HEVC in Chrome/Firefox), so check before uploading something nobody can watch.
+ */
+function probeVideo(file: File): Promise<boolean> {
+  return new Promise((resolve) => {
+    const v = document.createElement('video');
+    const url = URL.createObjectURL(file);
+    const done = (ok: boolean) => {
+      clearTimeout(timer);
+      v.removeAttribute('src');
+      v.load();
+      URL.revokeObjectURL(url);
+      resolve(ok);
+    };
+    // A slow or huge file shouldn't block the upload; the server still checks the format.
+    const timer = setTimeout(() => done(true), 8000);
+    v.muted = true;
+    v.preload = 'metadata';
+    v.onloadedmetadata = () => done(v.videoWidth > 0);
+    v.onerror = () => done(false);
+    v.src = url;
+  });
 }
 
 export interface SendInput {
@@ -79,6 +107,12 @@ export const Composer = React.forwardRef<
     previews.current = attachments.map((a) => a.previewUrl);
   });
   React.useEffect(() => () => previews.current.forEach((u) => URL.revokeObjectURL(u)), []);
+  // Uploads still in flight, so removing an attachment (or leaving) cancels its upload.
+  const uploads = React.useRef(new Map<string, AbortController>());
+  React.useEffect(() => {
+    const inFlight = uploads.current;
+    return () => inFlight.forEach((c) => c.abort());
+  }, []);
 
   async function addFiles(files: File[]) {
     if (!perms.attach) {
@@ -91,35 +125,50 @@ export const Composer = React.forwardRef<
       return;
     }
     setError(null);
-    for (const file of files.slice(0, room)) {
-      const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      const video = (VIDEO_TYPES as readonly string[]).includes(file.type);
-      // Checked here too so an oversized video fails before it uploads.
-      const tooBig = video && file.size > MAX_VIDEO_BYTES;
-      setAttachments((list) => [
-        ...list,
-        {
-          id,
-          previewUrl: URL.createObjectURL(file),
-          video,
-          key: null,
-          alt: '',
-          error: tooBig ? t('videoTooLarge', { max: MAX_VIDEO_BYTES / 1_000_000 }) : null,
-        },
-      ]);
-      if (tooBig) continue;
-      try {
-        const up = await uploadImage(file, video ? 'video' : 'content', communityId);
-        setAttachments((list) => list.map((a) => (a.id === id ? { ...a, key: up.key } : a)));
-      } catch (e) {
-        setAttachments((list) =>
-          list.map((a) => (a.id === id ? { ...a, error: (e as Error).message } : a)),
-        );
-      }
+    // Files upload side by side, each with its own progress bar.
+    for (const file of files.slice(0, room)) void addFile(file);
+  }
+
+  async function addFile(file: File) {
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const video = (VIDEO_TYPES as readonly string[]).includes(file.type);
+    const update = (patch: Partial<PendingAttachment>) =>
+      setAttachments((list) => list.map((a) => (a.id === id ? { ...a, ...patch } : a)));
+    setAttachments((list) => [
+      ...list,
+      {
+        id,
+        name: file.name,
+        previewUrl: URL.createObjectURL(file),
+        video,
+        key: null,
+        alt: '',
+        error: null,
+        progress: 0,
+      },
+    ]);
+    // Checked here too so an oversized or unplayable video fails before it uploads.
+    if (video && file.size > MAX_VIDEO_BYTES) {
+      return update({ error: t('videoTooLarge', { max: MAX_VIDEO_BYTES / 1_000_000 }) });
+    }
+    if (video && !(await probeVideo(file))) return update({ error: t('videoUnplayable') });
+    const abort = new AbortController();
+    uploads.current.set(id, abort);
+    try {
+      const up = await uploadImage(file, video ? 'video' : 'content', communityId, {
+        signal: abort.signal,
+        onProgress: (progress) => update({ progress }),
+      });
+      update({ key: up.key, progress: 1 });
+    } catch (e) {
+      if ((e as Error).name !== 'AbortError') update({ error: (e as Error).message });
+    } finally {
+      uploads.current.delete(id);
     }
   }
 
   function removeAttachment(id: string) {
+    uploads.current.get(id)?.abort();
     setAttachments((list) => {
       const gone = list.find((a) => a.id === id);
       if (gone) URL.revokeObjectURL(gone.previewUrl);
@@ -245,10 +294,10 @@ export const Composer = React.forwardRef<
                     </span>
                   )}
                   {!a.key && !a.error && (
-                    <Loader2
-                      className="absolute inset-0 m-auto size-6 animate-spin text-fg motion-reduce:animate-none"
-                      aria-label={t('uploading')}
-                      role="img"
+                    <UploadProgress
+                      value={a.progress}
+                      label={t('uploadingFile', { name: a.name })}
+                      className="absolute inset-x-1 top-1/2 -translate-y-1/2 rounded-full bg-surface/90 px-2 py-1 text-fg"
                     />
                   )}
                   <Button

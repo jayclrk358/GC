@@ -16,21 +16,79 @@ export interface UploadedImage {
   posterUrl: string | null;
 }
 
-export async function uploadImage(
+/**
+ * Upload a file to /api/uploads. Uses XHR (not fetch) so `onProgress` can report how much has
+ * been sent (0 to 1); at 1 the server is still processing. Abort with `signal`.
+ */
+export function uploadImage(
   file: File,
   purpose: string,
   communityId?: string,
-  alt?: string,
+  opts: { alt?: string; onProgress?: (fraction: number) => void; signal?: AbortSignal } = {},
 ): Promise<UploadedImage> {
   const form = new FormData();
   form.set('file', file);
   form.set('purpose', purpose);
   if (communityId) form.set('communityId', communityId);
-  if (alt) form.set('alt', alt);
-  const res = await fetch('/api/uploads', { method: 'POST', body: form });
-  const data = (await res.json().catch(() => ({}))) as UploadedImage & { error?: string };
-  if (!res.ok) throw new Error(data.error ?? 'Upload failed');
-  return data;
+  if (opts.alt) form.set('alt', opts.alt);
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/uploads');
+    xhr.responseType = 'json';
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && e.total > 0) opts.onProgress?.(e.loaded / e.total);
+    };
+    xhr.onload = () => {
+      const data = (xhr.response ?? {}) as UploadedImage & { error?: string };
+      if (xhr.status >= 200 && xhr.status < 300) resolve(data);
+      else if (xhr.status === 413) reject(new Error('That file is too large.'));
+      else reject(new Error(data.error ?? 'Upload failed. Please try again.'));
+    };
+    xhr.onerror = () => reject(new Error('Upload failed. Check your connection and try again.'));
+    xhr.onabort = () => reject(new DOMException('Upload cancelled', 'AbortError'));
+    if (opts.signal?.aborted) return reject(new DOMException('Upload cancelled', 'AbortError'));
+    opts.signal?.addEventListener('abort', () => xhr.abort(), { once: true });
+    xhr.send(form);
+  });
+}
+
+/** How far an upload has got: a bar, then "Processing…" once the file is sent. */
+export function UploadProgress({
+  value,
+  label,
+  className,
+}: {
+  /** 0 to 1. */
+  value: number;
+  /** What is uploading, e.g. "Uploading clip.mp4". */
+  label: string;
+  className?: string;
+}) {
+  const t = useTranslations('upload');
+  const pct = Math.round(value * 100);
+  const text = pct >= 100 ? t('processing') : `${pct}%`;
+  return (
+    <div className={cn('flex items-center gap-2 text-xs font-semibold tabular-nums', className)}>
+      <div
+        role="progressbar"
+        aria-label={label}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={pct}
+        aria-valuetext={text}
+        className="h-1.5 min-w-12 flex-1 overflow-hidden rounded-full bg-border"
+      >
+        <div
+          className={cn(
+            'h-full rounded-full bg-primary transition-[width] duration-200 motion-reduce:transition-none',
+            pct >= 100 && 'animate-pulse motion-reduce:animate-none',
+          )}
+          style={{ width: `${Math.max(pct, 2)}%` }}
+        />
+      </div>
+      <span aria-hidden>{text}</span>
+    </div>
+  );
 }
 
 /** Single image picker with preview. Decorative images (banners, avatars) need no alt text. */
@@ -54,6 +112,7 @@ export function ImageUpload({
   const t = useTranslations('upload');
   const inputId = React.useId();
   const [pending, setPending] = React.useState(false);
+  const [progress, setProgress] = React.useState(0);
   const [error, setError] = React.useState<string | null>(null);
   const url = mediaUrl(value);
 
@@ -62,9 +121,10 @@ export function ImageUpload({
     e.target.value = '';
     if (!file) return;
     setPending(true);
+    setProgress(0);
     setError(null);
     try {
-      const r = await uploadImage(file, purpose, communityId);
+      const r = await uploadImage(file, purpose, communityId, { onProgress: setProgress });
       onChange(r.key);
     } catch (err) {
       setError((err as Error).message);
@@ -118,6 +178,13 @@ export function ImageUpload({
           )}
         </div>
       </div>
+      {pending && (
+        <UploadProgress
+          value={progress}
+          label={t('progressLabel', { label })}
+          className="max-w-64"
+        />
+      )}
       {error && (
         <p role="alert" className="text-sm font-medium text-danger">
           {error}

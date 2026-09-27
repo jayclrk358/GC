@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Maximize2, Play } from 'lucide-react';
 import type { MessageAttachment, MessageEmbed } from '@magnox/db';
 import { isVideoKey } from '@magnox/shared';
-import { useMediaViewer } from '@/components/media/media-viewer';
+import { useMediaViewer, VideoUnavailable } from '@/components/media/media-viewer';
 import { mediaUrl } from '@/lib/media';
 import { cn } from '@/lib/utils';
 
@@ -84,30 +84,44 @@ function AttachmentImage({
 function AttachmentVideo({ a, onExpand }: { a: MessageAttachment; onExpand: () => void }) {
   const t = useTranslations('chat');
   const tm = useTranslations('media');
+  const [failed, setFailed] = React.useState(false);
+  // Server-rendered videos can fail before React listens for `error`, so check on mount too.
+  const ref = React.useCallback((v: HTMLVideoElement | null) => {
+    if (v?.error) setFailed(true);
+  }, []);
   const src = mediaUrl(a.key);
   if (!src) return null;
   const ratio = a.width && a.height ? `${a.width} / ${a.height}` : '16 / 9';
   return (
     <figure className="relative overflow-hidden rounded-ui border border-border bg-black">
-      {/* Chat videos have no caption tracks; the description below stands in. */}
-      <video
-        src={src}
-        controls
-        playsInline
-        preload="metadata"
-        aria-label={a.alt || tm('video')}
-        className="max-h-80 w-full bg-black"
-        style={{ aspectRatio: ratio }}
-      />
-      <button
-        type="button"
-        onClick={onExpand}
-        className="absolute end-2 top-2 inline-flex size-8 items-center justify-center rounded-full bg-black/75 text-white hover:bg-black"
-        aria-label={t('expandVideo')}
-        title={t('expandVideo')}
-      >
-        <Maximize2 className="size-4" aria-hidden />
-      </button>
+      {failed ? (
+        <VideoUnavailable src={src} style={{ aspectRatio: ratio }} />
+      ) : (
+        <>
+          {/* Chat videos have no caption tracks; the description below stands in. */}
+          <video
+            ref={ref}
+            // #t= makes browsers that load only metadata (Safari) still show the first frame.
+            src={`${src}#t=0.1`}
+            controls
+            playsInline
+            preload="metadata"
+            aria-label={a.alt || tm('video')}
+            onError={() => setFailed(true)}
+            className="max-h-80 w-full bg-black"
+            style={{ aspectRatio: ratio }}
+          />
+          <button
+            type="button"
+            onClick={onExpand}
+            className="absolute end-2 top-2 inline-flex size-8 items-center justify-center rounded-full bg-black/75 text-white hover:bg-black"
+            aria-label={t('expandVideo')}
+            title={t('expandVideo')}
+          >
+            <Maximize2 className="size-4" aria-hidden />
+          </button>
+        </>
+      )}
       {a.alt && (
         <figcaption className="bg-surface-2 px-2 py-1 text-xs text-muted">{a.alt}</figcaption>
       )}
