@@ -29,7 +29,8 @@ FROM deps AS build
 COPY . .
 ARG NEXT_PUBLIC_REALTIME_URL=""
 ENV NEXT_PUBLIC_REALTIME_URL=$NEXT_PUBLIC_REALTIME_URL
-RUN pnpm --filter @magnox/web build
+# public/ may be empty, and git doesn't keep empty folders, so make sure it exists.
+RUN mkdir -p apps/web/public && pnpm --filter @magnox/web build
 
 FROM node:22-bookworm-slim AS web
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0
