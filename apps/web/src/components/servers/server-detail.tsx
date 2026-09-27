@@ -2,21 +2,15 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import Script from 'next/script';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { ThumbsUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { Turnstile, type TurnstileHandle } from '@/components/ui/turnstile';
 import { FormError } from '@/components/auth/form-error';
 import { voteServerAction } from '@/app/actions/servers';
-
-declare global {
-  interface Window {
-    turnstile?: { reset: (el?: string | HTMLElement) => void };
-  }
-}
 
 export interface VotePanelProps {
   serverId: string;
@@ -41,6 +35,8 @@ export function VotePanel(props: VotePanelProps) {
   const [fields, setFields] = React.useState<Record<string, string>>({});
   const [pending, setPending] = React.useState(false);
   const [username, setUsername] = React.useState('');
+  const [captcha, setCaptcha] = React.useState<string | null>(null);
+  const turnstile = React.useRef<TurnstileHandle>(null);
   const next = `/servers/${props.serverId}`;
 
   return (
@@ -84,18 +80,17 @@ export function VotePanel(props: VotePanelProps) {
           noValidate
           onSubmit={async (e) => {
             e.preventDefault();
-            const form = new FormData(e.currentTarget);
             setPending(true);
             setError(null);
             const r = await voteServerAction(props.serverId, {
               username: props.rewards ? username.trim() : undefined,
-              turnstileToken: (form.get('cf-turnstile-response') as string | null) ?? undefined,
+              turnstileToken: captcha ?? undefined,
             });
             setPending(false);
             if (!r.ok) {
               setError(r.error);
               setFields(r.fields ?? {});
-              window.turnstile?.reset();
+              turnstile.current?.reset();
               return;
             }
             setCount(r.data.voteCount);
@@ -122,14 +117,12 @@ export function VotePanel(props: VotePanelProps) {
             </Field>
           )}
           {props.turnstileSiteKey && (
-            <>
-              <Script
-                src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-                strategy="afterInteractive"
-              />
-              <div className="cf-turnstile" data-sitekey={props.turnstileSiteKey} />
-              {fields.turnstile && <p className="text-sm text-danger">{fields.turnstile}</p>}
-            </>
+            <Turnstile
+              ref={turnstile}
+              siteKey={props.turnstileSiteKey}
+              action="vote"
+              onToken={setCaptcha}
+            />
           )}
           <Button type="submit" loading={pending} className="w-full">
             <ThumbsUp aria-hidden /> {t('voteButton')}

@@ -16,18 +16,19 @@ export function proxy(request: NextRequest) {
   const media = origin(process.env.MEDIA_BASE_URL);
   const rt = origin(process.env.NEXT_PUBLIC_REALTIME_URL);
   const rtWs = rt.replace(/^http/, 'ws');
+  // Turnstile (the sign-in, sign-up and vote checks) loads a script and runs in an iframe.
+  const turnstile = process.env.TURNSTILE_SITE_KEY ? ' https://challenges.cloudflare.com' : '';
 
   const csp = [
     `default-src 'self'`,
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${dev ? " 'unsafe-eval'" : ''}`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${turnstile}${dev ? " 'unsafe-eval'" : ''}`,
     // Community themes are emitted as validated inline <style>; Radix also sets inline styles.
     `style-src 'self' 'unsafe-inline'`,
     `img-src 'self' data: blob: ${media}`.trim(),
     `media-src 'self' ${media}`.trim(),
     `font-src 'self' data:`,
     `connect-src 'self' ${rt} ${rtWs}${dev ? ' ws: http://localhost:*' : ''}`.trim(),
-    // Turnstile (vote CAPTCHA) runs its challenge in an iframe, when it's configured.
-    `frame-src https://www.youtube-nocookie.com https://player.twitch.tv${process.env.TURNSTILE_SITE_KEY ? ' https://challenges.cloudflare.com' : ''}`,
+    `frame-src https://www.youtube-nocookie.com https://player.twitch.tv${turnstile}`,
     `frame-ancestors 'none'`,
     `base-uri 'self'`,
     `form-action 'self'`,

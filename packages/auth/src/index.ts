@@ -1,4 +1,5 @@
 import { betterAuth, type BetterAuthPlugin } from 'better-auth';
+import { captcha } from 'better-auth/plugins';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin } from 'better-auth/plugins/admin';
 import { twoFactor } from 'better-auth/plugins/two-factor';
@@ -9,6 +10,14 @@ import { cacheRedis, env, logger, platformAdminEmails, renderEmail, sendMail } f
 import { DEFAULT_PREFS } from '@magnox/shared';
 
 export const USERNAME_RE = /^[a-zA-Z0-9_.]{3,24}$/;
+
+/** Auth endpoints that need a Turnstile token (when Turnstile is configured). */
+export const TURNSTILE_ENDPOINTS = [
+  '/sign-up/email',
+  '/sign-in/email',
+  '/sign-in/username',
+  '/request-password-reset',
+];
 
 function socialProviders() {
   const e = env();
@@ -145,6 +154,17 @@ function createAuth<P extends BetterAuthPlugin[]>(extraPlugins: P) {
       }),
       twoFactor({ issuer: 'Magnox' }),
       admin({ defaultRole: 'user', adminRoles: ['admin'] }),
+      // With Turnstile keys set, sign-up, sign-in and password resets need a solved challenge.
+      ...(e.TURNSTILE_SITE_KEY && e.TURNSTILE_SECRET_KEY
+        ? [
+            captcha({
+              provider: 'cloudflare-turnstile',
+              secretKey: e.TURNSTILE_SECRET_KEY,
+              endpoints: TURNSTILE_ENDPOINTS,
+              siteVerifyURLOverride: e.TURNSTILE_VERIFY_URL,
+            }),
+          ]
+        : []),
       ...extraPlugins,
     ],
   });

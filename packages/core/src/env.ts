@@ -34,6 +34,11 @@ const schema = z.object({
   SERVER_QUERY_ALLOW_PRIVATE: bool,
   TURNSTILE_SITE_KEY: z.string().default(''),
   TURNSTILE_SECRET_KEY: z.string().default(''),
+  /** Only for tests: where Turnstile tokens are checked. */
+  TURNSTILE_VERIFY_URL: z
+    .string()
+    .url()
+    .default('https://challenges.cloudflare.com/turnstile/v0/siteverify'),
   PLATFORM_ADMIN_EMAILS: z.string().default(''),
   DISABLE_RATE_LIMITS: bool,
   WORKER_HEALTH_PORT: z.coerce.number().int().default(3002),

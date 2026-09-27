@@ -7,6 +7,7 @@ import { SignInForm } from '@/components/auth/sign-in-form';
 import { SocialButtons } from '@/components/auth/social-buttons';
 import { getUser } from '@/lib/auth';
 import { safeNext } from '@/lib/safe-redirect';
+import { turnstileSiteKey } from '@/lib/turnstile';
 
 export const metadata = { title: 'Sign in' };
 
@@ -35,7 +36,7 @@ export default async function SignInPage({
       }
     >
       <div className="flex flex-col gap-6">
-        <SignInForm next={next} />
+        <SignInForm next={next} turnstileSiteKey={await turnstileSiteKey()} />
         <SocialButtons providers={enabledSocialProviders()} next={next} />
       </div>
     </AuthCard>

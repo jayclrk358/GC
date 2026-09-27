@@ -7,18 +7,28 @@ import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Alert } from '@/components/ui/misc';
+import { Turnstile, type TurnstileHandle } from '@/components/ui/turnstile';
 import { authClient } from '@/lib/auth-client';
+import { captchaOptions, isCaptchaError } from './captcha';
 import { FormError } from './form-error';
 
 const USERNAME_RE = /^[a-zA-Z0-9_.]{3,24}$/;
 
-export function SignUpForm({ next }: { next: string }) {
+export function SignUpForm({
+  next,
+  turnstileSiteKey,
+}: {
+  next: string;
+  turnstileSiteKey: string | null;
+}) {
   const t = useTranslations('auth');
   const router = useRouter();
   const [error, setError] = React.useState<string | null>(null);
   const [fields, setFields] = React.useState<Record<string, string>>({});
   const [pending, setPending] = React.useState(false);
   const [verifySent, setVerifySent] = React.useState(false);
+  const [captcha, setCaptcha] = React.useState<string | null>(null);
+  const turnstile = React.useRef<TurnstileHandle>(null);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -39,6 +49,10 @@ export function SignUpForm({ next }: { next: string }) {
       setError('Please fix the highlighted fields.');
       return;
     }
+    if (turnstileSiteKey && !captcha) {
+      setError(t('captchaRequired'));
+      return;
+    }
 
     setPending(true);
     const res = await authClient.signUp.email({
@@ -47,9 +61,16 @@ export function SignUpForm({ next }: { next: string }) {
       password,
       username,
       callbackURL: next,
+      fetchOptions: captchaOptions(captcha),
     });
     setPending(false);
     if (res.error) {
+      // Each token works once, so every failed attempt needs a fresh check.
+      turnstile.current?.reset();
+      if (isCaptchaError(res.error)) {
+        setError(t('captchaFailed'));
+        return;
+      }
       const msg = res.error.message ?? 'Could not create your account.';
       if (/username/i.test(msg)) setFields({ username: msg });
       else if (/email|user already exists/i.test(msg)) setFields({ email: msg });
@@ -108,6 +129,14 @@ export function SignUpForm({ next }: { next: string }) {
           />
         )}
       </Field>
+      {turnstileSiteKey && (
+        <Turnstile
+          ref={turnstile}
+          siteKey={turnstileSiteKey}
+          action="sign-up"
+          onToken={setCaptcha}
+        />
+      )}
       <Button type="submit" size="lg" loading={pending}>
         {t('signUpCta')}
       </Button>

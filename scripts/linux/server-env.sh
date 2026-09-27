@@ -43,7 +43,8 @@ SMTP_URL=
 EMAIL_FROM="Magnox <no-reply@$site>"
 # REQUIRE_EMAIL_VERIFICATION=true
 
-# Optional sign-in providers and the vote CAPTCHA (see .env.example for all options).
+# Optional sign-in providers and the Cloudflare Turnstile check on sign-up, sign-in and votes
+# (see .env.example for all options).
 DISCORD_CLIENT_ID=
 DISCORD_CLIENT_SECRET=
 TURNSTILE_SITE_KEY=

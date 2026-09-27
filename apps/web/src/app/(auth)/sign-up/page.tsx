@@ -7,6 +7,7 @@ import { SignUpForm } from '@/components/auth/sign-up-form';
 import { SocialButtons } from '@/components/auth/social-buttons';
 import { getUser } from '@/lib/auth';
 import { safeNext } from '@/lib/safe-redirect';
+import { turnstileSiteKey } from '@/lib/turnstile';
 
 export const metadata = { title: 'Sign up' };
 
@@ -35,7 +36,7 @@ export default async function SignUpPage({
       }
     >
       <div className="flex flex-col gap-6">
-        <SignUpForm next={next} />
+        <SignUpForm next={next} turnstileSiteKey={await turnstileSiteKey()} />
         <SocialButtons providers={enabledSocialProviders()} next={next} />
       </div>
     </AuthCard>

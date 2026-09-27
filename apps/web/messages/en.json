@@ -113,7 +113,9 @@
     "verifyEmailSent": "Check your inbox to confirm your email address.",
     "termsNote": "By creating an account you agree to the community guidelines.",
     "signInCta": "Sign in",
-    "signUpCta": "Create account"
+    "signUpCta": "Create account",
+    "captchaRequired": "Complete the security check first.",
+    "captchaFailed": "The security check didn't pass. Please try it again."
   },
   "settings": {
     "title": "Settings",

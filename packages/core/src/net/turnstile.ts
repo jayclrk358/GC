@@ -17,7 +17,7 @@ export async function verifyTurnstile(token: string | undefined, ip?: string): P
   const body = new URLSearchParams({ secret: env().TURNSTILE_SECRET_KEY, response: token });
   if (ip) body.set('remoteip', ip);
   try {
-    const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+    const res = await fetch(env().TURNSTILE_VERIFY_URL, {
       method: 'POST',
       body,
       signal: AbortSignal.timeout(5000),

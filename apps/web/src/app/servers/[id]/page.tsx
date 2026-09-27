@@ -4,15 +4,14 @@ import { getTranslations } from 'next-intl/server';
 import { ArrowLeft, Globe2, ShieldCheck, Users } from 'lucide-react';
 import {
   endpointHistory,
-  env,
   getServerDetail,
   isAppError,
   markEndpointsHot,
-  turnstileEnabled,
   type ServerDetail,
 } from '@magnox/core';
 import { formatDuration } from '@magnox/shared';
 import { getUser } from '@/lib/auth';
+import { turnstileSiteKey } from '@/lib/turnstile';
 import { Alert, Badge } from '@/components/ui/misc';
 import { ServerHistoryCharts } from '@/components/servers/history-charts';
 import { LiveStatusPanel } from '@/components/servers/live-status-panel';
@@ -148,7 +147,7 @@ export default async function ServerPage({ params }: Params) {
               emailVerified={Boolean(user?.emailVerified)}
               waitText={wait}
               rewards={server.rewards}
-              turnstileSiteKey={turnstileEnabled() ? env().TURNSTILE_SITE_KEY : null}
+              turnstileSiteKey={await turnstileSiteKey()}
             />
           )}
         </aside>
