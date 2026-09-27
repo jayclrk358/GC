@@ -33,38 +33,38 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
   const showMembers = community.settings.showMemberCount !== false;
 
   return (
-    <header className="border-b border-border bg-surface">
-      {!compact && (
-        <div
-          className="relative h-36 overflow-hidden group-data-[dense=true]/dense:hidden sm:h-52"
-          data-decorative
-        >
-          {banner ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={banner}
-              alt=""
-              className="size-full object-cover"
-              style={{ objectPosition: `50% ${theme.bannerFocalY}%` }}
-            />
-          ) : (
-            <div
-              aria-hidden
-              className="size-full"
-              style={{
-                background: 'linear-gradient(135deg, var(--c-primary), var(--c-accent))',
-                opacity: 0.85,
-              }}
-            />
-          )}
-        </div>
-      )}
-      <div className="mx-auto max-w-6xl px-4">
+    <header>
+      <div className="mx-auto max-w-6xl px-4 pt-4 group-data-[dense=true]/dense:max-w-7xl group-data-[dense=true]/dense:pt-0 sm:px-6 lg:px-8">
+        {!compact && (
+          <div
+            className="relative h-36 overflow-hidden rounded-3xl border border-border group-data-[dense=true]/dense:hidden sm:h-56"
+            data-decorative
+          >
+            {banner ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={banner}
+                alt=""
+                className="mx-page-enter size-full object-cover"
+                style={{ objectPosition: `50% ${theme.bannerFocalY}%` }}
+              />
+            ) : (
+              <div
+                aria-hidden
+                className="size-full"
+                style={{
+                  background: 'linear-gradient(135deg, var(--c-primary), var(--c-accent))',
+                  opacity: 0.85,
+                }}
+              />
+            )}
+          </div>
+        )}
         <div
           className={
             compact
               ? 'flex flex-wrap items-center gap-4 py-5 group-data-[dense=true]/dense:gap-3 group-data-[dense=true]/dense:py-2'
-              : 'flex flex-wrap items-end gap-4 pb-4 group-data-[dense=true]/dense:items-center group-data-[dense=true]/dense:gap-3 group-data-[dense=true]/dense:py-2'
+              : 'flex flex-wrap items-end gap-4 px-2 pb-4 group-data-[dense=true]/dense:items-center group-data-[dense=true]/dense:gap-3 group-data-[dense=true]/dense:py-2 sm:px-4'
           }
         >
           {/* The logo overlaps the banner. The banner is positioned, so without its own
@@ -83,12 +83,12 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
                 alt=""
                 width={96}
                 height={96}
-                className="size-20 rounded-ui-lg border-4 border-surface bg-surface object-cover shadow-[0_10px_30px_-12px_var(--c-primary)] group-data-[dense=true]/dense:size-10 group-data-[dense=true]/dense:border-2 sm:size-24 sm:group-data-[dense=true]/dense:size-10"
+                className="size-20 rounded-ui-lg border-4 border-surface bg-surface object-cover shadow-md group-data-[dense=true]/dense:size-10 group-data-[dense=true]/dense:border-2 sm:size-24 sm:group-data-[dense=true]/dense:size-10"
               />
             ) : (
               <span
                 aria-hidden
-                className="grid size-20 place-items-center rounded-ui-lg border-4 border-surface bg-primary font-heading text-3xl font-extrabold text-on-primary shadow-[0_10px_30px_-12px_var(--c-primary)] group-data-[dense=true]/dense:size-10 group-data-[dense=true]/dense:border-2 group-data-[dense=true]/dense:text-lg sm:size-24 sm:group-data-[dense=true]/dense:size-10"
+                className="grid size-20 place-items-center rounded-ui-lg border-4 border-surface bg-primary font-heading text-3xl font-extrabold text-on-primary shadow-md group-data-[dense=true]/dense:size-10 group-data-[dense=true]/dense:border-2 group-data-[dense=true]/dense:text-lg sm:size-24 sm:group-data-[dense=true]/dense:size-10"
               >
                 {community.name.slice(0, 1).toUpperCase()}
               </span>
@@ -166,7 +166,7 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
         </div>
         <nav
           aria-label={t('sections', { name: community.name })}
-          className="-mb-px overflow-x-auto"
+          className="overflow-x-auto border-b border-border"
         >
           <ul className="flex gap-1">
             {nav.map((item) => (
@@ -175,7 +175,7 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
                   href={`${base}${TAB_PATHS[item.tab]}`}
                   exact={item.tab === 'home'}
                   also={item.tab === 'forum' ? [`${base}/t`] : undefined}
-                  className="rounded-none rounded-t-ui-sm border-b-2 border-transparent px-4 py-2.5 aria-[current=page]:border-primary aria-[current=page]:bg-transparent"
+                  className="relative rounded-none rounded-t-ui-sm px-4 py-2.5 transition-colors after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:origin-center after:scale-x-0 after:rounded-full after:bg-primary after:transition-transform after:duration-300 after:ease-[var(--mx-ease)] hover:bg-transparent hover:after:scale-x-50 aria-[current=page]:bg-transparent aria-[current=page]:after:scale-x-100"
                 >
                   {item.label || t(`tabs.${item.tab}`)}
                 </NavLink>

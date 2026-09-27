@@ -213,7 +213,7 @@ export function MessageList(props: Props) {
           <span aria-hidden className="h-px flex-1 bg-danger" />
           <span
             aria-hidden
-            className="ms-2 rounded-ui-sm bg-danger px-1.5 text-xs font-bold text-white"
+            className="ms-2 rounded-ui-sm bg-danger px-1.5 text-xs font-bold text-bg"
           >
             {t('new')}
           </span>

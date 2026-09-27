@@ -146,7 +146,7 @@ export function ChannelPermissions({
                         ? s === 'allow'
                           ? 'bg-success text-white'
                           : s === 'deny'
-                            ? 'bg-danger text-white'
+                            ? 'bg-danger text-bg'
                             : 'bg-surface-2 text-fg'
                         : 'text-muted',
                     )}

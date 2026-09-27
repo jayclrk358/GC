@@ -20,7 +20,8 @@
     "search": "Search",
     "copy": "Copy",
     "copied": "Copied",
-    "somethingWrong": "Something went wrong. Please try again."
+    "somethingWrong": "Something went wrong. Please try again.",
+    "moreFilters": "More filters"
   },
   "shell": {
     "skipToContent": "Skip to main content",
@@ -39,7 +40,17 @@
     "openPalette": "Search or jump to…",
     "shortcuts": "Keyboard shortcuts",
     "footerTagline": "Community hubs for games and game servers.",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "sidebar": "Sidebar",
+    "yourCommunities": "Your communities",
+    "noCommunitiesYet": "Communities you join show up here.",
+    "collapseSidebar": "Collapse sidebar",
+    "expandSidebar": "Expand sidebar",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "menu": "Menu",
+    "joinTitle": "Find your people",
+    "joinBody": "Sign up to join communities, chat and vote for your favourite servers."
   },
   "palette": {
     "placeholder": "Search communities, pages and actions…",

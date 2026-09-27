@@ -28,7 +28,7 @@ export function PaletteButton() {
     <button
       type="button"
       onClick={openPalette}
-      className="flex h-9 min-w-0 items-center gap-2 rounded-ui border border-border bg-surface-2 px-3 text-sm text-muted hover:text-fg sm:w-72"
+      className="mx-press flex h-9 min-w-0 items-center gap-2 rounded-ui border border-border bg-surface px-3 text-sm text-muted transition-colors hover:border-muted/60 hover:text-fg sm:w-full sm:max-w-md"
     >
       <Search className="size-4 shrink-0" aria-hidden />
       <span className="hidden truncate sm:inline">{t('openPalette')}</span>

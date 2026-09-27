@@ -51,7 +51,7 @@ export default async function CommunityLayout({
       )}
       <DenseOnChat slug={data.community.slug}>
         <CommunityHeader data={data} online={online} />
-        <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-8 group-data-[dense=true]/dense:max-w-7xl group-data-[dense=true]/dense:px-2 group-data-[dense=true]/dense:py-2 sm:group-data-[dense=true]/dense:px-4">
+        <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-8 group-data-[dense=true]/dense:max-w-7xl group-data-[dense=true]/dense:px-2 group-data-[dense=true]/dense:py-2 sm:px-6 sm:group-data-[dense=true]/dense:px-4 lg:px-8">
           {children}
         </div>
       </DenseOnChat>

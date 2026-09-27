@@ -32,8 +32,27 @@ export async function signIn(page: Page, identifier: string, password = PASSWORD
   await expect(page.getByRole('button', { name: /Account menu for/ })).toBeVisible();
 }
 
+/**
+ * Wait for entrance animations and colour transitions to finish, so contrast is measured on the
+ * final colours. Looping decoration (the "live" ping) and scroll-linked motion never settle, so
+ * they're left out.
+ */
+export async function settle(page: Page) {
+  await page.waitForFunction(() =>
+    document
+      .getAnimations()
+      .every(
+        (a) =>
+          a.playState !== 'running' ||
+          a.effect?.getComputedTiming().iterations === Infinity ||
+          a.timeline !== document.timeline,
+      ),
+  );
+}
+
 /** Run axe with WCAG 2.2 AA rules and fail on any violation. */
 export async function expectAccessible(page: Page, label = page.url()) {
+  await settle(page);
   const results = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
     .analyze();
@@ -59,15 +78,7 @@ export async function setScheme(
     },
     [scheme, contrast],
   );
-  // Buttons transition their colours; measure contrast only once they have settled.
-  // Looping decoration (the "live" ping) never settles, so it is left out.
-  await page.waitForFunction(() =>
-    document
-      .getAnimations()
-      .every(
-        (a) => a.playState !== 'running' || a.effect?.getComputedTiming().iterations === Infinity,
-      ),
-  );
+  await settle(page);
 }
 
 export interface CommunityOpts {

@@ -19,7 +19,7 @@ export function Tooltip({
       <T.Portal>
         <T.Content
           sideOffset={6}
-          className="z-50 max-w-xs rounded-ui-sm bg-fg px-2.5 py-1.5 text-sm text-bg shadow-lg"
+          className="mx-menu z-50 max-w-xs rounded-ui-sm bg-fg px-2.5 py-1.5 text-sm text-bg shadow-lg"
         >
           {content}
           <T.Arrow className="fill-fg" />

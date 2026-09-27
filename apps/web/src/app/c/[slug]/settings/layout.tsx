@@ -48,7 +48,7 @@ export default async function CommunitySettingsLayout({
                 <span className="flex items-center justify-between gap-2">
                   {l.label}
                   {'badge' in l && l.badge ? (
-                    <span className="rounded-full bg-danger px-1.5 text-xs text-white">
+                    <span className="rounded-full bg-danger px-1.5 text-xs text-bg">
                       {l.badge}
                       <span className="sr-only"> {t('openReports')}</span>
                     </span>

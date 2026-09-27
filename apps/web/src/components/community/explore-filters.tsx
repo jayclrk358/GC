@@ -7,6 +7,7 @@ import { LANGUAGES, REGIONS } from '@magnox/shared';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Input, Select } from '@/components/ui/input';
+import { FilterDisclosure } from '@/components/ui/filter-disclosure';
 
 export function ExploreFilters({
   games,
@@ -23,7 +24,7 @@ export function ExploreFilters({
     <form
       role="search"
       aria-label={t('filters')}
-      className="grid gap-3 rounded-ui-lg border border-border bg-surface p-4 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] lg:items-end"
+      className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-4 lg:sticky lg:top-20"
       onSubmit={(e) => {
         e.preventDefault();
         const form = new FormData(e.currentTarget);
@@ -50,52 +51,63 @@ export function ExploreFilters({
           </div>
         )}
       </Field>
-      <Field label={t('game')}>
-        {(p) => (
-          <Select {...p} name="game" defaultValue={values.game ?? ''}>
-            <option value="">{t('any')}</option>
-            {games.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.name}
-              </option>
-            ))}
-          </Select>
-        )}
-      </Field>
-      <Field label={t('region')}>
-        {(p) => (
-          <Select {...p} name="region" defaultValue={values.region ?? ''}>
-            <option value="">{t('any')}</option>
-            {REGIONS.map((r) => (
-              <option key={r} value={r}>
-                {tc(`regions.${r}`)}
-              </option>
-            ))}
-          </Select>
-        )}
-      </Field>
-      <Field label={t('language')}>
-        {(p) => (
-          <Select {...p} name="language" defaultValue={values.language ?? ''}>
-            <option value="">{t('any')}</option>
-            {LANGUAGES.map((l) => (
-              <option key={l} value={l}>
-                {tc(`languages.${l}`)}
-              </option>
-            ))}
-          </Select>
-        )}
-      </Field>
-      <Field label={t('sort')}>
-        {(p) => (
-          <Select {...p} name="sort" defaultValue={values.sort ?? ''}>
-            <option value="">{t('sortDefault')}</option>
-            <option value="popular">{t('sortPopular')}</option>
-            <option value="new">{t('sortNew')}</option>
-          </Select>
-        )}
-      </Field>
-      <Button type="submit">{t('apply')}</Button>
+      <FilterDisclosure
+        active={
+          (values.game ? 1 : 0) +
+          (values.region ? 1 : 0) +
+          (values.language ? 1 : 0) +
+          (values.sort ? 1 : 0)
+        }
+      >
+        <Field label={t('game')}>
+          {(p) => (
+            <Select {...p} name="game" defaultValue={values.game ?? ''}>
+              <option value="">{t('any')}</option>
+              {games.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name}
+                </option>
+              ))}
+            </Select>
+          )}
+        </Field>
+        <Field label={t('region')}>
+          {(p) => (
+            <Select {...p} name="region" defaultValue={values.region ?? ''}>
+              <option value="">{t('any')}</option>
+              {REGIONS.map((r) => (
+                <option key={r} value={r}>
+                  {tc(`regions.${r}`)}
+                </option>
+              ))}
+            </Select>
+          )}
+        </Field>
+        <Field label={t('language')}>
+          {(p) => (
+            <Select {...p} name="language" defaultValue={values.language ?? ''}>
+              <option value="">{t('any')}</option>
+              {LANGUAGES.map((l) => (
+                <option key={l} value={l}>
+                  {tc(`languages.${l}`)}
+                </option>
+              ))}
+            </Select>
+          )}
+        </Field>
+        <Field label={t('sort')}>
+          {(p) => (
+            <Select {...p} name="sort" defaultValue={values.sort ?? ''}>
+              <option value="">{t('sortDefault')}</option>
+              <option value="popular">{t('sortPopular')}</option>
+              <option value="new">{t('sortNew')}</option>
+            </Select>
+          )}
+        </Field>
+      </FilterDisclosure>
+      <Button type="submit" className="w-full">
+        {t('apply')}
+      </Button>
     </form>
   );
 }

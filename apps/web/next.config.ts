@@ -13,6 +13,8 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   agentRules: false,
+  // Keep the dev badge clear of the sidebar's bottom controls.
+  devIndicators: { position: 'bottom-right' },
   // Render metadata in <head> before the page instead of streaming it into <body> afterwards.
   // Screen readers announce the document title on load, so it must be there from the start
   // (WCAG 2.4.2). Our generateMetadata reuses the request-cached community load, so it's cheap.

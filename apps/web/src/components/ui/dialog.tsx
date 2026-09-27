@@ -26,10 +26,10 @@ export function DialogContent({
   const width = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl', xl: 'max-w-4xl' }[size];
   return (
     <D.Portal>
-      <D.Overlay className="fixed inset-0 z-50 bg-black/55" />
+      <D.Overlay className="mx-overlay fixed inset-0 z-50 bg-black/55 backdrop-blur-[2px]" />
       <D.Content
         className={cn(
-          'fixed top-1/2 left-1/2 z-50 flex max-h-[90dvh] w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 overflow-y-auto rounded-ui-lg border border-border bg-surface p-6 text-fg shadow-2xl',
+          'mx-pop fixed top-1/2 left-1/2 z-50 flex max-h-[90dvh] w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 overflow-y-auto rounded-ui-lg border border-border bg-surface p-6 text-fg shadow-2xl',
           width,
           className,
         )}

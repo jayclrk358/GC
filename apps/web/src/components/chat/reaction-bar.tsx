@@ -31,7 +31,7 @@ export function ReactionPicker({
       <Popover.Portal>
         <Popover.Content
           sideOffset={6}
-          className="z-50 rounded-ui border border-border bg-surface p-1 shadow-xl"
+          className="mx-menu z-50 rounded-ui border border-border bg-surface p-1 shadow-xl"
           aria-label={t('pickReaction')}
         >
           <div className="grid grid-cols-8 gap-1">

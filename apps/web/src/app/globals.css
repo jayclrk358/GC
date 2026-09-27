@@ -96,66 +96,258 @@
 
 @layer components {
   /*
-   * Gaming look. Everything here is decoration: it never carries meaning, it's hidden in high
-   * contrast mode, and animation respects reduced-motion preferences.
+   * Look and motion. Everything here is decoration: it never carries meaning, it's flattened in
+   * high contrast mode, and every animation is switched off by the reduced-motion preference.
    */
-  .mx-grid-bg {
-    background-image:
-      linear-gradient(
-        to right,
-        color-mix(in srgb, var(--c-border) 55%, transparent) 1px,
-        transparent 1px
-      ),
-      linear-gradient(
-        to bottom,
-        color-mix(in srgb, var(--c-border) 55%, transparent) 1px,
-        transparent 1px
-      );
-    background-size: 44px 44px;
-    mask-image: radial-gradient(ellipse 85% 75% at 50% 0%, #000 25%, transparent 75%);
+  :root {
+    --mx-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --mx-shadow-lift: 0 14px 28px -16px rgb(15 17 35 / 0.28);
   }
-  .mx-glow-blob {
-    position: absolute;
-    border-radius: 9999px;
-    filter: blur(90px);
-    opacity: 0.28;
-    pointer-events: none;
+  html[data-scheme='dark'] {
+    --mx-shadow-lift: 0 14px 28px -14px rgb(0 0 0 / 0.7);
   }
-  .mx-neon-line {
-    height: 1px;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      var(--c-primary) 30%,
-      var(--c-accent) 70%,
-      transparent
+  @media (prefers-color-scheme: dark) {
+    html[data-scheme='system'] {
+      --mx-shadow-lift: 0 14px 28px -14px rgb(0 0 0 / 0.7);
+    }
+  }
+
+  /* A quiet dot pattern that fades out, for hero areas. */
+  .mx-dots {
+    background-image: radial-gradient(
+      color-mix(in srgb, var(--c-text-muted) 38%, transparent) 1px,
+      transparent 1.4px
     );
+    background-size: 22px 22px;
+    mask-image: radial-gradient(ellipse 70% 80% at 70% 20%, #000 10%, transparent 70%);
   }
   .mx-eyebrow {
-    font-family: var(--mx-font-heading);
     font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.16em;
+    font-weight: 600;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--c-primary);
   }
-  .mx-card-glow {
+
+  /* Cards lift a little under the pointer or keyboard focus. */
+  .mx-card {
     transition:
-      border-color 150ms ease,
-      box-shadow 150ms ease,
-      transform 150ms ease;
+      translate 280ms var(--mx-ease),
+      box-shadow 280ms var(--mx-ease),
+      border-color 200ms ease;
   }
-  .mx-card-glow:hover,
-  .mx-card-glow:focus-within {
-    border-color: color-mix(in srgb, var(--c-primary) 60%, var(--c-border));
-    box-shadow: 0 12px 32px -16px color-mix(in srgb, var(--c-primary) 70%, transparent);
+  .mx-card:hover,
+  .mx-card:focus-within {
+    translate: 0 -3px;
+    box-shadow: var(--mx-shadow-lift);
+    border-color: color-mix(in srgb, var(--c-primary) 35%, var(--c-border));
   }
-  .mx-btn-glow {
-    box-shadow: 0 8px 24px -12px color-mix(in srgb, var(--c-primary) 85%, transparent);
+  .mx-card .mx-card-media {
+    transition: scale 500ms var(--mx-ease);
   }
-  .mx-btn-glow:hover {
-    box-shadow: 0 10px 30px -10px color-mix(in srgb, var(--c-primary) 95%, transparent);
+  .mx-card:hover .mx-card-media {
+    scale: 1.04;
   }
+
+  /* Buttons and tiles give way slightly when pressed. */
+  .mx-press {
+    transition-property: color, background-color, border-color, scale;
+    transition-duration: 160ms;
+  }
+  .mx-press:active:not(:disabled) {
+    scale: 0.97;
+  }
+
+  /* Highlighted headline words: a slow sweep between the two brand colours. */
+  .mx-gradient-text {
+    background: linear-gradient(
+      100deg,
+      var(--c-primary) 10%,
+      var(--c-accent) 45%,
+      var(--c-primary) 80%
+    );
+    background-size: 220% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: mx-sweep 9s ease-in-out infinite alternate;
+  }
+  @keyframes mx-sweep {
+    to {
+      background-position: 100% 0;
+    }
+  }
+
+  /* Each page fades up into place when you arrive. */
+  .mx-page-enter {
+    animation: mx-rise 360ms var(--mx-ease) backwards;
+  }
+  /* Children of a list arrive one after another. */
+  .mx-stagger > * {
+    animation: mx-rise 480ms var(--mx-ease) backwards;
+  }
+  .mx-stagger > :nth-child(2) {
+    animation-delay: 50ms;
+  }
+  .mx-stagger > :nth-child(3) {
+    animation-delay: 100ms;
+  }
+  .mx-stagger > :nth-child(4) {
+    animation-delay: 150ms;
+  }
+  .mx-stagger > :nth-child(5) {
+    animation-delay: 200ms;
+  }
+  .mx-stagger > :nth-child(6) {
+    animation-delay: 250ms;
+  }
+  .mx-stagger > :nth-child(7) {
+    animation-delay: 300ms;
+  }
+  .mx-stagger > :nth-child(n + 8) {
+    animation-delay: 350ms;
+  }
+  @keyframes mx-rise {
+    from {
+      opacity: 0;
+      translate: 0 10px;
+    }
+  }
+
+  /* Sections settle into place as they scroll into view (movement only, never hidden). */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      html:not([data-motion='reduce']) .mx-settle {
+        animation: mx-settle linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 80%;
+      }
+    }
+  }
+  @keyframes mx-settle {
+    from {
+      translate: 0 36px;
+      scale: 0.985;
+    }
+  }
+
+  /* Numbers count up from zero. The real value is also in the text for assistive tech. */
+  @property --mx-num {
+    syntax: '<integer>';
+    initial-value: 0;
+    inherits: false;
+  }
+  .mx-count {
+    --mx-num: var(--mx-to);
+    counter-reset: mx-num var(--mx-num);
+    animation: mx-count 1.4s var(--mx-ease) backwards;
+  }
+  .mx-count::after {
+    content: counter(mx-num);
+  }
+  @keyframes mx-count {
+    from {
+      --mx-num: 0;
+    }
+  }
+
+  /* Overlays, dialogs, sheets, menus and tooltips animate in and out (Radix data-state). */
+  .mx-overlay[data-state='open'] {
+    animation: mx-fade-in 200ms ease-out;
+  }
+  .mx-overlay[data-state='closed'] {
+    animation: mx-fade-out 150ms ease-in;
+  }
+  .mx-pop[data-state='open'] {
+    animation: mx-pop-in 220ms var(--mx-ease);
+  }
+  .mx-pop[data-state='closed'] {
+    animation: mx-pop-out 140ms ease-in;
+  }
+  .mx-sheet[data-state='open'] {
+    animation: mx-sheet-in 300ms var(--mx-ease);
+  }
+  .mx-sheet[data-state='closed'] {
+    animation: mx-sheet-out 200ms ease-in;
+  }
+  .mx-menu[data-state='open'],
+  .mx-menu[data-state='delayed-open'],
+  .mx-menu[data-state='instant-open'] {
+    animation: mx-menu-in 180ms var(--mx-ease);
+  }
+  .mx-menu[data-state='closed'] {
+    animation: mx-fade-out 120ms ease-in;
+  }
+  .mx-menu[data-side='top'] {
+    --mx-from: 0 6px;
+  }
+  .mx-menu[data-side='left'] {
+    --mx-from: 6px 0;
+  }
+  .mx-menu[data-side='right'] {
+    --mx-from: -6px 0;
+  }
+  @keyframes mx-fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes mx-fade-out {
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes mx-pop-in {
+    from {
+      opacity: 0;
+      scale: 0.96;
+    }
+  }
+  @keyframes mx-pop-out {
+    to {
+      opacity: 0;
+      scale: 0.97;
+    }
+  }
+  @keyframes mx-sheet-in {
+    from {
+      translate: -100% 0;
+    }
+  }
+  @keyframes mx-sheet-out {
+    to {
+      translate: -100% 0;
+    }
+  }
+  @keyframes mx-menu-in {
+    from {
+      opacity: 0;
+      translate: var(--mx-from, 0 -6px);
+      scale: 0.98;
+    }
+  }
+
+  /* Loading placeholders. */
+  .mx-skeleton {
+    background: linear-gradient(
+        90deg,
+        transparent 25%,
+        color-mix(in srgb, var(--c-text) 6%, transparent) 50%,
+        transparent 75%
+      )
+      var(--c-surface-2);
+    background-size: 300% 100%;
+    animation: mx-shimmer 1.6s ease-in-out infinite;
+  }
+  @keyframes mx-shimmer {
+    from {
+      background-position: 100% 0;
+    }
+    to {
+      background-position: 0 0;
+    }
+  }
+
   .mx-live-dot {
     position: relative;
   }
@@ -364,16 +556,17 @@
       --mx-focus: #ffff00;
     }
   }
-  html[data-contrast='high'] .mx-grid-bg,
-  html[data-contrast='high'] .mx-glow-blob {
+  html[data-contrast='high'] .mx-dots {
     display: none;
   }
-  html[data-contrast='high'] .mx-neon-line {
-    background: var(--c-border);
-  }
-  html[data-contrast='high'] .mx-card-glow,
-  html[data-contrast='high'] .mx-btn-glow {
+  html[data-contrast='high'] .mx-card:hover,
+  html[data-contrast='high'] .mx-card:focus-within {
     box-shadow: none;
+    border-color: var(--c-text);
+  }
+  html[data-contrast='high'] .mx-gradient-text {
+    background: none;
+    color: var(--c-primary);
   }
   html[data-contrast='high'] img,
   html[data-contrast='high'] video {
@@ -460,5 +653,12 @@
   /* Hide decorative flourishes in simplified layout. */
   html[data-simplified='on'] [data-decorative] {
     display: none !important;
+  }
+}
+
+@media (forced-colors: active) {
+  .mx-gradient-text {
+    background: none;
+    color: CanvasText;
   }
 }

@@ -13,19 +13,19 @@ export async function CommunityCard({ c }: { c: Card }) {
   const icon = mediaUrl(theme.iconKey);
   const banner = mediaUrl(theme.bannerKey);
   return (
-    <article className="group mx-card-glow relative flex h-full flex-col overflow-hidden rounded-ui-lg border border-border bg-surface">
+    <article className="group mx-card relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-surface">
       <div className="relative h-24" data-decorative aria-hidden>
         {banner ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={banner}
             alt=""
-            className="size-full object-cover"
+            className="mx-card-media size-full object-cover"
             style={{ objectPosition: `50% ${theme.bannerFocalY}%` }}
           />
         ) : (
           <div
-            className="size-full"
+            className="mx-card-media size-full"
             style={{
               background: `linear-gradient(135deg, ${theme.light.primary}, ${theme.light.accent})`,
             }}
@@ -40,12 +40,12 @@ export async function CommunityCard({ c }: { c: Card }) {
             <img
               src={icon}
               alt=""
-              className="size-14 rounded-ui border-4 border-surface bg-surface object-cover"
+              className="size-14 rounded-xl border-4 border-surface bg-surface object-cover shadow-sm"
             />
           ) : (
             <span
               aria-hidden
-              className="grid size-14 place-items-center rounded-ui border-4 border-surface text-xl font-extrabold"
+              className="grid size-14 place-items-center rounded-xl border-4 border-surface text-xl font-extrabold shadow-sm"
               style={{ background: theme.light.primary, color: theme.light.onPrimary }}
             >
               {c.name.slice(0, 1).toUpperCase()}

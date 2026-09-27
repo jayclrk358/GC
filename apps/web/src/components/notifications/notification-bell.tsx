@@ -81,7 +81,7 @@ export function NotificationBell({ initialUnread }: { initialUnread: number }) {
             {unread > 0 && (
               <span
                 aria-hidden
-                className="absolute -end-0.5 -top-0.5 grid min-w-4.5 place-items-center rounded-full bg-danger px-1 text-[10px] leading-4.5 font-bold text-white"
+                className="absolute -end-0.5 -top-0.5 grid min-w-4.5 place-items-center rounded-full bg-danger px-1 text-[10px] leading-4.5 font-bold text-bg"
               >
                 {unread > 99 ? '99+' : unread}
               </span>
@@ -93,7 +93,7 @@ export function NotificationBell({ initialUnread }: { initialUnread: number }) {
             align="end"
             sideOffset={8}
             aria-labelledby="notif-pop-h"
-            className="z-50 flex max-h-[min(32rem,80vh)] w-[min(24rem,calc(100vw-1rem))] flex-col overflow-hidden rounded-ui-lg border border-border bg-surface text-fg shadow-xl"
+            className="mx-menu z-50 flex max-h-[min(32rem,80vh)] w-[min(24rem,calc(100vw-1rem))] flex-col overflow-hidden rounded-ui-lg border border-border bg-surface text-fg shadow-xl"
           >
             <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
               <h2 id="notif-pop-h" className="font-bold">

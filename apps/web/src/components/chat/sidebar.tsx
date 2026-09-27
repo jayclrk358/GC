@@ -99,7 +99,7 @@ export function ChannelSidebar({ slug, categories, initialUnreads, me, canManage
                     )}
                     {unread && !mentions && <span className="sr-only">{t('unreadSr')}</span>}
                     {mentions > 0 && (
-                      <span className="rounded-full bg-danger px-1.5 text-xs font-bold text-white tabular-nums">
+                      <span className="rounded-full bg-danger px-1.5 text-xs font-bold text-bg tabular-nums">
                         {mentions > 99 ? '99+' : mentions}
                         <span className="sr-only"> {t('mentionsSr', { count: mentions })}</span>
                       </span>
@@ -139,9 +139,7 @@ export function ChannelSidebar({ slug, categories, initialUnreads, me, canManage
         <summary className="flex cursor-pointer items-center gap-2 px-4 py-2 text-sm font-semibold">
           {t('channels')}: #{current?.name ?? ''}
           {totalMentions > 0 && (
-            <span className="rounded-full bg-danger px-1.5 text-xs text-white">
-              {totalMentions}
-            </span>
+            <span className="rounded-full bg-danger px-1.5 text-xs text-bg">{totalMentions}</span>
           )}
         </summary>
         <nav aria-label={t('channels')} className="max-h-72 overflow-y-auto p-2">

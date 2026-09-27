@@ -200,7 +200,7 @@ test.describe('community hubs', () => {
     await expectAccessible(page, 'explore');
     await page.getByLabel('Search').fill(name);
     await page.getByRole('button', { name: 'Apply' }).click();
-    await expect(page.getByRole('link', { name })).toBeVisible();
+    await expect(page.getByRole('main').getByRole('link', { name })).toBeVisible();
 
     await page.goto('/settings/profile');
     await page.getByLabel('Bio').fill('I build castles.');
@@ -209,7 +209,7 @@ test.describe('community hubs', () => {
     await expect(page.getByText('Profile saved')).toBeVisible();
     await page.goto(`/u/${user.username}`);
     await expect(page.getByText('I build castles.')).toBeVisible();
-    await expect(page.getByRole('link', { name })).toBeVisible();
+    await expect(page.getByRole('main').getByRole('link', { name })).toBeVisible();
     await expectAccessible(page, 'profile page');
   });
 });

@@ -104,7 +104,7 @@ export function ServerCard({
   return (
     <article
       aria-labelledby={`srv-${server.id}`}
-      className="mx-card-glow flex h-full flex-col gap-3 rounded-ui-lg border border-border bg-surface p-4"
+      className="mx-card flex h-full flex-col gap-3 rounded-ui-lg border border-border bg-surface p-4"
     >
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">

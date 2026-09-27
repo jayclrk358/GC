@@ -18,7 +18,7 @@ export function DropdownMenuContent({
       <M.Content
         sideOffset={sideOffset}
         className={cn(
-          'z-50 min-w-48 overflow-hidden rounded-ui border border-border bg-surface p-1 text-fg shadow-xl',
+          'mx-menu z-50 min-w-48 overflow-hidden rounded-ui border border-border bg-surface p-1 text-fg shadow-xl',
           className,
         )}
         {...props}
