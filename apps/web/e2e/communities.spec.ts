@@ -271,7 +271,7 @@ test.describe('community hubs', () => {
       'Look at my name.',
     );
     const op = member.page.locator('article[id^="post-"]').first();
-    const name = op.locator('.mx-name');
+    const name = op.locator('.mx-name', { hasText: member.user.name });
     await expect(name).toHaveAttribute('data-effect', 'gradient');
     await expect(name).toHaveAttribute('data-anim', 'flow');
     await expect(op.locator('img[src*="/u/"]')).toBeVisible();
