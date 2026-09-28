@@ -3,6 +3,8 @@ import { db, schema } from '@magnox/db';
 import {
   ACCOUNT_KINDS,
   hexColor,
+  nameStyleView,
+  themeBackdrops,
   isTimeZone,
   LANGUAGES,
   MAX_PLAYSTYLES,
@@ -15,6 +17,7 @@ import { z } from 'zod';
 import { getMemberContext } from '../access';
 import { AppError } from '../errors';
 import { mediaUrl } from '../storage';
+import { loadAuthors } from './chat';
 import { communitiesForUser } from './communities';
 
 const profileSchema = z.object({
@@ -245,29 +248,45 @@ async function cardMembership(communityId: string, userId: string, viewerId: str
     .where(and(eq(schema.members.communityId, communityId), eq(schema.members.userId, userId)))
     .limit(1);
   if (!member) return null;
-  const roles = await db
-    .select({
-      name: schema.roles.name,
-      color: schema.roles.color,
-      iconKey: schema.roles.iconKey,
-    })
-    .from(schema.memberRoles)
-    .innerJoin(schema.roles, eq(schema.roles.id, schema.memberRoles.roleId))
-    .where(
-      and(
-        eq(schema.memberRoles.communityId, communityId),
-        eq(schema.memberRoles.userId, userId),
-        eq(schema.roles.isDefault, false),
-      ),
-    )
-    .orderBy(sql`${schema.roles.position} desc`)
-    .limit(6);
+  const [roles, [community], authors] = await Promise.all([
+    db
+      .select({
+        name: schema.roles.name,
+        color: schema.roles.color,
+        iconKey: schema.roles.iconKey,
+        nameStyle: schema.roles.nameStyle,
+      })
+      .from(schema.memberRoles)
+      .innerJoin(schema.roles, eq(schema.roles.id, schema.memberRoles.roleId))
+      .where(
+        and(
+          eq(schema.memberRoles.communityId, communityId),
+          eq(schema.memberRoles.userId, userId),
+          eq(schema.roles.isDefault, false),
+        ),
+      )
+      .orderBy(sql`${schema.roles.position} desc`)
+      .limit(6),
+    db
+      .select({ theme: schema.communities.theme })
+      .from(schema.communities)
+      .where(eq(schema.communities.id, communityId))
+      .limit(1),
+    loadAuthors(communityId, [userId]),
+  ]);
+  const backdrops = community ? themeBackdrops(community.theme) : undefined;
   return {
     community: ctx.community.name,
     joinedAt: member.joinedAt.toISOString(),
     nickname: member.nickname,
     owner: ctx.community.ownerId === userId,
-    roles: roles.map((r) => ({ name: r.name, color: r.color, iconUrl: mediaUrl(r.iconKey) })),
+    nameStyle: authors.get(userId)?.nameStyle ?? null,
+    roles: roles.map((r) => ({
+      name: r.name,
+      color: r.color,
+      iconUrl: mediaUrl(r.iconKey),
+      style: nameStyleView(r.color, r.nameStyle, backdrops),
+    })),
   };
 }
 

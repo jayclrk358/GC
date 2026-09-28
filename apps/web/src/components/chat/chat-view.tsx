@@ -302,6 +302,7 @@ export function ChatView(props: Props) {
           nickname: null,
           roleColor: null,
           nameStyle: null,
+          roleStyle: null,
           roleIcon: null,
           roleName: null,
         },
@@ -312,6 +313,7 @@ export function ChatView(props: Props) {
               id: replyTo.id,
               authorId: replyTo.authorId,
               authorName: authorName(replyTo),
+              authorStyle: replyTo.author?.nameStyle ?? null,
               excerpt: replyTo.content.slice(0, 120),
               deleted: false,
             }

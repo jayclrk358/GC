@@ -1301,23 +1301,45 @@
       "color": "Role colour",
       "gradient": "Gradient",
       "glow": "Glow",
-      "rainbow": "Rainbow"
+      "neon": "Neon",
+      "retro": "Retro 3D",
+      "chrome": "Chrome",
+      "gold": "Gold",
+      "rainbow": "Rainbow",
+      "fire": "Fire",
+      "ice": "Ice",
+      "sunset": "Sunset",
+      "toxic": "Toxic",
+      "ocean": "Ocean",
+      "galaxy": "Galaxy"
     },
     "nameAnimation": "Animation",
-    "nameAnimationDesc": "Flow needs a gradient or rainbow.",
+    "nameAnimationDesc": "Flow needs an effect with more than one colour.",
     "animations": {
       "none": "None",
       "shimmer": "Shimmer",
+      "flow": "Flow",
       "pulse": "Pulse",
-      "flow": "Flow"
+      "wave": "Wave",
+      "bounce": "Bounce",
+      "float": "Float",
+      "jelly": "Jelly",
+      "shake": "Shake",
+      "glitch": "Glitch",
+      "flicker": "Flicker",
+      "sparkle": "Sparkle"
     },
     "secondColor": "Second colour",
-    "secondColorDesc": "The gradient runs from the role colour to this one.",
     "preview": "Preview",
     "previewLight": "On a light background:",
     "previewDark": "On a dark background:",
     "previewName": "Member name",
-    "nametagNote": "Colours are adjusted so names stay readable. Animations play briefly when a name appears and while it’s hovered. People who turn off name effects, use high contrast or reduce motion see plain or still names."
+    "nametagNote": "Colours are adjusted so names stay readable. Animations play briefly when a name appears and while it’s hovered. People who turn off name effects, use high contrast or reduce motion see plain or still names.",
+    "secondColorFor": {
+      "gradient": "The gradient runs from the role colour to this one.",
+      "neon": "The colour of the neon glow around the name.",
+      "retro": "The colour of the 3D shadow behind the name."
+    }
   },
   "serverSettings": {
     "title": "Servers",

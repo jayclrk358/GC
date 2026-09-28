@@ -7,6 +7,7 @@ import { HoverCard } from 'radix-ui';
 import { Crown, Gamepad2, Users } from 'lucide-react';
 import type { ProfileCard } from '@magnox/core';
 import { RoleBadge } from '@/components/community/role-badge';
+import { StyledName } from '@/components/community/role-decor';
 import { usePrefs } from '@/components/shell/prefs-provider';
 import { Avatar, Badge } from '@/components/ui/misc';
 
@@ -130,7 +131,7 @@ function CardBody({ card }: { card: ProfileCard }) {
         </div>
         <div className="-mt-1 min-w-0">
           <p className="flex items-center gap-1.5 truncate text-lg leading-tight font-bold">
-            {displayName}
+            <StyledName name={displayName} style={member?.nameStyle} />
             {member?.owner && (
               <Crown className="size-4 shrink-0 text-warning" aria-label={t('owner')} role="img" />
             )}
@@ -177,6 +178,7 @@ function CardBody({ card }: { card: ProfileCard }) {
                     color={r.color}
                     iconUrl={r.iconUrl}
                     colorblind={prefs.colorblindRoleColors}
+                    style={r.style}
                   />
                 </li>
               ))}

@@ -239,6 +239,7 @@ export default async function ThreadPage({
                             color={p.author.roleColor}
                             iconUrl={p.author.roleIcon?.url}
                             colorblind={prefs.colorblindRoleColors}
+                            style={p.author.roleStyle}
                           />
                         )}
                         {p.isOp && <Badge tone="primary">{t('op')}</Badge>}

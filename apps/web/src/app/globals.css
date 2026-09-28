@@ -225,12 +225,13 @@
     --mx-n1: var(--mx-l, var(--mx-n1l)) var(--mx-d, var(--mx-n1d));
     --mx-n2: var(--mx-l, var(--mx-n2l)) var(--mx-d, var(--mx-n2d));
     --mx-shine: var(--mx-l, rgb(255 255 255 / 0.6)) var(--mx-d, rgb(255 255 255 / 0.85));
-    /* Rainbow stops, made readable on the community's backgrounds (defaults suit white/black). */
-    --mx-rainbow: var(
+    /* Palette stops (rainbow, fire...), made readable on the community's backgrounds. The
+       defaults are the rainbow, readable on white and on near-black. */
+    --mx-palette: var(
         --mx-l,
-        var(--mx-rbl, #c81e1e, #b45309, #15803d, #0369a1, #6d28d9, #be185d, #c81e1e)
+        var(--mx-pl, #c81e1e, #b45309, #15803d, #0369a1, #6d28d9, #be185d, #c81e1e)
       )
-      var(--mx-d, var(--mx-rbd, #ff8a8a, #ffc266, #7ee787, #79c0ff, #d2a8ff, #ff9bd2, #ff8a8a));
+      var(--mx-d, var(--mx-pd, #ff8a8a, #ffc266, #7ee787, #79c0ff, #d2a8ff, #ff9bd2, #ff8a8a));
     --mx-name-fill: linear-gradient(var(--mx-n1), var(--mx-n1));
     color: var(--mx-n1);
     font-weight: 700;
@@ -238,19 +239,33 @@
   .mx-name[data-effect='gradient'] {
     --mx-name-fill: linear-gradient(90deg, var(--mx-n1), var(--mx-n2), var(--mx-n1));
   }
-  .mx-name[data-effect='rainbow'] {
-    --mx-name-fill: linear-gradient(90deg, var(--mx-rainbow));
+  .mx-name[data-palette] {
+    --mx-name-fill: linear-gradient(90deg, var(--mx-palette));
   }
+  /* Metals catch the light on a slant. */
+  .mx-name:is([data-effect='chrome'], [data-effect='gold']) {
+    --mx-name-fill: linear-gradient(115deg, var(--mx-palette));
+  }
+  /* Glows are drop shadows (not text shadows) so they sit behind filled names too. */
   .mx-name[data-effect='glow'] {
-    text-shadow: 0 0 0.4em color-mix(in srgb, var(--mx-n1) 60%, transparent);
+    filter: drop-shadow(0 0 0.25em color-mix(in srgb, var(--mx-n1) 65%, transparent));
+  }
+  .mx-name[data-effect='neon'] {
+    filter: drop-shadow(0 0 0.06em var(--mx-n2))
+      drop-shadow(0 0 0.25em color-mix(in srgb, var(--mx-n2) 75%, transparent))
+      drop-shadow(0 0 0.6em color-mix(in srgb, var(--mx-n2) 45%, transparent));
+  }
+  .mx-name[data-effect='retro'] {
+    filter: drop-shadow(0.07em 0.07em 0 color-mix(in srgb, var(--mx-n2) 70%, transparent))
+      drop-shadow(0.07em 0.07em 0 color-mix(in srgb, var(--mx-n2) 35%, transparent));
+  }
+  .mx-name[data-effect='galaxy'] {
+    filter: drop-shadow(0 0 0.2em color-mix(in srgb, #a855f7 45%, transparent));
   }
   /* Filled names: the fill is painted through the letters. */
-  .mx-name:is(
-    [data-effect='gradient'],
-    [data-effect='rainbow'],
-    [data-anim='shimmer'],
-    [data-anim='flow']
-  ) {
+  .mx-name:is([data-effect='gradient'], [data-palette], [data-anim='shimmer'], [data-anim='flow']),
+  .mx-name:is([data-effect='gradient'], [data-palette], [data-anim='shimmer'], [data-anim='flow'])
+    .mx-name-letter {
     background-image: var(--mx-name-fill);
     background-size: 200% 100%;
     background-repeat: repeat-x;
@@ -260,13 +275,30 @@
     -webkit-box-decoration-break: clone;
     box-decoration-break: clone;
   }
+
+  /* Animations play twice when a name appears, and keep going while it's hovered. */
   .mx-name[data-anim] {
     animation-duration: 2.4s;
     animation-iteration-count: 2;
     animation-timing-function: linear;
   }
-  .mx-name[data-anim]:hover {
+  .mx-name[data-anim]:hover,
+  .mx-name[data-anim]:hover .mx-name-letter,
+  .mx-name[data-anim]:hover::before,
+  .mx-name[data-anim]:hover::after {
     animation-iteration-count: infinite;
+  }
+  /* Moving names need a box of their own. */
+  .mx-name:is(
+    [data-anim='bounce'],
+    [data-anim='float'],
+    [data-anim='jelly'],
+    [data-anim='shake'],
+    [data-anim='glitch'],
+    [data-anim='sparkle']
+  ),
+  .mx-name-letter {
+    display: inline-block;
   }
   .mx-name[data-anim='flow'] {
     animation-name: mx-name-flow;
@@ -283,6 +315,62 @@
   .mx-name[data-anim='pulse'] {
     animation-name: mx-name-pulse;
     animation-timing-function: ease-in-out;
+  }
+  .mx-name[data-anim='bounce'] {
+    animation-name: mx-name-bounce;
+    animation-duration: 1.2s;
+    animation-timing-function: ease-out;
+  }
+  .mx-name[data-anim='float'] {
+    animation-name: mx-name-float;
+    animation-duration: 3s;
+    animation-timing-function: ease-in-out;
+  }
+  .mx-name[data-anim='jelly'] {
+    animation-name: mx-name-jelly;
+    animation-duration: 1s;
+    animation-timing-function: ease-in-out;
+  }
+  .mx-name[data-anim='shake'] {
+    animation-name: mx-name-shake;
+    animation-duration: 0.6s;
+  }
+  .mx-name[data-anim='glitch'] {
+    animation-name: mx-name-glitch;
+    animation-duration: 1.2s;
+    animation-timing-function: steps(1, end);
+  }
+  .mx-name[data-anim='flicker'] {
+    animation-name: mx-name-flicker;
+    animation-duration: 2.4s;
+  }
+  .mx-name[data-anim='wave'] .mx-name-letter {
+    animation: mx-name-wave 1.4s ease-in-out 2;
+    animation-delay: calc(var(--i) * 70ms);
+  }
+  .mx-name[data-anim='sparkle'] {
+    position: relative;
+  }
+  .mx-name[data-anim='sparkle']::before,
+  .mx-name[data-anim='sparkle']::after {
+    content: '✦' / '';
+    position: absolute;
+    font-size: 0.6em;
+    line-height: 1;
+    color: var(--mx-n2);
+    -webkit-text-fill-color: var(--mx-n2);
+    opacity: 0;
+    pointer-events: none;
+    animation: mx-name-twinkle 1.4s ease-in-out 2;
+  }
+  .mx-name[data-anim='sparkle']::before {
+    top: -0.45em;
+    inset-inline-end: -0.55em;
+  }
+  .mx-name[data-anim='sparkle']::after {
+    bottom: -0.2em;
+    inset-inline-start: -0.55em;
+    animation-delay: 0.7s;
   }
   @keyframes mx-name-flow {
     to {
@@ -305,6 +393,118 @@
     50% {
       filter: brightness(1.3)
         drop-shadow(0 0 0.3em color-mix(in srgb, var(--mx-n1) 70%, transparent));
+    }
+  }
+  @keyframes mx-name-bounce {
+    0%,
+    45%,
+    100% {
+      transform: none;
+    }
+    20% {
+      transform: translateY(-0.35em);
+    }
+    35% {
+      transform: translateY(-0.1em);
+    }
+  }
+  @keyframes mx-name-float {
+    50% {
+      transform: translateY(-0.18em);
+    }
+  }
+  @keyframes mx-name-jelly {
+    0%,
+    100% {
+      transform: none;
+    }
+    30% {
+      transform: scale(1.12, 0.88);
+    }
+    45% {
+      transform: scale(0.92, 1.08);
+    }
+    60% {
+      transform: scale(1.04, 0.96);
+    }
+    75% {
+      transform: scale(0.98, 1.02);
+    }
+  }
+  @keyframes mx-name-shake {
+    0%,
+    100% {
+      transform: none;
+    }
+    20% {
+      transform: translateX(-0.06em) rotate(-2deg);
+    }
+    40% {
+      transform: translateX(0.06em) rotate(2deg);
+    }
+    60% {
+      transform: translateX(-0.04em) rotate(-1deg);
+    }
+    80% {
+      transform: translateX(0.03em) rotate(1deg);
+    }
+  }
+  @keyframes mx-name-glitch {
+    0%,
+    30%,
+    60%,
+    100% {
+      transform: none;
+    }
+    10% {
+      transform: translate(-0.04em, 0.02em) skewX(-8deg);
+      filter: drop-shadow(0.07em 0 0 var(--mx-n2))
+        drop-shadow(-0.07em 0 0 color-mix(in srgb, var(--mx-n1) 60%, #22d3ee));
+    }
+    20% {
+      transform: translate(0.05em, -0.02em);
+      filter: drop-shadow(-0.07em 0 0 var(--mx-n2));
+    }
+    45% {
+      transform: translateX(0.03em) skewX(6deg);
+      filter: drop-shadow(0.05em 0 0 color-mix(in srgb, var(--mx-n1) 60%, #f43f5e));
+    }
+  }
+  @keyframes mx-name-flicker {
+    0%,
+    18%,
+    22%,
+    26%,
+    52%,
+    58%,
+    100% {
+      opacity: 1;
+    }
+    20%,
+    24%,
+    55% {
+      opacity: 0.55;
+    }
+  }
+  @keyframes mx-name-wave {
+    0%,
+    50%,
+    100% {
+      transform: none;
+    }
+    25% {
+      transform: translateY(-0.28em);
+    }
+  }
+  @keyframes mx-name-twinkle {
+    0%,
+    100% {
+      opacity: 0;
+      transform: scale(0.3) rotate(0deg);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1) rotate(90deg);
     }
   }
 
@@ -856,21 +1056,32 @@
   }
 
   /* Plain names when effects are turned off, in high contrast, and in forced colours. */
-  html[data-name-effects='off'] .mx-name,
-  html[data-contrast='high'] .mx-name {
+  html[data-name-effects='off'] :is(.mx-name, .mx-name .mx-name-letter),
+  html[data-contrast='high'] :is(.mx-name, .mx-name .mx-name-letter) {
     color: inherit;
     background: none;
     text-shadow: none;
     filter: none;
     animation: none;
   }
+  html[data-name-effects='off'] .mx-name::before,
+  html[data-name-effects='off'] .mx-name::after,
+  html[data-contrast='high'] .mx-name::before,
+  html[data-contrast='high'] .mx-name::after {
+    content: none;
+  }
   @media (forced-colors: active) {
-    .mx-name {
+    .mx-name,
+    .mx-name .mx-name-letter {
       color: CanvasText;
       background: none;
       text-shadow: none;
       filter: none;
       animation: none;
+    }
+    .mx-name::before,
+    .mx-name::after {
+      content: none;
     }
   }
 

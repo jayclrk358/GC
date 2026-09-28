@@ -277,6 +277,23 @@ test.describe('community hubs', () => {
     await expect(op.locator('img[src*="/u/"]')).toBeVisible();
     await expectAccessible(member.page, 'thread with name effects');
 
+    // The role badge wears its role's style, and so do the hover card and the thread list.
+    await expect(op.locator('.mx-name', { hasText: 'Legend' })).toHaveAttribute(
+      'data-effect',
+      'gradient',
+    );
+    await op.getByRole('link', { name: member.user.name }).hover();
+    const card = member.page.locator('[data-radix-popper-content-wrapper]');
+    await expect(card.locator('.mx-name', { hasText: member.user.name })).toHaveAttribute(
+      'data-effect',
+      'gradient',
+    );
+    await expect(card.locator('.mx-name', { hasText: 'Legend' })).toBeVisible();
+    await member.page.goto(`/c/${slug}/forum/general`);
+    await expect(
+      member.page.locator('.mx-name', { hasText: member.user.name }).first(),
+    ).toHaveAttribute('data-effect', 'gradient');
+
     // People can turn name effects off: names go back to plain text.
     await member.page.goto('/settings/accessibility');
     await member.page.getByRole('switch', { name: 'Name effects' }).click();

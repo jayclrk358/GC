@@ -1,10 +1,12 @@
-import Link from 'next/link';
-import { listRoles, membersWithRoles } from '@magnox/core';
-import type { BlockConfig } from '@magnox/shared';
+import { listRoles, loadAuthors, membersWithRoles } from '@magnox/core';
+import { nameStyleView, themeBackdrops, type BlockConfig } from '@magnox/shared';
 import type { LoadedCommunity } from '@/lib/community';
 import { getPrefs } from '@/lib/prefs';
+import { mediaUrl } from '@/lib/media';
 import { Avatar } from '@/components/ui/misc';
 import { RoleBadge } from '@/components/community/role-badge';
+import { StyledName } from '@/components/community/role-decor';
+import { UserLink } from '@/components/profile/user-hover-card';
 import { BlockSection } from './section';
 
 export async function StaffBlock({
@@ -25,6 +27,11 @@ export async function StaffBlock({
     getPrefs(),
   ]);
   if (!people.length) return null;
+  const authors = await loadAuthors(
+    data.community.id,
+    people.map((p) => p.userId),
+  );
+  const backdrops = themeBackdrops(data.community.theme);
   const byId = new Map(roles.map((r) => [r.id, r]));
   const sorted = [...people].sort(
     (a, b) => (byId.get(b.roleId)?.position ?? 0) - (byId.get(a.roleId)?.position ?? 0),
@@ -43,16 +50,26 @@ export async function StaffBlock({
               <div className="min-w-0">
                 <p className="truncate font-semibold">
                   {p.username ? (
-                    <Link href={`/u/${p.username}`}>{p.nickname || p.name}</Link>
+                    <UserLink username={p.username} communityId={data.community.id}>
+                      <StyledName
+                        name={p.nickname || p.name}
+                        style={authors.get(p.userId)?.nameStyle}
+                      />
+                    </UserLink>
                   ) : (
-                    p.nickname || p.name
+                    <StyledName
+                      name={p.nickname || p.name}
+                      style={authors.get(p.userId)?.nameStyle}
+                    />
                   )}
                 </p>
                 {role && (
                   <RoleBadge
                     name={role.name}
                     color={role.color}
+                    iconUrl={mediaUrl(role.iconKey)}
                     colorblind={prefs.colorblindRoleColors}
+                    style={nameStyleView(role.color, role.nameStyle, backdrops)}
                   />
                 )}
               </div>

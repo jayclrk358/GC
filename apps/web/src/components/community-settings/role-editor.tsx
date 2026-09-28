@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { ArrowDown, ArrowUp, Lock, Plus, Trash2 } from 'lucide-react';
 import {
+  animationFits,
   DEFAULT_NAME_STYLE,
   has,
   NAME_ANIMATIONS,
@@ -35,6 +36,9 @@ import {
   updateRoleAction,
 } from '@/app/actions/roles';
 import { cn } from '@/lib/utils';
+
+/** Effects that use a second colour: the gradient's end, the neon glow, the retro shadow. */
+const TWO_COLOUR_EFFECTS: ReadonlySet<NameStyle['effect']> = new Set(['gradient', 'neon', 'retro']);
 
 const GROUPS: PermissionGroup[] = ['general', 'moderation', 'administration'];
 
@@ -181,7 +185,11 @@ export function RoleEditor({
                       style={{ background: r.color ?? 'var(--c-text-muted)' }}
                     />
                   )}
-                  <span className="truncate">{r.name}</span>
+                  <StyledName
+                    name={r.name}
+                    style={nameStyleView(r.color, r.nameStyle, backdrops)}
+                    className="truncate"
+                  />
                   {!canManage(r) && (
                     <Lock
                       className="ms-auto size-3.5 text-muted"
@@ -374,7 +382,7 @@ function NametagFields({
 }) {
   const t = useTranslations('roles');
   const view = nameStyleView(color, style, backdrops);
-  const flowing = style.effect === 'gradient' || style.effect === 'rainbow';
+
   return (
     <fieldset className="flex flex-col gap-4 rounded-ui border border-border p-4">
       <legend className="px-1 text-sm font-bold tracking-wide text-muted uppercase">
@@ -396,12 +404,11 @@ function NametagFields({
               value={style.effect}
               onValueChange={(value) => {
                 const effect = value as NameStyle['effect'];
-                const keepsFlow = effect === 'gradient' || effect === 'rainbow';
                 onStyle({
                   ...style,
                   effect,
                   animation:
-                    effect === 'none' || (style.animation === 'flow' && !keepsFlow)
+                    effect === 'none' || !animationFits(effect, style.animation)
                       ? 'none'
                       : style.animation,
                 });
@@ -426,7 +433,7 @@ function NametagFields({
               }
             >
               {NAME_ANIMATIONS.map((a) => (
-                <option key={a} value={a} disabled={a === 'flow' && !flowing}>
+                <option key={a} value={a} disabled={!animationFits(style.effect, a)}>
                   {t(`animations.${a}`)}
                 </option>
               ))}
@@ -434,8 +441,8 @@ function NametagFields({
           )}
         </Field>
       </div>
-      {style.effect === 'gradient' && (
-        <Field label={t('secondColor')} description={t('secondColorDesc')}>
+      {TWO_COLOUR_EFFECTS.has(style.effect) && (
+        <Field label={t('secondColor')} description={t(`secondColorFor.${style.effect}`)}>
           {(p) => (
             <input
               {...p}

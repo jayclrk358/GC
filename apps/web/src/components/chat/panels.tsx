@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, Spinner } from '@/components/ui/misc';
 import { UserLink } from '@/components/profile/user-hover-card';
+import { StyledName } from '@/components/community/role-decor';
 import { RichText } from '@/components/rich-text/rich-text';
 import { useChat } from './chat-context';
 import { formatDay, formatTime } from './format';
@@ -104,7 +105,11 @@ function MessageCard({
       aria-label={t('cardLabel', { name })}
     >
       <p className="flex flex-wrap items-baseline gap-x-2">
-        <span className="font-semibold">{name}</span>
+        <StyledName
+          name={name}
+          style={m.kind === 'user' ? m.author?.nameStyle : null}
+          className="font-semibold"
+        />
         {channelName && <span className="text-xs text-muted">#{channelName}</span>}
         <time dateTime={m.createdAt} className="text-xs text-muted">
           {formatDay(m.createdAt, { today: t('today'), yesterday: t('yesterday') })}{' '}
@@ -313,13 +318,17 @@ function MembersPanel() {
                   communityId={communityId}
                   className="block truncate text-sm font-semibold hover:underline"
                 >
-                  {m.nickname || m.name}
+                  <StyledName name={m.nickname || m.name} style={m.nameStyle} />
                 </UserLink>
               ) : (
-                <span className="block truncate text-sm font-semibold">{m.nickname || m.name}</span>
+                <span className="block truncate text-sm font-semibold">
+                  <StyledName name={m.nickname || m.name} style={m.nameStyle} />
+                </span>
               )}
               {m.roleName && (
-                <span className="block truncate text-xs text-muted">{m.roleName}</span>
+                <span className="block truncate text-xs text-muted">
+                  <StyledName name={m.roleName} style={m.roleStyle} />
+                </span>
               )}
             </span>
           </li>

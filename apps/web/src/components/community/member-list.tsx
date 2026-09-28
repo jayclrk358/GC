@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { Crown, Users } from 'lucide-react';
 import type { MemberRow, RoleSummary } from '@magnox/core';
-import { pickRoleDecor, type NameBackdrops } from '@magnox/shared';
+import { nameStyleView, pickRoleDecor, type NameBackdrops } from '@magnox/shared';
 import { Avatar, EmptyState } from '@/components/ui/misc';
 import { RoleBadge } from './role-badge';
 import { StyledName } from './role-decor';
@@ -100,6 +100,7 @@ export async function MemberList({
                                   color={r.color}
                                   iconUrl={r.iconUrl}
                                   colorblind={colorblind}
+                                  style={nameStyleView(r.color, r.nameStyle, backdrops)}
                                 />
                               </li>
                             ))}

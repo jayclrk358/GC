@@ -1,5 +1,6 @@
+import type { NameStyleView } from '@magnox/shared';
 import { cn } from '@/lib/utils';
-import { RoleIcon } from './role-decor';
+import { RoleIcon, StyledName } from './role-decor';
 
 /**
  * Role label with its colour. In colour-blind mode the dot becomes a lettered marker so roles can
@@ -10,6 +11,7 @@ export function RoleBadge({
   color,
   iconUrl,
   colorblind,
+  style,
   className,
 }: {
   name: string;
@@ -17,6 +19,8 @@ export function RoleBadge({
   /** The role's icon image; it replaces the colour dot (and tells roles apart on its own). */
   iconUrl?: string | null;
   colorblind?: boolean;
+  /** The role's own nametag style, so its name looks the way members' names do. */
+  style?: NameStyleView | null;
   className?: string;
 }) {
   return (
@@ -43,7 +47,7 @@ export function RoleBadge({
           style={{ background: color ?? 'var(--c-text-muted)' }}
         />
       )}
-      {name}
+      <StyledName name={name} style={style} />
     </span>
   );
 }

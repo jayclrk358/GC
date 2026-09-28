@@ -97,7 +97,10 @@ export const MessageItem = React.memo(function MessageItem({
               className="min-w-0 truncate text-start hover:text-fg hover:underline"
             >
               <span className="sr-only">{t('replyingToLabel')} </span>
-              <span className="font-semibold">@{m.replyTo.authorName}</span> {m.replyTo.excerpt}
+              <span className="font-semibold">
+                @<StyledName name={m.replyTo.authorName} style={m.replyTo.authorStyle} />
+              </span>{' '}
+              {m.replyTo.excerpt}
             </button>
           )}
         </p>
@@ -143,7 +146,7 @@ export const MessageItem = React.memo(function MessageItem({
                     style={{ background: m.author.roleColor ?? 'var(--c-text-muted)' }}
                   />
                 )}
-                {m.author.roleName}
+                <StyledName name={m.author.roleName} style={m.author.roleStyle} />
               </span>
             )}
             <time

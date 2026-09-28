@@ -13,6 +13,7 @@ import {
   THREAD_SORTS,
   type RichNode,
   type ThreadSort,
+  nameStyleView,
   pickRoleDecor,
   themeBackdrops,
   type NameStyleView,
@@ -27,6 +28,7 @@ import { audit } from './audit';
 import { getChannelById, listVisibleChannels, type ChannelView } from './channels';
 import { getNotificationSettings, notifyUser, queueFanout } from './notify';
 import { mediaUrl } from '../storage';
+import { loadAuthors } from './chat';
 
 export interface AuthorView {
   id: string | null;
@@ -38,6 +40,8 @@ export interface AuthorView {
   roleName: string | null;
   /** Nametag effect from their highest styled role, if any. */
   nameStyle: NameStyleView | null;
+  /** Their highest role's own style, for showing the role name. */
+  roleStyle: NameStyleView | null;
   /** Icon image of their highest role that has one. */
   roleIcon: { url: string; roleName: string } | null;
 }
@@ -53,7 +57,12 @@ export interface ThreadListItem {
   lastActivityAt: Date;
   createdAt: Date;
   flair: { id: string; name: string; color: string | null } | null;
-  author: { name: string; username: string | null; image: string | null } | null;
+  author: {
+    name: string;
+    username: string | null;
+    image: string | null;
+    nameStyle: NameStyleView | null;
+  } | null;
   myVote: number;
   unread: boolean;
   hasPoll: boolean;
@@ -121,6 +130,7 @@ export async function listThreads(
         authorName: schema.users.name,
         authorUsername: schema.users.username,
         authorImage: schema.users.image,
+        authorId: t.authorId,
         pollId: schema.polls.id,
       })
       .from(t)
@@ -162,6 +172,11 @@ export async function listThreads(
         ])
       : [[], []];
   const voteBy = new Map(votes.map((v) => [v.threadId, v.value]));
+  // Nicknames and nametag styles in this community.
+  const authors = await loadAuthors(
+    ctx.community.id,
+    rows.map((r) => r.authorId).filter((x): x is string => Boolean(x)),
+  );
   const readBy = new Map(reads.map((r) => [r.threadId, r.readAt]));
 
   return {
@@ -177,7 +192,12 @@ export async function listThreads(
       createdAt: r.createdAt,
       flair: r.flairId ? { id: r.flairId, name: r.flairName!, color: r.flairColor } : null,
       author: r.authorName
-        ? { name: r.authorName, username: r.authorUsername, image: r.authorImage }
+        ? {
+            name: (r.authorId && authors.get(r.authorId)?.nickname) || r.authorName,
+            username: r.authorUsername,
+            image: r.authorImage,
+            nameStyle: (r.authorId && authors.get(r.authorId)?.nameStyle) || null,
+          }
         : null,
       myVote: voteBy.get(r.id) ?? 0,
       unread: Boolean(ctx.userId) && (readBy.get(r.id) ?? new Date(0)) < r.lastActivityAt,
@@ -368,7 +388,7 @@ export async function listPosts(
   ]);
   const backdrops = community ? themeBackdrops(community.theme) : undefined;
   const nick = new Map(members.map((m) => [m.userId, m.nickname]));
-  const topRole = new Map<string, { name: string; color: string | null; position: number }>();
+  const topRole = new Map<string, (typeof topRoles)[number]>();
   const rolesByUser = new Map<string, (typeof topRoles)[number][]>();
   for (const r of topRoles) {
     const cur = topRole.get(r.userId);
@@ -412,6 +432,7 @@ export async function listPosts(
           nickname: r.authorId ? (nick.get(r.authorId) ?? null) : null,
           roleColor: role?.color ?? null,
           roleName: role?.name ?? null,
+          roleStyle: role ? nameStyleView(role.color, role.nameStyle, backdrops) : null,
           ...decorFor(r.authorId),
         },
         reactions: [...(byPost.get(r.id)?.entries() ?? [])]

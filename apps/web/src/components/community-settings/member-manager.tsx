@@ -6,10 +6,12 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Crown, Tags } from 'lucide-react';
 import type { RoleSummary } from '@magnox/core';
+import { nameStyleView, pickRoleDecor, type NameBackdrops } from '@magnox/shared';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Avatar, EmptyState } from '@/components/ui/misc';
 import { RoleBadge } from '@/components/community/role-badge';
+import { StyledName } from '@/components/community/role-decor';
 import { setMemberRoleAction } from '@/app/actions/roles';
 import { MemberModActions } from '@/components/moderation/member-mod-actions';
 import { formatDateTime } from '@/lib/format';
@@ -30,10 +32,13 @@ export function MemberManager({
   roles,
   actor,
   can,
+  backdrops,
 }: {
   communityId: string;
   members: Member[];
   roles: RoleSummary[];
+  /** The community's backgrounds, so nametag colours stay readable. */
+  backdrops: NameBackdrops;
   actor: { isOwner: boolean; topPosition: number; userId: string };
   can: { roles: boolean; kick: boolean; ban: boolean; timeout: boolean };
 }) {
@@ -76,7 +81,17 @@ export function MemberManager({
             <Avatar src={m.image} name={m.name} size={36} />
             <div className="min-w-0 flex-1">
               <p className="flex items-center gap-1 font-semibold">
-                {m.name}
+                <StyledName
+                  name={m.name}
+                  style={
+                    pickRoleDecor(
+                      m.roleIds
+                        .map((id) => byId.get(id))
+                        .filter((r): r is RoleSummary => Boolean(r)),
+                      backdrops,
+                    ).nameStyle
+                  }
+                />
                 {m.isOwner && (
                   <Crown className="size-4 text-warning" aria-label={t('owner')} role="img" />
                 )}
@@ -94,7 +109,12 @@ export function MemberManager({
                 .filter((r): r is RoleSummary => Boolean(r))
                 .map((r) => (
                   <li key={r.id}>
-                    <RoleBadge name={r.name} color={r.color} />
+                    <RoleBadge
+                      name={r.name}
+                      color={r.color}
+                      iconUrl={r.iconUrl}
+                      style={nameStyleView(r.color, r.nameStyle, backdrops)}
+                    />
                   </li>
                 ))}
             </ul>
@@ -131,7 +151,12 @@ export function MemberManager({
                         aria-busy={pendingRole === r.id || undefined}
                         onChange={(e) => void toggle(editing, r, e.target.checked)}
                       />
-                      <RoleBadge name={r.name} color={r.color} />
+                      <RoleBadge
+                        name={r.name}
+                        color={r.color}
+                        iconUrl={r.iconUrl}
+                        style={nameStyleView(r.color, r.nameStyle, backdrops)}
+                      />
                     </label>
                   </li>
                 ))}

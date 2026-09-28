@@ -7,6 +7,7 @@ import { Avatar, Badge } from '@/components/ui/misc';
 import { VoteButtons } from './vote-buttons';
 import { FlairBadge } from './flair-badge';
 import { UserLink } from '@/components/profile/user-hover-card';
+import { StyledName } from '@/components/community/role-decor';
 
 export async function ThreadList({
   communityId,
@@ -82,10 +83,10 @@ export async function ThreadList({
                       communityId={communityId}
                       className="hover:text-fg hover:underline"
                     >
-                      {th.author.name}
+                      <StyledName name={th.author.name} style={th.author.nameStyle} />
                     </UserLink>
                   ) : (
-                    th.author.name
+                    <StyledName name={th.author.name} style={th.author.nameStyle} />
                   )}
                 </span>
               )}

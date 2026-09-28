@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { contrastRatio } from './color';
-import { nameStyleView, pickRoleDecor, themeBackdrops } from './name-style';
+import {
+  LETTER_ANIMATIONS,
+  nameStyleView,
+  PALETTE_EFFECTS,
+  pickRoleDecor,
+  themeBackdrops,
+} from './name-style';
 
 describe('name styles', () => {
   it('gives plain names no style', () => {
@@ -39,9 +45,29 @@ describe('name styles', () => {
 
   it('builds readable rainbow stops', () => {
     const v = nameStyleView(null, { effect: 'rainbow', animation: 'shimmer' })!;
-    for (const stop of v.rainbow!.light.split(', ')) {
+    for (const stop of v.palette!.light.split(', ')) {
       expect(contrastRatio(stop, '#ffffff')).toBeGreaterThanOrEqual(4.5);
     }
+  });
+
+  it('keeps every palette readable on light and dark backgrounds', () => {
+    for (const effect of Object.keys(PALETTE_EFFECTS) as (keyof typeof PALETTE_EFFECTS)[]) {
+      const v = nameStyleView('#3366ff', { effect })!;
+      expect(v.palette, effect).toBeDefined();
+      for (const stop of v.palette!.light.split(', ')) {
+        expect(contrastRatio(stop, '#ffffff'), `${effect} ${stop}`).toBeGreaterThanOrEqual(4.5);
+      }
+      for (const stop of v.palette!.dark.split(', ')) {
+        expect(contrastRatio(stop, '#12131a'), `${effect} ${stop}`).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+  });
+
+  it('drops animations that need colours the effect does not have', () => {
+    expect(nameStyleView('#ff0000', { effect: 'glow', animation: 'flow' })!.animation).toBe('none');
+    expect(nameStyleView('#ff0000', { effect: 'fire', animation: 'flow' })!.animation).toBe('flow');
+    expect(nameStyleView('#ff0000', { effect: 'neon', animation: 'wave' })!.animation).toBe('wave');
+    expect(LETTER_ANIMATIONS.has('wave')).toBe(true);
   });
 
   it('uses the highest styled role and the highest role with an icon', () => {

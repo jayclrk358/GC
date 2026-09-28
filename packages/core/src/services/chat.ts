@@ -31,6 +31,7 @@ import {
   toChatDoc,
   uuidAtTime,
   type RichNode,
+  nameStyleView,
   pickRoleDecor,
   themeBackdrops,
   type NameStyleView,
@@ -61,6 +62,8 @@ export interface ChatAuthor {
   roleName: string | null;
   /** Nametag effect from their highest styled role, if any. */
   nameStyle: NameStyleView | null;
+  /** Their highest role's own style, for showing the role name. */
+  roleStyle: NameStyleView | null;
   /** Icon image of their highest role that has one. */
   roleIcon: { url: string; roleName: string } | null;
 }
@@ -69,6 +72,7 @@ export interface ReplyPreview {
   id: string;
   authorId: string | null;
   authorName: string;
+  authorStyle: NameStyleView | null;
   excerpt: string;
   deleted: boolean;
 }
@@ -149,7 +153,7 @@ export async function loadAuthors(
   ]);
   const backdrops = community ? themeBackdrops(community.theme) : undefined;
   const nick = new Map(members.map((m) => [m.userId, m.nickname]));
-  const top = new Map<string, { name: string; color: string | null; position: number }>();
+  const top = new Map<string, (typeof roles)[number]>();
   const byUser = new Map<string, (typeof roles)[number][]>();
   for (const r of roles) {
     const cur = top.get(r.userId);
@@ -168,6 +172,7 @@ export async function loadAuthors(
       roleColor: role?.color ?? null,
       roleName: role?.name ?? null,
       nameStyle: decor.nameStyle,
+      roleStyle: role ? nameStyleView(role.color, role.nameStyle, backdrops) : null,
       roleIcon: decor.icon
         ? { url: mediaUrl(decor.icon.key)!, roleName: decor.icon.roleName }
         : null,
@@ -245,6 +250,7 @@ async function toViews(
             id: r.replyToId,
             authorId: parent?.authorId ?? null,
             authorName: displayName(parent?.authorId ? authors.get(parent.authorId) : null),
+            authorStyle: (parent?.authorId && authors.get(parent.authorId)?.nameStyle) || null,
             excerpt: parent && !parent.deletedAt ? excerpt(parent.content) : '',
             deleted: !parent || Boolean(parent.deletedAt),
           }

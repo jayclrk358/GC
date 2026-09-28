@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import type { NameStyleView } from '@magnox/shared';
+import { LETTER_ANIMATIONS, type NameStyleView } from '@magnox/shared';
 import { cn } from '@/lib/utils';
 
 /**
@@ -21,10 +21,12 @@ export function StyledName({
   className?: string;
 }) {
   if (!style) return <span className={className}>{name}</span>;
+  const letters = LETTER_ANIMATIONS.has(style.animation);
   return (
     <span
       className={cn('mx-name', className)}
       data-effect={style.effect}
+      data-palette={style.palette ? '' : undefined}
       data-anim={style.animation === 'none' ? undefined : style.animation}
       style={
         {
@@ -32,20 +34,34 @@ export function StyledName({
           '--mx-n2l': style.light[1],
           '--mx-n1d': style.dark[0],
           '--mx-n2d': style.dark[1],
-          ...(style.rainbow
-            ? { '--mx-rbl': style.rainbow.light, '--mx-rbd': style.rainbow.dark }
+          ...(style.palette
+            ? { '--mx-pl': style.palette.light, '--mx-pd': style.palette.dark }
             : {}),
           ...(scheme
             ? {
                 '--mx-n1': style[scheme][0],
                 '--mx-n2': style[scheme][1],
-                ...(style.rainbow ? { '--mx-rainbow': style.rainbow[scheme] } : {}),
+                ...(style.palette ? { '--mx-palette': style.palette[scheme] } : {}),
               }
             : {}),
         } as React.CSSProperties
       }
     >
-      {name}
+      {letters ? (
+        <>
+          {/* Screen readers get the name once; the moving letters are for show. */}
+          <span className="sr-only">{name}</span>
+          <span aria-hidden>
+            {Array.from(name).map((ch, i) => (
+              <span key={i} className="mx-name-letter" style={{ '--i': i } as React.CSSProperties}>
+                {ch === ' ' ? '\u00a0' : ch}
+              </span>
+            ))}
+          </span>
+        </>
+      ) : (
+        name
+      )}
     </span>
   );
 }
