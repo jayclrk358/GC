@@ -12,6 +12,7 @@ export function RoleBadge({
   iconUrl,
   colorblind,
   style,
+  scheme,
   className,
 }: {
   name: string;
@@ -21,6 +22,8 @@ export function RoleBadge({
   colorblind?: boolean;
   /** The role's own nametag style, so its name looks the way members' names do. */
   style?: NameStyleView | null;
+  /** Force light or dark colours (previews). */
+  scheme?: 'light' | 'dark';
   className?: string;
 }) {
   return (
@@ -47,7 +50,7 @@ export function RoleBadge({
           style={{ background: color ?? 'var(--c-text-muted)' }}
         />
       )}
-      <StyledName name={name} style={style} />
+      <StyledName name={name} style={style} scheme={scheme} />
     </span>
   );
 }

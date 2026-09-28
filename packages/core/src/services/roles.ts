@@ -91,6 +91,7 @@ export async function createRole(ctx: MemberContext, raw: unknown): Promise<Role
         icon: input.icon,
         iconKey: input.iconKey ?? null,
         nameStyle: input.nameStyle,
+        badgeStyle: input.badgeStyle,
         permissions,
         hoist: input.hoist,
         mentionable: input.mentionable,
@@ -133,6 +134,7 @@ export async function updateRole(ctx: MemberContext, roleId: string, raw: unknow
           ? {}
           : {
               nameStyle: input.nameStyle,
+              badgeStyle: input.badgeStyle,
               ...(input.iconKey !== undefined ? { iconKey: input.iconKey } : {}),
             }),
         permissions,
@@ -287,6 +289,7 @@ export function roleSummary(role: RoleRow) {
     iconKey: role.iconKey,
     iconUrl: mediaUrl(role.iconKey),
     nameStyle: role.nameStyle,
+    badgeStyle: role.badgeStyle,
     position: role.position,
     permissions: role.permissions.toString(),
     isDefault: role.isDefault,

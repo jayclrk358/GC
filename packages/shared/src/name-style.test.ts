@@ -63,6 +63,13 @@ describe('name styles', () => {
     }
   });
 
+  it('uses its own main colour when one is set, otherwise the role colour', () => {
+    expect(nameStyleView('#b91c1c', { effect: 'color', color: '#1d4ed8' })!.light[0]).toBe(
+      '#1d4ed8',
+    );
+    expect(nameStyleView('#b91c1c', { effect: 'color', color: null })!.light[0]).toBe('#b91c1c');
+  });
+
   it('drops animations that need colours the effect does not have', () => {
     expect(nameStyleView('#ff0000', { effect: 'glow', animation: 'flow' })!.animation).toBe('none');
     expect(nameStyleView('#ff0000', { effect: 'fire', animation: 'flow' })!.animation).toBe('flow');

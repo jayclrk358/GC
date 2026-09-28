@@ -1,0 +1,1 @@
+ALTER TABLE "roles" ADD COLUMN "badge_style" jsonb DEFAULT '{"effect":"none","color2":null,"animation":"none"}'::jsonb NOT NULL;

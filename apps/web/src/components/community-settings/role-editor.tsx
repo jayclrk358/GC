@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { ArrowDown, ArrowUp, Lock, Plus, Trash2 } from 'lucide-react';
 import {
   animationFits,
+  isPaletteEffect,
   DEFAULT_NAME_STYLE,
   has,
   NAME_ANIMATIONS,
@@ -17,6 +18,7 @@ import {
   PERMISSION_META,
   type NameBackdrops,
   type NameStyle,
+  type NameStyleView,
   type PermissionGroup,
   type PermissionName,
 } from '@magnox/shared';
@@ -26,6 +28,7 @@ import { Field } from '@/components/ui/field';
 import { Input, Select } from '@/components/ui/input';
 import { ImageUpload } from '@/components/upload/image-upload';
 import { RoleIcon, StyledName } from '@/components/community/role-decor';
+import { RoleBadge } from '@/components/community/role-badge';
 import { Alert } from '@/components/ui/misc';
 import { Switch, SwitchField } from '@/components/ui/switch';
 import { FormError } from '@/components/auth/form-error';
@@ -108,6 +111,7 @@ export function RoleEditor({
       icon: draft.icon,
       iconKey: draft.iconKey,
       nameStyle: draft.nameStyle,
+      badgeStyle: draft.badgeStyle,
       permissions: draft.permissions,
       hoist: draft.hoist,
       mentionable: draft.mentionable,
@@ -187,7 +191,7 @@ export function RoleEditor({
                   )}
                   <StyledName
                     name={r.name}
-                    style={nameStyleView(r.color, r.nameStyle, backdrops)}
+                    style={nameStyleView(r.color, r.badgeStyle, backdrops)}
                     className="truncate"
                   />
                   {!canManage(r) && (
@@ -270,12 +274,14 @@ export function RoleEditor({
             {!draft.isDefault && (
               <NametagFields
                 communityId={communityId}
-                name={draft.name || t('previewName')}
+                roleName={draft.name || t('previewRole')}
                 color={draft.color}
-                style={draft.nameStyle ?? DEFAULT_NAME_STYLE}
+                nameStyle={draft.nameStyle ?? DEFAULT_NAME_STYLE}
+                badgeStyle={draft.badgeStyle ?? DEFAULT_NAME_STYLE}
                 iconKey={draft.iconKey}
                 backdrops={backdrops}
-                onStyle={(nameStyle) => setDraft({ ...draft, nameStyle })}
+                onNameStyle={(nameStyle) => setDraft({ ...draft, nameStyle })}
+                onBadgeStyle={(badgeStyle) => setDraft({ ...draft, badgeStyle })}
                 onIcon={(iconKey) => setDraft({ ...draft, iconKey })}
               />
             )}
@@ -360,29 +366,31 @@ export function RoleEditor({
   );
 }
 
-/** A role's icon image and nametag effect, with a live preview on light and dark. */
+/** A role's icon and its two looks: members' names, and the role's own name. */
 function NametagFields({
   communityId,
-  name,
+  roleName,
   color,
-  style,
+  nameStyle,
+  badgeStyle,
   iconKey,
   backdrops,
-  onStyle,
+  onNameStyle,
+  onBadgeStyle,
   onIcon,
 }: {
   communityId: string;
-  name: string;
+  roleName: string;
   color: string | null;
-  style: NameStyle;
+  nameStyle: NameStyle;
+  badgeStyle: NameStyle;
   iconKey: string | null;
   backdrops: NameBackdrops;
-  onStyle: (s: NameStyle) => void;
+  onNameStyle: (s: NameStyle) => void;
+  onBadgeStyle: (s: NameStyle) => void;
   onIcon: (key: string | null) => void;
 }) {
   const t = useTranslations('roles');
-  const view = nameStyleView(color, style, backdrops);
-
   return (
     <fieldset className="flex flex-col gap-4 rounded-ui border border-border p-4">
       <legend className="px-1 text-sm font-bold tracking-wide text-muted uppercase">
@@ -396,8 +404,65 @@ function NametagFields({
         value={iconKey}
         onChange={onIcon}
       />
+      <StyleFields
+        legend={t('memberNames')}
+        description={t('memberNamesDesc')}
+        color={color}
+        style={nameStyle}
+        backdrops={backdrops}
+        onStyle={onNameStyle}
+        preview={(view, scheme) => (
+          <StyledName
+            name={t('previewName')}
+            style={view}
+            scheme={scheme}
+            className="font-semibold"
+          />
+        )}
+      />
+      <StyleFields
+        legend={t('roleNameStyle')}
+        description={t('roleNameStyleDesc')}
+        color={color}
+        style={badgeStyle}
+        backdrops={backdrops}
+        onStyle={onBadgeStyle}
+        preview={(view, scheme) => (
+          <RoleBadge name={roleName} color={color} style={view} scheme={scheme} />
+        )}
+      />
+      <p className="text-xs text-muted">{t('nametagNote')}</p>
+    </fieldset>
+  );
+}
+
+/** Effect, animation and colours for one look, with a light and dark preview. */
+function StyleFields({
+  legend,
+  description,
+  color,
+  style,
+  backdrops,
+  onStyle,
+  preview,
+}: {
+  legend: string;
+  description: string;
+  color: string | null;
+  style: NameStyle;
+  backdrops: NameBackdrops;
+  onStyle: (s: NameStyle) => void;
+  preview: (view: NameStyleView | null, scheme: 'light' | 'dark') => React.ReactNode;
+}) {
+  const t = useTranslations('roles');
+  const view = nameStyleView(color, style, backdrops);
+  const off = style.effect === 'none';
+  return (
+    <fieldset className="flex flex-col gap-4 rounded-ui border border-border p-4">
+      <legend className="px-1 font-semibold">{legend}</legend>
+      <p className="-mt-2 text-sm text-muted">{description}</p>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label={t('nameEffect')} description={t('nameEffectDesc')}>
+        <Field label={t('nameEffect')}>
           {(p) => (
             <Select
               {...p}
@@ -422,12 +487,12 @@ function NametagFields({
             </Select>
           )}
         </Field>
-        <Field label={t('nameAnimation')} description={t('nameAnimationDesc')}>
+        <Field label={t('nameAnimation')}>
           {(p) => (
             <Select
               {...p}
               value={style.animation}
-              disabled={style.effect === 'none'}
+              disabled={off}
               onValueChange={(value) =>
                 onStyle({ ...style, animation: value as NameStyle['animation'] })
               }
@@ -441,20 +506,53 @@ function NametagFields({
           )}
         </Field>
       </div>
-      {TWO_COLOUR_EFFECTS.has(style.effect) && (
-        <Field label={t('secondColor')} description={t(`secondColorFor.${style.effect}`)}>
-          {(p) => (
+      {/* Palette effects (fire, rainbow...) bring their own colours. */}
+      {!off && !isPaletteEffect(style.effect) && (
+        <div className="flex flex-wrap items-end gap-4">
+          <label className="flex h-10 items-center gap-2 text-sm font-semibold">
             <input
-              {...p}
-              type="color"
-              value={style.color2 ?? '#22d3ee'}
-              onChange={(e) => onStyle({ ...style, color2: e.target.value })}
-              className="h-10 w-16 cursor-pointer rounded-ui border border-border bg-surface"
+              type="checkbox"
+              className="size-4 accent-[var(--c-primary)]"
+              checked={!style.color}
+              onChange={(e) =>
+                onStyle({ ...style, color: e.target.checked ? null : (color ?? '#7c3aed') })
+              }
             />
+            {t('useRoleColour')}
+          </label>
+          {style.color && (
+            <Field label={t('mainColour')}>
+              {(p) => (
+                <input
+                  {...p}
+                  type="color"
+                  value={style.color!}
+                  onChange={(e) => onStyle({ ...style, color: e.target.value })}
+                  className="h-10 w-16 cursor-pointer rounded-ui border border-border bg-surface"
+                />
+              )}
+            </Field>
           )}
-        </Field>
+          {TWO_COLOUR_EFFECTS.has(style.effect) && (
+            <Field label={t('secondColor')} description={t(`secondColorFor.${style.effect}`)}>
+              {(p) => (
+                <input
+                  {...p}
+                  type="color"
+                  value={style.color2 ?? '#22d3ee'}
+                  onChange={(e) => onStyle({ ...style, color2: e.target.value })}
+                  className="h-10 w-16 cursor-pointer rounded-ui border border-border bg-surface"
+                />
+              )}
+            </Field>
+          )}
+        </div>
       )}
-      <div role="group" aria-label={t('preview')} className="grid gap-2 sm:grid-cols-2">
+      <div
+        role="group"
+        aria-label={t('previewOf', { what: legend })}
+        className="grid gap-2 sm:grid-cols-2"
+      >
         {(['light', 'dark'] as const).map((scheme) => (
           <div
             key={scheme}
@@ -466,11 +564,10 @@ function NametagFields({
             }}
           >
             <span className="sr-only">{t(`preview${scheme === 'light' ? 'Light' : 'Dark'}`)}</span>
-            <StyledName name={name} style={view} scheme={scheme} className="font-semibold" />
+            {preview(view, scheme)}
           </div>
         ))}
       </div>
-      <p className="text-xs text-muted">{t('nametagNote')}</p>
     </fieldset>
   );
 }

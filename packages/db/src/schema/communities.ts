@@ -113,6 +113,11 @@ export const roles = pgTable(
       .$type<NameStyle>()
       .notNull()
       .default({ effect: 'none', color2: null, animation: 'none' }),
+    /** How the role's own name looks on badges and labels (separate from members' names). */
+    badgeStyle: jsonb('badge_style')
+      .$type<NameStyle>()
+      .notNull()
+      .default({ effect: 'none', color2: null, animation: 'none' }),
     position: integer('position').notNull().default(0),
     permissions: bigint('permissions', { mode: 'bigint' })
       .notNull()

@@ -69,7 +69,7 @@ export async function StaffBlock({
                     color={role.color}
                     iconUrl={mediaUrl(role.iconKey)}
                     colorblind={prefs.colorblindRoleColors}
-                    style={nameStyleView(role.color, role.nameStyle, backdrops)}
+                    style={nameStyleView(role.color, role.badgeStyle, backdrops)}
                   />
                 )}
               </div>

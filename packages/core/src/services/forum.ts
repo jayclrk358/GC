@@ -359,6 +359,7 @@ export async function listPosts(
             position: schema.roles.position,
             iconKey: schema.roles.iconKey,
             nameStyle: schema.roles.nameStyle,
+            badgeStyle: schema.roles.badgeStyle,
           })
           .from(schema.memberRoles)
           .innerJoin(schema.roles, eq(schema.roles.id, schema.memberRoles.roleId))
@@ -432,7 +433,7 @@ export async function listPosts(
           nickname: r.authorId ? (nick.get(r.authorId) ?? null) : null,
           roleColor: role?.color ?? null,
           roleName: role?.name ?? null,
-          roleStyle: role ? nameStyleView(role.color, role.nameStyle, backdrops) : null,
+          roleStyle: role ? nameStyleView(role.color, role.badgeStyle, backdrops) : null,
           ...decorFor(r.authorId),
         },
         reactions: [...(byPost.get(r.id)?.entries() ?? [])]

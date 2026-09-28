@@ -68,12 +68,19 @@ export function animationFits(effect: NameEffect, animation: NameAnimation): boo
 
 export interface NameStyle {
   effect: NameEffect;
-  /** Second colour, for gradients, neon and retro (the first is the role colour). */
+  /** Main colour; null uses the role colour. */
+  color?: string | null;
+  /** Second colour, for gradients, neon and retro. */
   color2: string | null;
   animation: NameAnimation;
 }
 
-export const DEFAULT_NAME_STYLE: NameStyle = { effect: 'none', color2: null, animation: 'none' };
+export const DEFAULT_NAME_STYLE: NameStyle = {
+  effect: 'none',
+  color: null,
+  color2: null,
+  animation: 'none',
+};
 
 /** What the page needs to draw a styled name, with colours already made readable. */
 export interface NameStyleView {
@@ -135,7 +142,8 @@ export function nameStyleView(
     ? (style.animation as NameAnimation)
     : 'none';
   const animation = animationFits(effect, requested) ? requested : 'none';
-  const c1 = roleColor && isHex(roleColor) ? roleColor : FALLBACK;
+  const main = style.color && isHex(style.color) ? style.color : roleColor;
+  const c1 = main && isHex(main) ? main : FALLBACK;
   const c2 = style.color2 && isHex(style.color2) ? style.color2 : c1;
   return {
     effect,

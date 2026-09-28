@@ -136,6 +136,7 @@ export async function loadAuthors(
         position: schema.roles.position,
         iconKey: schema.roles.iconKey,
         nameStyle: schema.roles.nameStyle,
+        badgeStyle: schema.roles.badgeStyle,
       })
       .from(schema.memberRoles)
       .innerJoin(schema.roles, eq(schema.roles.id, schema.memberRoles.roleId))
@@ -172,7 +173,7 @@ export async function loadAuthors(
       roleColor: role?.color ?? null,
       roleName: role?.name ?? null,
       nameStyle: decor.nameStyle,
-      roleStyle: role ? nameStyleView(role.color, role.nameStyle, backdrops) : null,
+      roleStyle: role ? nameStyleView(role.color, role.badgeStyle, backdrops) : null,
       roleIcon: decor.icon
         ? { url: mediaUrl(decor.icon.key)!, roleName: decor.icon.roleName }
         : null,

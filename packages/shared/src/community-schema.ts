@@ -56,6 +56,11 @@ export type CreateCommunityInput = z.infer<typeof createCommunitySchema>;
 
 export const nameStyleSchema = z.object({
   effect: z.enum(NAME_EFFECTS).default('none'),
+  color: z
+    .string()
+    .regex(/^#[0-9a-f]{6}$/i)
+    .nullable()
+    .default(null),
   color2: z
     .string()
     .regex(/^#[0-9a-f]{6}$/i)
@@ -73,7 +78,10 @@ export const roleInputSchema = z.object({
     .default(null),
   icon: z.string().max(40).nullable().default(null),
   permissions: z.string().regex(/^\d{1,20}$/),
-  nameStyle: nameStyleSchema.default(DEFAULT_NAME_STYLE),
+  /** How members with this role have their names shown. */
+  nameStyle: nameStyleSchema.default({ ...DEFAULT_NAME_STYLE, color: null }),
+  /** How the role's own name is shown (badges and role labels), separate from members' names. */
+  badgeStyle: nameStyleSchema.default({ ...DEFAULT_NAME_STYLE, color: null }),
   /** Uploaded role icon image, or null for none. Omitted means "leave as is". */
   iconKey: z.string().max(80).nullable().optional(),
   hoist: z.boolean().default(false),

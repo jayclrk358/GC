@@ -1294,8 +1294,7 @@
     "nametag": "Nametag",
     "iconImage": "Role icon",
     "iconImageDesc": "A small image shown next to members’ names. Square images work best; animated images show their first frame.",
-    "nameEffect": "Name effect",
-    "nameEffectDesc": "How the names of members with this role look. Their highest role with an effect wins.",
+    "nameEffect": "Effect",
     "effects": {
       "none": "None (plain name)",
       "color": "Role colour",
@@ -1314,7 +1313,6 @@
       "galaxy": "Galaxy"
     },
     "nameAnimation": "Animation",
-    "nameAnimationDesc": "Flow needs an effect with more than one colour.",
     "animations": {
       "none": "None",
       "shimmer": "Shimmer",
@@ -1330,7 +1328,6 @@
       "sparkle": "Sparkle"
     },
     "secondColor": "Second colour",
-    "preview": "Preview",
     "previewLight": "On a light background:",
     "previewDark": "On a dark background:",
     "previewName": "Member name",
@@ -1339,7 +1336,15 @@
       "gradient": "The gradient runs from the role colour to this one.",
       "neon": "The colour of the neon glow around the name.",
       "retro": "The colour of the 3D shadow behind the name."
-    }
+    },
+    "memberNames": "Member names",
+    "memberNamesDesc": "How the names of members with this role look. Their highest role with an effect wins.",
+    "roleNameStyle": "Role badge",
+    "roleNameStyleDesc": "How this role’s own name looks on badges and labels. Separate from members’ names.",
+    "useRoleColour": "Use the role colour",
+    "mainColour": "Colour",
+    "previewOf": "Preview of {what}",
+    "previewRole": "Role"
   },
   "serverSettings": {
     "title": "Servers",

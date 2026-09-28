@@ -254,7 +254,7 @@ async function cardMembership(communityId: string, userId: string, viewerId: str
         name: schema.roles.name,
         color: schema.roles.color,
         iconKey: schema.roles.iconKey,
-        nameStyle: schema.roles.nameStyle,
+        badgeStyle: schema.roles.badgeStyle,
       })
       .from(schema.memberRoles)
       .innerJoin(schema.roles, eq(schema.roles.id, schema.memberRoles.roleId))
@@ -285,7 +285,7 @@ async function cardMembership(communityId: string, userId: string, viewerId: str
       name: r.name,
       color: r.color,
       iconUrl: mediaUrl(r.iconKey),
-      style: nameStyleView(r.color, r.nameStyle, backdrops),
+      style: nameStyleView(r.color, r.badgeStyle, backdrops),
     })),
   };
 }

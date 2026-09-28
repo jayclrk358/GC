@@ -244,13 +244,25 @@ test.describe('community hubs', () => {
       ),
     });
     await expect(tag.getByRole('img', { name: /Role icon/ })).toBeVisible();
-    await choose(tag.getByLabel('Name effect'), 'Gradient');
-    await choose(tag.getByLabel('Animation'), 'Flow');
+    // Members' names and the role's own badge each get their own look.
+    const names = tag.getByRole('group', { name: 'Member names' });
+    await choose(names.getByLabel('Effect'), 'Gradient');
+    await choose(names.getByLabel('Animation'), 'Flow');
     await expect(
-      tag
-        .getByRole('group', { name: 'Preview' })
+      names
+        .getByRole('group', { name: 'Preview of Member names' })
         .locator('.mx-name[data-effect="gradient"][data-anim="flow"]'),
     ).toHaveCount(2);
+    const badge = tag.getByRole('group', { name: 'Role badge' });
+    await choose(badge.getByLabel('Effect'), 'Neon');
+    await choose(badge.getByLabel('Animation'), 'Wave');
+    await expect(
+      badge
+        .getByRole('group', { name: 'Preview of Role badge' })
+        .locator('.mx-name[data-effect="neon"][data-anim="wave"]'),
+    ).toHaveCount(2);
+    // Changing the badge left members' names alone.
+    await expect(names.locator('.mx-name[data-effect="gradient"]')).toHaveCount(2);
     await expectAccessible(page, 'role nametag settings');
     await page.getByRole('button', { name: 'Save role' }).click();
     await expect(page.getByText('Role saved')).toBeVisible();
@@ -280,7 +292,7 @@ test.describe('community hubs', () => {
     // The role badge wears its role's style, and so do the hover card and the thread list.
     await expect(op.locator('.mx-name', { hasText: 'Legend' })).toHaveAttribute(
       'data-effect',
-      'gradient',
+      'neon',
     );
     await op.getByRole('link', { name: member.user.name }).hover();
     const card = member.page.locator('[data-radix-popper-content-wrapper]');

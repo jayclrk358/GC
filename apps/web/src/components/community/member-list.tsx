@@ -100,7 +100,7 @@ export async function MemberList({
                                   color={r.color}
                                   iconUrl={r.iconUrl}
                                   colorblind={colorblind}
-                                  style={nameStyleView(r.color, r.nameStyle, backdrops)}
+                                  style={nameStyleView(r.color, r.badgeStyle, backdrops)}
                                 />
                               </li>
                             ))}

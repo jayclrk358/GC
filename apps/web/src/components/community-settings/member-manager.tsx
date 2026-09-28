@@ -113,7 +113,7 @@ export function MemberManager({
                       name={r.name}
                       color={r.color}
                       iconUrl={r.iconUrl}
-                      style={nameStyleView(r.color, r.nameStyle, backdrops)}
+                      style={nameStyleView(r.color, r.badgeStyle, backdrops)}
                     />
                   </li>
                 ))}
@@ -155,7 +155,7 @@ export function MemberManager({
                         name={r.name}
                         color={r.color}
                         iconUrl={r.iconUrl}
-                        style={nameStyleView(r.color, r.nameStyle, backdrops)}
+                        style={nameStyleView(r.color, r.badgeStyle, backdrops)}
                       />
                     </label>
                   </li>
