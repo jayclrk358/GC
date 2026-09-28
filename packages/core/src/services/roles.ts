@@ -13,6 +13,7 @@ import { requirePerm, type MemberContext } from '../access';
 import { AppError, forbidden, notFound } from '../errors';
 import { mediaUrl } from '../storage';
 import { audit } from './audit';
+import { assertUnderPlanLimit } from './billing';
 
 export type RoleRow = typeof schema.roles.$inferSelect;
 
@@ -72,8 +73,7 @@ export async function createRole(ctx: MemberContext, raw: unknown): Promise<Role
   assertCanGrant(ctx, permissions);
   await assertRoleIcon(ctx, input.iconKey);
   const existing = await listRoles(ctx.community.id);
-  if (existing.length >= 100)
-    throw new AppError('forbidden', 'A community can have up to 100 roles.');
+  await assertUnderPlanLimit(ctx.community.id, 'roles', existing.length, 'roles');
 
   const role = await db.transaction(async (tx) => {
     // New roles go to the bottom of the hierarchy, just above @everyone.

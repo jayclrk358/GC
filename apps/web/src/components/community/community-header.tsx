@@ -1,12 +1,13 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { Globe2, Play, Settings, Users } from 'lucide-react';
-import { playLink } from '@magnox/shared';
+import { playLink, planPerks } from '@magnox/shared';
 import type { LoadedCommunity } from '@/lib/community';
 import { mediaUrl } from '@/lib/media';
 import { formatCount } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/misc';
+import { PlanBadge } from '@/components/billing/plan-badge';
 import { NavLink } from '@/components/shell/nav-link';
 import { ScrollList } from '@/components/ui/scroll-list';
 import { JoinButton } from './join-button';
@@ -26,6 +27,7 @@ const TAB_PATHS: Record<string, string> = {
 
 export async function CommunityHeader({ data, online }: { data: LoadedCommunity; online: number }) {
   const t = await getTranslations('community');
+  const tp = await getTranslations('plans');
   const { community, game, nav, ctx, perms, user } = data;
   const theme = community.theme;
   const banner = mediaUrl(theme.bannerKey);
@@ -111,6 +113,11 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
               className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted group-data-[dense=true]/dense:sr-only"
               aria-label={t('details')}
             >
+              {planPerks(community.plan).badge && (
+                <li>
+                  <PlanBadge plan={community.plan} label={tp(`names.${community.plan}`)} />
+                </li>
+              )}
               {game && (
                 <li>
                   <Badge tone="primary">{game.name}</Badge>

@@ -51,7 +51,8 @@
     "closeMenu": "Close menu",
     "menu": "Menu",
     "joinTitle": "Find your people",
-    "joinBody": "Sign up to join communities, chat and vote for your favourite servers."
+    "joinBody": "Sign up to join communities, chat and vote for your favourite servers.",
+    "store": "Store"
   },
   "palette": {
     "placeholder": "Search communities, pages and actions…",
@@ -493,7 +494,8 @@
     "sortDefault": "Best match",
     "sortPopular": "Most members",
     "sortNew": "Newest",
-    "apply": "Apply"
+    "apply": "Apply",
+    "featured": "Featured"
   },
   "profile": {
     "communities": "Communities",
@@ -698,7 +700,8 @@
       "danger": "Danger zone",
       "channels": "Channels",
       "reports": "Reports",
-      "bans": "Bans"
+      "bans": "Bans",
+      "billing": "Plan & billing"
     },
     "general": {
       "title": "General",
@@ -2132,5 +2135,135 @@
     "memberSince": "In {community} since",
     "joined": "Joined Magnox",
     "viewProfile": "View full profile"
+  },
+  "plans": {
+    "names": {
+      "free": "Free",
+      "plus": "Plus",
+      "pro": "Pro"
+    },
+    "taglines": {
+      "free": "Everything you need to start a community.",
+      "plus": "More room to grow, and a Plus badge.",
+      "pro": "The biggest limits, a Pro badge and a place in Featured."
+    },
+    "interval": "Billing period",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "save": "2 months free",
+    "perMonth": "/month",
+    "perYear": "/year",
+    "freePrice": "Free",
+    "unavailable": "Not available yet",
+    "current": "Current plan",
+    "popular": "Most popular",
+    "features": {
+      "servers": "{count} linked game servers",
+      "roles": "{count} roles",
+      "channels": "{count} channels",
+      "attachments": "{count} files per chat message",
+      "imageMb": "{count} MB image uploads",
+      "videoMb": "{count} MB chat videos",
+      "badge": "{plan} badge on your community",
+      "featured": "Featured on Explore"
+    },
+    "compare": {
+      "caption": "Compare plans",
+      "feature": "Feature",
+      "yes": "Included",
+      "no": "Not included"
+    },
+    "rows": {
+      "servers": "Linked game servers",
+      "roles": "Roles",
+      "channels": "Channels",
+      "attachments": "Files per chat message",
+      "imageMb": "Image uploads",
+      "videoMb": "Chat videos",
+      "badge": "Plan badge",
+      "featured": "Featured on Explore"
+    },
+    "mb": "{count} MB"
+  },
+  "store": {
+    "title": "Store",
+    "eyebrow": "Magnox plans",
+    "heading": "Level up your community",
+    "intro": "Plans give a community more room and a few perks. Everyone in it benefits, and you can cancel any time.",
+    "startFree": "Start for free",
+    "choose": "Get {plan}",
+    "signInToBuy": "Sign in to buy",
+    "notSetUp": "Payments aren't set up on this site yet, so plans can't be bought right now.",
+    "secure": "Payments are handled by Stripe. Magnox never sees your card details.",
+    "pickTitle": "Get {plan}",
+    "pickDescription": "Choose the community to put on {plan} for {price}.",
+    "community": "Community",
+    "onPlan": "{name} (on {plan})",
+    "alreadyPaid": "{name} already has a paid plan. Change it from its settings.",
+    "manage": "Open Plan & billing",
+    "continue": "Continue to checkout",
+    "noCommunities": "You need a community you manage before you can buy a plan for it.",
+    "create": "Create a community",
+    "faqTitle": "Questions",
+    "faq": {
+      "who": {
+        "q": "Who can buy a plan?",
+        "a": "Anyone who can manage a community (its owner, or a role with Manage community). The person who pays is the only one who can change or cancel it."
+      },
+      "cancel": {
+        "q": "Can I cancel?",
+        "a": "Yes, any time from Plan & billing in the community settings. The plan stays on until the end of the period you paid for."
+      },
+      "downgrade": {
+        "q": "What happens when a plan ends?",
+        "a": "The community goes back to Free. Nothing is deleted: anything above the Free limits stays, you just can’t add more until you’re under them again."
+      },
+      "switch": {
+        "q": "Can I switch between Plus and Pro, or monthly and yearly?",
+        "a": "Yes. Changes apply straight away and the price difference is prorated on your next invoice."
+      },
+      "pay": {
+        "q": "How do I pay?",
+        "a": "Checkout is hosted by Stripe, which takes cards and other local payment methods. Invoices and card details are in the Stripe billing portal, linked from Plan & billing."
+      }
+    }
+  },
+  "billing": {
+    "title": "Plan & billing",
+    "description": "What this community's plan includes, how much of it is used, and who pays for it.",
+    "currentPlan": "Current plan",
+    "freeNote": "This community is on the Free plan.",
+    "renews": "Renews on {date}",
+    "ends": "Ends on {date} and won't renew.",
+    "pastDue": "The last payment failed. Stripe will try again; update the card in Payment details to keep the plan.",
+    "paidBy": "Paid for by {name}",
+    "you": "you",
+    "someoneElse": "someone else",
+    "usage": "Usage",
+    "usageDescription": "What the community uses of its plan’s limits.",
+    "usageOf": "{used} of {limit}",
+    "otherLimits": "Also on this plan: {attachments} files per chat message, image uploads up to {image} MB and chat videos up to {video} MB.",
+    "upgrade": "Upgrade",
+    "upgradeDescription": "Pay monthly or yearly with Stripe. Cancel any time.",
+    "buy": "Get {plan}",
+    "manage": "Manage plan",
+    "change": "Change plan",
+    "switchTo": "Switch to {plan} ({price})",
+    "onThisPlan": "On {plan}",
+    "prorated": "Changes apply now; the difference is prorated on the next invoice.",
+    "changed": "Switched to {plan}.",
+    "cancel": "Cancel plan",
+    "cancelConfirm": "Cancel the plan? It stays on until {date}, then the community goes back to Free.",
+    "cancelHint": "Cancelling keeps the plan until the end of the period you’ve paid for.",
+    "canceled": "The plan will end on {date}.",
+    "resume": "Keep the plan",
+    "resumed": "The plan will renew as normal.",
+    "portal": "Payment details and invoices",
+    "notPayer": "Only {name}, who pays for this plan, can change or cancel it.",
+    "notSetUp": "Payments aren't set up on this site yet, so plans can't be bought right now.",
+    "confirming": "Payment received. The plan will switch on in a moment; refresh if it hasn’t.",
+    "activated": "Thanks! {plan} is now on.",
+    "failed": "That didn’t work. Please try again.",
+    "compare": "Compare all plans"
   }
 }

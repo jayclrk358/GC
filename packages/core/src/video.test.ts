@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_VIDEO_BYTES } from '@magnox/shared';
+import { PLAN_LIMITS } from '@magnox/shared';
 import { processVideo } from './video';
 
 function box(type: string, body: Buffer): Buffer {
@@ -52,7 +52,9 @@ describe('processVideo', () => {
   });
 
   it('rejects videos over the size limit', () => {
-    const big = Buffer.concat([ftyp('mp42'), Buffer.alloc(MAX_VIDEO_BYTES)]);
-    expect(() => processVideo(big)).toThrow(/too large/);
+    const big = Buffer.concat([ftyp('mp42'), Buffer.alloc(PLAN_LIMITS.free.videoMb * 1_000_000)]);
+    expect(() => processVideo(big)).toThrow(/too large \(max 50 MB\)/);
+    // A bigger plan allows it.
+    expect(processVideo(big, PLAN_LIMITS.plus.videoMb * 1_000_000).mime).toBe('video/mp4');
   });
 });

@@ -20,6 +20,9 @@ export interface ChatPerms {
   manage: boolean;
   history: boolean;
   timedOutUntil: string | null;
+  /** From the community's plan. */
+  maxAttachments: number;
+  maxVideoMb: number;
 }
 
 export interface ChatChannelInfo {

@@ -5,10 +5,12 @@ import type { CommunityCard as Card } from '@magnox/core';
 import { mediaUrl } from '@/lib/media';
 import { formatCount } from '@/lib/utils';
 import { Badge } from '@/components/ui/misc';
+import { PlanBadge } from '@/components/billing/plan-badge';
 
 /** Card preview in the community's own colours (light set, contrast-checked). */
 export async function CommunityCard({ c }: { c: Card }) {
   const t = await getTranslations('community');
+  const tp = await getTranslations('plans');
   const theme = c.theme;
   const icon = mediaUrl(theme.iconKey);
   const banner = mediaUrl(theme.bannerKey);
@@ -66,6 +68,7 @@ export async function CommunityCard({ c }: { c: Card }) {
         </h3>
         {c.tagline && <p className="line-clamp-2 text-sm text-muted">{c.tagline}</p>}
         <div className="mt-auto flex flex-wrap items-center gap-2 pt-2 text-sm">
+          <PlanBadge plan={c.plan} label={tp(`names.${c.plan}`)} />
           {c.gameName && <Badge tone="primary">{c.gameName}</Badge>}
           <span className="flex items-center gap-1 text-muted">
             <Users className="size-4" aria-hidden />

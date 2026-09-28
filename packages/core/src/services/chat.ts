@@ -45,6 +45,7 @@ import { cacheRedis } from '../redis';
 import { rooms } from '../rooms';
 import { mediaUrl } from '../storage';
 import { audit } from './audit';
+import { communityLimits } from './billing';
 import { getChannelById, listVisibleChannels, type ChannelView } from './channels';
 import { queueFanout } from './notify';
 
@@ -534,6 +535,12 @@ export async function sendMessage(
   }
   if (input.attachments.length && !perm(channel, Permission.ATTACH_FILES)) {
     throw forbidden("You can't attach files in this channel.");
+  }
+  if (input.attachments.length) {
+    const { attachments: max } = await communityLimits(ctx.community.id);
+    if (input.attachments.length > max) {
+      throw new AppError('validation', `You can attach up to ${max} files to a message here.`);
+    }
   }
   const { body, content } = prepareChatBody(input.body);
   if (!content.trim() && !input.attachments.length) {

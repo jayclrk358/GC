@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { channelUnreads, isMuted, listBlockedUsers, listMessages } from '@magnox/core';
-import { has, isUuid, Permission } from '@magnox/shared';
+import { has, isUuid, Permission, planLimits } from '@magnox/shared';
 import { loadChatChannel, loadCommunity } from '@/lib/community';
 import { formatDateTime } from '@/lib/format';
 import { JoinButton } from '@/components/community/join-button';
@@ -100,6 +100,8 @@ export default async function ChatChannelPage({
         manage: has(perms, Permission.MANAGE_MESSAGES),
         history: has(perms, Permission.READ_HISTORY),
         timedOutUntil: data.ctx.timeoutUntil?.toISOString() ?? null,
+        maxAttachments: planLimits(data.community.plan).attachments,
+        maxVideoMb: planLimits(data.community.plan).videoMb,
       }}
       blocked={blocked.map((b) => b.userId)}
       initial={initial}

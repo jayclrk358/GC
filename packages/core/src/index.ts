@@ -37,3 +37,4 @@ export * from './services/history';
 export * from './services/votes';
 export * from './services/server-alerts';
 export * from './services/server-browser';
+export * from './services/billing';

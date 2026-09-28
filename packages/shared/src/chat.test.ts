@@ -10,6 +10,7 @@ import {
   toChatDoc,
 } from './chat';
 import { messageInputSchema } from './chat-schema';
+import { MAX_PLAN_LIMITS } from './plans';
 import { newId, timeOfUuid, uuidAtTime } from './ids';
 import type { RichNode } from './richtext';
 
@@ -184,11 +185,17 @@ describe('parseOpenGraph', () => {
 });
 
 describe('messageInputSchema', () => {
-  it('accepts a message and rejects too many attachments', () => {
+  it('accepts a message and rejects more attachments than any plan allows', () => {
     const body = doc(text('hi'));
     expect(messageInputSchema.parse({ body }).attachments).toEqual([]);
-    const attachments = Array.from({ length: 5 }, () => ({ key: 'u/abcdefgh12.webp', alt: '' }));
-    expect(messageInputSchema.safeParse({ body, attachments }).success).toBe(false);
+    // The community's own plan limit is checked by the chat service.
+    const files = (n: number) =>
+      Array.from({ length: n }, () => ({ key: 'u/abcdefgh12.webp', alt: '' }));
+    const most = MAX_PLAN_LIMITS.attachments;
+    expect(messageInputSchema.safeParse({ body, attachments: files(most) }).success).toBe(true);
+    expect(messageInputSchema.safeParse({ body, attachments: files(most + 1) }).success).toBe(
+      false,
+    );
   });
 });
 

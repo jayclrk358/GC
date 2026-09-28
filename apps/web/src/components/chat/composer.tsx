@@ -3,14 +3,7 @@
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { AtSign, Film, ImagePlus, SendHorizontal, Type, X } from 'lucide-react';
-import {
-  docToText,
-  MAX_ATTACHMENTS,
-  MAX_MESSAGE_CHARS,
-  MAX_VIDEO_BYTES,
-  VIDEO_TYPES,
-  type RichNode,
-} from '@magnox/shared';
+import { docToText, MAX_MESSAGE_CHARS, VIDEO_TYPES, type RichNode } from '@magnox/shared';
 import { Button } from '@/components/ui/button';
 import { uploadImage, UploadProgress } from '@/components/upload/image-upload';
 import { emitSocket } from '@/lib/realtime';
@@ -119,9 +112,9 @@ export const Composer = React.forwardRef<
       setError(t('noAttach'));
       return;
     }
-    const room = MAX_ATTACHMENTS - attachments.length;
+    const room = perms.maxAttachments - attachments.length;
     if (room <= 0) {
-      setError(t('tooManyAttachments', { max: MAX_ATTACHMENTS }));
+      setError(t('tooManyAttachments', { max: perms.maxAttachments }));
       return;
     }
     setError(null);
@@ -148,8 +141,8 @@ export const Composer = React.forwardRef<
       },
     ]);
     // Checked here too so an oversized or unplayable video fails before it uploads.
-    if (video && file.size > MAX_VIDEO_BYTES) {
-      return update({ error: t('videoTooLarge', { max: MAX_VIDEO_BYTES / 1_000_000 }) });
+    if (video && file.size > perms.maxVideoMb * 1_000_000) {
+      return update({ error: t('videoTooLarge', { max: perms.maxVideoMb }) });
     }
     if (video && !(await probeVideo(file))) return update({ error: t('videoUnplayable') });
     const abort = new AbortController();
@@ -342,7 +335,7 @@ export const Composer = React.forwardRef<
                 size="icon"
                 variant="ghost"
                 aria-label={t('attach')}
-                disabled={attachments.length >= MAX_ATTACHMENTS}
+                disabled={attachments.length >= perms.maxAttachments}
                 onClick={() => document.getElementById(fileInputId)?.click()}
               >
                 <ImagePlus aria-hidden />

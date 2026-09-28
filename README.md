@@ -121,6 +121,28 @@ keeps the databases off the network and restarts everything after a reboot.
 - **Backup:** `docker compose exec postgres pg_dump -U magnox magnox > magnox.sql`, plus the
   `magnox_media` volume (uploads).
 
+### Payments (Stripe)
+
+Communities can buy the **Plus** or **Pro** plan from `/store` (or Plan & billing in their
+settings). Plans raise limits (linked servers, roles, channels, files per chat message, upload
+sizes) and add perks (a plan badge; Pro communities appear under Featured on Explore). Free keeps
+the limits every community had before plans existed. Plans and limits live in
+`packages/shared/src/plans.ts`.
+
+To take payments:
+
+1. In the [Stripe dashboard](https://dashboard.stripe.com), create a **Plus** and a **Pro**
+   product, each with a monthly and a yearly recurring price.
+2. Add a webhook endpoint `https://YOUR-DOMAIN/api/stripe/webhook` sending
+   `checkout.session.completed` and `customer.subscription.created`, `.updated` and `.deleted`.
+3. Put the secret key, the webhook's signing secret and the four price ids in `.env`
+   (`STRIPE_*`, see `.env.example`), then `docker compose up -d`.
+4. Optional: turn on the [customer portal](https://dashboard.stripe.com/settings/billing/portal)
+   so payers can update cards and download invoices.
+
+Without a key the store still shows the plans, with buying turned off. Tests use a fake Stripe in
+`apps/worker/src/fixtures/fake-stripe.ts`.
+
 ## Scripts
 
 | Command            | What it does                                         |

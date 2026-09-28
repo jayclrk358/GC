@@ -17,6 +17,9 @@ import {
   type CommunityTemplate,
   type PresetKey,
   type Theme,
+  PLAN_IDS,
+  planPerks,
+  type PlanId,
 } from '@magnox/shared';
 import { z } from 'zod';
 import { requirePerm, type MemberContext } from '../access';
@@ -26,6 +29,7 @@ import { TEMPLATES } from '../templates';
 import { Permission } from '@magnox/shared';
 import { audit, diffOf } from './audit';
 import { cached } from '../cache';
+import { cancelCommunitySubscriptions } from './billing';
 
 const MAX_OWNED_COMMUNITIES = 10;
 
@@ -294,6 +298,8 @@ export async function deleteCommunity(ctx: MemberContext, confirmSlug: string): 
       action: 'community.delete',
     });
   });
+  // A deleted community shouldn't keep being charged for.
+  await cancelCommunitySubscriptions(ctx.community.id);
 }
 
 export interface ExploreFilters {
@@ -321,6 +327,7 @@ export interface CommunityCard {
   joinMode: string;
   theme: Theme;
   createdAt: Date;
+  plan: PlanId;
 }
 
 export async function exploreCommunities(
@@ -370,6 +377,7 @@ export async function exploreCommunities(
         joinMode: c.joinMode,
         theme: c.theme,
         createdAt: c.createdAt,
+        plan: c.plan,
       })
       .from(c)
       .leftJoin(schema.games, eq(schema.games.id, c.gameId))
@@ -383,6 +391,43 @@ export async function exploreCommunities(
       .where(and(...where)),
   ]);
   return { items: rows, total: totals[0]?.n ?? 0, page, pageSize };
+}
+
+/** Pro communities for Explore's Featured row (a fresh pick each time). */
+export async function featuredCommunities(limit = 3): Promise<CommunityCard[]> {
+  const c = schema.communities;
+  return db
+    .select({
+      id: c.id,
+      slug: c.slug,
+      name: c.name,
+      tagline: c.tagline,
+      gameId: c.gameId,
+      gameName: schema.games.name,
+      tags: c.tags,
+      region: c.region,
+      language: c.language,
+      memberCount: c.memberCount,
+      joinMode: c.joinMode,
+      theme: c.theme,
+      createdAt: c.createdAt,
+      plan: c.plan,
+    })
+    .from(c)
+    .leftJoin(schema.games, eq(schema.games.id, c.gameId))
+    .where(
+      and(
+        eq(c.visibility, 'public'),
+        isNull(c.deletedAt),
+        eq(c.nsfw, false),
+        inArray(
+          c.plan,
+          PLAN_IDS.filter((p) => planPerks(p).featured),
+        ),
+      ),
+    )
+    .orderBy(sql`random()`)
+    .limit(limit);
 }
 
 export async function searchCommunities(q: string, limit = 6) {

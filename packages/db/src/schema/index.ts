@@ -10,3 +10,4 @@ export * from './wiki';
 export * from './notifications';
 export * from './moderation';
 export * from './chat';
+export * from './billing';

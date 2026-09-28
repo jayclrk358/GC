@@ -12,6 +12,7 @@ import {
   PanelLeftOpen,
   Plus,
   Server,
+  ShoppingBag,
   type LucideIcon,
 } from 'lucide-react';
 import { Tooltip } from '@/components/ui/tooltip';
@@ -153,6 +154,9 @@ export function SidebarContent({
               onNavigate={onNavigate}
             >
               <NavIcon icon={Server} />
+            </Item>
+            <Item href="/store" label={t('store')} collapsed={collapsed} onNavigate={onNavigate}>
+              <NavIcon icon={ShoppingBag} />
             </Item>
           </ul>
         </nav>

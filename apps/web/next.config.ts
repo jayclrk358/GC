@@ -24,8 +24,8 @@ const nextConfig: NextConfig = {
   experimental: {
     serverActions: { bodySizeLimit: '12mb' },
     // Uploads pass through the proxy (CSP), which otherwise cuts bodies off at 10 MB; chat
-    // videos can be up to 50 MB.
-    proxyClientMaxBodySize: '55mb',
+    // videos can be up to 150 MB on the Pro plan.
+    proxyClientMaxBodySize: '160mb',
   },
 };
 

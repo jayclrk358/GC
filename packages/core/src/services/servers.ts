@@ -19,11 +19,11 @@ import { QUEUES, enqueue } from '../queues';
 import { enforceRateLimit } from '../ratelimit';
 import { POLL } from '../servers/schedule';
 import { audit } from './audit';
+import { assertUnderPlanLimit } from './billing';
 import { cached } from '../cache';
 
 const MAX_UNVERIFIED_PER_USER = 5;
 const MAX_ENDPOINTS_PER_IP = 20;
-const MAX_SERVERS_PER_COMMUNITY = 25;
 
 export interface ServerView {
   id: string;
@@ -275,12 +275,7 @@ export async function addServer(ctx: MemberContext, raw: unknown): Promise<Serve
         isNull(schema.gameServers.deletedAt),
       ),
     );
-  if (communityCount >= MAX_SERVERS_PER_COMMUNITY) {
-    throw new AppError(
-      'forbidden',
-      `A community can link up to ${MAX_SERVERS_PER_COMMUNITY} servers.`,
-    );
-  }
+  await assertUnderPlanLimit(ctx.community.id, 'servers', communityCount, 'linked servers');
   const [{ n: unverified } = { n: 0 }] = await db
     .select({ n: sql<number>`count(*)::int` })
     .from(schema.gameServers)

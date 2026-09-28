@@ -15,12 +15,14 @@
  *   GET  /go/:name     a redirect to /page/:name
  *   GET  /og.png       the preview image
  *   GET  /votes        votes the fake NuVotifier accepted, newest last
+ *   Stripe (HTTP)                     : control port, see fake-stripe.ts (STRIPE_API_URL)
  * Requires SERVER_QUERY_ALLOW_PRIVATE=true in the app, because these listen on localhost.
  */
 import { createServer as createHttpServer } from 'node:http';
 import { createServer as createTcpServer } from 'node:net';
 import { createSocket } from 'node:dgram';
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
+import { handleStripe } from './fake-stripe';
 
 const MC_PORT = Number(process.env.FAKE_MC_PORT ?? 25590);
 const A2S_PORT = Number(process.env.FAKE_A2S_PORT ?? 27090);
@@ -221,6 +223,7 @@ const OG_PNG = Buffer.from(
 );
 
 const ctl = createHttpServer((req, res) => {
+  if (handleStripe(req, res)) return;
   if (req.method === 'GET' && req.url === '/health') {
     res
       .writeHead(200, { 'content-type': 'application/json' })

@@ -1,4 +1,4 @@
-import { MAX_VIDEO_BYTES, randomToken } from '@magnox/shared';
+import { PLAN_LIMITS, randomToken } from '@magnox/shared';
 import { badRequest } from './errors';
 import type { ProcessedImage } from './images';
 
@@ -48,11 +48,15 @@ function mp4Size(buf: Buffer): { width: number; height: number } {
 
 /**
  * Accept a video upload as-is (no transcoding): MP4 or WebM only, checked by content, up to
- * MAX_VIDEO_BYTES. Browsers play these directly from the media origin.
+ * `maxBytes` (the community plan's limit; Free's by default). Browsers play these directly from
+ * the media origin.
  */
-export function processVideo(input: Buffer): ProcessedImage {
-  if (input.byteLength > MAX_VIDEO_BYTES) {
-    throw badRequest(`That video is too large (max ${MAX_VIDEO_BYTES / 1_000_000} MB).`);
+export function processVideo(
+  input: Buffer,
+  maxBytes = PLAN_LIMITS.free.videoMb * 1_000_000,
+): ProcessedImage {
+  if (input.byteLength > maxBytes) {
+    throw badRequest(`That video is too large (max ${Math.round(maxBytes / 1_000_000)} MB).`);
   }
   const kind = sniff(input);
   if (!kind) throw badRequest('Videos must be MP4 or WebM files.');

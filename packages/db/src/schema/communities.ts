@@ -53,6 +53,10 @@ export const communities = pgTable(
     nav: jsonb('nav').$type<NavConfig>().notNull(),
     settings: jsonb('settings').$type<CommunitySettings>().notNull().default({}),
     memberCount: integer('member_count').notNull().default(0),
+    /** Effective plan, kept in step with community_subscriptions (see core billing). */
+    plan: text('plan', { enum: ['free', 'plus', 'pro'] })
+      .notNull()
+      .default('free'),
     permVersion: integer('perm_version').notNull().default(0),
     createdAt: createdAt(),
     updatedAt: updatedAt(),

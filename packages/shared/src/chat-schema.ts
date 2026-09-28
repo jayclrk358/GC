@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { MAX_ATTACHMENTS } from './chat';
+import { MAX_PLAN_LIMITS } from './plans';
 import { richDocSchema } from './richtext-schema';
 
 // Input validation for chat messages (constants and helpers are in chat.ts).
@@ -12,7 +12,7 @@ export const attachmentInputSchema = z.object({
 export const messageInputSchema = z.object({
   body: richDocSchema,
   replyToId: z.string().uuid().nullable().default(null),
-  attachments: z.array(attachmentInputSchema).max(MAX_ATTACHMENTS).default([]),
+  attachments: z.array(attachmentInputSchema).max(MAX_PLAN_LIMITS.attachments).default([]),
   /** Client-generated id; a retried send with the same nonce returns the first message. */
   nonce: z
     .string()

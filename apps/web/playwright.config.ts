@@ -6,6 +6,14 @@ const env = {
   SERVER_QUERY_ALLOW_PRIVATE: 'true',
   // The fixture server stands in for Roblox's public APIs.
   ROBLOX_API_URL: 'http://127.0.0.1:25591/roblox',
+  // ...and for Stripe (see apps/worker/src/fixtures/fake-stripe.ts).
+  STRIPE_SECRET_KEY: 'sk_test_fixture',
+  STRIPE_WEBHOOK_SECRET: 'whsec_fixture',
+  STRIPE_PRICE_PLUS_MONTHLY: 'price_plus_month',
+  STRIPE_PRICE_PLUS_YEARLY: 'price_plus_year',
+  STRIPE_PRICE_PRO_MONTHLY: 'price_pro_month',
+  STRIPE_PRICE_PRO_YEARLY: 'price_pro_year',
+  STRIPE_API_URL: 'http://127.0.0.1:25591',
 };
 const chromiumPath = process.env.PW_CHROMIUM_PATH;
 

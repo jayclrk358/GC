@@ -41,6 +41,16 @@ const schema = z.object({
     .default('https://challenges.cloudflare.com/turnstile/v0/siteverify'),
   /** Only for tests: a stand-in for Roblox's public APIs (apis. and games.roblox.com). */
   ROBLOX_API_URL: z.string().default(''),
+  /** Stripe: payments for community plans. Leave blank to turn the store off. */
+  STRIPE_SECRET_KEY: z.string().default(''),
+  STRIPE_WEBHOOK_SECRET: z.string().default(''),
+  /** Stripe Price ids (price_...) for each plan and billing interval. */
+  STRIPE_PRICE_PLUS_MONTHLY: z.string().default(''),
+  STRIPE_PRICE_PLUS_YEARLY: z.string().default(''),
+  STRIPE_PRICE_PRO_MONTHLY: z.string().default(''),
+  STRIPE_PRICE_PRO_YEARLY: z.string().default(''),
+  /** Only for tests: a stand-in for Stripe's API (the worker's fixture server). */
+  STRIPE_API_URL: z.string().default(''),
   PLATFORM_ADMIN_EMAILS: z.string().default(''),
   DISABLE_RATE_LIMITS: bool,
   WORKER_HEALTH_PORT: z.coerce.number().int().default(3002),

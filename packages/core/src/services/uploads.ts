@@ -1,12 +1,13 @@
 import { inArray } from 'drizzle-orm';
 import { db, schema } from '@magnox/db';
-import { newId, Permission } from '@magnox/shared';
+import { newId, Permission, planLimits } from '@magnox/shared';
 import { getMemberContext, requirePerm } from '../access';
 import { processImage, UPLOAD_PURPOSES, type UploadPurpose } from '../images';
 import { processVideo } from '../video';
 import { AppError } from '../errors';
 import { enforceRateLimit } from '../ratelimit';
 import { mediaUrl, storage } from '../storage';
+import { communityPlan } from './billing';
 
 export interface UploadResult {
   key: string;
@@ -25,6 +26,22 @@ const COMMUNITY_PURPOSES = new Set<UploadPurpose>([
   'emoji',
   'role-icon',
 ]);
+
+/** Uploads whose size limit grows with the community's plan. */
+const PLAN_SIZED = new Set<UploadPurpose>(['content', 'video', 'gallery', 'banner', 'background']);
+
+/** The community plan's size limit for this upload, if it's for a community the uploader is in. */
+async function planUploadLimit(opts: {
+  userId: string;
+  purpose: UploadPurpose;
+  communityId?: string | null;
+}): Promise<number | undefined> {
+  if (!opts.communityId || !PLAN_SIZED.has(opts.purpose)) return undefined;
+  const ctx = await getMemberContext({ id: opts.communityId }, opts.userId).catch(() => null);
+  if (!ctx?.isMember) return undefined;
+  const limits = planLimits(await communityPlan(opts.communityId));
+  return (opts.purpose === 'video' ? limits.videoMb : limits.imageMb) * 1_000_000;
+}
 
 export function isUploadPurpose(p: string): p is UploadPurpose {
   return p in UPLOAD_PURPOSES;
@@ -64,10 +81,11 @@ export async function saveUpload(opts: {
           : Permission.MANAGE_COMMUNITY,
     );
   }
+  const maxBytes = await planUploadLimit(opts);
   const img =
     opts.purpose === 'video'
-      ? processVideo(opts.data)
-      : await processImage(opts.data, opts.purpose);
+      ? processVideo(opts.data, maxBytes)
+      : await processImage(opts.data, opts.purpose, maxBytes);
   await storage().put(img.key, img.body, img.mime);
   if (img.poster) await storage().put(img.poster.key, img.poster.body, 'image/webp');
   await db.insert(schema.uploads).values({

@@ -8,6 +8,7 @@ import {
   newId,
   parsePermissions,
   Permission,
+  MAX_PLAN_LIMITS,
 } from '@magnox/shared';
 import { z } from 'zod';
 import {
@@ -18,6 +19,7 @@ import {
 } from '../access';
 import { AppError, conflict, forbidden, notFound } from '../errors';
 import { audit } from './audit';
+import { assertUnderPlanLimit } from './billing';
 
 export type ChannelRow = typeof schema.channels.$inferSelect;
 
@@ -129,8 +131,7 @@ export async function createChannel(ctx: MemberContext, raw: unknown): Promise<C
   requirePerm(ctx, Permission.MANAGE_CHANNELS);
   const input = channelInputSchema.parse(raw);
   const existing = await listChannelRows(ctx.community.id);
-  if (existing.length >= 200)
-    throw new AppError('forbidden', 'A community can have up to 200 channels.');
+  await assertUnderPlanLimit(ctx.community.id, 'channels', existing.length, 'channels');
   if (input.type !== 'category') {
     await assertCategory(ctx.community.id, input.parentId);
     if (await nameTaken(ctx.community.id, input.name)) {
@@ -237,7 +238,7 @@ export async function deleteChannel(ctx: MemberContext, id: string): Promise<voi
 /** Save a new order for all channels (and categories). Parents are not changed here. */
 export async function reorderChannels(ctx: MemberContext, rawIds: unknown): Promise<void> {
   requirePerm(ctx, Permission.MANAGE_CHANNELS);
-  const ids = z.array(z.string().uuid()).max(200).parse(rawIds);
+  const ids = z.array(z.string().uuid()).max(MAX_PLAN_LIMITS.channels).parse(rawIds);
   const rows = await listChannelRows(ctx.community.id);
   const set = new Set(rows.map((r) => r.id));
   if (ids.length !== set.size || !ids.every((i) => set.has(i))) {

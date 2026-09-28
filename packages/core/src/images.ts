@@ -1,5 +1,5 @@
 import sharp, { type Metadata } from 'sharp';
-import { MAX_VIDEO_BYTES, randomToken } from '@magnox/shared';
+import { PLAN_LIMITS, randomToken } from '@magnox/shared';
 import { badRequest } from './errors';
 
 export const UPLOAD_PURPOSES = {
@@ -20,7 +20,12 @@ export const UPLOAD_PURPOSES = {
   },
   preview: { maxBytes: 5_000_000, width: 640, height: 640, fit: 'inside' as const },
   // Chat videos: stored as uploaded (see video.ts); the size fields don't apply.
-  video: { maxBytes: MAX_VIDEO_BYTES, width: 0, height: 0, fit: 'inside' as const },
+  video: {
+    maxBytes: PLAN_LIMITS.free.videoMb * 1_000_000,
+    width: 0,
+    height: 0,
+    fit: 'inside' as const,
+  },
 } as const;
 
 export type UploadPurpose = keyof typeof UPLOAD_PURPOSES;
@@ -45,10 +50,16 @@ function newKey(ext: 'webp'): string {
  * Validate and re-encode an uploaded image. Re-encoding strips EXIF/GPS metadata and
  * neutralises polyglot files. SVG and anything sharp can't decode are rejected.
  */
-export async function processImage(input: Buffer, purpose: UploadPurpose): Promise<ProcessedImage> {
+export async function processImage(
+  input: Buffer,
+  purpose: UploadPurpose,
+  /** A larger size limit than the purpose's own (a community plan's). */
+  maxBytes?: number,
+): Promise<ProcessedImage> {
   const spec = UPLOAD_PURPOSES[purpose];
-  if (input.byteLength > spec.maxBytes) {
-    throw badRequest(`That file is too large (max ${Math.round(spec.maxBytes / 1_000_000)} MB).`);
+  const max = Math.max(spec.maxBytes, maxBytes ?? 0);
+  if (input.byteLength > max) {
+    throw badRequest(`That file is too large (max ${Math.round(max / 1_000_000)} MB).`);
   }
   let meta: Metadata;
   try {
