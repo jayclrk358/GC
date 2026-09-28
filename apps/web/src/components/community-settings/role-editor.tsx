@@ -428,7 +428,14 @@ function NametagFields({
         backdrops={backdrops}
         onStyle={onBadgeStyle}
         preview={(view, scheme) => (
-          <RoleBadge name={roleName} color={color} style={view} scheme={scheme} />
+          <RoleBadge
+            name={roleName}
+            color={color}
+            style={view}
+            scheme={scheme}
+            // On the preview's own background (the page's badge colour may not match it).
+            className="border-current/30 bg-transparent"
+          />
         )}
       />
       <p className="text-xs text-muted">{t('nametagNote')}</p>
