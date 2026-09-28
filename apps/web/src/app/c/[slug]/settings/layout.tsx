@@ -3,6 +3,7 @@ import { openReportCount } from '@magnox/core';
 import { loadCommunityForSettings } from '@/lib/community';
 import { NavLink } from '@/components/shell/nav-link';
 import { BackLink } from '@/components/ui/back-link';
+import { ScrollList } from '@/components/ui/scroll-list';
 
 export default async function CommunitySettingsLayout({
   children,
@@ -43,9 +44,9 @@ export default async function CommunitySettingsLayout({
   return (
     <div className="flex flex-col gap-6">
       <BackLink href={`/c/${slug}`}>{tBack('backTo', { name: community.name })}</BackLink>
-      <div className="grid gap-8 md:grid-cols-[13rem_1fr]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 md:grid-cols-[13rem_minmax(0,1fr)]">
         <nav aria-label={t('navLabel')}>
-          <ul className="flex gap-1 overflow-x-auto md:flex-col">
+          <ScrollList className="relative flex gap-1 overflow-x-auto md:flex-col">
             {links.map((l) => (
               <li key={l.href}>
                 <NavLink href={l.href} exact={l.exact}>
@@ -61,7 +62,7 @@ export default async function CommunitySettingsLayout({
                 </NavLink>
               </li>
             ))}
-          </ul>
+          </ScrollList>
         </nav>
         <div className="min-w-0">{children}</div>
       </div>

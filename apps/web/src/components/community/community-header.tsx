@@ -8,6 +8,7 @@ import { formatCount } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/misc';
 import { NavLink } from '@/components/shell/nav-link';
+import { ScrollList } from '@/components/ui/scroll-list';
 import { JoinButton } from './join-button';
 import { InviteButton } from './invite-button';
 import { MuteMenu } from '@/components/notifications/mute-menu';
@@ -63,11 +64,13 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
             )}
           </div>
         )}
+        {/* Phones: logo and buttons share the first row, the name and details get the full
+            width below. Wider screens (and the dense chat header) keep everything on one row. */}
         <div
           className={
             compact
-              ? 'flex flex-wrap items-center gap-4 py-5 group-data-[dense=true]/dense:gap-3 group-data-[dense=true]/dense:py-2'
-              : 'flex flex-wrap items-end gap-4 px-2 pb-4 group-data-[dense=true]/dense:items-center group-data-[dense=true]/dense:gap-3 group-data-[dense=true]/dense:py-2 sm:px-4'
+              ? 'flex flex-wrap items-center gap-x-4 gap-y-3 py-5 group-data-[dense=true]/dense:gap-3 group-data-[dense=true]/dense:py-2'
+              : 'flex flex-wrap items-end gap-x-4 gap-y-3 px-2 pb-4 group-data-[dense=true]/dense:items-center group-data-[dense=true]/dense:gap-3 group-data-[dense=true]/dense:py-2 sm:px-4'
           }
         >
           {/* The logo overlaps the banner. The banner is positioned, so without its own
@@ -76,7 +79,7 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
             className={
               compact
                 ? 'relative z-10'
-                : 'relative z-10 -mt-10 group-data-[dense=true]/dense:mt-0 sm:-mt-12 sm:group-data-[dense=true]/dense:mt-0'
+                : 'relative z-10 -mt-7 group-data-[dense=true]/dense:mt-0 sm:-mt-12 sm:group-data-[dense=true]/dense:mt-0'
             }
           >
             {icon ? (
@@ -97,8 +100,8 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
               </span>
             )}
           </div>
-          <div className="flex min-w-0 flex-1 flex-col gap-1 pt-2 group-data-[dense=true]/dense:gap-0 group-data-[dense=true]/dense:pt-0">
-            <h1 className="text-2xl font-extrabold group-data-[dense=true]/dense:text-lg sm:text-3xl sm:group-data-[dense=true]/dense:text-lg">
+          <div className="order-last flex min-w-0 basis-full flex-col gap-1 group-data-[dense=true]/dense:order-none group-data-[dense=true]/dense:flex-1 group-data-[dense=true]/dense:basis-0 group-data-[dense=true]/dense:gap-0 sm:order-none sm:flex-1 sm:basis-0 sm:pt-2 sm:group-data-[dense=true]/dense:pt-0">
+            <h1 className="text-2xl font-extrabold break-words group-data-[dense=true]/dense:truncate group-data-[dense=true]/dense:text-lg sm:text-3xl sm:group-data-[dense=true]/dense:text-lg">
               {community.name}
             </h1>
             {community.tagline && (
@@ -114,7 +117,7 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
                 </li>
               )}
               {showMembers && (
-                <li className="flex items-center gap-1">
+                <li className="flex items-center gap-1 whitespace-nowrap">
                   <Users className="size-4" aria-hidden />
                   {t('memberCount', {
                     count: community.memberCount,
@@ -122,12 +125,12 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
                   })}
                 </li>
               )}
-              <li className="flex items-center gap-1">
+              <li className="flex items-center gap-1 whitespace-nowrap">
                 <span aria-hidden className="inline-block size-2 rounded-full bg-success" />
                 {t('onlineCount', { count: online })}
               </li>
               {community.region !== 'global' && (
-                <li className="flex items-center gap-1">
+                <li className="flex items-center gap-1 whitespace-nowrap">
                   <Globe2 className="size-4" aria-hidden />
                   {t(`regions.${community.region}`)}
                 </li>
@@ -139,7 +142,7 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
               )}
             </ul>
           </div>
-          <div className="flex flex-wrap items-center gap-2 pb-1">
+          <div className="ms-auto flex flex-wrap items-center justify-end gap-2 pb-1 group-data-[dense=true]/dense:pb-0 sm:ms-0">
             {play && (
               <Button asChild variant="play" className="mx-press">
                 <a
@@ -186,9 +189,9 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
         </div>
         <nav
           aria-label={t('sections', { name: community.name })}
-          className="overflow-x-auto border-b border-border"
+          className="border-b border-border"
         >
-          <ul className="flex gap-1">
+          <ScrollList className="relative flex gap-1 overflow-x-auto">
             {nav.map((item) => (
               <li key={item.tab}>
                 <NavLink
@@ -201,7 +204,7 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
                 </NavLink>
               </li>
             ))}
-          </ul>
+          </ScrollList>
         </nav>
       </div>
     </header>

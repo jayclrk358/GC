@@ -44,8 +44,9 @@ export function InviteButton({ communityId }: { communityId: string }) {
       }}
     >
       <DialogTrigger asChild>
-        <Button variant="outline">
-          <UserPlus aria-hidden /> {t('invite')}
+        <Button variant="outline" className="max-sm:px-3">
+          <UserPlus aria-hidden />
+          <span className="max-sm:sr-only">{t('invite')}</span>
         </Button>
       </DialogTrigger>
       <DialogContent title={t('title')} description={t('description')}>

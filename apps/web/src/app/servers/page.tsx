@@ -29,7 +29,7 @@ export default async function ServersPage({ searchParams }: { searchParams: Prom
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
       <AutoRefresh every={30} away={30} />
       <PageHeader title={t('browserTitle')} description={t('browserDescription')} />
-      <div className="grid gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start">
         <ServerFilters games={games} values={sp} />
         <div className="flex min-w-0 flex-col gap-4">
           <div className="flex flex-wrap items-center gap-3">

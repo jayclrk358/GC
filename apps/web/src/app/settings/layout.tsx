@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { NavLink } from '@/components/shell/nav-link';
 import { HistoryBack } from '@/components/ui/history-back';
+import { ScrollList } from '@/components/ui/scroll-list';
 
 export default async function SettingsLayout({ children }: { children: React.ReactNode }) {
   const t = await getTranslations('settings');
@@ -15,18 +16,18 @@ export default async function SettingsLayout({ children }: { children: React.Rea
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8">
       <HistoryBack fallback="/" />
-      <div className="grid gap-8 md:grid-cols-[14rem_1fr]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 md:grid-cols-[14rem_minmax(0,1fr)]">
         <nav aria-label={t('nav')}>
           <p className="mb-3 px-3 text-xs font-bold tracking-wide text-muted uppercase">
             {t('title')}
           </p>
-          <ul className="flex gap-1 overflow-x-auto md:flex-col">
+          <ScrollList className="relative flex gap-1 overflow-x-auto md:flex-col">
             {links.map((l) => (
               <li key={l.href}>
                 <NavLink href={l.href}>{l.label}</NavLink>
               </li>
             ))}
-          </ul>
+          </ScrollList>
         </nav>
         <div className="min-w-0">{children}</div>
       </div>

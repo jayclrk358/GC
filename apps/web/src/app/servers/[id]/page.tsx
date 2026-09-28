@@ -120,7 +120,7 @@ export default async function ServerPage({ params }: Params) {
         <Alert tone="warning">{t('downSince', { duration: downFor })}</Alert>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="flex min-w-0 flex-col gap-6">
           {server.description && (
             <p className="text-lg whitespace-pre-line text-muted">{server.description}</p>

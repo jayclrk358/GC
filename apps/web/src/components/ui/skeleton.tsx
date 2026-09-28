@@ -16,7 +16,7 @@ export function FilterGridSkeleton({ label }: { label: string }) {
         <Skeleton className="h-9 w-72 max-w-full" />
         <Skeleton className="h-5 w-96 max-w-full" />
       </div>
-      <div className="grid gap-6 lg:grid-cols-[15rem_minmax(0,1fr)]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[15rem_minmax(0,1fr)]">
         <Skeleton className="h-64 rounded-2xl max-lg:h-24" />
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 6 }, (_, i) => (

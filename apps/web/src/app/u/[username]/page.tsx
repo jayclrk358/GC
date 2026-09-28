@@ -143,7 +143,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
           </div>
         )}
 
-        <div className="mt-8 grid gap-8 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <div className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-8 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
           <div className="flex flex-col gap-8">
             {profile.bio && <p className="text-lg whitespace-pre-line">{profile.bio}</p>}
 

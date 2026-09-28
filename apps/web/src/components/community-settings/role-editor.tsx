@@ -149,7 +149,7 @@ export function RoleEditor({
   const editable = draft ? canManage(draft) : false;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[16rem_1fr]">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
       <p role="status" aria-live="polite" className="sr-only">
         {status}
       </p>

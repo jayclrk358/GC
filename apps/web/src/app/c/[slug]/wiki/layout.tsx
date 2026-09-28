@@ -20,7 +20,7 @@ export default async function WikiLayout({
   const tree = await listWikiTree(data.ctx);
   const base = `/c/${slug}/wiki`;
   return (
-    <div className="grid gap-8 lg:grid-cols-[15rem_minmax(0,1fr)]">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[15rem_minmax(0,1fr)]">
       <aside
         aria-label={t('sidebar')}
         className="flex flex-col gap-4 lg:sticky lg:top-20 lg:self-start"
