@@ -46,7 +46,7 @@ export async function StaffBlock({
               key={p.userId}
               className="flex items-center gap-3 rounded-ui border border-border bg-surface p-3"
             >
-              <Avatar src={p.image} name={p.nickname || p.name} size={44} />
+              <Avatar src={p.image} name={p.nickname || p.name} size={44} presence={p.userId} />
               <div className="min-w-0">
                 <p className="truncate font-semibold">
                   {p.username ? (

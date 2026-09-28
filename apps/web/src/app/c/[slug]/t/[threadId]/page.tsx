@@ -216,7 +216,12 @@ export default async function ThreadPage({
                   }
                 >
                   <header className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1">
-                    <Avatar src={p.author.image} name={authorName(p)} size={36} />
+                    <Avatar
+                      src={p.author.image}
+                      name={authorName(p)}
+                      size={36}
+                      presence={p.author.id}
+                    />
                     <div className="min-w-0">
                       <p className="flex flex-wrap items-center gap-2">
                         {p.author.username ? (

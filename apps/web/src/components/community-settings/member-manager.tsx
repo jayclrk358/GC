@@ -78,7 +78,7 @@ export function MemberManager({
       <ul className="divide-y divide-border rounded-ui-lg border border-border bg-surface">
         {members.map((m) => (
           <li key={m.userId} className="flex flex-wrap items-center gap-3 p-3">
-            <Avatar src={m.image} name={m.name} size={36} />
+            <Avatar src={m.image} name={m.name} size={36} presence={m.userId} />
             <div className="min-w-0 flex-1">
               <p className="flex items-center gap-1 font-semibold">
                 <StyledName

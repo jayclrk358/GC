@@ -807,6 +807,36 @@
   .prose-mx {
     overflow-wrap: anywhere;
   }
+  /* Presence dots on avatars: green online, orange crescent idle, red ring offline (shapes
+     differ so the status doesn't rest on colour alone). The halo is the card colour. */
+  .mx-presence {
+    position: absolute;
+    inset-inline-end: 0;
+    bottom: 0;
+    width: max(0.625rem, 28%);
+    height: max(0.625rem, 28%);
+    border-radius: 9999px;
+    background: #16a34a;
+    box-shadow: 0 0 0 2px var(--c-surface);
+    forced-color-adjust: none;
+  }
+  .mx-presence[data-presence='idle'] {
+    background: #ea580c;
+  }
+  .mx-presence[data-presence='idle']::after {
+    content: '';
+    position: absolute;
+    top: -14%;
+    left: -14%;
+    width: 64%;
+    height: 64%;
+    border-radius: 9999px;
+    background: var(--c-surface);
+  }
+  .mx-presence[data-presence='offline'] {
+    background: var(--c-surface);
+    border: 0.19rem solid #dc2626;
+  }
   /* Chat pages fill the window exactly, so the footer would only push them out of view. */
   body:has([data-dense='true']) [data-site-footer] {
     display: none;

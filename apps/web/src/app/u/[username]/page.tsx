@@ -105,6 +105,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
               name={profile.name}
               size={112}
               className="border-4 border-bg"
+              presence={profile.id}
             />
           </div>
           <div className="flex min-w-0 flex-col gap-1 pb-2">

@@ -63,7 +63,12 @@ export async function MemberList({
                     key={m.userId}
                     className="flex items-center gap-3 rounded-ui border border-border bg-surface p-3"
                   >
-                    <Avatar src={m.image} name={m.nickname || m.name} size={40} />
+                    <Avatar
+                      src={m.image}
+                      name={m.nickname || m.name}
+                      size={40}
+                      presence={m.userId}
+                    />
                     <div className="min-w-0 flex-1">
                       <p className="flex items-center gap-1 truncate font-semibold">
                         {m.username ? (

@@ -304,13 +304,7 @@ function MembersPanel() {
       <ul className="flex flex-col">
         {list.map((m) => (
           <li key={m.id} className="flex items-center gap-2 rounded-ui-sm px-2 py-1.5">
-            <span className="relative">
-              <Avatar src={m.image} name={m.nickname || m.name} size={28} />
-              <span
-                aria-hidden
-                className="absolute -end-0.5 -bottom-0.5 size-2.5 rounded-full bg-success ring-2 ring-surface"
-              />
-            </span>
+            <Avatar src={m.image} name={m.nickname || m.name} size={28} presence={m.id} />
             <span className="min-w-0">
               {m.username ? (
                 <UserLink

@@ -115,7 +115,13 @@ export const MessageItem = React.memo(function MessageItem({
               {time}
             </span>
           ) : (
-            <Avatar src={m.author?.image} name={name} size={36} />
+            <Avatar
+              src={m.author?.image}
+              name={name}
+              size={36}
+              presence={m.authorId}
+              presenceLabelled={false}
+            />
           )}
         </div>
         <div className="min-w-0 flex-1">

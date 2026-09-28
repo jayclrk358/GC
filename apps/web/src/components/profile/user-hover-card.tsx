@@ -127,7 +127,13 @@ function CardBody({ card }: { card: ProfileCard }) {
       <div className="flex flex-col gap-3 px-4 pb-4">
         {/* Positioned so it draws over the banner it overlaps. */}
         <div className="relative -mt-8 w-fit rounded-full bg-surface">
-          <Avatar src={card.image} name={card.name} size={64} className="border-4 border-surface" />
+          <Avatar
+            src={card.image}
+            name={card.name}
+            size={64}
+            className="border-4 border-surface"
+            presence={card.id}
+          />
         </div>
         <div className="-mt-1 min-w-0">
           <p className="flex items-center gap-1.5 truncate text-lg leading-tight font-bold">

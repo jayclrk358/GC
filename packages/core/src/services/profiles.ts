@@ -313,6 +313,7 @@ export async function getProfileCard(
   ]);
   const bio = profile?.bio ?? '';
   return {
+    id: user.id,
     name: user.name,
     username: user.username!,
     image: user.image,

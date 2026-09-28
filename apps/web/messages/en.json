@@ -2292,5 +2292,10 @@
     "activated": "Thanks! {plan} is now on.",
     "failed": "That didn’t work. Please try again.",
     "compare": "Compare all plans"
+  },
+  "presence": {
+    "online": "Online",
+    "idle": "Idle",
+    "offline": "Offline"
   }
 }

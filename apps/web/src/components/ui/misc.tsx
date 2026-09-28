@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { cn, initials } from '@/lib/utils';
+import { PresenceDot } from '@/components/presence/presence';
 
 export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
@@ -50,19 +51,34 @@ export function Kbd({ className, ...props }: React.HTMLAttributes<HTMLElement>) 
 }
 
 export function Avatar({
-  src,
-  name,
-  size = 40,
-  className,
-  alt,
-}: {
+  presence,
+  presenceLabelled = true,
+  ...props
+}: AvatarProps & {
+  /** Show this user's online / idle / offline dot. */
+  presence?: string | null;
+  /** Give the dot a label for screen readers (off where it would be noise, like chat). */
+  presenceLabelled?: boolean;
+}) {
+  if (!presence) return <AvatarImage {...props} />;
+  return (
+    <span className="relative inline-flex shrink-0 rounded-full">
+      <AvatarImage {...props} />
+      <PresenceDot userId={presence} labelled={presenceLabelled} />
+    </span>
+  );
+}
+
+interface AvatarProps {
   src?: string | null;
   name: string;
   size?: number;
   className?: string;
   /** Decorative by default (the name is usually shown next to it). */
   alt?: string;
-}) {
+}
+
+function AvatarImage({ src, name, size = 40, className, alt }: AvatarProps) {
   const style = { width: size, height: size, fontSize: Math.max(10, size * 0.38) };
   if (src) {
     return (

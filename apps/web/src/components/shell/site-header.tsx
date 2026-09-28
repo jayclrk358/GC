@@ -49,6 +49,7 @@ export async function SiteHeader({
               <NotificationBell initialUnread={unread} />
               <UserMenu
                 user={{
+                  id: user.id,
                   name: user.name,
                   username: (user as { username?: string | null }).username ?? null,
                   image: user.image ?? null,

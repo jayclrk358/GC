@@ -44,7 +44,7 @@ export function PaletteButton() {
 export function UserMenu({
   user,
 }: {
-  user: { name: string; username: string | null; image: string | null };
+  user: { id: string; name: string; username: string | null; image: string | null };
 }) {
   const t = useTranslations('shell');
   const router = useRouter();
@@ -56,7 +56,13 @@ export function UserMenu({
           className="rounded-full"
           aria-label={t('userMenu', { name: user.name })}
         >
-          <Avatar src={user.image} name={user.name} size={34} />
+          <Avatar
+            src={user.image}
+            name={user.name}
+            size={34}
+            presence={user.id}
+            presenceLabelled={false}
+          />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
