@@ -289,6 +289,12 @@ test.describe('community hubs', () => {
       'gradient',
     );
     await expect(card.locator('.mx-name', { hasText: 'Legend' })).toBeVisible();
+    // Animations keep running after the pointer leaves.
+    await member.page.mouse.move(0, 0);
+    await member.page.waitForTimeout(500);
+    expect(
+      await name.evaluate((el) => el.getAnimations().some((a) => a.playState === 'running')),
+    ).toBe(true);
     await member.page.goto(`/c/${slug}/forum/general`);
     await expect(
       member.page.locator('.mx-name', { hasText: member.user.name }).first(),

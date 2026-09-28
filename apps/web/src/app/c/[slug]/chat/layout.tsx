@@ -17,7 +17,8 @@ export default async function ChatLayout({
     channels.map((c) => c.id),
   );
   return (
-    <div className="flex h-[calc(100dvh-9.5rem)] min-h-[26rem] flex-col overflow-hidden rounded-ui-lg border border-border bg-surface md:flex-row">
+    // Fills what's left of the window under the community header (see DenseOnChat).
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-ui-lg border border-border bg-surface md:flex-row">
       <ChannelSidebar
         slug={slug}
         categories={tree.categories

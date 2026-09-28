@@ -1334,7 +1334,7 @@
     "previewLight": "On a light background:",
     "previewDark": "On a dark background:",
     "previewName": "Member name",
-    "nametagNote": "Colours are adjusted so names stay readable. Animations play briefly when a name appears and while it’s hovered. People who turn off name effects, use high contrast or reduce motion see plain or still names.",
+    "nametagNote": "Colours are adjusted so names stay readable. Animations loop with a short rest between moves. People who turn off name effects, use high contrast or reduce motion see plain or still names.",
     "secondColorFor": {
       "gradient": "The gradient runs from the role colour to this one.",
       "neon": "The colour of the neon glow around the name.",

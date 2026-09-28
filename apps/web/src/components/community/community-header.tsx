@@ -39,7 +39,7 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
 
   return (
     <header>
-      <div className="mx-auto max-w-6xl px-4 pt-4 group-data-[dense=true]/dense:max-w-7xl group-data-[dense=true]/dense:pt-0 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[100rem] px-4 pt-4 group-data-[dense=true]/dense:pt-0 sm:px-6 lg:px-8">
         {!compact && (
           <div
             className="relative h-36 overflow-hidden rounded-3xl border border-border group-data-[dense=true]/dense:hidden sm:h-56"

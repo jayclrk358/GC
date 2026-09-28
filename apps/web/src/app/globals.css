@@ -276,17 +276,12 @@
     box-decoration-break: clone;
   }
 
-  /* Animations play twice when a name appears, and keep going while it's hovered. */
+  /* Animations loop, with a rest between moves so a page full of names stays calm. They stop
+     for reduced motion, high contrast and the "name effects" preference. */
   .mx-name[data-anim] {
     animation-duration: 2.4s;
-    animation-iteration-count: 2;
-    animation-timing-function: linear;
-  }
-  .mx-name[data-anim]:hover,
-  .mx-name[data-anim]:hover .mx-name-letter,
-  .mx-name[data-anim]:hover::before,
-  .mx-name[data-anim]:hover::after {
     animation-iteration-count: infinite;
+    animation-timing-function: linear;
   }
   /* Moving names need a box of their own. */
   .mx-name:is(
@@ -318,7 +313,7 @@
   }
   .mx-name[data-anim='bounce'] {
     animation-name: mx-name-bounce;
-    animation-duration: 1.2s;
+    animation-duration: 2.4s;
     animation-timing-function: ease-out;
   }
   .mx-name[data-anim='float'] {
@@ -328,16 +323,16 @@
   }
   .mx-name[data-anim='jelly'] {
     animation-name: mx-name-jelly;
-    animation-duration: 1s;
+    animation-duration: 2.4s;
     animation-timing-function: ease-in-out;
   }
   .mx-name[data-anim='shake'] {
     animation-name: mx-name-shake;
-    animation-duration: 0.6s;
+    animation-duration: 2.4s;
   }
   .mx-name[data-anim='glitch'] {
     animation-name: mx-name-glitch;
-    animation-duration: 1.2s;
+    animation-duration: 3s;
     animation-timing-function: steps(1, end);
   }
   .mx-name[data-anim='flicker'] {
@@ -345,7 +340,7 @@
     animation-duration: 2.4s;
   }
   .mx-name[data-anim='wave'] .mx-name-letter {
-    animation: mx-name-wave 1.4s ease-in-out 2;
+    animation: mx-name-wave 2.4s ease-in-out infinite;
     animation-delay: calc(var(--i) * 70ms);
   }
   .mx-name[data-anim='sparkle'] {
@@ -361,7 +356,7 @@
     -webkit-text-fill-color: var(--mx-n2);
     opacity: 0;
     pointer-events: none;
-    animation: mx-name-twinkle 1.4s ease-in-out 2;
+    animation: mx-name-twinkle 2.4s ease-in-out infinite;
   }
   .mx-name[data-anim='sparkle']::before {
     top: -0.45em;
@@ -370,7 +365,7 @@
   .mx-name[data-anim='sparkle']::after {
     bottom: -0.2em;
     inset-inline-start: -0.55em;
-    animation-delay: 0.7s;
+    animation-delay: 1.2s;
   }
   @keyframes mx-name-flow {
     to {
@@ -397,14 +392,14 @@
   }
   @keyframes mx-name-bounce {
     0%,
-    45%,
+    30%,
     100% {
       transform: none;
     }
-    20% {
+    10% {
       transform: translateY(-0.35em);
     }
-    35% {
+    20% {
       transform: translateY(-0.1em);
     }
   }
@@ -415,37 +410,39 @@
   }
   @keyframes mx-name-jelly {
     0%,
+    40%,
     100% {
       transform: none;
     }
-    30% {
+    10% {
       transform: scale(1.12, 0.88);
     }
-    45% {
+    18% {
       transform: scale(0.92, 1.08);
     }
-    60% {
+    26% {
       transform: scale(1.04, 0.96);
     }
-    75% {
+    33% {
       transform: scale(0.98, 1.02);
     }
   }
   @keyframes mx-name-shake {
     0%,
+    25%,
     100% {
       transform: none;
     }
-    20% {
+    5% {
       transform: translateX(-0.06em) rotate(-2deg);
     }
-    40% {
+    10% {
       transform: translateX(0.06em) rotate(2deg);
     }
-    60% {
+    15% {
       transform: translateX(-0.04em) rotate(-1deg);
     }
-    80% {
+    20% {
       transform: translateX(0.03em) rotate(1deg);
     }
   }
@@ -488,11 +485,11 @@
   }
   @keyframes mx-name-wave {
     0%,
-    50%,
+    30%,
     100% {
       transform: none;
     }
-    25% {
+    15% {
       transform: translateY(-0.28em);
     }
   }
@@ -809,6 +806,14 @@
   }
   .prose-mx {
     overflow-wrap: anywhere;
+  }
+  /* Chat pages fill the window exactly, so the footer would only push them out of view. */
+  body:has([data-dense='true']) [data-site-footer] {
+    display: none;
+  }
+  /* Keep lines readable on wide pages; images, tables and code can use the full width. */
+  .prose-mx :is(p, ul, ol, blockquote, h2, h3, h4, h5, h6) {
+    max-width: 80ch;
   }
   .prose-mx > * + * {
     margin-top: 0.75em;

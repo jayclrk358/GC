@@ -46,6 +46,14 @@ test('pages fit a phone screen', async ({ page }) => {
     await expectNoSidewaysScroll(page, url);
   }
 
+  // Chat fills the screen exactly: the community header stays in view, the composer isn't cut off.
+  await page.goto(`/c/${slug}/chat/lounge`);
+  await expect(page.getByRole('textbox', { name: 'Message #lounge' })).toBeInViewport();
+  await expect(page.getByRole('heading', { level: 1 })).toBeInViewport();
+  expect(
+    await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight),
+  ).toBeLessThanOrEqual(1);
+
   // Settings tabs scroll sideways and keep the current one in view.
   await page.goto(`/c/${slug}/settings/roles`);
   const tabs = page.getByRole('navigation', { name: 'Community settings sections' });

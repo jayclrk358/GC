@@ -296,3 +296,16 @@ test.describe('chat', () => {
     }
   });
 });
+
+test('chat fills the window and keeps the community header in view', async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 768 });
+  await signUp(page, uniqueUser('fit'), '/new');
+  const { slug } = await createCommunity(page, { template: 'Game server' });
+  await openChat(page, slug);
+  for (let i = 0; i < 20; i++) await send(page, `Line ${i}`);
+  await page.mouse.move(800, 400);
+  await page.mouse.wheel(0, 4000);
+  await expect(composer(page)).toBeInViewport();
+  await expect(page.getByRole('heading', { level: 1 })).toBeInViewport();
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+});
