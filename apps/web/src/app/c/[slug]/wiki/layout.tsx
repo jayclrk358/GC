@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { FilePlus2, Search } from 'lucide-react';
-import { canEditWiki, listWikiTree } from '@magnox/core';
+import { canEditWiki } from '@magnox/core';
+import { loadWikiTree } from './_load';
 import { loadCommunity } from '@/lib/community';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +18,7 @@ export default async function WikiLayout({
   const { slug } = await params;
   const data = await loadCommunity(slug);
   const t = await getTranslations('wiki');
-  const tree = await listWikiTree(data.ctx);
+  const tree = await loadWikiTree(slug);
   const base = `/c/${slug}/wiki`;
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[15rem_minmax(0,1fr)]">

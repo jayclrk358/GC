@@ -40,22 +40,20 @@ export function ChannelSidebar({ slug, categories, initialUnreads, me, canManage
     }
   }
 
-  useRooms(
-    all.map((c) => `channel:${c.id}`),
-    {
-      'message:new': (p: { channelId: string; message: MessageView }) => {
-        if (p.channelId === active || !me || p.message.authorId === me.id) return;
-        const pinged = mentionsMe(p.message, me.id, me.roleIds);
-        setUnreads((u) => ({
-          ...u,
-          [p.channelId]: {
-            unread: true,
-            mentions: (u[p.channelId]?.mentions ?? 0) + (pinged ? 1 : 0),
-          },
-        }));
-      },
+  // Unread dots are only for signed-in people; visitors don't need every channel's messages.
+  useRooms(me ? all.map((c) => `channel:${c.id}`) : [], {
+    'message:new': (p: { channelId: string; message: MessageView }) => {
+      if (p.channelId === active || !me || p.message.authorId === me.id) return;
+      const pinged = mentionsMe(p.message, me.id, me.roleIds);
+      setUnreads((u) => ({
+        ...u,
+        [p.channelId]: {
+          unread: true,
+          mentions: (u[p.channelId]?.mentions ?? 0) + (pinged ? 1 : 0),
+        },
+      }));
     },
-  );
+  });
   useUserEvents(
     {
       'channel:read': (p: { channelId: string }) =>

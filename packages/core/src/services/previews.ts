@@ -53,10 +53,10 @@ async function fetchPreview(
         strictSize: true,
       });
       if (res.status < 400 && res.contentType.startsWith('image/')) {
-        const img = await processImage(res.body, 'preview');
         // Thumbnails are shown still, so an animated image keeps just its first frame.
+        const img = await processImage(res.body, 'preview');
         const key = previewImageKey(og.image);
-        await storage().put(key, img.poster?.body ?? img.body, 'image/webp');
+        await storage().put(key, img.body, 'image/webp');
         image = { imageKey: key, imageWidth: img.width, imageHeight: img.height };
       }
     } catch (err) {

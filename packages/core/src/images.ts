@@ -1,4 +1,8 @@
 import sharp, { type Metadata } from 'sharp';
+
+// Every image is different, so libvips' cache of recent operations only holds memory (tens of
+// MB per process) without ever being reused.
+sharp.cache(false);
 import {
   IMAGE_VARIANTS,
   PLAN_LIMITS,
@@ -27,7 +31,14 @@ export const UPLOAD_PURPOSES = {
   // Still of a video's opening frame, made by the uploader's browser; shown until it's played.
   poster: { maxBytes: 5_000_000, width: 1024, height: 1024, fit: 'inside' as const },
   // Link preview images, shown as small thumbnails beside the link.
-  preview: { maxBytes: 5_000_000, width: 320, height: 320, fit: 'inside' as const },
+  preview: {
+    maxBytes: 5_000_000,
+    width: 320,
+    height: 320,
+    fit: 'inside' as const,
+    // Shown still, so only the first frame of an animation is encoded.
+    still: true,
+  },
   // Chat videos: stored as uploaded (see video.ts); the size fields don't apply.
   video: {
     maxBytes: PLAN_LIMITS.free.videoMb * 1_000_000,
@@ -69,12 +80,14 @@ export async function processImage(
 ): Promise<ProcessedImage> {
   const spec = UPLOAD_PURPOSES[purpose];
   const max = Math.max(spec.maxBytes, maxBytes ?? 0);
+  // Pictures fetched for link previews end up tiny, so don't decode anything huge for them.
+  const limitInputPixels = purpose === 'preview' ? 16_000_000 : 50_000_000;
   if (input.byteLength > max) {
     throw badRequest(`That file is too large (max ${Math.round(max / 1_000_000)} MB).`);
   }
   let meta: Metadata;
   try {
-    meta = await sharp(input, { animated: true, limitInputPixels: 50_000_000 }).metadata();
+    meta = await sharp(input, { animated: true, limitInputPixels }).metadata();
   } catch {
     throw badRequest('That file is not a supported image.');
   }
@@ -82,7 +95,7 @@ export async function processImage(
     throw badRequest('Please upload a PNG, JPEG, WebP, AVIF or GIF image.');
   }
   const animated = (meta.pages ?? 1) > 1 && !('still' in spec && spec.still);
-  const pipeline = sharp(input, { animated, limitInputPixels: 50_000_000 })
+  const pipeline = sharp(input, { animated, limitInputPixels })
     .rotate()
     .resize({ width: spec.width, height: spec.height, fit: spec.fit, withoutEnlargement: true });
   const { data, info } = await pipeline

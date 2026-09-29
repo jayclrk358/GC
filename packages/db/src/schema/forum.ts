@@ -61,6 +61,10 @@ export const threads = pgTable(
   },
   (t) => [
     index('threads_channel_activity_idx').on(t.channelId, t.pinned, t.lastActivityAt),
+    // Latest activity per channel (forum overview) without the pinned split.
+    index('threads_channel_recent_idx')
+      .on(t.channelId, t.lastActivityAt)
+      .where(sql`deleted_at is null`),
     index('threads_community_idx').on(t.communityId, t.lastActivityAt),
     index('threads_author_idx').on(t.authorId),
     index('threads_search_idx').using('gin', t.search),
@@ -125,8 +129,8 @@ export const postReactions = pgTable(
     createdAt: createdAt(),
   },
   (t) => [
+    // Also serves lookups by post: it's the first column.
     primaryKey({ columns: [t.postId, t.userId, t.emoji] }),
-    index('post_reactions_post_idx').on(t.postId),
   ],
 );
 

@@ -24,8 +24,16 @@ export async function audit(tx: DbOrTx, entry: AuditEntry): Promise<void> {
     reason: entry.reason ?? null,
   });
   // Chat deletions already reach open channels as message events.
-  if (!entry.action.startsWith('message.')) communityChanged(entry.communityId, entry.actorId);
+  if (entry.action.startsWith('message.')) return;
+  communityChanged(
+    entry.communityId,
+    entry.actorId,
+    MEMBERSHIP_ACTIONS.has(entry.action) ? 'members' : 'content',
+  );
 }
+
+/** People leaving or being removed, which only the member list shows. */
+const MEMBERSHIP_ACTIONS = new Set(['member.leave', 'member.kick', 'member.ban', 'member.unban']);
 
 /** Shallow diff of changed keys, for audit entries. */
 export function diffOf<T extends Record<string, unknown>>(

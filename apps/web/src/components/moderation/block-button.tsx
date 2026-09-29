@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Ban } from 'lucide-react';
@@ -20,7 +19,6 @@ export function BlockButton({
   blocked: boolean;
 }) {
   const t = useTranslations('privacy');
-  const router = useRouter();
   const [confirm, setConfirm] = React.useState(false);
   const [pending, setPending] = React.useState(false);
 
@@ -33,8 +31,8 @@ export function BlockButton({
       toast.error(r.error);
       return;
     }
+    // The action sends back the updated page itself.
     toast.success(block ? t('blocked', { name }) : t('unblocked', { name }));
-    router.refresh();
   }
 
   if (blocked) {

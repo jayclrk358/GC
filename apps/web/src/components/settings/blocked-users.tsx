@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -14,7 +13,6 @@ export function BlockedUsers({
   users: { userId: string; name: string; username: string | null; image: string | null }[];
 }) {
   const t = useTranslations('privacy');
-  const router = useRouter();
   if (!users.length) return <p className="text-sm text-muted">{t('noneBlocked')}</p>;
   return (
     <ul className="divide-y divide-border">
@@ -35,11 +33,10 @@ export function BlockedUsers({
             variant="outline"
             aria-label={t('unblockNamed', { name: u.name })}
             onClick={async () => {
+              // The action sends back the updated list itself.
               const r = await unblockUserAction(u.userId);
-              if (r.ok) {
-                toast.success(t('unblocked', { name: u.name }));
-                router.refresh();
-              } else toast.error(r.error);
+              if (r.ok) toast.success(t('unblocked', { name: u.name }));
+              else toast.error(r.error);
             }}
           >
             {t('unblock')}

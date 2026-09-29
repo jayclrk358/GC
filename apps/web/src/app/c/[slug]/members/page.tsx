@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { listMembers, listRoles, roleSummary } from '@magnox/core';
 import { themeBackdrops } from '@magnox/shared';
@@ -40,22 +41,22 @@ export default async function MembersPage({
       />
       <nav aria-label={t('pagination')} className="flex justify-between">
         {pageNum > 0 ? (
-          <a
+          <Link
             className="font-semibold text-primary underline"
             href={`?${new URLSearchParams({ ...(q ? { q } : {}), page: String(pageNum - 1) })}`}
           >
             {t('previous')}
-          </a>
+          </Link>
         ) : (
           <span />
         )}
         {hasMore && (
-          <a
+          <Link
             className="font-semibold text-primary underline"
             href={`?${new URLSearchParams({ ...(q ? { q } : {}), page: String(pageNum + 1) })}`}
           >
             {t('next')}
-          </a>
+          </Link>
         )}
       </nav>
     </div>

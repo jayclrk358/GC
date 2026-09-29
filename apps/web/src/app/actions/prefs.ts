@@ -26,11 +26,13 @@ async function writeCookie(prefs: Prefs) {
   (await cookies()).set(PREFS_COOKIE, encodePrefsCookie(prefs), COOKIE_OPTS);
 }
 
-/** Save display preferences to this browser and, when signed in, to the account. */
+/**
+ * Save display preferences to the account when signed in. The browser has already written the
+ * cookie (PrefsProvider), and setting it here too would make Next re-render the whole page.
+ */
 export async function savePrefs(input: unknown) {
   return runAction(async () => {
     const prefs = prefsSchema.parse(input);
-    await writeCookie(prefs);
     const user = await getUser();
     if (user) {
       await db

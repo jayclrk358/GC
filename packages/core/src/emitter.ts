@@ -15,8 +15,15 @@ export function realtime(): Emitter {
 /**
  * Tell open pages of a community that something changed (settings, members, wiki…) so they can
  * refresh. Pages wait a moment before refreshing, which covers the enclosing transaction
- * committing after this is sent.
+ * committing after this is sent. `kind` lets pages skip what they don't show: people joining
+ * and leaving only matter to the member list.
  */
-export function communityChanged(communityId: string, actorId: string | null): void {
-  realtime().to(`community:${communityId}`).emit('community:changed', { communityId, actorId });
+export function communityChanged(
+  communityId: string,
+  actorId: string | null,
+  kind: 'content' | 'members' = 'content',
+): void {
+  realtime()
+    .to(`community:${communityId}`)
+    .emit('community:changed', { communityId, actorId, kind });
 }

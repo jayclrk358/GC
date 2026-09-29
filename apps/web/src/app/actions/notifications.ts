@@ -18,10 +18,13 @@ async function userId() {
   return user.id;
 }
 
+/**
+ * The bell and the notifications page mark items read on screen themselves, so nothing is
+ * re-rendered (this is called from every page, and a re-render would redo the whole page).
+ */
 export async function markReadAction(ids: string[] | 'all') {
   return runAction(async () => {
     await markNotificationsRead(await userId(), ids);
-    revalidatePath('/notifications');
   });
 }
 

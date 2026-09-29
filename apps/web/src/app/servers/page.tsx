@@ -27,7 +27,8 @@ export default async function ServersPage({ searchParams }: { searchParams: Prom
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
-      <AutoRefresh every={30} away={30} />
+      {/* Cards update their status live; the list itself (order, new servers) every 5 min. */}
+      <AutoRefresh every={300} away={120} />
       <PageHeader title={t('browserTitle')} description={t('browserDescription')} />
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start">
         <ServerFilters games={games} values={sp} />

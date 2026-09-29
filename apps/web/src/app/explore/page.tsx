@@ -48,7 +48,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
-      <AutoRefresh every={60} away={60} />
+      <AutoRefresh every={300} away={120} />
       <PageHeader title={t('title')} description={t('description')} />
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start">
         <ExploreFilters games={games} values={sp} />

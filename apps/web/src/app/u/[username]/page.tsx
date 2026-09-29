@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import * as React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -36,8 +37,14 @@ const PLATFORM_ICONS: Record<Platform, LucideIcon> = {
 
 const KINDS = new Map(ACCOUNT_KINDS.map((k) => [k.key, k]));
 
+// Once per request: the title (generateMetadata) and the page share it.
+const loadProfile = cache(async (username: string) => {
+  const viewer = await getUser();
+  return { viewer, profile: await getPublicProfile(username, viewer?.id) };
+});
+
 export async function generateMetadata({ params }: { params: Promise<{ username: string }> }) {
-  const profile = await getPublicProfile((await params).username);
+  const { profile } = await loadProfile((await params).username);
   return { title: profile ? `${profile.name} (@${profile.username})` : 'Profile' };
 }
 
@@ -61,8 +68,7 @@ function Section({
 }
 
 export default async function ProfilePage({ params }: { params: Promise<{ username: string }> }) {
-  const viewer = await getUser();
-  const profile = await getPublicProfile((await params).username, viewer?.id);
+  const { viewer, profile } = await loadProfile((await params).username);
   if (!profile) notFound();
   const banner = imgSourcesFromUrl(profile.bannerUrl, 'md', '100vw');
   const t = await getTranslations('profile');

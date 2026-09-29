@@ -52,7 +52,8 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     {
-      source: '/((?!_next/static|_next/image|favicon.ico|media/|api/health).*)',
+      // Uploads skip it: the proxy would otherwise buffer a copy of every file in memory.
+      source: '/((?!_next/static|_next/image|favicon.ico|media/|api/health|api/uploads).*)',
       missing: [
         { type: 'header', key: 'next-router-prefetch' },
         { type: 'header', key: 'purpose', value: 'prefetch' },

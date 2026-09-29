@@ -33,9 +33,17 @@ export function CommunityLive({
   // Settings pages are where the changes are made; their forms keep their own state.
   const active = auto && !pathname.includes('/settings');
   useRoom(active ? `community:${communityId}` : null, {
-    'community:changed': (p: { communityId: string; actorId: string | null }) => {
+    'community:changed': (p: {
+      communityId: string;
+      actorId: string | null;
+      kind?: 'content' | 'members';
+    }) => {
       // The person who made the change already sees it.
-      if (p.communityId === communityId && p.actorId !== userId) refresh();
+      if (p.communityId !== communityId || p.actorId === userId) return;
+      // People joining and leaving only change the member list; refreshing every open page of a
+      // busy community each time someone joins would be a lot of work for nothing.
+      if (p.kind === 'members' && !pathname.endsWith('/members')) return;
+      refresh();
     },
   });
   return null;

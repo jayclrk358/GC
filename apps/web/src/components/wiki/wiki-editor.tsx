@@ -83,7 +83,6 @@ export function WikiEditor({
     }
     setDirty(false);
     router.push(`/c/${slug}/wiki/${r.data.slug}`);
-    router.refresh();
   }
 
   return (

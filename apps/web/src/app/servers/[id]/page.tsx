@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
@@ -23,7 +24,8 @@ type Params = { params: Promise<{ id: string }> };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-async function load(id: string, userId: string | null): Promise<ServerDetail> {
+// Once per request: the title (generateMetadata) and the page share it.
+const load = cache(async (id: string, userId: string | null): Promise<ServerDetail> => {
   if (!UUID.test(id)) notFound();
   try {
     return await getServerDetail(id, userId);
@@ -31,7 +33,7 @@ async function load(id: string, userId: string | null): Promise<ServerDetail> {
     if (isAppError(e) && e.code === 'not_found') notFound();
     throw e;
   }
-}
+});
 
 /** "5 h 10 min" from now until `iso` (or since it, for past times). */
 function durationFrom(iso: string | null): string | null {
@@ -61,7 +63,8 @@ export default async function ServerPage({ params }: Params) {
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8">
-      <AutoRefresh every={60} away={60} />
+      {/* Status is live; the history charts catch up every 5 min. */}
+      <AutoRefresh every={300} away={120} />
       <HistoryBack fallback="/servers" />
 
       <header className="flex flex-col gap-3">

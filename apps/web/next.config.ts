@@ -11,6 +11,9 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   outputFileTracingRoot: resolve(process.cwd(), '../..'),
   poweredByHeader: false,
+  // Caddy compresses responses (zstd or gzip) on the way out; doing it here as well would only
+  // cost CPU and stop Caddy using zstd.
+  compress: false,
   reactStrictMode: true,
   agentRules: false,
   // Keep the dev badge clear of the sidebar's bottom controls.
@@ -23,9 +26,11 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['sharp', 'postgres', 'ioredis', 'bullmq', 'pino', 'nodemailer'],
   experimental: {
     serverActions: { bodySizeLimit: '12mb' },
-    // Uploads pass through the proxy (CSP), which otherwise cuts bodies off at 10 MB; chat
-    // videos can be up to 150 MB on the Pro plan.
-    proxyClientMaxBodySize: '160mb',
+    // Server actions pass through the proxy (CSP), which otherwise cuts bodies off at 10 MB.
+    // Uploads skip it (see the matcher in proxy.ts), so it never holds a copy of a video.
+    proxyClientMaxBodySize: '13mb',
+    // Import only the Radix components used, not the whole umbrella package.
+    optimizePackageImports: ['radix-ui'],
   },
 };
 

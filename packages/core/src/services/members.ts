@@ -3,6 +3,7 @@ import { db, schema, type DbOrTx } from '@magnox/db';
 import { requireMember, type MemberContext } from '../access';
 import { AppError, forbidden } from '../errors';
 import { enforceRateLimit } from '../ratelimit';
+import { cached } from '../cache';
 import { communityChanged } from '../emitter';
 import { cacheRedis } from '../redis';
 import { audit } from './audit';
@@ -69,7 +70,7 @@ export async function joinCommunity(ctx: MemberContext): Promise<void> {
   await db.transaction(async (tx) => {
     await addMember(tx, ctx.community.id, ctx.userId!);
   });
-  communityChanged(ctx.community.id, ctx.userId);
+  communityChanged(ctx.community.id, ctx.userId, 'members');
 }
 
 export async function leaveCommunity(ctx: MemberContext): Promise<void> {
@@ -214,11 +215,17 @@ export async function countOnline(userIds: string[]): Promise<number> {
   return values.filter(Boolean).length;
 }
 
+/**
+ * How many members are online. Shown on every page of the community, so it's worked out at most
+ * every 20 seconds rather than on each view.
+ */
 export async function onlineInCommunity(communityId: string): Promise<number> {
-  const rows = await db
-    .select({ userId: schema.members.userId })
-    .from(schema.members)
-    .where(eq(schema.members.communityId, communityId))
-    .limit(2000);
-  return countOnline(rows.map((r) => r.userId));
+  return cached(`online:${communityId}`, 20, async () => {
+    const rows = await db
+      .select({ userId: schema.members.userId })
+      .from(schema.members)
+      .where(eq(schema.members.communityId, communityId))
+      .limit(2000);
+    return countOnline(rows.map((r) => r.userId));
+  });
 }

@@ -2,8 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { MessagesSquare } from 'lucide-react';
-import { listVisibleChannels } from '@magnox/core';
-import { loadCommunity } from '@/lib/community';
+import { loadChatChannels, loadCommunity } from '@/lib/community';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/misc';
 
@@ -11,8 +10,7 @@ export const metadata = { title: 'Chat' };
 
 export default async function ChatIndex({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const data = await loadCommunity(slug);
-  const { channels } = await listVisibleChannels(data.ctx, { types: ['text'] });
+  const [data, { channels }] = await Promise.all([loadCommunity(slug), loadChatChannels(slug)]);
   if (channels[0]) redirect(`/c/${slug}/chat/${channels[0].name}`);
   const t = await getTranslations('chat');
   return (

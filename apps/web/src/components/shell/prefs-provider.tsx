@@ -44,8 +44,10 @@ export function PrefsProvider({
 }) {
   const [prefs, setPrefs] = React.useState(initial);
   const [lastInitial, setLastInitial] = React.useState(initial);
-  // Adopt fresh server preferences (e.g. after router.refresh()) without an effect.
-  if (initial !== lastInitial) {
+  // Adopt fresh server preferences (e.g. after router.refresh()) without an effect. Every
+  // refresh sends a new object, so compare contents: otherwise everything using the preferences
+  // (the whole chat, for one) would re-render on each refresh for no change.
+  if (initial !== lastInitial && JSON.stringify(initial) !== JSON.stringify(lastInitial)) {
     setLastInitial(initial);
     setPrefs(initial);
   }

@@ -53,8 +53,8 @@ export function ReplyComposer({
     setKey((k) => k + 1);
     setReplyTo(null);
     setStatus(t('replyPosted'));
+    // The action already sent back the updated thread; this only moves to the new reply.
     router.push(`/c/${slug}/t/${threadId}?page=${lastPage}#post-${r.data.id}`);
-    router.refresh();
   }
 
   return (

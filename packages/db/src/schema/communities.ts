@@ -92,7 +92,9 @@ export const members = pgTable(
   },
   (t) => [
     primaryKey({ columns: [t.communityId, t.userId] }),
-    index('members_user_idx').on(t.userId),
+    // "Your communities" (newest first) and member lists (by join date), without sorting.
+    index('members_user_idx').on(t.userId, t.joinedAt),
+    index('members_community_joined_idx').on(t.communityId, t.joinedAt),
   ],
 );
 

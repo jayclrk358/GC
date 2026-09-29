@@ -159,8 +159,45 @@ async function place(element: HTMLElement, rect: DOMRect | null | undefined) {
 }
 
 /** @-mention support scoped to one community's members and roles. */
+/**
+ * Suggestions for what's typed after "@": asked for once typing pauses (not on every key), and
+ * each answer is remembered for this editor, so backspacing doesn't ask again.
+ */
+function mentionLookup(communityId: string) {
+  const answers = new Map<string, Promise<MentionItem[]>>();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let waiting: ((items: MentionItem[]) => void)[] = [];
+  const ask = (query: string) => {
+    let answer = answers.get(query);
+    if (!answer) {
+      answer = fetch(`/api/communities/${communityId}/mentions?q=${encodeURIComponent(query)}`)
+        .then(async (r) => (r.ok ? ((await r.json()) as { items: MentionItem[] }).items : []))
+        .catch(() => {
+          answers.delete(query);
+          return [];
+        });
+      answers.set(query, answer);
+    }
+    return answer;
+  };
+  return (query: string) =>
+    new Promise<MentionItem[]>((resolve) => {
+      const known = answers.get(query);
+      if (known) return void known.then(resolve);
+      // Earlier keystrokes still waiting get the latest answer (only the latest is shown).
+      waiting.push(resolve);
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        const batch = waiting;
+        waiting = [];
+        void ask(query).then((items) => batch.forEach((r) => r(items)));
+      }, 150);
+    });
+}
+
 export function mentionExtension(communityId: string) {
   let counter = 0;
+  const lookup = mentionLookup(communityId);
   return Mention.extend({
     addAttributes() {
       return {
@@ -183,17 +220,7 @@ export function mentionExtension(communityId: string) {
     },
     suggestion: {
       char: '@',
-      items: async ({ query }) => {
-        try {
-          const r = await fetch(
-            `/api/communities/${communityId}/mentions?q=${encodeURIComponent(query)}`,
-          );
-          if (!r.ok) return [];
-          return ((await r.json()) as { items: MentionItem[] }).items;
-        } catch {
-          return [];
-        }
-      },
+      items: ({ query }) => lookup(query),
       command: ({ editor, range, props }) => {
         const item = props as unknown as MentionItem;
         editor

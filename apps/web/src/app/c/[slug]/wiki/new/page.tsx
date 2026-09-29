@@ -1,6 +1,7 @@
 import { notFound, redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { canEditWiki, listWikiTree } from '@magnox/core';
+import { canEditWiki } from '@magnox/core';
+import { loadWikiTree } from '../_load';
 import { loadCommunity } from '@/lib/community';
 import { WikiEditor } from '@/components/wiki/wiki-editor';
 import { parentOptions } from '@/components/wiki/tree-utils';
@@ -21,7 +22,7 @@ export default async function NewWikiPage({
   if (!canEditWiki(data.ctx)) notFound();
   const t = await getTranslations('wiki');
   const tBack = await getTranslations('common');
-  const parents = parentOptions(await listWikiTree(data.ctx));
+  const parents = parentOptions(await loadWikiTree(slug));
   const parent = (await searchParams).parent;
   return (
     <div className="flex flex-col gap-5">

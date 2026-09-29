@@ -50,14 +50,23 @@ export function UserLink({
   const load = () => {
     if (card === undefined) void loadCard(username, communityId).then(setCard);
   };
+  // Start loading once the pointer rests on the name (so the card is usually ready when it
+  // opens), but not for every name the pointer merely crosses.
+  const rest = React.useRef<ReturnType<typeof setTimeout>>(undefined);
+  React.useEffect(() => () => clearTimeout(rest.current), []);
   return (
     <HoverCard.Root openDelay={350} closeDelay={150} onOpenChange={(open) => open && load()}>
       <HoverCard.Trigger asChild>
         <Link
           href={`/u/${username}`}
           className={className}
-          // Start loading as the pointer arrives, so the card is usually ready when it opens.
-          onPointerEnter={load}
+          // Chats and member lists show dozens of names; don't prefetch every profile.
+          prefetch={false}
+          onPointerEnter={() => {
+            clearTimeout(rest.current);
+            rest.current = setTimeout(load, 150);
+          }}
+          onPointerLeave={() => clearTimeout(rest.current)}
           {...props}
         >
           {children}

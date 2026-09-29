@@ -9,7 +9,7 @@ import { discardUpload, uploadImage, UploadProgress } from '@/components/upload/
 import { emitSocket } from '@/lib/realtime';
 import { cn } from '@/lib/utils';
 import { useChat } from './chat-context';
-import { ChatEditor, type ChatEditorHandle } from './chat-editor';
+import { ChatEditor, type ChatEditorHandle } from './lazy-chat-editor';
 import { authorName } from './message-item';
 import type { ChatMessage } from './types';
 

@@ -125,12 +125,19 @@ export function ChatView(props: Props) {
     if (!last || s.hasMoreAfter || !atBottom.current || document.visibilityState !== 'visible')
       return;
     if (acked.current && last.id <= acked.current) return;
-    if (ackTimer.current) clearTimeout(ackTimer.current);
+    // One pending acknowledgement covers everything that arrives meanwhile: in a busy channel
+    // that's one request every couple of seconds per reader, not one per message.
+    if (ackTimer.current) return;
     ackTimer.current = setTimeout(() => {
-      acked.current = last.id;
+      ackTimer.current = null;
+      const now = stateRef.current;
+      const latest = [...now.messages].reverse().find((m) => !m.pending && !m.failed);
+      if (!latest || (acked.current && latest.id <= acked.current)) return;
+      if (now.hasMoreAfter || !atBottom.current || document.visibilityState !== 'visible') return;
+      acked.current = latest.id;
       setUnreadBanner(false);
-      void ackChannelAction(communityId, channel.id, last.id);
-    }, 600);
+      void ackChannelAction(communityId, channel.id, latest.id);
+    }, 2000);
   }, [me, perms.member, communityId, channel.id]);
 
   React.useEffect(() => {
@@ -437,6 +444,38 @@ export function ChatView(props: Props) {
     focusComposer: () => composerRef.current?.focus(),
   };
 
+  // Messages re-render only when what they show changes. The actions close over this render's
+  // state, so route calls through a ref to a stable object; without that, every typing
+  // indicator, new message or panel toggle would re-render every message in the list.
+  const actionsRef = React.useRef(actions);
+  React.useLayoutEffect(() => {
+    actionsRef.current = actions;
+  });
+  const stableActions = React.useMemo(
+    () =>
+      new Proxy({} as ChatActions, {
+        get:
+          (_, k) =>
+          (...args: unknown[]) =>
+            (actionsRef.current[k as keyof ChatActions] as (...a: unknown[]) => unknown)(...args),
+      }),
+    [],
+  );
+  const context = React.useMemo(
+    () => ({
+      communityId,
+      slug: props.slug,
+      channel,
+      me,
+      perms,
+      prefs,
+      blocked,
+      editingId,
+      actions: stableActions,
+    }),
+    [communityId, props.slug, channel, me, perms, prefs, blocked, editingId, stableActions],
+  );
+
   const typingNames = Object.values(typers).map((v) => v.name);
   const verbosity = prefs.chatAnnouncements as ChatVerbosity;
   const firstUnread = dividerId ? state.messages.find((m) => m.id === dividerId) : null;
@@ -462,19 +501,7 @@ export function ChatView(props: Props) {
   );
 
   return (
-    <ChatProvider
-      value={{
-        communityId,
-        slug: props.slug,
-        channel,
-        me,
-        perms,
-        prefs,
-        blocked,
-        editingId,
-        actions,
-      }}
-    >
+    <ChatProvider value={context}>
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <header className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2">
           <h2 className="flex min-w-0 items-center gap-1.5 text-lg font-bold">

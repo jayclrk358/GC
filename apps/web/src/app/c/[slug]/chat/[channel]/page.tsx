@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
-import { channelUnreads, isMuted, listBlockedUsers, listMessages } from '@magnox/core';
+import { isMuted, listBlockedUsers, listMessages } from '@magnox/core';
 import { has, isUuid, Permission, planLimits } from '@magnox/shared';
-import { loadChatChannel, loadCommunity } from '@/lib/community';
+import { loadChatChannel, loadChatUnreads, loadCommunity } from '@/lib/community';
 import { formatDateTime } from '@/lib/format';
 import { JoinButton } from '@/components/community/join-button';
 import { ChatNotice, ChatView, SignInToChat } from '@/components/chat/chat-view';
@@ -23,19 +23,20 @@ export default async function ChatChannelPage({
   const focus = (await searchParams).m;
   const focusId = focus && isUuid(focus) ? focus : null;
   const data = await loadCommunity(slug);
-  const channel = await loadChatChannel(data.ctx, name);
+  const channel = await loadChatChannel(slug, name);
   const t = await getTranslations('chat');
   const perms = BigInt(channel.perms);
   const user = data.user;
   const member = data.ctx.isMember;
 
-  const unread = (await channelUnreads(data.ctx, [channel.id])).get(channel.id);
+  const unread = (await loadChatUnreads(slug)).get(channel.id);
   const lastReadId = unread?.unread ? unread.lastReadId : null;
   const [initial, blocked, muted] = await Promise.all([
     listMessages(
       data.ctx,
       channel.id,
       focusId ? { around: focusId } : lastReadId ? { around: lastReadId } : {},
+      channel,
     ),
     user ? listBlockedUsers(user.id) : [],
     user && member ? isMuted(user.id, 'channel', channel.id) : false,

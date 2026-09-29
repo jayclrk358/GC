@@ -88,7 +88,8 @@ export default async function HomePage() {
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-16 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-      <AutoRefresh every={60} away={60} />
+      {/* Server rows update live; the rest (stats, lists) every 5 min. */}
+      <AutoRefresh every={300} away={120} />
       <section
         aria-labelledby="hero-h"
         className="relative isolate overflow-hidden rounded-3xl border border-border bg-surface px-6 py-10 sm:px-10 sm:py-14"

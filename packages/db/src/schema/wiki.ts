@@ -66,5 +66,9 @@ export const wikiRevisions = pgTable(
     restoredFromId: uuid('restored_from_id'),
     createdAt: createdAt(),
   },
-  (t) => [index('wiki_revisions_page_idx').on(t.pageId, t.id)],
+  (t) => [
+    index('wiki_revisions_page_idx').on(t.pageId, t.id),
+    // Someone's edits (checked before their images are deleted).
+    index('wiki_revisions_author_idx').on(t.authorId),
+  ],
 );

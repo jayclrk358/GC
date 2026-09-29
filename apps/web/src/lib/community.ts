@@ -4,11 +4,12 @@ import { notFound } from 'next/navigation';
 import { eq } from 'drizzle-orm';
 import { db, schema } from '@magnox/db';
 import {
+  channelUnreads,
   getChannelByName,
-  getChatChannelByName,
   getCommunityRow,
   getMemberContext,
   isAppError,
+  listVisibleChannels,
   type MemberContext,
 } from '@magnox/core';
 import { has, normalizeNav, Permission, type NavTab } from '@magnox/shared';
@@ -87,11 +88,23 @@ export async function loadForumChannel(ctx: MemberContext, name: string) {
 }
 
 /** A chat (text) channel the viewer can see, or a 404. */
-export async function loadChatChannel(ctx: MemberContext, name: string) {
-  try {
-    return await getChatChannelByName(ctx, decodeURIComponent(name));
-  } catch (e) {
-    if (isAppError(e) && (e.code === 'not_found' || e.code === 'forbidden')) notFound();
-    throw e;
-  }
+/** The chat channels someone can see, once per request (the chat layout and page share it). */
+export const loadChatChannels = cache(async (slug: string) =>
+  listVisibleChannels((await loadCommunity(slug)).ctx, { types: ['text'] }),
+);
+
+/** Unread state for all of those channels, once per request. */
+export const loadChatUnreads = cache(async (slug: string) => {
+  const { channels } = await loadChatChannels(slug);
+  return channelUnreads(
+    (await loadCommunity(slug)).ctx,
+    channels.map((c) => c.id),
+  );
+});
+
+export async function loadChatChannel(slug: string, name: string) {
+  const { channels } = await loadChatChannels(slug);
+  const channel = channels.find((c) => c.name === decodeURIComponent(name).toLowerCase());
+  if (!channel) notFound();
+  return channel;
 }

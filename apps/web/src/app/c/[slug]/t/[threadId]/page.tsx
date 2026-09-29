@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
@@ -35,7 +36,8 @@ import { BackLink } from '@/components/ui/back-link';
 
 type Params = Promise<{ slug: string; threadId: string }>;
 
-async function load(slug: string, threadId: string) {
+// Once per request: the title (generateMetadata) and the page share it.
+const load = cache(async (slug: string, threadId: string) => {
   const data = await loadCommunity(slug);
   try {
     return { data, ...(await getThread(data.ctx, threadId)) };
@@ -43,7 +45,7 @@ async function load(slug: string, threadId: string) {
     if (isAppError(e) && (e.code === 'not_found' || e.code === 'forbidden')) notFound();
     throw e;
   }
-}
+});
 
 export async function generateMetadata({ params }: { params: Params }) {
   const { slug, threadId } = await params;
@@ -320,7 +322,8 @@ export default async function ThreadPage({
                           post={{
                             id: p.id,
                             isOp: p.isOp,
-                            body: p.body,
+                            // Only needed to edit, so other posts' text isn't sent twice.
+                            body: own && !thread.locked ? p.body : null,
                             authorName: authorName(p),
                             edited: Boolean(p.editedAt),
                             isSolution,

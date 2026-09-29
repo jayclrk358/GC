@@ -282,7 +282,10 @@ function MembersPanel() {
   const { communityId } = useChat();
   const [tick, setTick] = React.useState(0);
   React.useEffect(() => {
-    const id = setInterval(() => setTick((n) => n + 1), 60_000);
+    // Only while someone's looking: a hidden tab catches up when it's shown again.
+    const id = setInterval(() => {
+      if (document.visibilityState === 'visible') setTick((n) => n + 1);
+    }, 60_000);
     return () => clearInterval(id);
   }, []);
   const { data, loading, error } = useJson<{

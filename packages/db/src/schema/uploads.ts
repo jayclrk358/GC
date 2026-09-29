@@ -25,5 +25,8 @@ export const uploads = pgTable(
     variants: boolean('variants').notNull().default(false),
     createdAt: createdAt(),
   },
-  (t) => [index('uploads_owner_idx').on(t.ownerId)],
+  (t) => [
+    index('uploads_owner_idx').on(t.ownerId),
+    index('uploads_community_idx').on(t.communityId),
+  ],
 );

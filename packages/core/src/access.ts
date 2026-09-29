@@ -263,6 +263,32 @@ export async function loadChannel(id: string): Promise<ChannelRef | null> {
   return rows[0] ?? null;
 }
 
+/**
+ * Member contexts for room checks, kept for a few seconds: opening chat subscribes to every
+ * channel at once, and each would otherwise work out the same member's roles again. Only used
+ * for subscribing (reading); anything that changes data checks afresh.
+ */
+const SUBSCRIBE_CTX_MS = 5_000;
+const subscribeCtx = new Map<string, { at: number; ctx: Promise<MemberContext> }>();
+
+function memberContextForRooms(communityId: string, userId: string | null) {
+  const key = `${communityId}|${userId ?? ''}`;
+  const hit = subscribeCtx.get(key);
+  if (hit && Date.now() - hit.at < SUBSCRIBE_CTX_MS) return hit.ctx;
+  const ctx = getMemberContext({ id: communityId }, userId);
+  subscribeCtx.set(key, { at: Date.now(), ctx });
+  // Only members are remembered: someone who has just joined must be checked afresh.
+  ctx.then(
+    (c) => !c.isMember && subscribeCtx.delete(key),
+    () => subscribeCtx.delete(key),
+  );
+  // Oldest first (insertion order): keep the map small on a busy server.
+  if (subscribeCtx.size > 5000) {
+    for (const k of [...subscribeCtx.keys()].slice(0, 1000)) subscribeCtx.delete(k);
+  }
+  return ctx;
+}
+
 /** Room authorization for the realtime server. */
 export async function canSubscribe(
   userId: string | null,
@@ -280,7 +306,7 @@ export async function canSubscribe(
     }
     case 'community': {
       try {
-        await getMemberContext({ id }, userId);
+        await memberContextForRooms(id, userId);
         return true;
       } catch {
         return false;
@@ -290,7 +316,7 @@ export async function canSubscribe(
       const channel = await loadChannel(id);
       if (!channel) return false;
       try {
-        const ctx = await getMemberContext({ id: channel.communityId }, userId);
+        const ctx = await memberContextForRooms(channel.communityId, userId);
         return has(await channelPermissions(ctx, channel), Permission.VIEW_CHANNEL);
       } catch {
         return false;
@@ -311,7 +337,7 @@ export async function canSubscribe(
       const channel = await loadChannel(t.channelId);
       if (!channel) return false;
       try {
-        const ctx = await getMemberContext({ id: t.communityId }, userId);
+        const ctx = await memberContextForRooms(t.communityId, userId);
         return has(await channelPermissions(ctx, channel), Permission.VIEW_CHANNEL);
       } catch {
         return false;

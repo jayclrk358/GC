@@ -1,14 +1,14 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { FilePlus2, History, Lock, Pencil } from 'lucide-react';
-import { canEditWiki, listWikiTree, type WikiTreeNode } from '@magnox/core';
+import { canEditWiki, type WikiTreeNode } from '@magnox/core';
 import { docHeadings, has, Permission } from '@magnox/shared';
 import { formatDateTime, relativeTime } from '@/lib/format';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/misc';
 import { RichText } from '@/components/rich-text/rich-text';
 import { WikiPageTools } from '@/components/wiki/wiki-page-tools';
-import { loadWikiPage } from '../_load';
+import { loadWikiPage, loadWikiTree } from '../_load';
 
 type Params = Promise<{ slug: string; page: string }>;
 
@@ -30,7 +30,7 @@ export default async function WikiPageView({ params }: { params: Params }) {
   const { slug, page: pageSlug } = await params;
   const { data, page } = await loadWikiPage(slug, pageSlug);
   const t = await getTranslations('wiki');
-  const tree = await listWikiTree(data.ctx);
+  const tree = await loadWikiTree(slug);
   const node = findNode(tree, page.id);
   const parent = page.parentId ? findNode(tree, page.parentId) : null;
   const headings = docHeadings(page.body);

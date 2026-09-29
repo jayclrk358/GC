@@ -28,7 +28,7 @@ import {
 import { RichText } from '@/components/rich-text/rich-text';
 import { cn } from '@/lib/utils';
 import { useChat } from './chat-context';
-import { ChatEditor, type ChatEditorHandle } from './chat-editor';
+import { ChatEditor, type ChatEditorHandle } from './lazy-chat-editor';
 import { Attachments, Embeds } from './attachments';
 import { ReactionBar, ReactionPicker } from './reaction-bar';
 import { formatTime, fullDateTime } from './format';
@@ -65,6 +65,9 @@ export const MessageItem = React.memo(function MessageItem({
   const live = !m.pending && !m.failed;
   const [picker, setPicker] = React.useState(false);
   const headerId = `msg-${m.id}-h`;
+  // A grouped message's heading is only there for screen readers, so its name isn't styled
+  // (an animated name nobody can see would still cost a repaint every frame).
+  const nameStyle = grouped ? undefined : m.author?.nameStyle;
   // Only the message that holds focus in the log exposes its controls to Tab.
   const ctl = tabIndex === 0 ? 0 : -1;
 
@@ -136,14 +139,14 @@ export const MessageItem = React.memo(function MessageItem({
                 tabIndex={ctl}
                 className="hover:underline"
               >
-                <StyledName name={name} style={m.author.nameStyle} className="font-semibold" />
+                <StyledName name={name} style={nameStyle} className="font-semibold" />
               </UserLink>
             ) : (
-              <StyledName name={name} style={m.author?.nameStyle} className="font-semibold" />
+              <StyledName name={name} style={nameStyle} className="font-semibold" />
             )}
             {m.author?.roleName && (
               <span className="inline-flex items-center gap-1 text-xs text-muted">
-                {m.author.roleIcon ? (
+                {grouped ? null : m.author.roleIcon ? (
                   <RoleIcon url={m.author.roleIcon.url} />
                 ) : (
                   <span
@@ -152,7 +155,10 @@ export const MessageItem = React.memo(function MessageItem({
                     style={{ background: m.author.roleColor ?? 'var(--c-text-muted)' }}
                   />
                 )}
-                <StyledName name={m.author.roleName} style={m.author.roleStyle} />
+                <StyledName
+                  name={m.author.roleName}
+                  style={grouped ? undefined : m.author.roleStyle}
+                />
               </span>
             )}
             <time

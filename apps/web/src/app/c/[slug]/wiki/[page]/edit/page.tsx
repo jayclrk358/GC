@@ -1,10 +1,10 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { canEditWiki, listWikiTree } from '@magnox/core';
+import { canEditWiki } from '@magnox/core';
 import { WikiEditor } from '@/components/wiki/wiki-editor';
 import { parentOptions } from '@/components/wiki/tree-utils';
-import { loadWikiPage } from '../../_load';
+import { loadWikiPage, loadWikiTree } from '../../_load';
 import { BackLink } from '@/components/ui/back-link';
 
 type Params = Promise<{ slug: string; page: string }>;
@@ -22,7 +22,7 @@ export default async function EditWikiPage({ params }: { params: Params }) {
   if (!canEditWiki(data.ctx, page)) notFound();
   const t = await getTranslations('wiki');
   const tBack = await getTranslations('common');
-  const parents = parentOptions(await listWikiTree(data.ctx), page.id);
+  const parents = parentOptions(await loadWikiTree(slug), page.id);
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">

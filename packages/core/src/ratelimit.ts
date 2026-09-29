@@ -17,11 +17,13 @@ export async function rateLimit(
   if (env().DISABLE_RATE_LIMITS) return { ok: true, remaining: limit, resetIn: 0 };
   const redis = cacheRedis();
   const k = `rl:${key}`;
-  const [[, count], [, ttl]] = (await redis.multi().incr(k).ttl(k).exec()) as [
-    [null, number],
-    [null, number],
-  ];
-  if (ttl < 0) await redis.expire(k, windowSeconds);
+  // One round trip: count, start the window if this is its first hit, and read what's left.
+  const [[, count], , [, ttl]] = (await redis
+    .multi()
+    .incr(k)
+    .expire(k, windowSeconds, 'NX')
+    .ttl(k)
+    .exec()) as [[null, number], [null, number], [null, number]];
   const resetIn = ttl < 0 ? windowSeconds : ttl;
   return { ok: count <= limit, remaining: Math.max(0, limit - count), resetIn };
 }

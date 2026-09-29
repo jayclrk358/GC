@@ -313,9 +313,12 @@ export async function listMessages(
   ctx: MemberContext,
   channelId: string,
   rawOpts: unknown = {},
+  /** The channel, when the caller has already loaded it for this member. */
+  known?: ChannelView,
 ): Promise<MessagePage> {
   const opts = pageSchema.parse(rawOpts);
-  const channel = await getChatChannel(ctx, channelId);
+  const channel =
+    known?.id === channelId && known.type === 'text' ? known : await getChatChannel(ctx, channelId);
   if (!perm(channel, Permission.READ_HISTORY)) {
     return { messages: [], hasMoreBefore: false, hasMoreAfter: false, history: false };
   }

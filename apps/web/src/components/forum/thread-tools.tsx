@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Bell, BellOff, Lock, Pin, Settings2, Unlock } from 'lucide-react';
@@ -63,17 +62,15 @@ export function ModTools({
   isMod: boolean;
 }) {
   const t = useTranslations('forum');
-  const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [target, setTarget] = React.useState(channelId);
   const [flair, setFlair] = React.useState(flairId ?? '');
 
   async function apply(input: Record<string, unknown>, message: string) {
+    // The action sends back the updated page itself.
     const r = await moderateThreadAction(communityId, threadId, input);
-    if (r.ok) {
-      toast.success(message);
-      router.refresh();
-    } else toast.error(r.error);
+    if (r.ok) toast.success(message);
+    else toast.error(r.error);
   }
 
   return (
