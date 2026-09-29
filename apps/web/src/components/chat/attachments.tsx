@@ -95,7 +95,7 @@ function AttachmentVideo({ a, onExpand }: { a: MessageAttachment; onExpand: () =
   return (
     <figure className="relative overflow-hidden rounded-ui border border-border bg-black">
       {failed ? (
-        <VideoUnavailable src={src} style={{ aspectRatio: ratio }} />
+        <VideoUnavailable mediaKey={a.key} style={{ aspectRatio: ratio }} />
       ) : (
         <>
           {/* Chat videos have no caption tracks; the description below stands in. */}

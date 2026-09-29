@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { isVideoKey } from '@magnox/shared';
 import { usePrefs } from '@/components/shell/prefs-provider';
-import { mediaUrl } from '@/lib/media';
+import { downloadHref, mediaUrl } from '@/lib/media';
 import { cn } from '@/lib/utils';
 
 export interface MediaItem {
@@ -34,7 +34,13 @@ export interface MediaItem {
 const ZOOMS = [1, 1.5, 2, 3] as const;
 
 /** Shown in place of a video the browser can't load or decode, with a way to get the file. */
-export function VideoUnavailable({ src, style }: { src: string; style?: React.CSSProperties }) {
+export function VideoUnavailable({
+  mediaKey,
+  style,
+}: {
+  mediaKey: string;
+  style?: React.CSSProperties;
+}) {
   const t = useTranslations('media');
   return (
     <div
@@ -44,7 +50,7 @@ export function VideoUnavailable({ src, style }: { src: string; style?: React.CS
       <VideoOff aria-hidden className="size-6" />
       <p>{t('cantPlay')}</p>
       <a
-        href={`${src}?download=1`}
+        href={downloadHref(mediaKey)}
         download
         className="inline-flex items-center gap-1.5 rounded-ui px-2 py-1 font-semibold underline hover:bg-white/15"
       >
@@ -187,7 +193,7 @@ export function MediaViewer({
               </button>
             )}
             <a
-              href={`${url}?download=1`}
+              href={downloadHref(item.key)}
               download
               className={toolClass}
               aria-label={t('download')}
@@ -223,7 +229,7 @@ export function MediaViewer({
             }}
           >
             {video && failed ? (
-              <VideoUnavailable src={url} />
+              <VideoUnavailable mediaKey={item.key} />
             ) : video ? (
               <video
                 key={item.key}

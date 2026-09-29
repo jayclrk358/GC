@@ -20,3 +20,8 @@ export function mediaUrl(key: string | null | undefined): string | null {
   if (!key || !KEY_RE.test(key)) return null;
   return `${mediaBase()}/${key}`;
 }
+
+/** Link that saves an upload rather than opening it (see /api/media/download). */
+export function downloadHref(key: string): string {
+  return `/api/media/download/${key}`;
+}
