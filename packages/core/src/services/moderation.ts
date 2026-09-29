@@ -20,6 +20,7 @@ import { getChatChannel } from './chat';
 import { queueMediaCleanup } from './media-cleanup';
 import { removeMember } from './members';
 import { notifyUser, queueFanout } from './notify';
+import { removeFromVoice } from './voice-rooms';
 
 async function targetRank(communityId: string, userId: string, ownerId: string) {
   const rows = await db
@@ -63,6 +64,7 @@ export async function kickMember(
     });
   });
   realtime().to(rooms.user(userId)).emit('community:removed', { communityId: ctx.community.id });
+  await removeFromVoice(ctx.community.id, userId);
   await notifyUser({
     userId,
     type: 'moderation',
@@ -157,6 +159,7 @@ export async function banMember(ctx: MemberContext, userId: string, raw: unknown
     });
   });
   realtime().to(rooms.user(userId)).emit('community:removed', { communityId: ctx.community.id });
+  await removeFromVoice(ctx.community.id, userId);
   if (removed.posts.length) await queueMediaCleanup({ kind: 'posts', ids: removed.posts });
   if (removed.threads.length) await queueMediaCleanup({ kind: 'threads', ids: removed.threads });
   await notifyUser({
@@ -254,6 +257,8 @@ export async function timeoutMember(
     diff: { until: until?.toISOString() ?? null },
   });
   if (until) {
+    // Timed-out members can't be in voice (nor rejoin: they lose Connect until it ends).
+    await removeFromVoice(ctx.community.id, userId);
     await notifyUser({
       userId,
       type: 'moderation',

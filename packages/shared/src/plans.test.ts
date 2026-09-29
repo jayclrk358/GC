@@ -5,6 +5,7 @@ import {
   PLAN_IDS,
   PLAN_LIMITS,
   PLAN_PERKS,
+  planFor,
   planLimits,
   planRank,
 } from './plans';
@@ -32,7 +33,25 @@ describe('plans', () => {
       attachments: 4,
       imageMb: 10,
       videoMb: 50,
+      voiceChannels: 0,
+      voiceParticipants: 0,
     });
+  });
+
+  it('keeps effects, icons, backgrounds, separators and voice for paying communities', () => {
+    for (const perk of [
+      'nameEffects',
+      'roleIcons',
+      'pageBackground',
+      'chatBackgrounds',
+      'separators',
+    ] as const) {
+      expect(PLAN_PERKS.free[perk]).toBe(false);
+      expect(planFor(perk)).toBe('plus');
+    }
+    expect(planFor('screenShare')).toBe('pro');
+    expect(PLAN_LIMITS.plus.voiceChannels).toBeGreaterThan(0);
+    expect(PLAN_LIMITS.pro.voiceParticipants).toBeGreaterThan(PLAN_LIMITS.plus.voiceParticipants);
   });
 
   it('knows the highest limit on any plan, and falls back to Free', () => {

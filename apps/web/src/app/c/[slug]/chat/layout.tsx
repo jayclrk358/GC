@@ -1,3 +1,4 @@
+import { planPerks } from '@magnox/shared';
 import { loadChatChannels, loadChatUnreads, loadCommunity } from '@/lib/community';
 import { ChannelSidebar } from '@/components/chat/sidebar';
 
@@ -10,6 +11,7 @@ export default async function ChatLayout({
 }) {
   const { slug } = await params;
   const data = await loadCommunity(slug);
+  const perks = planPerks(data.community.plan);
   const [{ tree }, unreads] = await Promise.all([loadChatChannels(slug), loadChatUnreads(slug)]);
   return (
     // Fills what's left of the window under the community header (see DenseOnChat).
@@ -17,12 +19,19 @@ export default async function ChatLayout({
       <ChannelSidebar
         slug={slug}
         categories={tree.categories
-          .filter((c) => c.channels.length)
           .map((c) => ({
             id: c.id,
             name: c.name,
-            channels: c.channels.map((ch) => ({ id: ch.id, name: ch.name })),
-          }))}
+            // Separators are a paid perk: kept, but not shown, on Free.
+            channels: c.channels
+              .filter((ch) => ch.type !== 'separator' || perks.separators)
+              .map((ch) => ({
+                id: ch.id,
+                name: ch.name,
+                type: ch.type as 'text' | 'voice' | 'separator',
+              })),
+          }))
+          .filter((c) => c.channels.some((ch) => ch.type !== 'separator'))}
         initialUnreads={Object.fromEntries(
           [...unreads].map(([id, u]) => [id, { unread: u.unread, mentions: u.mentions }]),
         )}

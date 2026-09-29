@@ -7,6 +7,7 @@ import { cached } from '../cache';
 import { communityChanged } from '../emitter';
 import { cacheRedis } from '../redis';
 import { audit } from './audit';
+import { removeFromVoice } from './voice-rooms';
 
 async function isBanned(tx: DbOrTx, communityId: string, userId: string): Promise<boolean> {
   const rows = await tx
@@ -88,6 +89,7 @@ export async function leaveCommunity(ctx: MemberContext): Promise<void> {
       targetId: ctx.userId!,
     });
   });
+  await removeFromVoice(ctx.community.id, ctx.userId!);
 }
 
 export interface MemberRow {

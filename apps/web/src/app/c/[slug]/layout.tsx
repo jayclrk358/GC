@@ -1,11 +1,14 @@
 import type { Metadata } from 'next';
-import { onlineInCommunity } from '@magnox/core';
+import { onlineInCommunity, voicePeople } from '@magnox/core';
 import { loadCommunity } from '@/lib/community';
+import { planPerks } from '@magnox/shared';
 import { imgSources } from '@/lib/media';
 import { CommunityHeader } from '@/components/community/community-header';
 import { CommunityThemeStyle } from '@/components/community/theme-style';
 import { DenseOnChat } from '@/components/community/dense-on-chat';
 import { CommunityLive } from '@/components/live/live';
+import { VoiceBar } from '@/components/voice/voice-bar';
+import { VoiceProvider } from '@/components/voice/voice-provider';
 
 export async function generateMetadata({
   params,
@@ -28,8 +31,14 @@ export default async function CommunityLayout({
   params: Promise<{ slug: string }>;
 }) {
   const data = await loadCommunity((await params).slug);
-  const online = await onlineInCommunity(data.community.id);
-  const bg = imgSources(data.community.theme.backgroundKey, 'md', '100vw');
+  const [online, voice] = await Promise.all([
+    onlineInCommunity(data.community.id),
+    voicePeople(data.community.id),
+  ]);
+  // The background picture is a paid perk; a community on Free keeps it set but not shown.
+  const bg = planPerks(data.community.plan).pageBackground
+    ? imgSources(data.community.theme.backgroundKey, 'md', '100vw')
+    : null;
   return (
     <div
       data-community-theme
@@ -51,12 +60,15 @@ export default async function CommunityLayout({
           />
         </div>
       )}
-      <DenseOnChat slug={data.community.slug}>
-        <CommunityHeader data={data} online={online} />
-        <div className="mx-auto flex w-full max-w-[100rem] flex-1 flex-col px-4 py-8 group-data-[dense=true]/dense:min-h-0 group-data-[dense=true]/dense:px-2 group-data-[dense=true]/dense:py-2 sm:px-6 sm:group-data-[dense=true]/dense:px-4 lg:px-8">
-          {children}
-        </div>
-      </DenseOnChat>
+      <VoiceProvider communityId={data.community.id} initialPeople={voice}>
+        <DenseOnChat slug={data.community.slug}>
+          <CommunityHeader data={data} online={online} />
+          <div className="mx-auto flex w-full max-w-[100rem] flex-1 flex-col px-4 py-8 group-data-[dense=true]/dense:min-h-0 group-data-[dense=true]/dense:px-2 group-data-[dense=true]/dense:py-2 sm:px-6 sm:group-data-[dense=true]/dense:px-4 lg:px-8">
+            <VoiceBar slug={data.community.slug} />
+            {children}
+          </div>
+        </DenseOnChat>
+      </VoiceProvider>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { listChannelRows, listFlairs, listRoles } from '@magnox/core';
+import { planLimits, planPerks } from '@magnox/shared';
 import { loadCommunityForSettings } from '@/lib/community';
 import { PageHeader } from '@/components/ui/misc';
 import { ChannelManager } from '@/components/community-settings/channel-manager';
@@ -43,6 +44,12 @@ export default async function ChannelSettingsPage({
         channels={channels}
         roles={roles.map((r) => ({ id: r.id, name: r.name, isDefault: r.isDefault }))}
         canEditPerms={perms.manageRoles}
+        plan={community.plan}
+        perks={planPerks(community.plan)}
+        voiceChannelsLeft={Math.max(
+          0,
+          planLimits(community.plan).voiceChannels - rows.filter((r) => r.type === 'voice').length,
+        )}
       />
       <FlairManager
         communityId={community.id}
@@ -54,7 +61,7 @@ export default async function ChannelSettingsPage({
           modOnly: f.modOnly,
         }))}
         channels={channels
-          .filter((c) => c.type !== 'category')
+          .filter((c) => c.type === 'forum' || c.type === 'announcement')
           .map((c) => ({ id: c.id, name: c.name }))}
       />
     </div>

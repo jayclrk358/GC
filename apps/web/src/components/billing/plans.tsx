@@ -12,6 +12,7 @@ import {
   type PaidPlanId,
   type PlanId,
   type PlanLimits,
+  type PlanPerks,
 } from '@magnox/shared';
 import type { PlanPrices } from '@magnox/core';
 import { cn } from '@/lib/utils';
@@ -75,6 +76,21 @@ export function PlanFeatures({ plan, className }: { plan: PlanId; className?: st
     t('features.imageMb', { count: l.imageMb }),
     t('features.videoMb', { count: l.videoMb }),
   ];
+  if (l.voiceChannels) {
+    items.push(
+      t('features.voiceChannels', { count: l.voiceChannels, people: l.voiceParticipants }),
+    );
+  }
+  if (perks.screenShare) items.push(t('features.screenShare'));
+  for (const perk of [
+    'nameEffects',
+    'roleIcons',
+    'pageBackground',
+    'chatBackgrounds',
+    'separators',
+  ] as const) {
+    if (perks[perk]) items.push(t(`features.${perk}`));
+  }
   if (perks.badge) items.push(t('features.badge', { plan: t(`names.${plan}`) }));
   if (perks.featured) items.push(t('features.featured'));
   return (
@@ -163,16 +179,26 @@ export function PlanCard({
   );
 }
 
-const ROWS: (keyof PlanLimits | 'badge' | 'featured')[] = [
+const ROWS: (keyof PlanLimits | keyof PlanPerks)[] = [
   'servers',
   'roles',
   'channels',
   'attachments',
   'imageMb',
   'videoMb',
+  'voiceChannels',
+  'voiceParticipants',
+  'screenShare',
+  'nameEffects',
+  'roleIcons',
+  'pageBackground',
+  'chatBackgrounds',
+  'separators',
   'badge',
   'featured',
 ];
+
+const isPerk = (row: string): row is keyof PlanPerks => row in PLAN_PERKS.free;
 
 /** Every limit and perk, side by side. */
 export function ComparisonTable() {
@@ -201,7 +227,7 @@ export function ComparisonTable() {
               </th>
               {PLAN_IDS.map((p) => {
                 let cell: React.ReactNode;
-                if (row === 'badge' || row === 'featured') {
+                if (isPerk(row)) {
                   cell = PLAN_PERKS[p][row] ? (
                     <Check
                       aria-label={t('compare.yes')}
@@ -216,8 +242,13 @@ export function ComparisonTable() {
                     />
                   );
                 } else {
-                  const v = PLAN_LIMITS[p][row];
-                  cell = row === 'imageMb' || row === 'videoMb' ? t('mb', { count: v }) : v;
+                  const v = PLAN_LIMITS[p][row as keyof PlanLimits];
+                  cell =
+                    row === 'imageMb' || row === 'videoMb'
+                      ? t('mb', { count: v })
+                      : v === 0
+                        ? t('compare.none')
+                        : v;
                 }
                 return (
                   <td key={p} className="p-2 text-center whitespace-nowrap tabular-nums sm:p-3">

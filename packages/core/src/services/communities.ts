@@ -31,6 +31,7 @@ import { audit, diffOf } from './audit';
 import { cached } from '../cache';
 import { cancelCommunitySubscriptions } from './billing';
 import { queueMediaCleanup } from './media-cleanup';
+import { endCommunityVoiceCalls } from './voice-rooms';
 
 const MAX_OWNED_COMMUNITIES = 10;
 
@@ -302,6 +303,7 @@ export async function deleteCommunity(ctx: MemberContext, confirmSlug: string): 
   });
   // A deleted community shouldn't keep being charged for.
   await cancelCommunitySubscriptions(ctx.community.id);
+  await endCommunityVoiceCalls(ctx.community.id);
   await queueMediaCleanup({ kind: 'community', id: ctx.community.id });
 }
 

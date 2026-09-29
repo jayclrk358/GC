@@ -1,5 +1,5 @@
 import { listRoles, loadAuthors, membersWithRoles } from '@magnox/core';
-import { nameStyleView, themeBackdrops, type BlockConfig } from '@magnox/shared';
+import { nameStyleView, planPerks, themeBackdrops, type BlockConfig } from '@magnox/shared';
 import type { LoadedCommunity } from '@/lib/community';
 import { getPrefs } from '@/lib/prefs';
 import { mediaUrl } from '@/lib/media';
@@ -32,6 +32,7 @@ export async function StaffBlock({
     people.map((p) => p.userId),
   );
   const backdrops = themeBackdrops(data.community.theme);
+  const perks = planPerks(data.community.plan);
   const byId = new Map(roles.map((r) => [r.id, r]));
   const sorted = [...people].sort(
     (a, b) => (byId.get(b.roleId)?.position ?? 0) - (byId.get(a.roleId)?.position ?? 0),
@@ -67,9 +68,9 @@ export async function StaffBlock({
                   <RoleBadge
                     name={role.name}
                     color={role.color}
-                    iconUrl={mediaUrl(role.iconKey)}
+                    iconUrl={perks.roleIcons ? mediaUrl(role.iconKey) : null}
                     colorblind={prefs.colorblindRoleColors}
-                    style={nameStyleView(role.color, role.badgeStyle, backdrops)}
+                    style={nameStyleView(role.color, role.badgeStyle, backdrops, perks)}
                   />
                 )}
               </div>

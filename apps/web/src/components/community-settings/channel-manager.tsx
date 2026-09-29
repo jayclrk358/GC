@@ -13,18 +13,23 @@ import {
   MessageCircle,
   Pencil,
   Plus,
+  SeparatorHorizontal,
   ShieldCheck,
   Trash2,
+  Volume2,
 } from 'lucide-react';
+import type { PlanId, PlanPerks } from '@magnox/shared';
+import { PlanLock } from '@/components/billing/plan-lock';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Field } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
+import { Input, Select } from '@/components/ui/input';
 import { Badge, EmptyState } from '@/components/ui/misc';
 import {
   createChannelAction,
   deleteChannelAction,
   reorderChannelsAction,
+  setChatBackgroundEverywhereAction,
   updateChannelAction,
 } from '@/app/actions/channels';
 import { ChannelForm, type ChannelData, type ChannelFormValues } from './channel-form';
@@ -33,6 +38,7 @@ import { ChannelPermissions } from './channel-permissions';
 type Dialogs =
   | { kind: 'channel'; channel?: ChannelData; parentId?: string | null }
   | { kind: 'category'; channel?: ChannelData }
+  | { kind: 'separator'; channel?: ChannelData; parentId?: string | null }
   | { kind: 'perms'; channel: ChannelData }
   | { kind: 'delete'; channel: ChannelData }
   | null;
@@ -67,12 +73,18 @@ export function ChannelManager({
   channels: initial,
   roles,
   canEditPerms,
+  plan,
+  perks,
+  voiceChannelsLeft,
 }: {
   communityId: string;
   slug: string;
   channels: ChannelData[];
   roles: { id: string; name: string; isDefault: boolean }[];
   canEditPerms: boolean;
+  plan: PlanId;
+  perks: PlanPerks;
+  voiceChannelsLeft: number;
 }) {
   const t = useTranslations('channels');
   const router = useRouter();
@@ -112,10 +124,19 @@ export function ChannelManager({
   }
 
   async function saveChannel(v: ChannelFormValues, existing?: ChannelData) {
+    const { backgroundEverywhere, ...input } = v;
     const r = existing
-      ? await updateChannelAction(communityId, existing.id, v)
-      : await createChannelAction(communityId, v);
+      ? await updateChannelAction(communityId, existing.id, input)
+      : await createChannelAction(communityId, input);
     if (!r.ok) return { error: r.error, fields: r.fields };
+    if (backgroundEverywhere && input.type === 'text') {
+      const all = await setChatBackgroundEverywhereAction(
+        communityId,
+        input.settings.backgroundKey,
+        input.settings.backgroundDim,
+      );
+      if (!all.ok) toast.error(all.error);
+    }
     toast.success(
       existing ? t('savedToast', { name: v.name }) : t('createdToast', { name: v.name }),
     );
@@ -124,15 +145,30 @@ export function ChannelManager({
   }
 
   const row = (c: ChannelData, list: ChannelData[], i: number) => {
-    const Icon = c.type === 'announcement' ? Megaphone : c.type === 'text' ? MessageCircle : Hash;
+    const Icon =
+      c.type === 'announcement'
+        ? Megaphone
+        : c.type === 'text'
+          ? MessageCircle
+          : c.type === 'voice'
+            ? Volume2
+            : c.type === 'separator'
+              ? SeparatorHorizontal
+              : Hash;
+    const label = c.type === 'separator' ? c.name || t('separatorUnnamed') : c.name;
     return (
       <li key={c.id} className="flex flex-wrap items-center gap-3 px-3 py-2">
         <Icon className="size-4 shrink-0 text-muted" aria-hidden />
         <div className="min-w-0 flex-1">
           <p className="flex flex-wrap items-center gap-2 font-semibold">
-            {c.name}
+            {label}
             {c.type === 'announcement' && <Badge>{t('types.announcement')}</Badge>}
             {c.type === 'text' && <Badge>{t('types.text')}</Badge>}
+            {c.type === 'voice' && <Badge>{t('types.voice')}</Badge>}
+            {c.type === 'separator' && <Badge>{t('types.separator')}</Badge>}
+            {c.type === 'text' && c.settings.backgroundKey && (
+              <Badge tone="primary">{t('backgroundBadge')}</Badge>
+            )}
             {c.settings.qa && <Badge tone="success">{t('qaBadge')}</Badge>}
             {c.settings.voting && <Badge tone="primary">{t('votingBadge')}</Badge>}
           </p>
@@ -160,12 +196,18 @@ export function ChannelManager({
           <Button
             size="icon-sm"
             variant="ghost"
-            aria-label={t('editNamed', { name: c.name })}
-            onClick={() => setDialog({ kind: 'channel', channel: c })}
+            aria-label={t('editNamed', { name: label })}
+            onClick={() =>
+              setDialog(
+                c.type === 'separator'
+                  ? { kind: 'separator', channel: c }
+                  : { kind: 'channel', channel: c },
+              )
+            }
           >
             <Pencil aria-hidden />
           </Button>
-          {canEditPerms && (
+          {canEditPerms && c.type !== 'separator' && (
             <Button
               size="icon-sm"
               variant="ghost"
@@ -178,7 +220,7 @@ export function ChannelManager({
           <Button
             size="icon-sm"
             variant="ghost"
-            aria-label={t('deleteNamed', { name: c.name })}
+            aria-label={t('deleteNamed', { name: label })}
             onClick={() => setDialog({ kind: 'delete', channel: c })}
           >
             <Trash2 aria-hidden />
@@ -199,6 +241,9 @@ export function ChannelManager({
         </Button>
         <Button variant="outline" onClick={() => setDialog({ kind: 'category' })}>
           <FolderPlus aria-hidden /> {t('newCategory')}
+        </Button>
+        <Button variant="outline" onClick={() => setDialog({ kind: 'separator' })}>
+          <SeparatorHorizontal aria-hidden /> {t('newSeparator')}
         </Button>
         <Button asChild variant="ghost">
           <a href={`/c/${slug}/forum`}>{t('viewForum')}</a>
@@ -309,6 +354,11 @@ export function ChannelManager({
               categories={categories}
               onCancel={() => setDialog(null)}
               onSubmit={(v) => saveChannel(v, dialog.channel)}
+              communityId={communityId}
+              slug={slug}
+              chatBackgrounds={perks.chatBackgrounds}
+              voiceChannelsLeft={voiceChannelsLeft}
+              voiceUpgrade={plan === 'free' ? 'plus' : plan === 'plus' ? 'pro' : null}
             />
           </DialogContent>
         )}
@@ -329,6 +379,39 @@ export function ChannelManager({
                 router.refresh();
               }}
             />
+          </DialogContent>
+        )}
+      </Dialog>
+
+      <Dialog open={dialog?.kind === 'separator'} onOpenChange={(o) => !o && setDialog(null)}>
+        {dialog?.kind === 'separator' && (
+          <DialogContent
+            size="sm"
+            title={dialog.channel ? t('editSeparator') : t('newSeparator')}
+            description={t('separatorExplain')}
+          >
+            {perks.separators || dialog.channel ? (
+              <SeparatorForm
+                initial={dialog.channel}
+                parentId={
+                  dialog.channel
+                    ? dialog.channel.parentId
+                    : (dialog.parentId ?? categories[0]?.id ?? null)
+                }
+                categories={categories}
+                onCancel={() => setDialog(null)}
+                onSubmit={async (v) => {
+                  const r = dialog.channel
+                    ? await updateChannelAction(communityId, dialog.channel.id, v)
+                    : await createChannelAction(communityId, { type: 'separator', ...v });
+                  if (!r.ok) return r.error;
+                  setDialog(null);
+                  router.refresh();
+                }}
+              />
+            ) : (
+              <PlanLock perk="separators" slug={slug} what={t('separatorLocked')} />
+            )}
           </DialogContent>
         )}
       </Dialog>
@@ -429,6 +512,76 @@ function CategoryForm({
         </Button>
         <Button type="submit" loading={pending}>
           {t('save')}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+/** A separator's label (blank for just a line) and where it sits. */
+function SeparatorForm({
+  initial,
+  parentId,
+  categories,
+  onSubmit,
+  onCancel,
+}: {
+  initial?: ChannelData;
+  parentId: string | null;
+  categories: { id: string; name: string }[];
+  onSubmit: (v: { name: string; parentId: string | null }) => Promise<string | void>;
+  onCancel: () => void;
+}) {
+  const t = useTranslations('channels');
+  const [name, setName] = React.useState(initial?.name ?? '');
+  const [parent, setParent] = React.useState<string | null>(parentId);
+  const [error, setError] = React.useState<string | null>(null);
+  const [pending, setPending] = React.useState(false);
+  return (
+    <form
+      className="flex flex-col gap-4"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setPending(true);
+        const err = await onSubmit({ name: name.trim(), parentId: parent });
+        setPending(false);
+        if (err) setError(err);
+      }}
+    >
+      {error && (
+        <p role="alert" className="text-sm font-medium text-danger">
+          {error}
+        </p>
+      )}
+      <Field label={t('separatorLabel')} description={t('separatorLabelHint')}>
+        {(p) => (
+          <Input
+            {...p}
+            value={name}
+            maxLength={40}
+            onChange={(e) => setName(e.target.value)}
+            autoComplete="off"
+          />
+        )}
+      </Field>
+      <Field label={t('category')}>
+        {(p) => (
+          <Select {...p} value={parent ?? ''} onValueChange={(value) => setParent(value || null)}>
+            <option value="">{t('noCategory')}</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </Select>
+        )}
+      </Field>
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="ghost" onClick={onCancel}>
+          {t('cancel')}
+        </Button>
+        <Button type="submit" loading={pending}>
+          {initial ? t('save') : t('create')}
         </Button>
       </div>
     </form>

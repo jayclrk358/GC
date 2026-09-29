@@ -25,10 +25,18 @@ const COMMUNITY_PURPOSES = new Set<UploadPurpose>([
   'gallery',
   'emoji',
   'role-icon',
+  'channel-background',
 ]);
 
 /** Uploads whose size limit grows with the community's plan. */
-const PLAN_SIZED = new Set<UploadPurpose>(['content', 'video', 'gallery', 'banner', 'background']);
+const PLAN_SIZED = new Set<UploadPurpose>([
+  'content',
+  'video',
+  'gallery',
+  'banner',
+  'background',
+  'channel-background',
+]);
 
 /** The community plan's size limit for this upload, if it's for a community the uploader is in. */
 async function planUploadLimit(opts: {
@@ -82,7 +90,9 @@ export async function saveUpload(opts: {
         ? Permission.MANAGE_EMOJI
         : opts.purpose === 'role-icon'
           ? Permission.MANAGE_ROLES
-          : Permission.MANAGE_COMMUNITY,
+          : opts.purpose === 'channel-background'
+            ? Permission.MANAGE_CHANNELS
+            : Permission.MANAGE_COMMUNITY,
     );
   }
   const maxBytes = await planUploadLimit(opts);

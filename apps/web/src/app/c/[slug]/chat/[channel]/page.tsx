@@ -1,10 +1,18 @@
 import { getTranslations } from 'next-intl/server';
-import { isMuted, listBlockedUsers, listMessages } from '@magnox/core';
-import { has, isUuid, Permission, planLimits } from '@magnox/shared';
+import {
+  isMuted,
+  listBlockedUsers,
+  listMessages,
+  syncVoicePeople,
+  voiceEnabled,
+} from '@magnox/core';
+import { has, isUuid, Permission, planLimits, planPerks } from '@magnox/shared';
+import { imgSources } from '@/lib/media';
 import { loadChatChannel, loadChatUnreads, loadCommunity } from '@/lib/community';
 import { formatDateTime } from '@/lib/format';
 import { JoinButton } from '@/components/community/join-button';
 import { ChatNotice, ChatView, SignInToChat } from '@/components/chat/chat-view';
+import { VoiceView, type VoiceBlock } from '@/components/voice/voice-view';
 
 type Params = Promise<{ slug: string; channel: string }>;
 
@@ -29,6 +37,30 @@ export default async function ChatChannelPage({
   const user = data.user;
   const member = data.ctx.isMember;
 
+  if (channel.type === 'voice') {
+    // Put the "who's here" list right if a LiveKit webhook was missed.
+    await syncVoicePeople(channel.id);
+    const blocked: VoiceBlock | null = !voiceEnabled()
+      ? 'notSetUp'
+      : !planLimits(data.community.plan).voiceChannels
+        ? 'needsPlan'
+        : !user
+          ? 'signedOut'
+          : !member
+            ? 'notMember'
+            : !has(perms, Permission.CONNECT)
+              ? 'noPermission'
+              : null;
+    return (
+      <VoiceView
+        channel={{ id: channel.id, name: channel.name, topic: channel.topic }}
+        slug={slug}
+        blocked={blocked}
+        canModerate={has(perms, Permission.MUTE_MEMBERS)}
+      />
+    );
+  }
+
   const unread = (await loadChatUnreads(slug)).get(channel.id);
   const lastReadId = unread?.unread ? unread.lastReadId : null;
   const [initial, blocked, muted] = await Promise.all([
@@ -43,6 +75,11 @@ export default async function ChatChannelPage({
   ]);
 
   const canSend = member && has(perms, Permission.SEND_MESSAGES);
+  // Chat backgrounds are a paid perk: kept on Free, but not shown.
+  const image = planPerks(data.community.plan).chatBackgrounds
+    ? imgSources(channel.settings.backgroundKey, 'md', '(min-width: 1024px) 70vw, 100vw')
+    : null;
+  const background = image ? { image, dim: channel.settings.backgroundDim ?? 70 } : null;
   const notice = !user ? (
     <SignInToChat
       href={`/sign-in?next=${encodeURIComponent(`/c/${slug}/chat/${channel.name}`)}`}
@@ -81,6 +118,7 @@ export default async function ChatChannelPage({
         topic: channel.topic,
         slowmodeSeconds: channel.slowmodeSeconds,
       }}
+      background={background}
       me={
         user
           ? {

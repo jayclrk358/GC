@@ -888,7 +888,8 @@
     "unsaved": "Unsaved changes",
     "saveBlocked": "Fix contrast issues before saving.",
     "saveHint": "Visitors with high contrast or custom fonts turned on will still see their own settings.",
-    "saved": "Theme saved"
+    "saved": "Theme saved",
+    "backgroundLocked": "Page background images"
   },
   "blocks": {
     "title": "Page builder",
@@ -1189,6 +1190,14 @@
         "name": "Edit wiki",
         "description": "Create and edit wiki pages."
       },
+      "CONNECT": {
+        "name": "Connect to voice",
+        "description": "Join voice channels and listen."
+      },
+      "SPEAK": {
+        "name": "Speak",
+        "description": "Talk and share their screen in voice channels."
+      },
       "CREATE_INVITE": {
         "name": "Create invites",
         "description": "Generate invite links."
@@ -1244,6 +1253,10 @@
       "MANAGE_NICKNAMES": {
         "name": "Manage nicknames",
         "description": "Change other members' nicknames."
+      },
+      "MUTE_MEMBERS": {
+        "name": "Mute members",
+        "description": "Mute others in voice channels and remove them from calls."
       },
       "MANAGE_CHANNELS": {
         "name": "Manage channels",
@@ -1344,7 +1357,9 @@
     "useRoleColour": "Use the role colour",
     "mainColour": "Colour",
     "previewOf": "Preview of {what}",
-    "previewRole": "Role"
+    "previewRole": "Role",
+    "iconImageLocked": "Role icons",
+    "effectsLocked": "Name effects and animations"
   },
   "serverSettings": {
     "title": "Servers",
@@ -1775,7 +1790,9 @@
     "types": {
       "forum": "Forum",
       "announcement": "Announcements",
-      "text": "Chat"
+      "text": "Chat",
+      "voice": "Voice",
+      "separator": "Separator"
     },
     "name": "Name",
     "nameHint": "Lowercase letters, numbers and dashes, like build-contests.",
@@ -1841,7 +1858,25 @@
     "flairChannel": "Channel",
     "addFlair": "Add flair",
     "flairCreated": "Flair added.",
-    "deleteFlair": "Delete flair {name}"
+    "deleteFlair": "Delete flair {name}",
+    "newSeparator": "New separator",
+    "editSeparator": "Edit separator",
+    "separatorExplain": "A labelled line between channels in lists, to group them without a category.",
+    "separatorLabel": "Label",
+    "separatorLabelHint": "Leave blank for just a line.",
+    "separatorUnnamed": "(line)",
+    "separatorLocked": "Custom separators",
+    "background": "Background",
+    "backgroundImage": "Background image",
+    "backgroundHint": "Shown behind the messages, dimmed so they stay easy to read.",
+    "backgroundDim": "Dim the image",
+    "backgroundDimHint": "{value}% (higher keeps text easier to read)",
+    "backgroundEverywhere": "Use for every chat channel",
+    "backgroundEverywhereHint": "Put this background (or none) behind all chat channels in the community.",
+    "backgroundLocked": "Chat channel backgrounds",
+    "backgroundBadge": "Background",
+    "voiceLocked": "Voice channels",
+    "moreVoiceLocked": "More voice channels"
   },
   "reports": {
     "title": "Reports",
@@ -2076,7 +2111,8 @@
     "videoTooLarge": "That video is too large (max {max} MB).",
     "videoBadge": "Video",
     "uploadingFile": "Uploading {name}",
-    "videoUnplayable": "Your browser can't play this video, so others probably can't either. Use an MP4 (H.264) or WebM file."
+    "videoUnplayable": "Your browser can't play this video, so others probably can't either. Use an MP4 (H.264) or WebM file.",
+    "voiceChannelSr": "(voice channel)"
   },
   "serverPage": {
     "verified": "Verified",
@@ -2171,8 +2207,8 @@
     },
     "taglines": {
       "free": "Everything you need to start a community.",
-      "plus": "More room to grow, and a Plus badge.",
-      "pro": "The biggest limits, a Pro badge and a place in Featured."
+      "plus": "More room, voice channels, chat backgrounds, name effects and a Plus badge.",
+      "pro": "The biggest limits, bigger voice calls, screen sharing, a Pro badge and a place in Featured."
     },
     "interval": "Billing period",
     "monthly": "Monthly",
@@ -2192,13 +2228,21 @@
       "imageMb": "{count} MB image uploads",
       "videoMb": "{count} MB chat videos",
       "badge": "{plan} badge on your community",
-      "featured": "Featured on Explore"
+      "featured": "Featured on Explore",
+      "voiceChannels": "{count, plural, one {# voice channel} other {# voice channels}}, up to {people} people each",
+      "nameEffects": "Name and role effects and animations",
+      "roleIcons": "Role icons",
+      "pageBackground": "Community background image",
+      "chatBackgrounds": "Chat channel backgrounds",
+      "separators": "Custom separators in channel lists",
+      "screenShare": "Screen sharing in voice channels"
     },
     "compare": {
       "caption": "Compare plans",
       "feature": "Feature",
       "yes": "Included",
-      "no": "Not included"
+      "no": "Not included",
+      "none": "None"
     },
     "rows": {
       "servers": "Linked game servers",
@@ -2208,9 +2252,22 @@
       "imageMb": "Image uploads",
       "videoMb": "Chat videos",
       "badge": "Plan badge",
-      "featured": "Featured on Explore"
+      "featured": "Featured on Explore",
+      "voiceChannels": "Voice channels",
+      "voiceParticipants": "People per voice channel",
+      "nameEffects": "Name and role effects",
+      "roleIcons": "Role icons",
+      "pageBackground": "Community background image",
+      "chatBackgrounds": "Chat backgrounds",
+      "separators": "Custom separators",
+      "screenShare": "Screen sharing"
     },
-    "mb": "{count} MB"
+    "mb": "{count} MB",
+    "lock": {
+      "needs": "{what} need {plan}.",
+      "kept": "Anything already set up is kept, and shows again after upgrading.",
+      "cta": "Get {plan}"
+    }
   },
   "store": {
     "title": "Store",
@@ -2297,5 +2354,41 @@
     "online": "Online",
     "idle": "Idle",
     "offline": "Offline"
+  },
+  "voice": {
+    "voiceChannel": "(voice channel)",
+    "join": "Join voice",
+    "leave": "Leave",
+    "mute": "Mute",
+    "deafen": "Deafen",
+    "share": "Share screen",
+    "connecting": "Connecting…",
+    "connected": "Voice connected",
+    "barLabel": "Voice call",
+    "inChannel": "{count, plural, one {# person} other {# people}} in voice",
+    "speaking": "(speaking)",
+    "micOff": "Microphone off",
+    "you": "{name} (you)",
+    "empty": "Nobody's here yet. Join to start talking.",
+    "screens": "Shared screens",
+    "screenOf": "{name}'s screen",
+    "muteOther": "Mute {name}",
+    "removeOther": "Remove {name} from the call",
+    "mutedOther": "{name} was muted.",
+    "removedOther": "{name} was removed from the call.",
+    "joinedAnnounce": "You joined {name}.",
+    "leftAnnounce": "You left the voice channel.",
+    "noMicrophone": "Couldn't use your microphone. Check your browser's permission for this site.",
+    "connectFailed": "Couldn't connect to voice. Please try again.",
+    "removedYou": "You were removed from the voice channel.",
+    "callEnded": "The voice channel was closed.",
+    "needsPlanWhat": "Voice channels",
+    "signIn": "Sign in",
+    "signInToTalk": "to join voice channels.",
+    "blocked": {
+      "notMember": "Join this community to use its voice channels.",
+      "noPermission": "You don't have permission to join this voice channel.",
+      "notSetUp": "Voice isn't set up on this site yet."
+    }
   }
 }

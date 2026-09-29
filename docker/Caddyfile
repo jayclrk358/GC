@@ -10,6 +10,10 @@
 	@socket path /socket.io/*
 	reverse_proxy @socket realtime:3001
 
+	# Voice: LiveKit's signalling (the audio itself goes straight to LiveKit's UDP port).
+	@voice path /rtc /rtc/*
+	reverse_proxy @voice livekit:7880
+
 	reverse_proxy web:3000
 }
 

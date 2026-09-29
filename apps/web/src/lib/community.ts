@@ -88,23 +88,31 @@ export async function loadForumChannel(ctx: MemberContext, name: string) {
 }
 
 /** A chat (text) channel the viewer can see, or a 404. */
-/** The chat channels someone can see, once per request (the chat layout and page share it). */
+/**
+ * What the chat area lists, once per request (the chat layout and page share it): chat and
+ * voice channels, and the separators between them.
+ */
 export const loadChatChannels = cache(async (slug: string) =>
-  listVisibleChannels((await loadCommunity(slug)).ctx, { types: ['text'] }),
+  listVisibleChannels((await loadCommunity(slug)).ctx, { types: ['text', 'voice', 'separator'] }),
 );
 
-/** Unread state for all of those channels, once per request. */
+/** Unread state for the chat channels, once per request. */
 export const loadChatUnreads = cache(async (slug: string) => {
   const { channels } = await loadChatChannels(slug);
   return channelUnreads(
     (await loadCommunity(slug)).ctx,
-    channels.map((c) => c.id),
+    channels.filter((c) => c.type === 'text').map((c) => c.id),
   );
 });
 
+/** A chat or voice channel by the name in the address. */
 export async function loadChatChannel(slug: string, name: string) {
   const { channels } = await loadChatChannels(slug);
-  const channel = channels.find((c) => c.name === decodeURIComponent(name).toLowerCase());
+  const channel = channels.find(
+    (c) =>
+      (c.type === 'text' || c.type === 'voice') &&
+      c.name === decodeURIComponent(name).toLowerCase(),
+  );
   if (!channel) notFound();
   return channel;
 }

@@ -4,15 +4,17 @@ import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Hash, Plus } from 'lucide-react';
+import { Hash, Plus, Volume2 } from 'lucide-react';
 import type { MessageView } from '@magnox/core';
 import { mentionsMe } from '@magnox/shared';
 import { useRooms, useUserEvents } from '@/lib/realtime';
 import { cn } from '@/lib/utils';
+import { VoiceChannelPeople } from '@/components/voice/voice-people';
 
 interface SidebarChannel {
   id: string;
   name: string;
+  type: 'text' | 'voice' | 'separator';
 }
 
 interface Props {
@@ -23,12 +25,13 @@ interface Props {
   canManage: boolean;
 }
 
-/** Text channels with live unread and mention counts. */
+/** Chat channels with live unread and mention counts, voice channels, and separators. */
 export function ChannelSidebar({ slug, categories, initialUnreads, me, canManage }: Props) {
   const t = useTranslations('chat');
   const pathname = usePathname();
   const base = `/c/${slug}/chat`;
-  const all = categories.flatMap((c) => c.channels);
+  const all = categories.flatMap((c) => c.channels).filter((c) => c.type !== 'separator');
+  const text = all.filter((c) => c.type === 'text');
   const active = all.find((c) => pathname === `${base}/${c.name}`)?.id ?? null;
   const [unreads, setUnreads] = React.useState(initialUnreads);
   // Opening a channel reads it.
@@ -41,7 +44,7 @@ export function ChannelSidebar({ slug, categories, initialUnreads, me, canManage
   }
 
   // Unread dots are only for signed-in people; visitors don't need every channel's messages.
-  useRooms(me ? all.map((c) => `channel:${c.id}`) : [], {
+  useRooms(me ? text.map((c) => `channel:${c.id}`) : [], {
     'message:new': (p: { channelId: string; message: MessageView }) => {
       if (p.channelId === active || !me || p.message.authorId === me.id) return;
       const pinged = mentionsMe(p.message, me.id, me.roleIds);
@@ -76,6 +79,22 @@ export function ChannelSidebar({ slug, categories, initialUnreads, me, canManage
           )}
           <ul aria-label={cat.name || t('channels')}>
             {cat.channels.map((c) => {
+              if (c.type === 'separator') {
+                return (
+                  <li key={c.id} className="px-2 pt-2 pb-1">
+                    <div
+                      role="separator"
+                      aria-label={c.name || undefined}
+                      className="flex items-center gap-2 text-xs font-semibold text-muted"
+                    >
+                      <span aria-hidden className="h-px flex-1 bg-border" />
+                      {c.name && <span aria-hidden>{c.name}</span>}
+                      {c.name && <span aria-hidden className="h-px flex-1 bg-border" />}
+                    </div>
+                  </li>
+                );
+              }
+              const Icon = c.type === 'voice' ? Volume2 : Hash;
               const u = unreads[c.id];
               const isActive = c.id === active;
               const unread = !isActive && u?.unread;
@@ -90,8 +109,9 @@ export function ChannelSidebar({ slug, categories, initialUnreads, me, canManage
                       unread && 'font-bold text-fg',
                     )}
                   >
-                    <Hash className="size-4 shrink-0" aria-hidden />
+                    <Icon className="size-4 shrink-0" aria-hidden />
                     <span className="min-w-0 flex-1 truncate">{c.name}</span>
+                    {c.type === 'voice' && <span className="sr-only">{t('voiceChannelSr')}</span>}
                     {unread && !mentions && (
                       <span aria-hidden className="size-2 rounded-full bg-fg" />
                     )}
@@ -103,6 +123,7 @@ export function ChannelSidebar({ slug, categories, initialUnreads, me, canManage
                       </span>
                     )}
                   </Link>
+                  {c.type === 'voice' && <VoiceChannelPeople channelId={c.id} />}
                 </li>
               );
             })}
@@ -135,7 +156,8 @@ export function ChannelSidebar({ slug, categories, initialUnreads, me, canManage
       </nav>
       <details className="border-b border-border md:hidden">
         <summary className="flex cursor-pointer items-center gap-2 px-4 py-2 text-sm font-semibold">
-          {t('channels')}: #{current?.name ?? ''}
+          {t('channels')}: {current?.type === 'voice' ? '' : '#'}
+          {current?.name ?? ''}
           {totalMentions > 0 && (
             <span className="rounded-full bg-danger px-1.5 text-xs text-bg">{totalMentions}</span>
           )}

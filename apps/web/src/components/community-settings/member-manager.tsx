@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Crown, Tags } from 'lucide-react';
 import type { RoleSummary } from '@magnox/core';
-import { nameStyleView, pickRoleDecor, type NameBackdrops } from '@magnox/shared';
+import { nameStyleView, pickRoleDecor, type DecorPerks, type NameBackdrops } from '@magnox/shared';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Avatar, EmptyState } from '@/components/ui/misc';
@@ -33,12 +33,15 @@ export function MemberManager({
   actor,
   can,
   backdrops,
+  perks,
 }: {
   communityId: string;
   members: Member[];
   roles: RoleSummary[];
   /** The community's backgrounds, so nametag colours stay readable. */
   backdrops: NameBackdrops;
+  /** What the community's plan shows (name effects, role icons). */
+  perks: DecorPerks;
   actor: { isOwner: boolean; topPosition: number; userId: string };
   can: { roles: boolean; kick: boolean; ban: boolean; timeout: boolean };
 }) {
@@ -89,6 +92,7 @@ export function MemberManager({
                         .map((id) => byId.get(id))
                         .filter((r): r is RoleSummary => Boolean(r)),
                       backdrops,
+                      perks,
                     ).nameStyle
                   }
                 />
@@ -112,8 +116,8 @@ export function MemberManager({
                     <RoleBadge
                       name={r.name}
                       color={r.color}
-                      iconUrl={r.iconUrl}
-                      style={nameStyleView(r.color, r.badgeStyle, backdrops)}
+                      iconUrl={perks.roleIcons ? r.iconUrl : null}
+                      style={nameStyleView(r.color, r.badgeStyle, backdrops, perks)}
                     />
                   </li>
                 ))}
@@ -154,8 +158,8 @@ export function MemberManager({
                       <RoleBadge
                         name={r.name}
                         color={r.color}
-                        iconUrl={r.iconUrl}
-                        style={nameStyleView(r.color, r.badgeStyle, backdrops)}
+                        iconUrl={perks.roleIcons ? r.iconUrl : null}
+                        style={nameStyleView(r.color, r.badgeStyle, backdrops, perks)}
                       />
                     </label>
                   </li>

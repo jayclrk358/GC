@@ -4,19 +4,20 @@ import {
   docToText,
   flairInputSchema,
   has,
+  type NameStyleView,
+  nameStyleView,
   newId,
   Permission,
+  pickRoleDecor,
+  planPerks,
   postInputSchema,
   REACTIONS,
-  sanitizeDoc,
-  threadInputSchema,
-  THREAD_SORTS,
   type RichNode,
-  type ThreadSort,
-  nameStyleView,
-  pickRoleDecor,
+  sanitizeDoc,
   themeBackdrops,
-  type NameStyleView,
+  THREAD_SORTS,
+  threadInputSchema,
+  type ThreadSort,
 } from '@magnox/shared';
 import { z } from 'zod';
 import { channelPermissions, requirePerm, type MemberContext } from '../access';
@@ -383,12 +384,13 @@ export async function listPosts(
           )
       : [],
     db
-      .select({ theme: schema.communities.theme })
+      .select({ theme: schema.communities.theme, plan: schema.communities.plan })
       .from(schema.communities)
       .where(eq(schema.communities.id, ctx.community.id))
       .limit(1),
   ]);
   const backdrops = community ? themeBackdrops(community.theme) : undefined;
+  const perks = planPerks(community?.plan);
   const nick = new Map(members.map((m) => [m.userId, m.nickname]));
   const topRole = new Map<string, (typeof topRoles)[number]>();
   const rolesByUser = new Map<string, (typeof topRoles)[number][]>();
@@ -398,7 +400,7 @@ export async function listPosts(
     rolesByUser.set(r.userId, [...(rolesByUser.get(r.userId) ?? []), r]);
   }
   const decorFor = (userId: string | null) => {
-    const d = pickRoleDecor(userId ? (rolesByUser.get(userId) ?? []) : [], backdrops);
+    const d = pickRoleDecor(userId ? (rolesByUser.get(userId) ?? []) : [], backdrops, perks);
     return {
       nameStyle: d.nameStyle,
       roleIcon: d.icon ? { url: mediaUrl(d.icon.key)!, roleName: d.icon.roleName } : null,
@@ -434,7 +436,7 @@ export async function listPosts(
           nickname: r.authorId ? (nick.get(r.authorId) ?? null) : null,
           roleColor: role?.color ?? null,
           roleName: role?.name ?? null,
-          roleStyle: role ? nameStyleView(role.color, role.badgeStyle, backdrops) : null,
+          roleStyle: role ? nameStyleView(role.color, role.badgeStyle, backdrops, perks) : null,
           ...decorFor(r.authorId),
         },
         reactions: [...(byPost.get(r.id)?.entries() ?? [])]

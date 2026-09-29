@@ -2,20 +2,30 @@
 
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
+import type { PaidPlanId } from '@magnox/shared';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Input, Select } from '@/components/ui/input';
 import { SwitchField } from '@/components/ui/switch';
 import { FormError } from '@/components/auth/form-error';
+import { PlanLock } from '@/components/billing/plan-lock';
+import { ImageUpload } from '@/components/upload/image-upload';
 
 export interface ChannelData {
   id: string;
   parentId: string | null;
-  type: 'category' | 'forum' | 'text' | 'announcement' | 'wiki';
+  type: 'category' | 'forum' | 'text' | 'announcement' | 'wiki' | 'voice' | 'separator';
   name: string;
   topic: string;
   position: number;
-  settings: { voting?: boolean; qa?: boolean; requireFlair?: boolean; defaultSort?: string };
+  settings: {
+    voting?: boolean;
+    qa?: boolean;
+    requireFlair?: boolean;
+    defaultSort?: string;
+    backgroundKey?: string | null;
+    backgroundDim?: number;
+  };
   slowmodeSeconds: number;
 }
 
@@ -23,7 +33,7 @@ const SLOWMODES = [0, 10, 30, 60, 300, 900, 3600];
 const SORTS = ['latest', 'new', 'top', 'hot', 'unanswered'] as const;
 
 export type ChannelFormValues = {
-  type: 'forum' | 'announcement' | 'text';
+  type: 'forum' | 'announcement' | 'text' | 'voice';
   name: string;
   topic: string;
   parentId: string | null;
@@ -32,17 +42,26 @@ export type ChannelFormValues = {
     qa: boolean;
     requireFlair: boolean;
     defaultSort: (typeof SORTS)[number];
+    backgroundKey: string | null;
+    backgroundDim: number;
   };
   slowmodeSeconds: number;
+  /** Chat: put this channel's background behind every chat channel too. */
+  backgroundEverywhere?: boolean;
 };
 
-/** Create or edit a forum/announcement channel. */
+/** Create or edit a forum, announcement, chat or voice channel. */
 export function ChannelForm({
   initial,
   categories,
   onSubmit,
   onCancel,
   isNew,
+  communityId,
+  slug,
+  chatBackgrounds,
+  voiceChannelsLeft,
+  voiceUpgrade,
 }: {
   initial?: ChannelData;
   categories: { id: string; name: string }[];
@@ -51,10 +70,20 @@ export function ChannelForm({
   ) => Promise<{ error?: string; fields?: Record<string, string> } | void>;
   onCancel: () => void;
   isNew: boolean;
+  communityId: string;
+  slug: string;
+  /** The plan allows pictures behind chat channels. */
+  chatBackgrounds: boolean;
+  /** How many more voice channels the plan allows, and the plan that would allow more. */
+  voiceChannelsLeft: number;
+  voiceUpgrade: PaidPlanId | null;
 }) {
   const t = useTranslations('channels');
   const [v, setV] = React.useState<ChannelFormValues>({
-    type: initial?.type === 'announcement' || initial?.type === 'text' ? initial.type : 'forum',
+    type:
+      initial?.type === 'announcement' || initial?.type === 'text' || initial?.type === 'voice'
+        ? initial.type
+        : 'forum',
     name: initial?.name ?? '',
     topic: initial?.topic ?? '',
     parentId: initial?.parentId ?? categories[0]?.id ?? null,
@@ -65,8 +94,11 @@ export function ChannelForm({
       defaultSort: (SORTS as readonly string[]).includes(initial?.settings.defaultSort ?? '')
         ? (initial!.settings.defaultSort as (typeof SORTS)[number])
         : 'latest',
+      backgroundKey: initial?.settings.backgroundKey ?? null,
+      backgroundDim: initial?.settings.backgroundDim ?? 70,
     },
     slowmodeSeconds: initial?.slowmodeSeconds ?? 0,
+    backgroundEverywhere: false,
   });
   const [error, setError] = React.useState<string | null>(null);
   const [fields, setFields] = React.useState<Record<string, string>>({});
@@ -102,9 +134,19 @@ export function ChannelForm({
               <option value="forum">{t('types.forum')}</option>
               <option value="announcement">{t('types.announcement')}</option>
               <option value="text">{t('types.text')}</option>
+              <option value="voice" disabled={voiceChannelsLeft <= 0}>
+                {t('types.voice')}
+              </option>
             </Select>
           )}
         </Field>
+      )}
+      {isNew && voiceChannelsLeft <= 0 && voiceUpgrade && (
+        <PlanLock
+          plan={voiceUpgrade}
+          slug={slug}
+          what={voiceUpgrade === 'plus' ? t('voiceLocked') : t('moreVoiceLocked')}
+        />
       )}
       <Field label={t('name')} description={t('nameHint')} error={fields.name} required>
         {(p) => (
@@ -143,7 +185,52 @@ export function ChannelForm({
           </Select>
         )}
       </Field>
-      {v.type !== 'text' && (
+      {v.type === 'text' && (
+        <fieldset className="flex flex-col gap-3 rounded-ui border border-border p-4">
+          <legend className="px-1 text-sm font-semibold">{t('background')}</legend>
+          {chatBackgrounds ? (
+            <>
+              <ImageUpload
+                label={t('backgroundImage')}
+                description={t('backgroundHint')}
+                purpose="channel-background"
+                communityId={communityId}
+                shape="banner"
+                value={v.settings.backgroundKey}
+                onChange={(k) => setS({ backgroundKey: k })}
+              />
+              {v.settings.backgroundKey && (
+                <Field
+                  label={t('backgroundDim')}
+                  description={t('backgroundDimHint', { value: v.settings.backgroundDim })}
+                >
+                  {(p) => (
+                    <input
+                      {...p}
+                      type="range"
+                      min={0}
+                      max={95}
+                      value={v.settings.backgroundDim}
+                      aria-valuetext={`${v.settings.backgroundDim}%`}
+                      onChange={(e) => setS({ backgroundDim: Number(e.target.value) })}
+                      className="accent-[var(--c-primary)]"
+                    />
+                  )}
+                </Field>
+              )}
+              <SwitchField
+                label={t('backgroundEverywhere')}
+                description={t('backgroundEverywhereHint')}
+                checked={Boolean(v.backgroundEverywhere)}
+                onCheckedChange={(x) => set({ backgroundEverywhere: x })}
+              />
+            </>
+          ) : (
+            <PlanLock perk="chatBackgrounds" slug={slug} what={t('backgroundLocked')} />
+          )}
+        </fieldset>
+      )}
+      {v.type !== 'text' && v.type !== 'voice' && (
         <fieldset className="flex flex-col rounded-ui border border-border px-4 py-2">
           <legend className="px-1 text-sm font-semibold">{t('forumOptions')}</legend>
           <SwitchField
@@ -185,27 +272,29 @@ export function ChannelForm({
           </Field>
         </fieldset>
       )}
-      <Field label={t('slowmode')} description={t('slowmodeHint')}>
-        {(p) => (
-          <Select
-            {...p}
-            value={v.slowmodeSeconds}
-            onValueChange={(value) => set({ slowmodeSeconds: Number(value) })}
-          >
-            {SLOWMODES.map((s) => (
-              <option key={s} value={s}>
-                {s === 0
-                  ? t('slowmodeOff')
-                  : s < 60
-                    ? t('seconds', { count: s })
-                    : s < 3600
-                      ? t('minutes', { count: s / 60 })
-                      : t('hours', { count: s / 3600 })}
-              </option>
-            ))}
-          </Select>
-        )}
-      </Field>
+      {v.type !== 'voice' && (
+        <Field label={t('slowmode')} description={t('slowmodeHint')}>
+          {(p) => (
+            <Select
+              {...p}
+              value={v.slowmodeSeconds}
+              onValueChange={(value) => set({ slowmodeSeconds: Number(value) })}
+            >
+              {SLOWMODES.map((s) => (
+                <option key={s} value={s}>
+                  {s === 0
+                    ? t('slowmodeOff')
+                    : s < 60
+                      ? t('seconds', { count: s })
+                      : s < 3600
+                        ? t('minutes', { count: s / 60 })
+                        : t('hours', { count: s / 3600 })}
+                </option>
+              ))}
+            </Select>
+          )}
+        </Field>
+      )}
       <div className="flex justify-end gap-2">
         <Button type="button" variant="ghost" onClick={onCancel}>
           {t('cancel')}

@@ -15,6 +15,10 @@ export const Permission = {
   READ_HISTORY: 1n << 8n,
   VOTE: 1n << 9n,
   EDIT_WIKI: 1n << 10n,
+  /** Join voice channels (and hear them). */
+  CONNECT: 1n << 14n,
+  /** Talk (and share a screen) in voice channels. */
+  SPEAK: 1n << 15n,
   CREATE_INVITE: 1n << 11n,
   CHANGE_NICKNAME: 1n << 12n,
   RSVP_EVENTS: 1n << 13n,
@@ -31,6 +35,8 @@ export const Permission = {
   MANAGE_REPORTS: 1n << 24n,
   REVIEW_APPLICATIONS: 1n << 25n,
   MANAGE_NICKNAMES: 1n << 26n,
+  /** Mute others and remove them from voice channels. */
+  MUTE_MEMBERS: 1n << 27n,
 
   // Administration
   MANAGE_CHANNELS: 1n << 32n,
@@ -60,9 +66,12 @@ export const CHANNEL_SCOPED: bigint =
   Permission.READ_HISTORY |
   Permission.VOTE |
   Permission.EDIT_WIKI |
+  Permission.CONNECT |
+  Permission.SPEAK |
   Permission.MANAGE_MESSAGES |
   Permission.MANAGE_THREADS |
-  Permission.MANAGE_WIKI;
+  Permission.MANAGE_WIKI |
+  Permission.MUTE_MEMBERS;
 
 /** What a timed-out member keeps. */
 export const TIMEOUT_ALLOWED: bigint = Permission.VIEW_CHANNEL | Permission.READ_HISTORY;
@@ -78,6 +87,8 @@ export const DEFAULT_EVERYONE: bigint =
   Permission.ADD_REACTIONS |
   Permission.READ_HISTORY |
   Permission.VOTE |
+  Permission.CONNECT |
+  Permission.SPEAK |
   Permission.CREATE_INVITE |
   Permission.CHANGE_NICKNAME |
   Permission.RSVP_EVENTS;
@@ -94,7 +105,8 @@ export const DEFAULT_MODERATOR: bigint =
   Permission.VIEW_AUDIT_LOG |
   Permission.MANAGE_REPORTS |
   Permission.REVIEW_APPLICATIONS |
-  Permission.MANAGE_NICKNAMES;
+  Permission.MANAGE_NICKNAMES |
+  Permission.MUTE_MEMBERS;
 
 export const DEFAULT_ADMIN: bigint = Permission.ADMINISTRATOR;
 
@@ -113,6 +125,8 @@ export const PERMISSION_META: Record<PermissionName, { group: PermissionGroup; c
     READ_HISTORY: { group: 'general', channel: true },
     VOTE: { group: 'general', channel: true },
     EDIT_WIKI: { group: 'general', channel: true },
+    CONNECT: { group: 'general', channel: true },
+    SPEAK: { group: 'general', channel: true },
     CREATE_INVITE: { group: 'general', channel: false },
     CHANGE_NICKNAME: { group: 'general', channel: false },
     RSVP_EVENTS: { group: 'general', channel: false },
@@ -127,6 +141,7 @@ export const PERMISSION_META: Record<PermissionName, { group: PermissionGroup; c
     MANAGE_REPORTS: { group: 'moderation', channel: false },
     REVIEW_APPLICATIONS: { group: 'moderation', channel: false },
     MANAGE_NICKNAMES: { group: 'moderation', channel: false },
+    MUTE_MEMBERS: { group: 'moderation', channel: true },
     MANAGE_CHANNELS: { group: 'administration', channel: false },
     MANAGE_ROLES: { group: 'administration', channel: false },
     MANAGE_COMMUNITY: { group: 'administration', channel: false },

@@ -1,5 +1,5 @@
-// Community plans: what each one allows. Free matches what every community had before plans
-// existed, so nobody loses anything; paid plans raise the limits and add perks.
+// Community plans: what each one allows. Free keeps the limits every community had before plans
+// existed; paid plans raise them and unlock perks (effects, backgrounds, voice and more).
 
 export const PLAN_IDS = ['free', 'plus', 'pro'] as const;
 export type PlanId = (typeof PLAN_IDS)[number];
@@ -21,6 +21,10 @@ export interface PlanLimits {
   imageMb: number;
   /** Largest chat video, in MB. */
   videoMb: number;
+  /** Voice channels (0: none). */
+  voiceChannels: number;
+  /** People in one voice channel at a time. */
+  voiceParticipants: number;
 }
 
 export interface PlanPerks {
@@ -28,19 +32,84 @@ export interface PlanPerks {
   badge: boolean;
   /** Shown in the Featured row on Explore. */
   featured: boolean;
+  /** Name and role effects beyond a plain colour: gradients, glow, rainbow, animations. */
+  nameEffects: boolean;
+  /** Small images beside role names. */
+  roleIcons: boolean;
+  /** A picture behind the whole community. */
+  pageBackground: boolean;
+  /** Pictures behind chat channels. */
+  chatBackgrounds: boolean;
+  /** Labelled dividers in channel lists. */
+  separators: boolean;
+  /** Sharing a screen in voice channels. */
+  screenShare: boolean;
 }
 
 export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
-  free: { servers: 25, roles: 100, channels: 200, attachments: 4, imageMb: 10, videoMb: 50 },
-  plus: { servers: 50, roles: 200, channels: 350, attachments: 8, imageMb: 20, videoMb: 100 },
-  pro: { servers: 100, roles: 250, channels: 500, attachments: 10, imageMb: 25, videoMb: 150 },
+  free: {
+    servers: 25,
+    roles: 100,
+    channels: 200,
+    attachments: 4,
+    imageMb: 10,
+    videoMb: 50,
+    voiceChannels: 0,
+    voiceParticipants: 0,
+  },
+  plus: {
+    servers: 50,
+    roles: 200,
+    channels: 350,
+    attachments: 8,
+    imageMb: 20,
+    videoMb: 100,
+    voiceChannels: 3,
+    voiceParticipants: 15,
+  },
+  pro: {
+    servers: 100,
+    roles: 250,
+    channels: 500,
+    attachments: 10,
+    imageMb: 25,
+    videoMb: 150,
+    voiceChannels: 10,
+    voiceParticipants: 50,
+  },
 };
 
-export const PLAN_PERKS: Record<PlanId, PlanPerks> = {
-  free: { badge: false, featured: false },
-  plus: { badge: true, featured: false },
-  pro: { badge: true, featured: true },
+const PAID_PERKS = {
+  nameEffects: true,
+  roleIcons: true,
+  pageBackground: true,
+  chatBackgrounds: true,
+  separators: true,
 };
+
+/**
+ * What each plan unlocks. A community that drops to Free keeps its settings for these; they
+ * just stop showing until it upgrades again.
+ */
+export const PLAN_PERKS: Record<PlanId, PlanPerks> = {
+  free: {
+    badge: false,
+    featured: false,
+    nameEffects: false,
+    roleIcons: false,
+    pageBackground: false,
+    chatBackgrounds: false,
+    separators: false,
+    screenShare: false,
+  },
+  plus: { badge: true, featured: false, ...PAID_PERKS, screenShare: false },
+  pro: { badge: true, featured: true, ...PAID_PERKS, screenShare: true },
+};
+
+/** The cheapest plan with a perk, for "upgrade to …" prompts. */
+export function planFor(perk: keyof PlanPerks): PaidPlanId {
+  return PLAN_PERKS.plus[perk] ? 'plus' : 'pro';
+}
 
 /** The highest value of each limit on any plan (for input validation before the plan is known). */
 export const MAX_PLAN_LIMITS: PlanLimits = {
@@ -50,6 +119,8 @@ export const MAX_PLAN_LIMITS: PlanLimits = {
   attachments: Math.max(...PLAN_IDS.map((p) => PLAN_LIMITS[p].attachments)),
   imageMb: Math.max(...PLAN_IDS.map((p) => PLAN_LIMITS[p].imageMb)),
   videoMb: Math.max(...PLAN_IDS.map((p) => PLAN_LIMITS[p].videoMb)),
+  voiceChannels: Math.max(...PLAN_IDS.map((p) => PLAN_LIMITS[p].voiceChannels)),
+  voiceParticipants: Math.max(...PLAN_IDS.map((p) => PLAN_LIMITS[p].voiceParticipants)),
 };
 
 /**

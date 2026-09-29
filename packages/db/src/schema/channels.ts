@@ -13,7 +13,17 @@ import {
 import { communities } from './communities';
 import { createdAt, tz } from './_helpers';
 
-export const CHANNEL_TYPES = ['category', 'text', 'announcement', 'forum', 'wiki'] as const;
+export const CHANNEL_TYPES = [
+  'category',
+  'text',
+  'announcement',
+  'forum',
+  'wiki',
+  // Talk live (audio via LiveKit).
+  'voice',
+  // A labelled divider between channels in a list; not a place to post.
+  'separator',
+] as const;
 export type ChannelType = (typeof CHANNEL_TYPES)[number];
 
 export interface ChannelSettings {
@@ -25,6 +35,9 @@ export interface ChannelSettings {
   requireFlair?: boolean;
   defaultSort?: 'latest' | 'top' | 'hot' | 'new' | 'unanswered';
   emoji?: string;
+  /** Chat: a picture behind the messages (upload key), and how much it's dimmed (0-95%). */
+  backgroundKey?: string | null;
+  backgroundDim?: number;
 }
 
 export const channels = pgTable(

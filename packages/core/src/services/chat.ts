@@ -24,17 +24,18 @@ import {
   MAX_MESSAGE_CHARS,
   messageEditSchema,
   messageInputSchema,
+  nameStyleView,
+  type NameStyleView,
   newId,
   parseSearchQuery,
   Permission,
+  pickRoleDecor,
+  planPerks,
+  type RichNode,
   sanitizeDoc,
+  themeBackdrops,
   toChatDoc,
   uuidAtTime,
-  type RichNode,
-  nameStyleView,
-  pickRoleDecor,
-  themeBackdrops,
-  type NameStyleView,
 } from '@magnox/shared';
 import { z } from 'zod';
 import type { MemberContext } from '../access';
@@ -148,12 +149,13 @@ export async function loadAuthors(
         ),
       ),
     db
-      .select({ theme: schema.communities.theme })
+      .select({ theme: schema.communities.theme, plan: schema.communities.plan })
       .from(schema.communities)
       .where(eq(schema.communities.id, communityId))
       .limit(1),
   ]);
   const backdrops = community ? themeBackdrops(community.theme) : undefined;
+  const perks = planPerks(community?.plan);
   const nick = new Map(members.map((m) => [m.userId, m.nickname]));
   const top = new Map<string, (typeof roles)[number]>();
   const byUser = new Map<string, (typeof roles)[number][]>();
@@ -164,7 +166,7 @@ export async function loadAuthors(
   }
   for (const u of users) {
     const role = top.get(u.id);
-    const decor = pickRoleDecor(byUser.get(u.id) ?? [], backdrops);
+    const decor = pickRoleDecor(byUser.get(u.id) ?? [], backdrops, perks);
     out.set(u.id, {
       id: u.id,
       name: u.name,
@@ -174,7 +176,7 @@ export async function loadAuthors(
       roleColor: role?.color ?? null,
       roleName: role?.name ?? null,
       nameStyle: decor.nameStyle,
-      roleStyle: role ? nameStyleView(role.color, role.badgeStyle, backdrops) : null,
+      roleStyle: role ? nameStyleView(role.color, role.badgeStyle, backdrops, perks) : null,
       roleIcon: decor.icon
         ? { url: mediaUrl(decor.icon.key)!, roleName: decor.icon.roleName }
         : null,

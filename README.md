@@ -132,9 +132,20 @@ keeps the databases off the network and restarts everything after a reboot.
 
 Communities can buy the **Plus** or **Pro** plan from `/store` (or Plan & billing in their
 settings). Plans raise limits (linked servers, roles, channels, files per chat message, upload
-sizes) and add perks (a plan badge; Pro communities appear under Featured on Explore). Free keeps
-the limits every community had before plans existed. Plans and limits live in
-`packages/shared/src/plans.ts`.
+sizes) and unlock perks:
+
+|                                                                 | Free | Plus                    | Pro                      |
+| --------------------------------------------------------------- | ---- | ----------------------- | ------------------------ |
+| Name and role effects (gradients, glow, animations), role icons |      | ✓                       | ✓                        |
+| Page background picture, chat channel backgrounds               |      | ✓                       | ✓                        |
+| Custom separators in the channel list                           |      | ✓                       | ✓                        |
+| Voice channels                                                  |      | 3, up to 15 people each | 10, up to 50 people each |
+| Screen sharing in voice                                         |      |                         | ✓                        |
+| Plan badge / Featured on Explore                                |      | badge                   | badge and Featured       |
+
+Free keeps the limits every community had before plans existed. A community that drops back to
+Free keeps its settings for the perks above; they stop showing until it upgrades again. Plans,
+limits and perks live in `packages/shared/src/plans.ts`.
 
 To take payments:
 
@@ -149,6 +160,39 @@ To take payments:
 
 Without a key the store still shows the plans, with buying turned off. Tests use a fake Stripe in
 `apps/worker/src/fixtures/fake-stripe.ts`.
+
+### Voice channels (LiveKit)
+
+Voice channels run on your own [LiveKit](https://livekit.io) server, the `livekit` service in
+`docker-compose.yml`. Browsers connect to it through Caddy (`/rtc` on your site's address), and
+the audio itself goes straight to ports 7881/tcp and 7882/udp.
+
+`scripts/linux/server-env.sh` sets this up for new servers. For an existing `.env`:
+
+```bash
+cat >> .env <<ENV
+COMPOSE_PROFILES=voice
+LIVEKIT_API_KEY=$(openssl rand -hex 8)
+LIVEKIT_API_SECRET=$(openssl rand -hex 32)
+ENV
+sudo ufw allow 7881/tcp && sudo ufw allow 7882/udp   # and in your host's firewall panel
+docker compose up -d --build
+```
+
+- **Home network or IP address only:** also set `LIVEKIT_NODE_IP` to the server's IP and
+  `LIVEKIT_USE_EXTERNAL_IP=false`. On a server with a public IP, LiveKit finds its address itself.
+- **Behind strict firewalls** (some schools and offices allow only port 443), audio can't get
+  through without a TURN server; see LiveKit's [TURN docs](https://docs.livekit.io/home/self-hosting/deployment/#improving-connectivity-with-turn).
+- **Local development:** run [livekit-server](https://docs.livekit.io/home/self-hosting/local/)
+  with the same settings as the `LIVEKIT_CONFIG` in `docker-compose.yml` (webhook to
+  `http://localhost:3000/api/voice/webhook`), and set `LIVEKIT_URL=ws://localhost:7880`.
+- **More capacity:** one LiveKit server handles hundreds of people talking. For more, run LiveKit
+  on more servers, all pointed at the same Redis (add a `redis:` block to `LIVEKIT_CONFIG`) and
+  each with its own public IP and open ports. List them all after `reverse_proxy @voice` in
+  `docker/Caddyfile`, and LiveKit places each call on a server with room. Set `LIVEKIT_API_URL`
+  if LiveKit no longer runs next to the app.
+
+Without the keys, voice channels say that voice isn't set up yet.
 
 ## Scripts
 

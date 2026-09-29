@@ -51,6 +51,15 @@ const schema = z.object({
   STRIPE_PRICE_PRO_YEARLY: z.string().default(''),
   /** Only for tests: a stand-in for Stripe's API (the worker's fixture server). */
   STRIPE_API_URL: z.string().default(''),
+  /**
+   * Voice channels (LiveKit). The address browsers connect to (wss://…; blank: this site, whose
+   * /rtc path Caddy passes to LiveKit), the address this app uses for LiveKit's API, and the
+   * API key and secret from LiveKit's config. Leave the key blank to turn voice off.
+   */
+  LIVEKIT_URL: z.string().default(''),
+  LIVEKIT_API_URL: z.string().default('http://localhost:7880'),
+  LIVEKIT_API_KEY: z.string().default(''),
+  LIVEKIT_API_SECRET: z.string().default(''),
   PLATFORM_ADMIN_EMAILS: z.string().default(''),
   DISABLE_RATE_LIMITS: bool,
   WORKER_HEALTH_PORT: z.coerce.number().int().default(3002),

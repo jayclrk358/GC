@@ -19,6 +19,7 @@ export const VARIANTS_BY_PURPOSE: Readonly<Record<string, readonly ImageVariant[
   icon: ['sm'],
   banner: ['md'],
   background: ['md'],
+  'channel-background': ['md'],
   gallery: ['md'],
   content: ['md'],
 };

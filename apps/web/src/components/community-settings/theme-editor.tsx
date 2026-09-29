@@ -29,6 +29,7 @@ import { Field } from '@/components/ui/field';
 import { Input, Select } from '@/components/ui/input';
 import { Badge } from '@/components/ui/misc';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PlanLock } from '@/components/billing/plan-lock';
 import { ImageUpload } from '@/components/upload/image-upload';
 import { SettingsSection } from '@/components/settings/section';
 import { updateThemeAction } from '@/app/actions/communities';
@@ -174,10 +175,15 @@ export function ThemeEditor({
   communityId,
   communityName,
   initial,
+  slug,
+  backgroundAllowed,
 }: {
   communityId: string;
   communityName: string;
   initial: Theme;
+  slug: string;
+  /** The page background image needs a paid plan. */
+  backgroundAllowed: boolean;
 }) {
   const t = useTranslations('theme');
   const router = useRouter();
@@ -381,15 +387,19 @@ export function ThemeEditor({
               )}
             </Field>
           )}
-          <ImageUpload
-            label={t('background')}
-            purpose="background"
-            communityId={communityId}
-            shape="banner"
-            value={theme.backgroundKey}
-            onChange={(k) => setTheme({ ...theme, backgroundKey: k ?? undefined })}
-          />
-          {theme.backgroundKey && (
+          {backgroundAllowed ? (
+            <ImageUpload
+              label={t('background')}
+              purpose="background"
+              communityId={communityId}
+              shape="banner"
+              value={theme.backgroundKey}
+              onChange={(k) => setTheme({ ...theme, backgroundKey: k ?? undefined })}
+            />
+          ) : (
+            <PlanLock perk="pageBackground" slug={slug} what={t('backgroundLocked')} />
+          )}
+          {backgroundAllowed && theme.backgroundKey && (
             <Field
               label={t('backgroundDim')}
               description={t('backgroundDimDesc', { value: theme.backgroundDim })}

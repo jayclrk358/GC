@@ -154,3 +154,21 @@ export async function choose(dropdown: Locator, option: string | RegExp) {
   await listbox.getByRole('option', { name: option, exact: typeof option === 'string' }).click();
   await expect(listbox).toBeHidden();
 }
+
+/**
+ * Put the signed-in owner's (only) community on a paid plan, through the store and the fixture
+ * server's stand-in for Stripe Checkout.
+ */
+export async function upgradeCommunity(page: Page, slug: string, plan: 'Plus' | 'Pro' = 'Plus') {
+  await page.goto('/store');
+  const card = page.getByRole('region', { name: plan });
+  await card.getByRole('button', { name: `Get ${plan}` }).click();
+  await page
+    .getByRole('dialog', { name: `Get ${plan}` })
+    .getByRole('button', { name: 'Continue to checkout' })
+    .click();
+  await expect(page.getByRole('heading', { name: 'Fixture Checkout' })).toBeVisible();
+  await page.getByRole('button', { name: /^Pay / }).click();
+  await page.waitForURL(new RegExp(`/c/${slug}/settings/billing`));
+  await expect(page.getByText(`Thanks! ${plan} is now on.`)).toBeVisible();
+}

@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Alert } from '@/components/ui/misc';
 import { usePrefs } from '@/components/shell/prefs-provider';
+import type { ImgSources } from '@/lib/media';
 import { ReportDialog } from '@/components/moderation/report-dialog';
 import { MuteMenu } from '@/components/notifications/mute-menu';
 import { useReconnect, useRoom } from '@/lib/realtime';
@@ -56,6 +57,8 @@ interface Props {
   requireAlt: boolean;
   focusMessageId: string | null;
   notice: React.ReactNode;
+  /** A picture behind the messages (a paid perk), dimmed by `dim` percent. */
+  background?: { image: ImgSources; dim: number } | null;
 }
 
 const TYPING_TTL = 7000;
@@ -558,7 +561,27 @@ export function ChatView(props: Props) {
           </div>
         </header>
 
-        <div className="relative flex min-h-0 flex-1">
+        <div className="relative isolate flex min-h-0 flex-1">
+          {props.background && (
+            <div
+              aria-hidden
+              data-decorative
+              className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                {...props.background.image}
+                alt=""
+                decoding="async"
+                className="size-full object-cover"
+              />
+              {/* Dims the picture towards the page colour so messages stay easy to read. */}
+              <div
+                className="absolute inset-0 bg-surface"
+                style={{ opacity: props.background.dim / 100 }}
+              />
+            </div>
+          )}
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">
             {unreadBanner && firstUnread && (
               <div className="flex flex-wrap items-center justify-between gap-2 bg-primary px-4 py-1.5 text-sm text-on-primary">

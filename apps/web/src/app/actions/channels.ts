@@ -6,6 +6,7 @@ import {
   deleteChannel,
   listOverwrites,
   reorderChannels,
+  setChatBackgroundEverywhere,
   setOverwrite,
   updateChannel,
 } from '@magnox/core';
@@ -53,6 +54,18 @@ export async function setOverwriteAction(communityId: string, channelId: string,
   return runAction(async () => {
     const ctx = await ctxFor(communityId);
     await setOverwrite(ctx, channelId, input);
+    revalidatePath(`/c/${ctx.community.slug}`, 'layout');
+  });
+}
+
+export async function setChatBackgroundEverywhereAction(
+  communityId: string,
+  backgroundKey: string | null,
+  backgroundDim: number,
+) {
+  return runAction(async () => {
+    const ctx = await ctxFor(communityId);
+    await setChatBackgroundEverywhere(ctx, backgroundKey, backgroundDim);
     revalidatePath(`/c/${ctx.community.slug}`, 'layout');
   });
 }

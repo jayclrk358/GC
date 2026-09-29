@@ -15,6 +15,11 @@ import {
   type BillingInterval,
   type PaidPlanId,
   type PlanId,
+  PLAN_IDS,
+  PLAN_LIMITS,
+  planFor,
+  planPerks,
+  type PlanPerks,
 } from '@magnox/shared';
 import { requirePerm, type MemberContext } from '../access';
 import { communityChanged } from '../emitter';
@@ -149,17 +154,38 @@ const PLAN_NAMES: Record<PlanId, string> = { free: 'Free', plus: 'Plus', pro: 'P
 /** Refuse to go past a plan limit, pointing at an upgrade when there is one. */
 export async function assertUnderPlanLimit(
   communityId: string,
-  key: 'servers' | 'roles' | 'channels',
+  key: 'servers' | 'roles' | 'channels' | 'voiceChannels',
   current: number,
   noun: string,
 ): Promise<void> {
   const plan = await communityPlan(communityId);
   const limit = planLimits(plan)[key];
   if (current < limit) return;
+  if (limit === 0) {
+    const needed = PLAN_IDS.find((p) => PLAN_LIMITS[p][key] > 0) ?? 'plus';
+    throw new AppError(
+      'forbidden',
+      `${noun[0]!.toUpperCase()}${noun.slice(1)} need the ${PLAN_NAMES[needed]} plan. Upgrade in Plan & billing.`,
+    );
+  }
   const more = plan === 'pro' ? '' : ' Upgrade the plan in Plan & billing for more.';
   throw new AppError(
     'forbidden',
     `On the ${PLAN_NAMES[plan]} plan a community can have up to ${limit} ${noun}.${more}`,
+  );
+}
+
+/** Refuse something that needs a paid plan's perk (e.g. separators) on a plan without it. */
+export async function assertPlanPerk(
+  communityId: string,
+  perk: keyof PlanPerks,
+  what: string,
+): Promise<void> {
+  const plan = await communityPlan(communityId);
+  if (planPerks(plan)[perk]) return;
+  throw new AppError(
+    'forbidden',
+    `${what} need the ${PLAN_NAMES[planFor(perk)]} plan. Upgrade in Plan & billing.`,
   );
 }
 

@@ -3,15 +3,16 @@ import { db, schema } from '@magnox/db';
 import {
   ACCOUNT_KINDS,
   hexColor,
-  nameStyleView,
-  themeBackdrops,
   isTimeZone,
   LANGUAGES,
   MAX_PLAYSTYLES,
   MAX_PROFILE_LANGUAGES,
+  nameStyleView,
   normaliseHandle,
+  planPerks,
   PLATFORMS,
   PLAYSTYLES,
+  themeBackdrops,
 } from '@magnox/shared';
 import { z } from 'zod';
 import { getMemberContext } from '../access';
@@ -268,13 +269,14 @@ async function cardMembership(communityId: string, userId: string, viewerId: str
       .orderBy(sql`${schema.roles.position} desc`)
       .limit(6),
     db
-      .select({ theme: schema.communities.theme })
+      .select({ theme: schema.communities.theme, plan: schema.communities.plan })
       .from(schema.communities)
       .where(eq(schema.communities.id, communityId))
       .limit(1),
     loadAuthors(communityId, [userId]),
   ]);
   const backdrops = community ? themeBackdrops(community.theme) : undefined;
+  const perks = planPerks(community?.plan);
   return {
     community: ctx.community.name,
     joinedAt: member.joinedAt.toISOString(),
@@ -284,8 +286,8 @@ async function cardMembership(communityId: string, userId: string, viewerId: str
     roles: roles.map((r) => ({
       name: r.name,
       color: r.color,
-      iconUrl: mediaUrl(r.iconKey),
-      style: nameStyleView(r.color, r.badgeStyle, backdrops),
+      iconUrl: perks.roleIcons ? mediaUrl(r.iconKey) : null,
+      style: nameStyleView(r.color, r.badgeStyle, backdrops, perks),
     })),
   };
 }

@@ -50,6 +50,12 @@ x-app-env: &app-env
   STRIPE_PRICE_PLUS_YEARLY: ${STRIPE_PRICE_PLUS_YEARLY:-}
   STRIPE_PRICE_PRO_MONTHLY: ${STRIPE_PRICE_PRO_MONTHLY:-}
   STRIPE_PRICE_PRO_YEARLY: ${STRIPE_PRICE_PRO_YEARLY:-}
+  # Voice channels (the livekit service below). Blank key: voice is off.
+  LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-}
+  LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-}
+  # LiveKit's API, from the app's side (another address if LiveKit runs elsewhere).
+  LIVEKIT_API_URL: ${LIVEKIT_API_URL:-http://livekit:7880}
+  LIVEKIT_URL: ${LIVEKIT_URL:-}
 
 services:
   postgres:
@@ -157,6 +163,37 @@ services:
       redis-queue: { condition: service_healthy }
     restart: unless-stopped
     stop_grace_period: 30s
+
+  # Voice channels. Start it with `--profile voice` (or COMPOSE_PROFILES=voice in .env) once
+  # LIVEKIT_API_KEY/SECRET are in .env, and open 7881/tcp and 7882/udp on the firewall: the
+  # audio goes straight there, not through Caddy.
+  # For more voice capacity, run more of these on other servers with a shared Redis (see README).
+  livekit:
+    image: livekit/livekit-server:v1.10.1
+    profiles: [voice]
+    environment:
+      LIVEKIT_CONFIG: |
+        port: 7880
+        rtc:
+          tcp_port: 7881
+          udp_port: 7882
+          # The address browsers send audio to. Found automatically on a server with a public IP;
+          # on a home network set LIVEKIT_NODE_IP to the server's LAN IP and this to false.
+          use_external_ip: ${LIVEKIT_USE_EXTERNAL_IP:-true}
+          node_ip: ${LIVEKIT_NODE_IP:-}
+        keys:
+          ${LIVEKIT_API_KEY:-unset}: ${LIVEKIT_API_SECRET:-unset}
+        webhook:
+          api_key: ${LIVEKIT_API_KEY:-unset}
+          urls: ['http://web:3000/api/voice/webhook']
+        room:
+          empty_timeout: 60
+        logging:
+          level: info
+    ports: ['7881:7881', '7882:7882/udp']
+    logging: *logging
+    restart: unless-stopped
+    stop_grace_period: 2m
 
   caddy:
     build: { context: ./docker, dockerfile: caddy.Dockerfile }

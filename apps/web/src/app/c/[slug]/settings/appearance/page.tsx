@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { planPerks } from '@magnox/shared';
 import { getTranslations } from 'next-intl/server';
 import { loadCommunityForSettings } from '@/lib/community';
 import { PageHeader } from '@/components/ui/misc';
@@ -17,6 +18,8 @@ export default async function AppearancePage({ params }: { params: Promise<{ slu
         communityId={community.id}
         communityName={community.name}
         initial={community.theme}
+        slug={community.slug}
+        backgroundAllowed={planPerks(community.plan).pageBackground}
       />
     </div>
   );

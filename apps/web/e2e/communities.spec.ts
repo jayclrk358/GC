@@ -8,6 +8,7 @@ import {
   signUp,
   startThread,
   uniqueUser,
+  upgradeCommunity,
 } from './helpers';
 
 test.describe('community hubs', () => {
@@ -229,6 +230,14 @@ test.describe('community hubs', () => {
     await signUp(page, uniqueUser('decor'), '/new');
     const { slug } = await createCommunity(page, { template: 'Game server' });
     const member = await joinAsMember(browser, slug);
+
+    // Effects and role icons need a paid plan.
+    await page.goto(`/c/${slug}/settings/roles`);
+    await page.getByRole('button', { name: 'Create role' }).click();
+    await page.getByRole('button', { name: 'New role', exact: true }).click();
+    await expect(page.getByText('Role icons need Plus.')).toBeVisible();
+    await expect(page.getByText('Name effects and animations need Plus.')).toBeVisible();
+    await upgradeCommunity(page, slug);
 
     await page.goto(`/c/${slug}/settings/roles`);
     await page.getByRole('button', { name: 'Create role' }).click();

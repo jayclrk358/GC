@@ -131,16 +131,29 @@ function paletteFor(effect: PaletteEffect, backgrounds: string[]): string {
   return [...stops, stops[0]].join(', ');
 }
 
+/**
+ * Which decorations a community's plan shows (a plan's perks fit this). Without name effects a
+ * styled name keeps just its colour, still; without role icons none are shown.
+ */
+export interface DecorPerks {
+  nameEffects: boolean;
+  roleIcons: boolean;
+}
+
 export function nameStyleView(
   roleColor: string | null | undefined,
   style: Partial<NameStyle> | null | undefined,
   backdrops: NameBackdrops = DEFAULT_BACKDROPS,
+  perks?: Pick<DecorPerks, 'nameEffects'>,
 ): NameStyleView | null {
-  const effect = style?.effect;
-  if (!effect || effect === 'none' || !NAME_EFFECTS.includes(effect)) return null;
-  const requested = NAME_ANIMATIONS.includes(style.animation as NameAnimation)
-    ? (style.animation as NameAnimation)
-    : 'none';
+  const plain = perks?.nameEffects === false;
+  const chosen = style?.effect;
+  if (!chosen || chosen === 'none' || !NAME_EFFECTS.includes(chosen)) return null;
+  const effect: Exclude<NameEffect, 'none'> = plain ? 'color' : chosen;
+  const requested =
+    !plain && NAME_ANIMATIONS.includes(style.animation as NameAnimation)
+      ? (style.animation as NameAnimation)
+      : 'none';
   const animation = animationFits(effect, requested) ? requested : 'none';
   const main = style.color && isHex(style.color) ? style.color : roleColor;
   const c1 = main && isHex(main) ? main : FALLBACK;
@@ -176,12 +189,13 @@ export function pickRoleDecor<
 >(
   roles: R[],
   backdrops: NameBackdrops = DEFAULT_BACKDROPS,
+  perks?: DecorPerks,
 ): { nameStyle: NameStyleView | null; icon: { key: string; roleName: string } | null } {
   const sorted = [...roles].sort((a, b) => b.position - a.position);
   const styled = sorted.find((r) => r.nameStyle?.effect && r.nameStyle.effect !== 'none');
-  const withIcon = sorted.find((r) => r.iconKey);
+  const withIcon = perks?.roleIcons === false ? undefined : sorted.find((r) => r.iconKey);
   return {
-    nameStyle: styled ? nameStyleView(styled.color, styled.nameStyle, backdrops) : null,
+    nameStyle: styled ? nameStyleView(styled.color, styled.nameStyle, backdrops, perks) : null,
     icon: withIcon ? { key: withIcon.iconKey!, roleName: withIcon.name } : null,
   };
 }

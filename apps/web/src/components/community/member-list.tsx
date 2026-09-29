@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { Crown, Users } from 'lucide-react';
 import type { MemberRow, RoleSummary } from '@magnox/core';
-import { nameStyleView, pickRoleDecor, type NameBackdrops } from '@magnox/shared';
+import { nameStyleView, pickRoleDecor, type DecorPerks, type NameBackdrops } from '@magnox/shared';
 import { Avatar, EmptyState } from '@/components/ui/misc';
 import { RoleBadge } from './role-badge';
 import { StyledName } from './role-decor';
@@ -14,6 +14,7 @@ export async function MemberList({
   colorblind,
   query,
   backdrops,
+  perks,
 }: {
   communityId: string;
   members: MemberRow[];
@@ -22,6 +23,8 @@ export async function MemberList({
   query: string;
   /** The community theme's backgrounds, so name effects stay readable on them. */
   backdrops: NameBackdrops;
+  /** What the community's plan shows (name effects, role icons). */
+  perks: DecorPerks;
 }) {
   const t = await getTranslations('community');
   if (members.length === 0) {
@@ -57,6 +60,7 @@ export async function MemberList({
                 const decor = pickRoleDecor(
                   m.roleIds.map((id) => byId.get(id)).filter((r): r is RoleSummary => Boolean(r)),
                   backdrops,
+                  perks,
                 );
                 return (
                   <li
@@ -103,9 +107,9 @@ export async function MemberList({
                                 <RoleBadge
                                   name={r.name}
                                   color={r.color}
-                                  iconUrl={r.iconUrl}
+                                  iconUrl={perks.roleIcons ? r.iconUrl : null}
                                   colorblind={colorblind}
-                                  style={nameStyleView(r.color, r.badgeStyle, backdrops)}
+                                  style={nameStyleView(r.color, r.badgeStyle, backdrops, perks)}
                                 />
                               </li>
                             ))}

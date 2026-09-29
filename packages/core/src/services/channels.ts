@@ -1,4 +1,4 @@
-import { and, asc, eq, isNull, max, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNull, max, sql } from 'drizzle-orm';
 import { db, schema } from '@magnox/db';
 import {
   ALL_PERMISSIONS,
@@ -19,8 +19,9 @@ import {
 } from '../access';
 import { AppError, conflict, forbidden, notFound } from '../errors';
 import { audit } from './audit';
-import { assertUnderPlanLimit } from './billing';
+import { assertPlanPerk, assertUnderPlanLimit } from './billing';
 import { messageRefs, postRefs, queueMediaCleanup } from './media-cleanup';
+import { endVoiceCall } from './voice-rooms';
 
 export type ChannelRow = typeof schema.channels.$inferSelect;
 
@@ -64,8 +65,12 @@ export async function listVisibleChannels(
 ): Promise<{ channels: ChannelView[]; tree: ChannelTree }> {
   const rows = await listChannelRows(ctx.community.id);
   const perms = await channelPermissionsMany(ctx, rows as ChannelRef[]);
+  // Categories and separators only arrange other channels, so they're never hidden themselves.
   const visible = rows.filter(
-    (r) => r.type === 'category' || has(perms.get(r.id) ?? 0n, Permission.VIEW_CHANNEL),
+    (r) =>
+      r.type === 'category' ||
+      r.type === 'separator' ||
+      has(perms.get(r.id) ?? 0n, Permission.VIEW_CHANNEL),
   );
   const views: ChannelView[] = visible.map((r) => ({
     id: r.id,
@@ -122,7 +127,7 @@ async function nameTaken(communityId: string, name: string, exceptId?: string) {
       and(
         eq(schema.channels.communityId, communityId),
         eq(schema.channels.name, name),
-        sql`${schema.channels.type} <> 'category'`,
+        sql`${schema.channels.type} not in ('category', 'separator')`,
       ),
     );
   return rows.some((r) => r.id !== exceptId);
@@ -133,7 +138,19 @@ export async function createChannel(ctx: MemberContext, raw: unknown): Promise<C
   const input = channelInputSchema.parse(raw);
   const existing = await listChannelRows(ctx.community.id);
   await assertUnderPlanLimit(ctx.community.id, 'channels', existing.length, 'channels');
-  if (input.type !== 'category') {
+  if (input.type === 'separator') {
+    await assertPlanPerk(ctx.community.id, 'separators', 'Custom separators');
+  }
+  if (input.type === 'voice') {
+    const voice = existing.filter((c) => c.type === 'voice').length;
+    await assertUnderPlanLimit(ctx.community.id, 'voiceChannels', voice, 'voice channels');
+  }
+  if (input.type !== 'category' && input.type !== 'separator') {
+    await assertUploadsExist([input.settings.backgroundKey]);
+  }
+  if (input.type === 'separator') {
+    await assertCategory(ctx.community.id, input.parentId);
+  } else if (input.type !== 'category') {
     await assertCategory(ctx.community.id, input.parentId);
     if (await nameTaken(ctx.community.id, input.name)) {
       throw new AppError('conflict', 'A channel with that name already exists.', {
@@ -154,9 +171,9 @@ export async function createChannel(ctx: MemberContext, raw: unknown): Promise<C
       type: input.type,
       name: input.name,
       parentId: input.type === 'category' ? null : input.parentId,
-      topic: input.type === 'category' ? '' : input.topic,
-      settings: input.type === 'category' ? {} : input.settings,
-      slowmodeSeconds: input.type === 'category' ? 0 : input.slowmodeSeconds,
+      topic: 'topic' in input ? input.topic : '',
+      settings: 'settings' in input ? input.settings : {},
+      slowmodeSeconds: 'slowmodeSeconds' in input ? input.slowmodeSeconds : 0,
       position: (top ?? 0) + 1,
     })
     .returning();
@@ -183,24 +200,29 @@ export async function updateChannel(ctx: MemberContext, id: string, raw: unknown
   requirePerm(ctx, Permission.MANAGE_CHANNELS);
   const row = await loadChannelRow(ctx, id);
   const input = channelInputSchema.parse({ ...(raw as object), type: row.type });
-  if (input.type !== 'category') {
+  if (input.type === 'separator') {
+    await assertCategory(ctx.community.id, input.parentId);
+  } else if (input.type !== 'category') {
     await assertCategory(ctx.community.id, input.parentId);
     if (input.name !== row.name && (await nameTaken(ctx.community.id, input.name, id))) {
       throw conflict('A channel with that name already exists.');
     }
+    await assertUploadsExist([input.settings.backgroundKey]);
   }
   await db
     .update(schema.channels)
     .set(
       input.type === 'category'
         ? { name: input.name }
-        : {
-            name: input.name,
-            topic: input.topic,
-            parentId: input.parentId,
-            settings: input.settings,
-            slowmodeSeconds: input.slowmodeSeconds,
-          },
+        : input.type === 'separator'
+          ? { name: input.name, parentId: input.parentId }
+          : {
+              name: input.name,
+              topic: input.topic,
+              parentId: input.parentId,
+              settings: input.settings,
+              slowmodeSeconds: input.slowmodeSeconds,
+            },
     )
     .where(eq(schema.channels.id, id));
   await audit(db, {
@@ -244,6 +266,7 @@ export async function deleteChannel(ctx: MemberContext, id: string): Promise<voi
     });
   });
   await bumpPermVersion(ctx.community.id);
+  if (row.type === 'voice') await endVoiceCall(id);
   if (media.length) await queueMediaCleanup({ kind: 'refs', refs: media });
 }
 
@@ -376,4 +399,52 @@ export async function setOverwrite(
 
 export function channelPerms(view: ChannelView): bigint {
   return BigInt(view.perms);
+}
+
+async function assertUploadsExist(keys: (string | null | undefined)[]): Promise<void> {
+  const wanted = keys.filter((k): k is string => Boolean(k));
+  if (!wanted.length) return;
+  const rows = await db
+    .select({ key: schema.uploads.key })
+    .from(schema.uploads)
+    .where(inArray(schema.uploads.key, wanted));
+  if (rows.length !== new Set(wanted).size)
+    throw new AppError('validation', 'The background image could not be found. Upload it again.');
+}
+
+/**
+ * Put the same background (or none) behind every chat channel, e.g. after choosing one for a
+ * channel and ticking "use for all chat channels".
+ */
+export async function setChatBackgroundEverywhere(
+  ctx: MemberContext,
+  backgroundKey: string | null,
+  backgroundDim: number,
+): Promise<void> {
+  requirePerm(ctx, Permission.MANAGE_CHANNELS);
+  const input = z
+    .object({
+      backgroundKey: z
+        .string()
+        .regex(/^u\/[a-z0-9]{8,40}\.(webp|png|jpg|gif)$/)
+        .nullable(),
+      backgroundDim: z.number().int().min(0).max(95),
+    })
+    .parse({ backgroundKey, backgroundDim });
+  await assertUploadsExist([input.backgroundKey]);
+  await db
+    .update(schema.channels)
+    .set({
+      settings: sql`${schema.channels.settings} || ${JSON.stringify(input)}::jsonb`,
+    })
+    .where(
+      and(eq(schema.channels.communityId, ctx.community.id), eq(schema.channels.type, 'text')),
+    );
+  await audit(db, {
+    communityId: ctx.community.id,
+    actorId: ctx.userId,
+    action: 'channel.update',
+    targetType: 'channel',
+    diff: { chatBackground: input.backgroundKey ? 'all chat channels' : 'removed everywhere' },
+  });
 }

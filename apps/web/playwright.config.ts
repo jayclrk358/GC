@@ -29,7 +29,11 @@ export default defineConfig({
     baseURL: 'http://localhost:3000',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
-    launchOptions: chromiumPath ? { executablePath: chromiumPath } : undefined,
+    launchOptions: {
+      ...(chromiumPath ? { executablePath: chromiumPath } : {}),
+      // A pretend microphone (a beep) that's allowed without asking, for the voice tests.
+      args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'],
+    },
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: [

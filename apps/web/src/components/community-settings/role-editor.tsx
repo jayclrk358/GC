@@ -21,11 +21,13 @@ import {
   type NameStyleView,
   type PermissionGroup,
   type PermissionName,
+  type DecorPerks,
 } from '@magnox/shared';
 import type { RoleSummary } from '@magnox/core';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Input, Select } from '@/components/ui/input';
+import { PlanLock } from '@/components/billing/plan-lock';
 import { ImageUpload } from '@/components/upload/image-upload';
 import { RoleIcon, StyledName } from '@/components/community/role-decor';
 import { RoleBadge } from '@/components/community/role-badge';
@@ -50,11 +52,16 @@ export function RoleEditor({
   roles: initialRoles,
   actor,
   backdrops,
+  slug,
+  perks,
 }: {
   communityId: string;
   roles: RoleSummary[];
   /** The community theme's backgrounds, for readable name colours and the preview. */
   backdrops: NameBackdrops;
+  slug: string;
+  /** What the community's plan shows: name effects and role icons need a paid plan. */
+  perks: DecorPerks;
   actor: { isOwner: boolean; topPosition: number; perms: string };
 }) {
   const t = useTranslations('roles');
@@ -180,7 +187,7 @@ export function RoleEditor({
                     r.id === selected?.id && 'bg-surface-2 ring-2 ring-primary',
                   )}
                 >
-                  {r.iconUrl ? (
+                  {r.iconUrl && perks.roleIcons ? (
                     <RoleIcon url={r.iconUrl} />
                   ) : (
                     <span
@@ -191,7 +198,7 @@ export function RoleEditor({
                   )}
                   <StyledName
                     name={r.name}
-                    style={nameStyleView(r.color, r.badgeStyle, backdrops)}
+                    style={nameStyleView(r.color, r.badgeStyle, backdrops, perks)}
                     className="truncate"
                   />
                   {!canManage(r) && (
@@ -280,6 +287,8 @@ export function RoleEditor({
                 badgeStyle={draft.badgeStyle ?? DEFAULT_NAME_STYLE}
                 iconKey={draft.iconKey}
                 backdrops={backdrops}
+                slug={slug}
+                perks={perks}
                 onNameStyle={(nameStyle) => setDraft({ ...draft, nameStyle })}
                 onBadgeStyle={(badgeStyle) => setDraft({ ...draft, badgeStyle })}
                 onIcon={(iconKey) => setDraft({ ...draft, iconKey })}
@@ -375,6 +384,8 @@ function NametagFields({
   badgeStyle,
   iconKey,
   backdrops,
+  slug,
+  perks,
   onNameStyle,
   onBadgeStyle,
   onIcon,
@@ -386,6 +397,8 @@ function NametagFields({
   badgeStyle: NameStyle;
   iconKey: string | null;
   backdrops: NameBackdrops;
+  slug: string;
+  perks: DecorPerks;
   onNameStyle: (s: NameStyle) => void;
   onBadgeStyle: (s: NameStyle) => void;
   onIcon: (key: string | null) => void;
@@ -396,20 +409,26 @@ function NametagFields({
       <legend className="px-1 text-sm font-bold tracking-wide text-muted uppercase">
         {t('nametag')}
       </legend>
-      <ImageUpload
-        label={t('iconImage')}
-        description={t('iconImageDesc')}
-        purpose="role-icon"
-        communityId={communityId}
-        value={iconKey}
-        onChange={onIcon}
-      />
+      {perks.roleIcons ? (
+        <ImageUpload
+          label={t('iconImage')}
+          description={t('iconImageDesc')}
+          purpose="role-icon"
+          communityId={communityId}
+          value={iconKey}
+          onChange={onIcon}
+        />
+      ) : (
+        <PlanLock perk="roleIcons" slug={slug} what={t('iconImageLocked')} />
+      )}
+      {!perks.nameEffects && <PlanLock perk="nameEffects" slug={slug} what={t('effectsLocked')} />}
       <StyleFields
         legend={t('memberNames')}
         description={t('memberNamesDesc')}
         color={color}
         style={nameStyle}
         backdrops={backdrops}
+        locked={!perks.nameEffects}
         onStyle={onNameStyle}
         preview={(view, scheme) => (
           <StyledName
@@ -426,6 +445,7 @@ function NametagFields({
         color={color}
         style={badgeStyle}
         backdrops={backdrops}
+        locked={!perks.nameEffects}
         onStyle={onBadgeStyle}
         preview={(view, scheme) => (
           <RoleBadge
@@ -450,6 +470,7 @@ function StyleFields({
   color,
   style,
   backdrops,
+  locked,
   onStyle,
   preview,
 }: {
@@ -458,11 +479,14 @@ function StyleFields({
   color: string | null;
   style: NameStyle;
   backdrops: NameBackdrops;
+  /** Only a plain colour is available (the plan has no name effects). */
+  locked: boolean;
   onStyle: (s: NameStyle) => void;
   preview: (view: NameStyleView | null, scheme: 'light' | 'dark') => React.ReactNode;
 }) {
   const t = useTranslations('roles');
-  const view = nameStyleView(color, style, backdrops);
+  // The preview shows what members will see on this plan.
+  const view = nameStyleView(color, style, backdrops, { nameEffects: !locked });
   const off = style.effect === 'none';
   return (
     <fieldset className="flex flex-col gap-4 rounded-ui border border-border p-4">
@@ -487,7 +511,7 @@ function StyleFields({
               }}
             >
               {NAME_EFFECTS.map((e) => (
-                <option key={e} value={e}>
+                <option key={e} value={e} disabled={locked && e !== 'none' && e !== 'color'}>
                   {t(`effects.${e}`)}
                 </option>
               ))}
@@ -499,7 +523,7 @@ function StyleFields({
             <Select
               {...p}
               value={style.animation}
-              disabled={off}
+              disabled={off || locked}
               onValueChange={(value) =>
                 onStyle({ ...style, animation: value as NameStyle['animation'] })
               }

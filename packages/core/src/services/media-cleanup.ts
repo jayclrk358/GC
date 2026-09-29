@@ -28,7 +28,15 @@ export type MediaCleanup =
 /** Uploads people put in what they write: chat attachments, forum and wiki images. */
 const CONTENT_PURPOSES = ['content', 'video'];
 /** A community's own images, which go with it. */
-const COMMUNITY_PURPOSES = ['icon', 'banner', 'background', 'gallery', 'emoji', 'role-icon'];
+const COMMUNITY_PURPOSES = [
+  'icon',
+  'banner',
+  'background',
+  'channel-background',
+  'gallery',
+  'emoji',
+  'role-icon',
+];
 
 const KEY_PATTERN = '(u/[a-z0-9]{8,40}\\.(?:webp|png|jpg|gif|mp4|webm))';
 /** Image sources anywhere in a rich text document. */

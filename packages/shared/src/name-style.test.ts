@@ -92,4 +92,32 @@ describe('name styles', () => {
     expect(decor.nameStyle?.effect).toBe('gradient');
     expect(decor.icon).toEqual({ key: 'u/aaaaaaaa.webp', roleName: 'Member' });
   });
+
+  it('shows only a still, plain colour without the name effects perk', () => {
+    const plain = { nameEffects: false, roleIcons: false };
+    const view = nameStyleView(
+      '#e11d48',
+      { effect: 'rainbow', animation: 'wave', color2: null },
+      undefined,
+      plain,
+    );
+    expect(view).toMatchObject({ effect: 'color', animation: 'none' });
+    expect(view?.palette).toBeUndefined();
+    expect(nameStyleView('#e11d48', { effect: 'none' }, undefined, plain)).toBeNull();
+    const decor = pickRoleDecor(
+      [
+        {
+          name: 'Member',
+          position: 1,
+          color: '#22c55e',
+          nameStyle: { effect: 'glow', animation: 'pulse', color2: null },
+          iconKey: 'u/aaaaaaaa.webp',
+        },
+      ],
+      undefined,
+      plain,
+    );
+    expect(decor.nameStyle).toMatchObject({ effect: 'color', animation: 'none' });
+    expect(decor.icon).toBeNull();
+  });
 });

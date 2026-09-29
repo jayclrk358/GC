@@ -17,6 +17,13 @@ export const UPLOAD_PURPOSES = {
   icon: { maxBytes: 5_000_000, width: 512, height: 512, fit: 'cover' as const },
   banner: { maxBytes: 10_000_000, width: 2400, height: 1000, fit: 'inside' as const },
   background: { maxBytes: 10_000_000, width: 2560, height: 1600, fit: 'inside' as const },
+  // A picture behind a chat channel's messages.
+  'channel-background': {
+    maxBytes: 10_000_000,
+    width: 2560,
+    height: 1600,
+    fit: 'inside' as const,
+  },
   gallery: { maxBytes: 10_000_000, width: 2560, height: 2560, fit: 'inside' as const },
   content: { maxBytes: 10_000_000, width: 2560, height: 2560, fit: 'inside' as const },
   emoji: { maxBytes: 1_000_000, width: 128, height: 128, fit: 'contain' as const },

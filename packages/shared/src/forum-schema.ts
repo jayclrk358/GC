@@ -22,12 +22,24 @@ export const channelSettingsSchema = z.object({
   requireFlair: z.boolean().default(false),
   defaultSort: z.enum(['latest', 'new', 'top', 'hot', 'unanswered']).default('latest'),
   emoji: z.string().max(8).default(''),
+  backgroundKey: z
+    .string()
+    .regex(/^u\/[a-z0-9]{8,40}\.(webp|png|jpg|gif)$/)
+    .nullable()
+    .default(null),
+  backgroundDim: z.number().int().min(0).max(95).default(70),
 });
 
 export const channelInputSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('category'), name: z.string().trim().min(1).max(50) }),
+  // A separator's name is its label (it may be blank: just a line).
   z.object({
-    type: z.enum(['forum', 'text', 'announcement']),
+    type: z.literal('separator'),
+    name: z.string().trim().max(40).default(''),
+    parentId: z.string().uuid().nullable().default(null),
+  }),
+  z.object({
+    type: z.enum(['forum', 'text', 'announcement', 'voice']),
     name: channelNameSchema,
     topic: z.string().trim().max(300).default(''),
     parentId: z.string().uuid().nullable().default(null),
