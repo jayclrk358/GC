@@ -21,6 +21,8 @@ export const uploads = pgTable(
     alt: text('alt').notNull().default(''),
     /** The name the file had on the uploader's device, used when it's downloaded. */
     filename: text('filename'),
+    /** Its smaller copies (see IMAGE_VARIANTS) exist. Older uploads get them in the background. */
+    variants: boolean('variants').notNull().default(false),
     createdAt: createdAt(),
   },
   (t) => [index('uploads_owner_idx').on(t.ownerId)],

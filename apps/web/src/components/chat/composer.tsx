@@ -26,25 +26,45 @@ interface PendingAttachment {
 }
 
 /**
- * Whether this browser can show the video's picture. Browsers skip streams they can't decode
- * (e.g. HEVC in Chrome/Firefox), so check before uploading something nobody can watch.
+ * Whether this browser can show the video's picture, and a still of its opening frame to show
+ * in chat until someone presses play (so videos in chat load nothing until then). Browsers skip
+ * streams they can't decode (e.g. HEVC in Chrome/Firefox), so check before uploading something
+ * nobody can watch.
  */
-function probeVideo(file: File): Promise<boolean> {
+function probeVideo(file: File): Promise<{ playable: boolean; poster: Blob | null }> {
   return new Promise((resolve) => {
     const v = document.createElement('video');
     const url = URL.createObjectURL(file);
-    const done = (ok: boolean) => {
+    let settled = false;
+    const done = (playable: boolean, poster: Blob | null = null) => {
+      if (settled) return;
+      settled = true;
       clearTimeout(timer);
       v.removeAttribute('src');
       v.load();
       URL.revokeObjectURL(url);
-      resolve(ok);
+      resolve({ playable, poster });
     };
     // A slow or huge file shouldn't block the upload; the server still checks the format.
     const timer = setTimeout(() => done(true), 8000);
     v.muted = true;
-    v.preload = 'metadata';
-    v.onloadedmetadata = () => done(v.videoWidth > 0);
+    v.playsInline = true;
+    v.preload = 'auto';
+    v.onloadedmetadata = () => {
+      if (!(v.videoWidth > 0)) return done(false);
+      // Just past the start, where the first frame has usually been drawn.
+      v.currentTime = Math.min(0.1, (v.duration || 1) / 2);
+    };
+    v.onseeked = () => {
+      const scale = Math.min(1, 1024 / Math.max(v.videoWidth, v.videoHeight));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(v.videoWidth * scale);
+      canvas.height = Math.round(v.videoHeight * scale);
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return done(true);
+      ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob((blob) => done(true, blob), 'image/jpeg', 0.85);
+    };
     v.onerror = () => done(false);
     v.src = url;
   });
@@ -144,11 +164,13 @@ export const Composer = React.forwardRef<
     if (video && file.size > perms.maxVideoMb * 1_000_000) {
       return update({ error: t('videoTooLarge', { max: perms.maxVideoMb }) });
     }
-    if (video && !(await probeVideo(file))) return update({ error: t('videoUnplayable') });
+    const probe = video ? await probeVideo(file) : null;
+    if (probe && !probe.playable) return update({ error: t('videoUnplayable') });
     const abort = new AbortController();
     uploads.current.set(id, abort);
     try {
       const up = await uploadImage(file, video ? 'video' : 'content', communityId, {
+        poster: probe?.poster ?? undefined,
         signal: abort.signal,
         onProgress: (progress) => update({ progress }),
       });

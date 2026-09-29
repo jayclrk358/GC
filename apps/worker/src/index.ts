@@ -48,6 +48,13 @@ await queue(QUEUES.maintenance).upsertJobScheduler(
   { name: 'maintenance-hourly' },
 );
 
+// Smaller copies of images uploaded before they were made (quick once there are none left).
+await queue(QUEUES.media).add(
+  'media-variants',
+  {},
+  { jobId: 'media-variants', removeOnComplete: true, removeOnFail: true },
+);
+
 // Health endpoint for container orchestration and the e2e test harness.
 const health = createServer((req, res) => {
   const ok = workers.every((w) => w.isRunning());

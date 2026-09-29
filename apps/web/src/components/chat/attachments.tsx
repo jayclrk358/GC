@@ -6,7 +6,7 @@ import { Maximize2, Play } from 'lucide-react';
 import type { MessageAttachment, MessageEmbed } from '@magnox/db';
 import { isVideoKey } from '@magnox/shared';
 import { useMediaViewer, VideoUnavailable } from '@/components/media/media-viewer';
-import { mediaUrl } from '@/lib/media';
+import { imgSources, mediaUrl } from '@/lib/media';
 import { cn } from '@/lib/utils';
 
 /**
@@ -47,8 +47,9 @@ function AttachmentImage({
   const tm = useTranslations('media');
   const [playing, setPlaying] = React.useState(false);
   const still = a.animated && !animate && !playing && a.posterKey;
-  const src = mediaUrl(still ? a.posterKey : a.key);
-  if (!src) return null;
+  // Inline, the smaller copy is plenty; the viewer shows the full image.
+  const src = still ? { src: mediaUrl(a.posterKey) ?? '' } : imgSources(a.key, 'md');
+  if (!src?.src) return null;
   const ratio = a.width && a.height ? `${a.width} / ${a.height}` : undefined;
   return (
     <div className="relative overflow-hidden rounded-ui border border-border bg-surface-2">
@@ -60,9 +61,10 @@ function AttachmentImage({
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={src}
+          {...src}
           alt={a.alt}
           loading="lazy"
+          decoding="async"
           className="max-h-80 w-full object-contain"
           style={{ aspectRatio: ratio }}
         />
@@ -90,6 +92,8 @@ function AttachmentVideo({ a, onExpand }: { a: MessageAttachment; onExpand: () =
     if (v?.error) setFailed(true);
   }, []);
   const src = mediaUrl(a.key);
+  // A still of the opening frame (made when it was uploaded), so nothing loads until it's played.
+  const poster = mediaUrl(a.posterKey);
   if (!src) return null;
   const ratio = a.width && a.height ? `${a.width} / ${a.height}` : '16 / 9';
   return (
@@ -101,11 +105,13 @@ function AttachmentVideo({ a, onExpand }: { a: MessageAttachment; onExpand: () =
           {/* Chat videos have no caption tracks; the description below stands in. */}
           <video
             ref={ref}
-            // #t= makes browsers that load only metadata (Safari) still show the first frame.
-            src={`${src}#t=0.1`}
+            // Without a still, #t= makes browsers that load only metadata (Safari) show the
+            // first frame.
+            src={poster ? src : `${src}#t=0.1`}
+            poster={poster ?? undefined}
             controls
             playsInline
-            preload="metadata"
+            preload={poster ? 'none' : 'metadata'}
             aria-label={a.alt || tm('video')}
             onError={() => setFailed(true)}
             className="max-h-80 w-full bg-black"

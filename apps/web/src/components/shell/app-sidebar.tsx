@@ -16,6 +16,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { Tooltip } from '@/components/ui/tooltip';
+import { imgSources } from '@/lib/media';
 import { SIDEBAR_COOKIE } from '@/lib/sidebar';
 import { cn } from '@/lib/utils';
 import { Logo, Wordmark } from './logo';
@@ -23,7 +24,8 @@ import { Logo, Wordmark } from './logo';
 export interface SidebarCommunity {
   slug: string;
   name: string;
-  icon: string | null;
+  /** Upload key of the community's icon. */
+  iconKey: string | null;
   color: string;
   onColor: string;
 }
@@ -85,15 +87,25 @@ function NavIcon({ icon: Icon }: { icon: LucideIcon }) {
 }
 
 function CommunityTile({ c }: { c: SidebarCommunity }) {
+  const icon = imgSources(c.iconKey, 'sm');
   return (
     <span
       aria-hidden
       className="grid size-8 shrink-0 place-items-center overflow-hidden rounded-[50%] text-sm font-bold transition-[border-radius] duration-300 ease-[var(--mx-ease)] group-hover/item:rounded-[30%] group-aria-[current=page]/item:rounded-[30%]"
-      style={c.icon ? undefined : { background: c.color, color: c.onColor }}
+      style={icon ? undefined : { background: c.color, color: c.onColor }}
     >
-      {c.icon ? (
+      {icon ? (
+        // Lazy, so the hidden desktop sidebar on phones doesn't load them.
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={c.icon} alt="" className="size-full object-cover" />
+        <img
+          {...icon}
+          alt=""
+          width={32}
+          height={32}
+          loading="lazy"
+          decoding="async"
+          className="size-full object-cover"
+        />
       ) : (
         c.name.slice(0, 1).toUpperCase()
       )}

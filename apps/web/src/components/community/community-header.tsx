@@ -3,7 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { Globe2, Play, Settings, Users } from 'lucide-react';
 import { playLink, planPerks } from '@magnox/shared';
 import type { LoadedCommunity } from '@/lib/community';
-import { mediaUrl } from '@/lib/media';
+import { imgSources } from '@/lib/media';
 import { formatCount } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/misc';
@@ -30,8 +30,8 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
   const tp = await getTranslations('plans');
   const { community, game, nav, ctx, perms, user } = data;
   const theme = community.theme;
-  const banner = mediaUrl(theme.bannerKey);
-  const icon = mediaUrl(theme.iconKey);
+  const banner = imgSources(theme.bannerKey, 'md', '(min-width: 1600px) 1600px, 100vw');
+  const icon = imgSources(theme.iconKey, 'sm', '(min-width: 640px) 96px, 80px');
   const play = playLink(community.playUrl);
   const base = `/c/${community.slug}`;
   const compact = theme.headerStyle === 'compact';
@@ -46,10 +46,13 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
             data-decorative
           >
             {banner ? (
+              // Lazy: chat pages hide the banner, and a hidden lazy image isn't downloaded.
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={banner}
+                {...banner}
                 alt=""
+                loading="lazy"
+                decoding="async"
                 fetchPriority="high"
                 className="mx-page-enter size-full object-cover"
                 style={{ objectPosition: `50% ${theme.bannerFocalY}%` }}
@@ -87,10 +90,11 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
             {icon ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={icon}
+                {...icon}
                 alt=""
                 width={96}
                 height={96}
+                decoding="async"
                 className="size-20 rounded-ui-lg border-4 border-surface bg-surface object-cover shadow-md group-data-[dense=true]/dense:size-10 group-data-[dense=true]/dense:border-2 sm:size-24 sm:group-data-[dense=true]/dense:size-10"
               />
             ) : (

@@ -1,5 +1,6 @@
 import type { Job } from 'bullmq';
 import {
+  backfillImageVariants,
   cleanupMedia,
   cleanupUnverifiedServers,
   deliverVotifierVote,
@@ -42,6 +43,11 @@ export const handlers: Record<string, Handler> = {
     return deliverVotifierVote(voteId, address, final);
   },
   'media-cleanup': async (job) => ({ removed: await cleanupMedia(job.data as MediaCleanup) }),
+  'media-variants': async () => {
+    let done = 0;
+    for (let n = await backfillImageVariants(); n > 0; n = await backfillImageVariants()) done += n;
+    return { done };
+  },
   'history-maintenance': async () => maintainHistory(),
   'maintenance-hourly': async () => {
     await wakeHotDormant();

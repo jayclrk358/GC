@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { onlineInCommunity } from '@magnox/core';
 import { loadCommunity } from '@/lib/community';
-import { mediaUrl } from '@/lib/media';
+import { imgSources } from '@/lib/media';
 import { CommunityHeader } from '@/components/community/community-header';
 import { CommunityThemeStyle } from '@/components/community/theme-style';
 import { DenseOnChat } from '@/components/community/dense-on-chat';
@@ -29,7 +29,7 @@ export default async function CommunityLayout({
 }) {
   const data = await loadCommunity((await params).slug);
   const online = await onlineInCommunity(data.community.id);
-  const bg = mediaUrl(data.community.theme.backgroundKey);
+  const bg = imgSources(data.community.theme.backgroundKey, 'md', '100vw');
   return (
     <div
       data-community-theme
@@ -44,7 +44,7 @@ export default async function CommunityLayout({
           className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={bg} alt="" className="size-full object-cover" />
+          <img {...bg} alt="" decoding="async" className="size-full object-cover" />
           <div
             className="absolute inset-0 bg-bg"
             style={{ opacity: data.community.theme.backgroundDim / 100 }}

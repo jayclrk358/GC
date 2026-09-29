@@ -1,5 +1,6 @@
 import { and, eq, inArray, sql, type SQL } from 'drizzle-orm';
 import { db, schema } from '@magnox/db';
+import { MEDIA_KEY_RE as KEY_RE, variantKey } from '@magnox/shared';
 import { enforceRateLimit } from '../ratelimit';
 import { enqueue, QUEUES } from '../queues';
 import { logger } from '../logger';
@@ -29,7 +30,6 @@ const CONTENT_PURPOSES = ['content', 'video'];
 /** A community's own images, which go with it. */
 const COMMUNITY_PURPOSES = ['icon', 'banner', 'background', 'gallery', 'emoji', 'role-icon'];
 
-const KEY_RE = /^u\/[a-z0-9]{8,40}\.(webp|png|jpg|gif|mp4|webm)$/;
 const KEY_PATTERN = '(u/[a-z0-9]{8,40}\\.(?:webp|png|jpg|gif|mp4|webm))';
 /** Image sources anywhere in a rich text document. */
 const IMAGE_SRC = 'lax $.** ? (@.type == "image").attrs.src';
@@ -233,10 +233,14 @@ async function stillInUse(
   return used;
 }
 
-/** Delete files (and their still frames) from storage, then forget them. */
+/** Delete files (with their still frames and smaller copies) from storage, then forget them. */
 async function removeUploads(rows: { key: string; posterKey: string | null }[]): Promise<number> {
   if (!rows.length) return 0;
-  const files = rows.flatMap((r) => (r.posterKey ? [r.key, r.posterKey] : [r.key]));
+  const files = rows.flatMap((r) =>
+    [r.key, r.posterKey, variantKey(r.key, 'sm'), variantKey(r.key, 'md')].filter(
+      (k): k is string => Boolean(k),
+    ),
+  );
   for (const batch of chunks(files, 16)) {
     await Promise.all(batch.map((key) => storage().delete(key)));
   }

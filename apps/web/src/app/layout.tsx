@@ -17,7 +17,7 @@ import '@fontsource/opendyslexic/400.css';
 import '@fontsource/opendyslexic/700.css';
 import './globals.css';
 import { getUser } from '@/lib/auth';
-import { mediaBase, mediaUrl } from '@/lib/media';
+import { MEDIA_FALLBACK, mediaBase } from '@/lib/media';
 import { getPrefs } from '@/lib/prefs';
 import { AppProviders } from '@/components/shell/app-providers';
 import { SiteHeader } from '@/components/shell/site-header';
@@ -58,7 +58,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     ? (await communitiesForUser(user.id).catch(() => [])).slice(0, 40).map((c) => ({
         slug: c.slug,
         name: c.name,
-        icon: mediaUrl(c.theme.iconKey),
+        iconKey: c.theme.iconKey ?? null,
         color: c.theme.light.primary,
         onColor: c.theme.light.onPrimary,
       }))
@@ -75,6 +75,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <head>
         <style nonce={nonce} dangerouslySetInnerHTML={{ __html: SITE_TOKENS }} />
         <meta name="mx-media-base" content={mediaBase()} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: MEDIA_FALLBACK }} />
       </head>
       <body className="min-h-dvh">
         <NextIntlClientProvider>

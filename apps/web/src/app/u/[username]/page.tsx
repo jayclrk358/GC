@@ -23,6 +23,7 @@ import { CopyHandle, LocalTime } from '@/components/profile/profile-client';
 import { formatDate } from '@/lib/format';
 import { Avatar, Badge } from '@/components/ui/misc';
 import { HistoryBack } from '@/components/ui/history-back';
+import { imgSourcesFromUrl } from '@/lib/media';
 
 const PLATFORM_ICONS: Record<Platform, LucideIcon> = {
   pc: Monitor,
@@ -63,6 +64,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
   const viewer = await getUser();
   const profile = await getPublicProfile((await params).username, viewer?.id);
   if (!profile) notFound();
+  const banner = imgSourcesFromUrl(profile.bannerUrl, 'md', '100vw');
   const t = await getTranslations('profile');
   const tc = await getTranslations('community');
   const blocked =
@@ -83,9 +85,9 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
           className="absolute start-4 top-4 z-10 rounded-full bg-surface/90 px-3 text-fg shadow-sm backdrop-blur"
         />
         <div className="h-40 sm:h-56" data-decorative aria-hidden>
-          {profile.bannerUrl ? (
+          {banner ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={profile.bannerUrl} alt="" className="size-full object-cover" />
+            <img {...banner} alt="" decoding="async" className="size-full object-cover" />
           ) : (
             <div
               className="size-full"

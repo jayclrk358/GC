@@ -1,0 +1,1 @@
+ALTER TABLE "uploads" ADD COLUMN "variants" boolean DEFAULT false NOT NULL;

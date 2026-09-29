@@ -1,8 +1,8 @@
-import { eq, inArray } from 'drizzle-orm';
+import { and, asc, eq, inArray } from 'drizzle-orm';
 import { db, schema } from '@magnox/db';
-import { newId, Permission, planLimits } from '@magnox/shared';
+import { newId, Permission, planLimits, VARIANTS_BY_PURPOSE } from '@magnox/shared';
 import { getMemberContext, requirePerm } from '../access';
-import { processImage, UPLOAD_PURPOSES, type UploadPurpose } from '../images';
+import { makeVariants, processImage, UPLOAD_PURPOSES, type UploadPurpose } from '../images';
 import { processVideo } from '../video';
 import { AppError } from '../errors';
 import { enforceRateLimit } from '../ratelimit';
@@ -55,6 +55,8 @@ export async function saveUpload(opts: {
   alt?: string;
   /** The file's name on the uploader's device, used again when it's downloaded. */
   filename?: string | null;
+  /** For a video: a still of its opening frame, shown until it's played. */
+  poster?: Buffer | null;
 }): Promise<UploadResult> {
   await enforceRateLimit(
     `upload:${opts.userId}`,
@@ -88,8 +90,21 @@ export async function saveUpload(opts: {
     opts.purpose === 'video'
       ? processVideo(opts.data, maxBytes)
       : await processImage(opts.data, opts.purpose, maxBytes);
-  await storage().put(img.key, img.body, img.mime);
-  if (img.poster) await storage().put(img.poster.key, img.poster.body, 'image/webp');
+  if (opts.purpose === 'video' && opts.poster) {
+    // Re-encoded like any image; a still that isn't a valid image is just left out.
+    const still = await processImage(opts.poster, 'poster').catch(() => null);
+    if (still) {
+      img.poster = { key: still.key, body: still.body };
+      // WebM sizes aren't read from the file, but the still has the same shape.
+      if (!img.width || !img.height)
+        Object.assign(img, { width: still.width, height: still.height });
+    }
+  }
+  await Promise.all([
+    storage().put(img.key, img.body, img.mime),
+    img.poster && storage().put(img.poster.key, img.poster.body, 'image/webp'),
+    ...(img.variants ?? []).map((v) => storage().put(v.key, v.body, 'image/webp')),
+  ]);
   await db.insert(schema.uploads).values({
     id: newId(),
     key: img.key,
@@ -104,6 +119,7 @@ export async function saveUpload(opts: {
     posterKey: img.poster?.key ?? null,
     alt: (opts.alt ?? '').slice(0, 1000),
     filename: cleanFilename(opts.filename),
+    variants: true,
   });
   return {
     key: img.key,
@@ -132,4 +148,36 @@ export async function uploadDownloadName(key: string): Promise<string> {
     where: eq(schema.uploads.key, key),
   });
   return downloadFilename(row?.filename, key);
+}
+
+/**
+ * Make the smaller copies for images uploaded before they existed, a few at a time. Worker job;
+ * returns how many images it handled, and is run again until that's 0.
+ */
+export async function backfillImageVariants(limit = 25): Promise<number> {
+  const rows = await db
+    .select({ id: schema.uploads.id, key: schema.uploads.key, purpose: schema.uploads.purpose })
+    .from(schema.uploads)
+    .where(
+      and(
+        eq(schema.uploads.variants, false),
+        inArray(schema.uploads.purpose, Object.keys(VARIANTS_BY_PURPOSE)),
+        eq(schema.uploads.mime, 'image/webp'),
+      ),
+    )
+    .orderBy(asc(schema.uploads.id))
+    .limit(limit);
+  for (const row of rows) {
+    const original = await storage().get(row.key);
+    if (original) {
+      try {
+        const variants = await makeVariants(row.key, original, row.purpose);
+        for (const v of variants) await storage().put(v.key, v.body, 'image/webp');
+      } catch {
+        // Unreadable originals are left as they are; pages fall back to them anyway.
+      }
+    }
+    await db.update(schema.uploads).set({ variants: true }).where(eq(schema.uploads.id, row.id));
+  }
+  return rows.length;
 }

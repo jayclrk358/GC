@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { getInvitePreview, getMemberContext } from '@magnox/core';
 import { getUser } from '@/lib/auth';
-import { mediaUrl } from '@/lib/media';
+import { imgSources } from '@/lib/media';
 import { formatCount } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/misc';
@@ -35,14 +35,14 @@ export default async function InvitePage({ params }: { params: Promise<{ code: s
     }
   }
 
-  const icon = mediaUrl(invite.theme.iconKey);
+  const icon = imgSources(invite.theme.iconKey, 'sm', '80px');
   return (
     <div className="flex flex-1 items-start justify-center px-4 py-16">
       <div className="w-full max-w-md rounded-ui-lg border border-border bg-surface p-8 text-center shadow-sm">
         <div className="flex flex-col items-center gap-3">
           {icon ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={icon} alt="" className="size-20 rounded-ui-lg object-cover" />
+            <img {...icon} alt="" decoding="async" className="size-20 rounded-ui-lg object-cover" />
           ) : (
             <span
               aria-hidden

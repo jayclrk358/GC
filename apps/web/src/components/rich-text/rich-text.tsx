@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { docHeadings, isSafeHref, type RichMark, type RichNode } from '@magnox/shared';
-import { mediaUrl } from '@/lib/media';
+import { imgSources } from '@/lib/media';
 import { cn } from '@/lib/utils';
 import { MediaScope } from '@/components/media/media-scope';
 import { Spoiler } from './spoiler';
@@ -90,7 +90,8 @@ function renderNode(n: RichNode, key: React.Key, opts: RenderOpts): React.ReactN
       return <br key={key} />;
     case 'image': {
       const imgKey = String(n.attrs?.src ?? '');
-      const src = mediaUrl(imgKey);
+      // The smaller copy inline; the media viewer shows the full image.
+      const src = imgSources(imgKey, 'md');
       if (!src) return null;
       const alt = String(n.attrs?.alt ?? '');
       // Opens in the media viewer (see MediaScope); the image's alt text names the button.
@@ -103,7 +104,7 @@ function renderNode(n: RichNode, key: React.Key, opts: RenderOpts): React.ReactN
           className="mx-view block cursor-zoom-in"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={src} alt={alt} loading="lazy" />
+          <img {...src} alt={alt} loading="lazy" decoding="async" />
         </button>
       );
     }

@@ -19,13 +19,22 @@
 		X-Content-Type-Options nosniff
 		Content-Security-Policy "default-src 'none'; img-src 'self'; media-src 'self'; sandbox"
 		Cross-Origin-Resource-Policy cross-origin
-		Cache-Control "public, max-age=31536000, immutable"
 		-Server
 	}
-	@allowed path_regexp ^/u/[a-z0-9]{8,40}\.(webp|png|jpg|gif|mp4|webm)$
+	# Uploads and their smaller copies (u/<id>-sm.webp, u/<id>-md.webp). Files never change once
+	# written, so they're cached for good; misses aren't, so a copy made later still shows up.
+	@allowed path_regexp ^/u/[a-z0-9]{8,40}(-(sm|md))?\.(webp|png|jpg|gif|mp4|webm)$
 	handle @allowed {
 		root * /srv/media
+		header Cache-Control "public, max-age=31536000, immutable"
 		file_server
 	}
-	respond 404
+	handle {
+		header Cache-Control "no-store"
+		respond 404
+	}
+	handle_errors {
+		header Cache-Control "no-store"
+		respond "Not found" 404
+	}
 }

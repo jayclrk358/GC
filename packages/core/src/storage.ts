@@ -9,6 +9,7 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { MEDIA_KEY_RE, STORED_KEY_RE } from '@magnox/shared';
 import { env } from './env';
 
 export interface StorageDriver {
@@ -20,8 +21,14 @@ export interface StorageDriver {
    * when the file is on this machine and can be streamed with `open` instead (local storage).
    */
   downloadUrl(key: string, filename: string): Promise<string | null>;
-  /** The file as a stream, or null if it's missing or not stored on this machine (S3). */
-  open(key: string): Promise<{ body: ReadableStream<Uint8Array>; size: number } | null>;
+  /**
+   * The file (or bytes `start` to `end` of it, inclusive) as a stream, with the file's full size;
+   * null if it's missing or not stored on this machine (S3).
+   */
+  open(
+    key: string,
+    range?: { start: number; end: number },
+  ): Promise<{ body: ReadableStream<Uint8Array>; size: number } | null>;
 }
 
 /**
@@ -90,10 +97,8 @@ export function presignDownload(
   );
 }
 
-const KEY_RE = /^u\/[a-z0-9]{8,40}\.(webp|png|jpg|gif|mp4|webm)$/;
-
 export function assertKey(key: string): void {
-  if (!KEY_RE.test(key)) throw new Error('Invalid storage key');
+  if (!STORED_KEY_RE.test(key)) throw new Error('Invalid storage key');
 }
 
 /** The monorepo root (where pnpm-workspace.yaml lives), so every app shares one storage folder. */
@@ -138,11 +143,11 @@ class LocalDriver implements StorageDriver {
     return null;
   }
 
-  async open(key: string) {
+  async open(key: string, range?: { start: number; end: number }) {
     const p = this.path(key);
     try {
       const { size } = await stat(p);
-      const body = Readable.toWeb(createReadStream(p)) as ReadableStream<Uint8Array>;
+      const body = Readable.toWeb(createReadStream(p, range)) as ReadableStream<Uint8Array>;
       return { body, size };
     } catch {
       return null;
@@ -175,9 +180,17 @@ class S3Driver implements StorageDriver {
     );
   }
 
-  async get(): Promise<Buffer | null> {
-    // Media is served directly by the bucket/CDN in S3 mode.
-    return null;
+  async get(key: string): Promise<Buffer | null> {
+    assertKey(key);
+    try {
+      const res = await this.client.send(
+        new GetObjectCommand({ Bucket: env().S3_BUCKET, Key: key }),
+      );
+      return res.Body ? Buffer.from(await res.Body.transformToByteArray()) : null;
+    } catch (err) {
+      if ((err as { name?: string }).name === 'NoSuchKey') return null;
+      throw err;
+    }
   }
 
   async delete(key: string): Promise<void> {
@@ -203,6 +216,6 @@ export function storage(): StorageDriver {
 }
 
 export function mediaUrl(key: string | null | undefined): string | null {
-  if (!key || !KEY_RE.test(key)) return null;
+  if (!key || !MEDIA_KEY_RE.test(key)) return null;
   return `${env().MEDIA_BASE_URL.replace(/\/$/, '')}/${key}`;
 }

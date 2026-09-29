@@ -1,5 +1,11 @@
 import sharp, { type Metadata } from 'sharp';
-import { PLAN_LIMITS, randomToken } from '@magnox/shared';
+import {
+  IMAGE_VARIANTS,
+  PLAN_LIMITS,
+  randomToken,
+  VARIANTS_BY_PURPOSE,
+  variantKey,
+} from '@magnox/shared';
 import { badRequest } from './errors';
 
 export const UPLOAD_PURPOSES = {
@@ -18,7 +24,10 @@ export const UPLOAD_PURPOSES = {
     fit: 'contain' as const,
     still: true,
   },
-  preview: { maxBytes: 5_000_000, width: 640, height: 640, fit: 'inside' as const },
+  // Still of a video's opening frame, made by the uploader's browser; shown until it's played.
+  poster: { maxBytes: 5_000_000, width: 1024, height: 1024, fit: 'inside' as const },
+  // Link preview images, shown as small thumbnails beside the link.
+  preview: { maxBytes: 5_000_000, width: 320, height: 320, fit: 'inside' as const },
   // Chat videos: stored as uploaded (see video.ts); the size fields don't apply.
   video: {
     maxBytes: PLAN_LIMITS.free.videoMb * 1_000_000,
@@ -40,6 +49,8 @@ export interface ProcessedImage {
   height: number;
   animated: boolean;
   poster?: { key: string; body: Buffer };
+  /** Smaller copies (see IMAGE_VARIANTS), stored next to the original. */
+  variants?: { key: string; body: Buffer }[];
 }
 
 function newKey(ext: 'webp'): string {
@@ -87,12 +98,63 @@ export async function processImage(
     animated,
   };
   if (animated) {
+    // The still frame stands in for the animation inline, so it needn't be full size.
     const poster = await sharp(input, { pages: 1 })
       .rotate()
-      .resize({ width: spec.width, height: spec.height, fit: spec.fit, withoutEnlargement: true })
+      .resize({
+        width: Math.min(spec.width, IMAGE_VARIANTS.md),
+        height: Math.min(spec.height, IMAGE_VARIANTS.md),
+        fit: spec.fit,
+        withoutEnlargement: true,
+      })
       .webp({ quality: 80 })
       .toBuffer();
     result.poster = { key: newKey('webp'), body: poster };
   }
+  result.variants = await makeVariants(result.key, data, purpose, {
+    width: result.width,
+    height: result.height,
+    animated,
+  });
   return result;
+}
+
+/**
+ * The smaller copies of a stored image for its purpose. An image already that small is copied
+ * as-is, so each copy always exists and pages can link to it without checking.
+ */
+export async function makeVariants(
+  key: string,
+  webp: Buffer,
+  purpose: string,
+  size?: { width: number; height: number; animated: boolean },
+): Promise<{ key: string; body: Buffer }[]> {
+  const wanted = VARIANTS_BY_PURPOSE[purpose] ?? [];
+  if (!wanted.length) return [];
+  const info = size ?? (await sizeOf(webp));
+  const out: { key: string; body: Buffer }[] = [];
+  for (const variant of wanted) {
+    const vkey = variantKey(key, variant);
+    if (!vkey) continue;
+    const max = IMAGE_VARIANTS[variant];
+    const body =
+      Math.max(info.width, info.height) <= max
+        ? webp
+        : await sharp(webp, { animated: info.animated, limitInputPixels: 50_000_000 })
+            .resize({ width: max, height: max, fit: 'inside', withoutEnlargement: true })
+            .webp({ quality: 80, effort: 4 })
+            .toBuffer();
+    out.push({ key: vkey, body });
+  }
+  return out;
+}
+
+async function sizeOf(webp: Buffer) {
+  const meta = await sharp(webp, { animated: true }).metadata();
+  const animated = (meta.pages ?? 1) > 1;
+  return {
+    width: meta.width ?? 0,
+    height: animated ? (meta.pageHeight ?? meta.height ?? 0) : (meta.height ?? 0),
+    animated,
+  };
 }

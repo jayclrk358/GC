@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { Users } from 'lucide-react';
 import type { CommunityCard as Card } from '@magnox/core';
-import { mediaUrl } from '@/lib/media';
+import { imgSources } from '@/lib/media';
 import { formatCount } from '@/lib/utils';
 import { Badge } from '@/components/ui/misc';
 import { PlanBadge } from '@/components/billing/plan-badge';
@@ -12,15 +12,15 @@ export async function CommunityCard({ c }: { c: Card }) {
   const t = await getTranslations('community');
   const tp = await getTranslations('plans');
   const theme = c.theme;
-  const icon = mediaUrl(theme.iconKey);
-  const banner = mediaUrl(theme.bannerKey);
+  const icon = imgSources(theme.iconKey, 'sm');
+  const banner = imgSources(theme.bannerKey, 'md');
   return (
     <article className="group mx-card relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-surface">
       <div className="relative h-24" data-decorative aria-hidden>
         {banner ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={banner}
+            {...banner}
             alt=""
             loading="lazy"
             decoding="async"
@@ -42,7 +42,7 @@ export async function CommunityCard({ c }: { c: Card }) {
           {icon ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={icon}
+              {...icon}
               alt=""
               loading="lazy"
               decoding="async"

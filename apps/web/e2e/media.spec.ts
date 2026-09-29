@@ -74,6 +74,21 @@ test('chat images and videos open in the media viewer', async ({ page }) => {
   await expect(inline).toBeVisible();
   await expect(msg.getByText('Clip of the boss fight')).toBeVisible();
 
+  // Inline, the image is its smaller copy; if a copy is missing (older uploads, until the worker
+  // makes them), the full image loads instead.
+  const thumb = msg.getByRole('img', { name: 'Map of the spawn area' });
+  await expect(thumb).toHaveAttribute('src', /\/u\/[a-z0-9]+-md\.webp$/);
+  await expect
+    .poll(() => thumb.evaluate((i: HTMLImageElement) => i.naturalWidth))
+    .toBeGreaterThan(0);
+  await page.route(/-md\.webp$/, (route) => route.fulfill({ status: 404 }));
+  await page.reload();
+  await expect(thumb).toHaveAttribute('src', /\/u\/[a-z0-9]+\.webp$/);
+  await expect
+    .poll(() => thumb.evaluate((i: HTMLImageElement) => i.naturalWidth))
+    .toBeGreaterThan(0);
+  await page.unroute(/-md\.webp$/);
+
   // The image opens the viewer: zoom, download and step to the video.
   const opener = msg.getByRole('button', { name: 'Map of the spawn area' });
   await opener.click();
@@ -235,8 +250,12 @@ test('videos that browsers cannot play are caught before and after upload', asyn
   await composer.press('Enter');
   const msg = page.locator('article[data-message-id]').filter({ hasText: 'Watch this' });
   await expect(msg.locator('video')).toBeVisible();
+  // The browser made a still of the opening frame, so the video loads nothing until played.
+  await expect(msg.locator('video')).toHaveAttribute('poster', /\/u\/[a-z0-9]+\.webp$/);
+  await expect(msg.locator('video')).toHaveAttribute('preload', 'none');
   await page.route(/\/u\/[a-z0-9]+\.webm/, (route) => route.fulfill({ status: 404 }));
   await page.reload();
+  await msg.locator('video').evaluate((v: HTMLVideoElement) => void v.play().catch(() => {}));
   await expect(msg.getByText("This video can't be played in your browser.")).toBeVisible();
   await expect(msg.getByRole('link', { name: 'Download' })).toHaveAttribute(
     'href',

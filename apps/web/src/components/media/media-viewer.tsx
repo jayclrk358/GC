@@ -235,6 +235,7 @@ export function MediaViewer({
                 key={item.key}
                 ref={videoRef}
                 src={url}
+                poster={mediaUrl(item.posterKey) ?? undefined}
                 controls
                 autoPlay={prefs.autoplayMedia}
                 playsInline
@@ -252,6 +253,7 @@ export function MediaViewer({
                 key={item.key}
                 src={src}
                 alt={item.alt}
+                decoding="async"
                 className={cn(
                   'rounded-ui-sm object-contain select-none',
                   zoom === 0 ? 'max-h-full max-w-full' : 'm-auto max-w-none',

@@ -10,6 +10,7 @@ import { RoleBadge } from '@/components/community/role-badge';
 import { StyledName } from '@/components/community/role-decor';
 import { usePrefs } from '@/components/shell/prefs-provider';
 import { Avatar, Badge } from '@/components/ui/misc';
+import { imgSourcesFromUrl } from '@/lib/media';
 
 // One request per person (and community) per page; a failed one is retried next time.
 const cards = new Map<string, Promise<ProfileCard | null>>();
@@ -109,12 +110,13 @@ function CardBody({ card }: { card: ProfileCard }) {
   const date = (iso: string) => format.dateTime(new Date(iso), { dateStyle: 'medium' });
   const member = card.member;
   const displayName = member?.nickname || card.name;
+  const banner = imgSourcesFromUrl(card.bannerUrl, 'md');
   return (
     <div className="flex flex-col">
       <div className="h-16" aria-hidden>
-        {card.bannerUrl ? (
+        {banner ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={card.bannerUrl} alt="" className="size-full object-cover" />
+          <img {...banner} alt="" decoding="async" className="size-full object-cover" />
         ) : (
           <div
             className="size-full"

@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { useMediaViewer, type MediaItem } from '@/components/media/media-viewer';
-import { mediaUrl } from '@/lib/media';
+import { imgSources, mediaUrl } from '@/lib/media';
 
 export interface GalleryImage extends MediaItem {
   /** Shown in the grid: a still frame when the viewer turned animation off. */
@@ -30,8 +30,12 @@ export function GalleryGrid({
         }
       >
         {images.map((img, i) => {
-          const src = mediaUrl(img.thumbKey);
-          if (!src) return null;
+          // The still frame (animation off), or the smaller copy of the image.
+          const src =
+            img.thumbKey === img.key
+              ? imgSources(img.key, 'md')
+              : { src: mediaUrl(img.thumbKey) ?? '' };
+          if (!src?.src) return null;
           return (
             <li key={i} className="mb-3 break-inside-avoid">
               <figure className="overflow-hidden rounded-ui border border-border bg-surface">
@@ -43,9 +47,10 @@ export function GalleryGrid({
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={src}
+                    {...src}
                     alt={img.alt}
                     loading="lazy"
+                    decoding="async"
                     className={layout === 'masonry' ? 'w-full' : 'aspect-video w-full object-cover'}
                   />
                 </button>

@@ -299,7 +299,8 @@ export function RichTextEditor({
     try {
       const r = await uploadImage(file, 'content', communityId, { onProgress: setUploadProgress });
       setAlt('');
-      setPendingImage({ key: r.key, url: r.url });
+      // Preview the file from this device rather than downloading it straight back.
+      setPendingImage({ key: r.key, url: URL.createObjectURL(file) });
     } catch (err) {
       setImageError((err as Error).message);
     } finally {
@@ -427,7 +428,14 @@ export function RichTextEditor({
         </DialogContent>
       </Dialog>
 
-      <Dialog open={Boolean(pendingImage)} onOpenChange={(o) => !o && setPendingImage(null)}>
+      <Dialog
+        open={Boolean(pendingImage)}
+        onOpenChange={(o) => {
+          if (o) return;
+          if (pendingImage) URL.revokeObjectURL(pendingImage.url);
+          setPendingImage(null);
+        }}
+      >
         <DialogContent title={t('altTitle')} description={t('altDescription')}>
           <form
             className="flex flex-col gap-3"
@@ -439,6 +447,7 @@ export function RichTextEditor({
                 return;
               }
               editor.chain().focus().setImage({ src: pendingImage.key, alt: alt.trim() }).run();
+              URL.revokeObjectURL(pendingImage.url);
               setPendingImage(null);
               setImageError(null);
             }}

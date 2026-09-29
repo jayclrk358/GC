@@ -4,7 +4,8 @@ import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { ImagePlus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { mediaUrl } from '@/lib/media';
+import { VARIANTS_BY_PURPOSE } from '@magnox/shared';
+import { imgSources, mediaUrl } from '@/lib/media';
 import { cn } from '@/lib/utils';
 
 export interface UploadedImage {
@@ -24,13 +25,20 @@ export function uploadImage(
   file: File,
   purpose: string,
   communityId?: string,
-  opts: { alt?: string; onProgress?: (fraction: number) => void; signal?: AbortSignal } = {},
+  opts: {
+    alt?: string;
+    /** A still to show for a video until it's played. */
+    poster?: Blob;
+    onProgress?: (fraction: number) => void;
+    signal?: AbortSignal;
+  } = {},
 ): Promise<UploadedImage> {
   const form = new FormData();
   form.set('file', file);
   form.set('purpose', purpose);
   if (communityId) form.set('communityId', communityId);
   if (opts.alt) form.set('alt', opts.alt);
+  if (opts.poster) form.set('poster', opts.poster, 'poster.jpg');
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', '/api/uploads');
@@ -122,7 +130,10 @@ export function ImageUpload({
   const [pending, setPending] = React.useState(false);
   const [progress, setProgress] = React.useState(0);
   const [error, setError] = React.useState<string | null>(null);
-  const url = mediaUrl(value);
+  const variant = VARIANTS_BY_PURPOSE[purpose]?.[0];
+  const full = mediaUrl(value);
+  const preview = variant ? imgSources(value, variant) : full ? { src: full } : null;
+  const url = preview?.src;
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -160,7 +171,12 @@ export function ImageUpload({
         >
           {url ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={url} alt={t('currentImage', { label })} className="size-full object-cover" />
+            <img
+              {...preview}
+              alt={t('currentImage', { label })}
+              decoding="async"
+              className="size-full object-cover"
+            />
           ) : (
             <ImagePlus className="size-6" aria-hidden />
           )}

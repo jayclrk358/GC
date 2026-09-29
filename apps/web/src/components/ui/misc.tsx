@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { cn, initials } from '@/lib/utils';
+import { imgSourcesFromUrl } from '@/lib/media';
 import { PresenceDot } from '@/components/presence/presence';
 
 export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
@@ -80,11 +81,14 @@ interface AvatarProps {
 
 function AvatarImage({ src, name, size = 40, className, alt }: AvatarProps) {
   const style = { width: size, height: size, fontSize: Math.max(10, size * 0.38) };
-  if (src) {
+  // Only our own uploads (a picture from a sign-in provider would be blocked by the CSP), at the
+  // smallest size that's sharp at this size on this screen.
+  const image = imgSourcesFromUrl(src, 'sm', `${size}px`);
+  if (image) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={src}
+        {...image}
         alt={alt ?? ''}
         width={size}
         height={size}

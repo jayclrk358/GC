@@ -16,7 +16,16 @@ const FAIL_TTL_MS = 3600 * 1000;
 
 const hashUrl = (url: string) => createHash('sha256').update(url).digest('hex');
 
-async function fetchPreview(url: string): Promise<LinkPreviewData | null> {
+/**
+ * Preview images are named after their address, so refreshing a preview (daily) reuses the file
+ * everyone already has cached instead of storing and downloading a new copy.
+ */
+const previewImageKey = (imageUrl: string) => `u/${hashUrl(imageUrl).slice(0, 40)}.webp`;
+
+async function fetchPreview(
+  url: string,
+  previous: LinkPreviewData | null,
+): Promise<LinkPreviewData | null> {
   const page = await safeFetch(url, {
     accept: 'text/html,application/xhtml+xml;q=0.9',
     maxBytes: 512 * 1024,
@@ -29,7 +38,13 @@ async function fetchPreview(url: string): Promise<LinkPreviewData | null> {
     imageWidth: null,
     imageHeight: null,
   };
-  if (og.image) {
+  if (og.image && previous?.imageKey === previewImageKey(og.image)) {
+    image = {
+      imageKey: previous.imageKey,
+      imageWidth: previous.imageWidth,
+      imageHeight: previous.imageHeight,
+    };
+  } else if (og.image) {
     try {
       // Re-host the image so viewers never load third-party content (or leak their IP).
       const res = await safeFetch(og.image, {
@@ -39,13 +54,10 @@ async function fetchPreview(url: string): Promise<LinkPreviewData | null> {
       });
       if (res.status < 400 && res.contentType.startsWith('image/')) {
         const img = await processImage(res.body, 'preview');
-        await storage().put(img.key, img.body, img.mime);
-        if (img.poster) await storage().put(img.poster.key, img.poster.body, 'image/webp');
-        image = {
-          imageKey: img.poster?.key ?? img.key,
-          imageWidth: img.width,
-          imageHeight: img.height,
-        };
+        // Thumbnails are shown still, so an animated image keeps just its first frame.
+        const key = previewImageKey(og.image);
+        await storage().put(key, img.poster?.body ?? img.body, 'image/webp');
+        image = { imageKey: key, imageWidth: img.width, imageHeight: img.height };
       }
     } catch (err) {
       log.debug({ err: (err as Error).message, url: og.image }, 'preview image skipped');
@@ -74,7 +86,7 @@ export async function getLinkPreview(url: string): Promise<LinkPreviewData | nul
   if (!(await rateLimit(`preview-host:${host}`, 30, 60)).ok) return null;
   let data: LinkPreviewData | null = null;
   try {
-    data = await fetchPreview(url);
+    data = await fetchPreview(url, cached?.ok ? cached.data : null);
   } catch (err) {
     log.debug({ err: (err as Error).message, url }, 'preview fetch failed');
   }
