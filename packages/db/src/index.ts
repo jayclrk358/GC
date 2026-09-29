@@ -14,6 +14,11 @@ export const sql =
   globalForDb.__mxSql ??
   postgres(DATABASE_URL, {
     max: Number(process.env.DATABASE_POOL_SIZE ?? 10),
+    // Close connections left idle for a minute, so quiet processes don't hold server memory.
+    idle_timeout: 60,
+    // Hosted poolers in transaction mode (Neon's "-pooler" address, Supabase on port 6543)
+    // can't keep prepared statements between queries: set DATABASE_PREPARE=false for those.
+    prepare: process.env.DATABASE_PREPARE !== 'false',
     onnotice: () => {},
   });
 

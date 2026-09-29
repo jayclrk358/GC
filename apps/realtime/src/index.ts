@@ -3,7 +3,12 @@ import { Server, type Socket } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
 import { fromNodeHeaders } from 'better-auth/node';
 import { auth } from '@magnox/auth';
-import { cacheRedis, env, logger, rooms } from '@magnox/core';
+// Just the modules needed here: the package's main entry also loads image processing, S3,
+// Stripe and the rest, which this process never uses.
+import { env } from '@magnox/core/env';
+import { logger } from '@magnox/core/logger';
+import { cacheRedis } from '@magnox/core/redis';
+import { rooms } from '@magnox/core/rooms';
 import { authorizeRoom } from './authorize';
 import { registerPresence } from './presence';
 

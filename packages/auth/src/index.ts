@@ -6,7 +6,10 @@ import { twoFactor } from 'better-auth/plugins/two-factor';
 import { username } from 'better-auth/plugins/username';
 import { eq } from 'drizzle-orm';
 import { db, schema } from '@magnox/db';
-import { cacheRedis, env, logger, platformAdminEmails, renderEmail, sendMail } from '@magnox/core';
+import { env, platformAdminEmails } from '@magnox/core/env';
+import { logger } from '@magnox/core/logger';
+import { renderEmail, sendMail } from '@magnox/core/mail';
+import { cacheRedis } from '@magnox/core/redis';
 import { DEFAULT_PREFS } from '@magnox/shared';
 
 export const USERNAME_RE = /^[a-zA-Z0-9_.]{3,24}$/;

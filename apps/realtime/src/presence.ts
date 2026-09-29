@@ -1,5 +1,5 @@
 import type { Server, Socket } from 'socket.io';
-import { cacheRedis } from '@magnox/core';
+import { cacheRedis } from '@magnox/core/redis';
 
 const PRESENCE_TTL = 90;
 /** How many people one page can watch at once. */

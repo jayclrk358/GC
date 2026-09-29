@@ -1,0 +1,24 @@
+# Use hosted Postgres and/or Redis instead of the bundled containers:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml -f docker-compose.external.yml up -d --build
+# Set EXTERNAL_DATABASE_URL (and, if Redis is hosted too, EXTERNAL_REDIS_QUEUE_URL and
+# EXTERNAL_REDIS_CACHE_URL) in .env first. The bundled services only start if named with
+# --profile local-db / --profile local-redis, e.g. to keep Redis on this machine:
+#   ... -f docker-compose.external.yml --profile local-redis up -d --build
+services:
+  postgres:
+    profiles: [local-db]
+  redis-queue:
+    profiles: [local-redis]
+  redis-cache:
+    profiles: [local-redis]
+  migrate:
+    depends_on: !reset {}
+  web:
+    depends_on: !reset
+      migrate: { condition: service_completed_successfully }
+  realtime:
+    depends_on: !reset
+      migrate: { condition: service_completed_successfully }
+  worker:
+    depends_on: !reset
+      migrate: { condition: service_completed_successfully }

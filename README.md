@@ -120,6 +120,13 @@ keeps the databases off the network and restarts everything after a reboot.
   Docker volumes).
 - **Backup:** `docker compose exec postgres pg_dump -U magnox magnox > magnox.sql`, plus the
   `magnox_media` volume (uploads).
+- **Hosted Postgres or Redis (optional):** set `EXTERNAL_DATABASE_URL` (and, for Redis,
+  `EXTERNAL_REDIS_QUEUE_URL` / `EXTERNAL_REDIS_CACHE_URL`) in `.env`, then add
+  `-f docker-compose.external.yml` to your `docker compose` command; the bundled containers are
+  then left off (add `--profile local-redis` to keep Redis on the server). Pick the same region as
+  the server: pages run a few dozen queries, so a distant database makes every page slower.
+  Redis is used for every live event, so it's usually best left on the server. The queue Redis
+  needs `maxmemory-policy noeviction`; pay-per-command Redis plans get expensive with job queues.
 
 ### Payments (Stripe)
 

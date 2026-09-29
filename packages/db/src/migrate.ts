@@ -7,7 +7,11 @@ import { loadRootEnv } from './env';
 loadRootEnv();
 
 const url = process.env.DATABASE_URL ?? 'postgres://magnox:magnox@localhost:5432/magnox';
-const client = postgres(url, { max: 1, onnotice: () => {} });
+const client = postgres(url, {
+  max: 1,
+  prepare: process.env.DATABASE_PREPARE !== 'false',
+  onnotice: () => {},
+});
 const migrationsFolder = fileURLToPath(new URL('../drizzle', import.meta.url));
 
 await migrate(drizzle(client), { migrationsFolder });

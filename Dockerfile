@@ -42,7 +42,7 @@ COPY --from=build --chown=magnox /repo/apps/web/.next/static ./apps/web/.next/st
 COPY --from=build --chown=magnox /repo/apps/web/public ./apps/web/public
 USER magnox
 EXPOSE 3000
-HEALTHCHECK --interval=30s --timeout=5s CMD node -e "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+HEALTHCHECK --interval=60s --timeout=5s --start-period=30s CMD node -e "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 CMD ["node", "apps/web/server.js"]
 
 FROM deps AS app
@@ -50,4 +50,4 @@ ENV NODE_ENV=production
 COPY . .
 RUN useradd --system --uid 1001 magnox && mkdir -p /data/media && chown magnox /data/media
 USER magnox
-CMD ["pnpm", "--filter", "@magnox/realtime", "start"]
+CMD ["node", "--import", "tsx", "apps/realtime/src/index.ts"]
