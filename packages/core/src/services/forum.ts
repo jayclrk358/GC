@@ -26,6 +26,7 @@ import { enforceRateLimit } from '../ratelimit';
 import { rooms } from '../rooms';
 import { audit } from './audit';
 import { getChannelById, listVisibleChannels, type ChannelView } from './channels';
+import { queueMediaCleanup } from './media-cleanup';
 import { getNotificationSettings, notifyUser, queueFanout } from './notify';
 import { mediaUrl } from '../storage';
 import { loadAuthors } from './chat';
@@ -744,6 +745,9 @@ export async function deletePost(
     }
   });
   realtime().to(rooms.thread(thread.id)).emit('post:deleted', { threadId: thread.id, postId });
+  await queueMediaCleanup(
+    post.isOp ? { kind: 'threads', ids: [thread.id] } : { kind: 'posts', ids: [postId] },
+  );
   return { threadDeleted: post.isOp };
 }
 

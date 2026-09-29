@@ -17,6 +17,7 @@ import { enforceRateLimit } from '../ratelimit';
 import { rooms } from '../rooms';
 import { audit } from './audit';
 import { getChatChannel } from './chat';
+import { queueMediaCleanup } from './media-cleanup';
 import { removeMember } from './members';
 import { notifyUser, queueFanout } from './notify';
 
@@ -100,6 +101,7 @@ export async function banMember(ctx: MemberContext, userId: string, raw: unknown
   if (!user) throw notFound('User');
   const seconds = BAN_DURATIONS[input.duration];
   const expiresAt = seconds ? new Date(Date.now() + seconds * 1000) : null;
+  const removed = { posts: [] as string[], threads: [] as string[] };
   await db.transaction(async (tx) => {
     await removeMember(tx, ctx.community.id, userId);
     await tx
@@ -117,7 +119,7 @@ export async function banMember(ctx: MemberContext, userId: string, raw: unknown
       });
     if (input.deleteSeconds) {
       const since = new Date(Date.now() - input.deleteSeconds * 1000);
-      await tx
+      const posts = await tx
         .update(schema.posts)
         .set({ deletedAt: new Date(), deletedBy: ctx.userId })
         .where(
@@ -127,8 +129,9 @@ export async function banMember(ctx: MemberContext, userId: string, raw: unknown
             gt(schema.posts.createdAt, since),
             isNull(schema.posts.deletedAt),
           ),
-        );
-      await tx
+        )
+        .returning({ id: schema.posts.id });
+      const threads = await tx
         .update(schema.threads)
         .set({ deletedAt: new Date() })
         .where(
@@ -138,7 +141,10 @@ export async function banMember(ctx: MemberContext, userId: string, raw: unknown
             gt(schema.threads.createdAt, since),
             isNull(schema.threads.deletedAt),
           ),
-        );
+        )
+        .returning({ id: schema.threads.id });
+      removed.posts = posts.map((p) => p.id);
+      removed.threads = threads.map((t) => t.id);
     }
     await audit(tx, {
       communityId: ctx.community.id,
@@ -151,6 +157,8 @@ export async function banMember(ctx: MemberContext, userId: string, raw: unknown
     });
   });
   realtime().to(rooms.user(userId)).emit('community:removed', { communityId: ctx.community.id });
+  if (removed.posts.length) await queueMediaCleanup({ kind: 'posts', ids: removed.posts });
+  if (removed.threads.length) await queueMediaCleanup({ kind: 'threads', ids: removed.threads });
   await notifyUser({
     userId,
     type: 'moderation',

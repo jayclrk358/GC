@@ -18,6 +18,7 @@ import { AppError, forbidden, notFound } from '../errors';
 import { communityChanged } from '../emitter';
 import { enforceRateLimit } from '../ratelimit';
 import { audit } from './audit';
+import { queueMediaCleanup } from './media-cleanup';
 import { queueFanout } from './notify';
 
 export type WikiPageRow = typeof schema.wikiPages.$inferSelect;
@@ -342,6 +343,7 @@ export async function deleteWikiPage(ctx: MemberContext, pageId: string): Promis
       diff: { title: page.title },
     });
   });
+  await queueMediaCleanup({ kind: 'wiki-page', id: page.id });
 }
 
 export async function searchWiki(ctx: MemberContext, rawQ: string, limit = 20) {

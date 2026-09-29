@@ -52,6 +52,14 @@ export function uploadImage(
   });
 }
 
+/**
+ * Throw away an upload that won't be used after all (an attachment removed before sending).
+ * The server only removes it if it's yours and not in anything you've posted.
+ */
+export function discardUpload(key: string): void {
+  void fetch(`/api/uploads/${key}`, { method: 'DELETE', keepalive: true }).catch(() => {});
+}
+
 /** How far an upload has got: a bar, then "Processing…" once the file is sent. */
 export function UploadProgress({
   value,

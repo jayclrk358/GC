@@ -19,6 +19,8 @@ export const uploads = pgTable(
     /** Static first frame for animated images (used when a user disables animation). */
     posterKey: text('poster_key'),
     alt: text('alt').notNull().default(''),
+    /** The name the file had on the uploader's device, used when it's downloaded. */
+    filename: text('filename'),
     createdAt: createdAt(),
   },
   (t) => [index('uploads_owner_idx').on(t.ownerId)],

@@ -1,9 +1,11 @@
 import type { Job } from 'bullmq';
 import {
+  cleanupMedia,
   cleanupUnverifiedServers,
   deliverVotifierVote,
   logger,
   maintainHistory,
+  type MediaCleanup,
   processFanout,
   processLinkPreviews,
   type FanoutJob,
@@ -39,6 +41,7 @@ export const handlers: Record<string, Handler> = {
     const final = job.attemptsMade + 1 >= (job.opts.attempts ?? 1);
     return deliverVotifierVote(voteId, address, final);
   },
+  'media-cleanup': async (job) => ({ removed: await cleanupMedia(job.data as MediaCleanup) }),
   'history-maintenance': async () => maintainHistory(),
   'maintenance-hourly': async () => {
     await wakeHotDormant();

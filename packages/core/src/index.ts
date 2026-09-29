@@ -19,6 +19,7 @@ export * from './services/roles';
 export * from './services/invites';
 export * from './services/blocks';
 export * from './services/uploads';
+export * from './services/media-cleanup';
 export * from './services/profiles';
 export * from './services/servers';
 export * from './images';

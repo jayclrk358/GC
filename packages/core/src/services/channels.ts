@@ -20,6 +20,7 @@ import {
 import { AppError, conflict, forbidden, notFound } from '../errors';
 import { audit } from './audit';
 import { assertUnderPlanLimit } from './billing';
+import { messageRefs, postRefs, queueMediaCleanup } from './media-cleanup';
 
 export type ChannelRow = typeof schema.channels.$inferSelect;
 
@@ -215,6 +216,16 @@ export async function updateChannel(ctx: MemberContext, id: string, raw: unknown
 export async function deleteChannel(ctx: MemberContext, id: string): Promise<void> {
   requirePerm(ctx, Permission.MANAGE_CHANNELS);
   const row = await loadChannelRow(ctx, id);
+  // Messages and threads go with the channel, so note the files they used first.
+  const media =
+    row.type === 'category'
+      ? []
+      : [
+          ...(await messageRefs(sql`m.channel_id = ${id}`)),
+          ...(await postRefs(
+            sql`p.thread_id in (select id from threads where channel_id = ${id})`,
+          )),
+        ];
   await db.transaction(async (tx) => {
     if (row.type === 'category') {
       await tx
@@ -233,6 +244,7 @@ export async function deleteChannel(ctx: MemberContext, id: string): Promise<voi
     });
   });
   await bumpPermVersion(ctx.community.id);
+  if (media.length) await queueMediaCleanup({ kind: 'refs', refs: media });
 }
 
 /** Save a new order for all channels (and categories). Parents are not changed here. */

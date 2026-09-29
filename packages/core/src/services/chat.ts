@@ -48,6 +48,7 @@ import { mediaUrl } from '../storage';
 import { audit } from './audit';
 import { communityLimits } from './billing';
 import { getChannelById, listVisibleChannels, type ChannelView } from './channels';
+import { queueMediaCleanup } from './media-cleanup';
 import { queueFanout } from './notify';
 
 // ── Views ──────────────────────────────────────────────────────────────────
@@ -751,6 +752,12 @@ export async function deleteMessage(ctx: MemberContext, messageId: string): Prom
   realtime()
     .to(rooms.channel(channel.id))
     .emit('message:deleted', { channelId: channel.id, id: row.id });
+  if (row.attachments.length) {
+    await queueMediaCleanup({
+      kind: 'refs',
+      refs: row.attachments.map((a) => ({ key: a.key, authorId: row.authorId })),
+    });
+  }
 }
 
 export async function toggleMessageReaction(

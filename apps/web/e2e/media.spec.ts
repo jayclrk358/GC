@@ -87,16 +87,22 @@ test('chat images and videos open in the media viewer', async ({ page }) => {
   expect(href).toMatch(/^\/api\/media\/download\/u\/[a-z0-9]+\.webp$/);
   await expectAccessible(page, 'media viewer');
 
-  // Download saves the file (via a same-origin link, which the media origin answers with an
-  // attachment), and the media origin serves byte ranges for seeking.
+  // Download saves the file under the name it was uploaded with (images are stored as WebP).
   const [file] = await Promise.all([page.waitForEvent('download'), download.click()]);
-  expect(file.suggestedFilename()).toMatch(/^magnox-[a-z0-9]+\.webp$/);
+  expect(file.suggestedFilename()).toBe('map.webp');
   const saved = await page.request.get(href!);
-  expect(saved.headers()['content-disposition']).toContain('attachment');
+  expect(saved.headers()['content-disposition']).toContain('attachment; filename="map.webp"');
   await expect(viewer).toBeVisible();
   await page.keyboard.press('ArrowRight');
   const videoViewer = page.getByRole('dialog', { name: 'Video 2 of 2' });
   await expect(videoViewer).toBeVisible();
+  const [clip] = await Promise.all([
+    page.waitForEvent('download'),
+    videoViewer.getByRole('link', { name: 'Download' }).click(),
+  ]);
+  expect(clip.suggestedFilename()).toBe('raid.webm');
+
+  // The media origin serves byte ranges for seeking.
   const video = videoViewer.locator('video');
   const src = await video.getAttribute('src');
   const range = await page.request.get(src!, { headers: { range: 'bytes=0-15' } });

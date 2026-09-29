@@ -23,6 +23,7 @@ export async function POST(req: Request) {
       communityId,
       data: Buffer.from(await file.arrayBuffer()),
       alt: String(form.get('alt') ?? ''),
+      filename: file.name,
     });
     return Response.json(result);
   } catch (e) {

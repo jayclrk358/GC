@@ -30,6 +30,7 @@ import { Permission } from '@magnox/shared';
 import { audit, diffOf } from './audit';
 import { cached } from '../cache';
 import { cancelCommunitySubscriptions } from './billing';
+import { queueMediaCleanup } from './media-cleanup';
 
 const MAX_OWNED_COMMUNITIES = 10;
 
@@ -287,7 +288,8 @@ export async function deleteCommunity(ctx: MemberContext, confirmSlug: string): 
     throw new AppError('validation', 'Type the community address exactly to confirm.');
   }
   await db.transaction(async (tx) => {
-    // Free the slug (it can be reused) and hide the community. Data is kept for 30 days.
+    // Free the slug (it can be reused) and hide the community. Uploaded files are removed now;
+    // everything else is kept for 30 days.
     await tx
       .update(schema.communities)
       .set({ deletedAt: new Date(), slug: `deleted-${ctx.community.id}`, visibility: 'private' })
@@ -300,6 +302,7 @@ export async function deleteCommunity(ctx: MemberContext, confirmSlug: string): 
   });
   // A deleted community shouldn't keep being charged for.
   await cancelCommunitySubscriptions(ctx.community.id);
+  await queueMediaCleanup({ kind: 'community', id: ctx.community.id });
 }
 
 export interface ExploreFilters {

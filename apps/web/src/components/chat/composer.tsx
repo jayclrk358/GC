@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { AtSign, Film, ImagePlus, SendHorizontal, Type, X } from 'lucide-react';
 import { docToText, MAX_MESSAGE_CHARS, VIDEO_TYPES, type RichNode } from '@magnox/shared';
 import { Button } from '@/components/ui/button';
-import { uploadImage, UploadProgress } from '@/components/upload/image-upload';
+import { discardUpload, uploadImage, UploadProgress } from '@/components/upload/image-upload';
 import { emitSocket } from '@/lib/realtime';
 import { cn } from '@/lib/utils';
 import { useChat } from './chat-context';
@@ -162,6 +162,8 @@ export const Composer = React.forwardRef<
 
   function removeAttachment(id: string) {
     uploads.current.get(id)?.abort();
+    const key = attachments.find((a) => a.id === id)?.key;
+    if (key) discardUpload(key);
     setAttachments((list) => {
       const gone = list.find((a) => a.id === id);
       if (gone) URL.revokeObjectURL(gone.previewUrl);

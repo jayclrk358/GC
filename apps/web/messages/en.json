@@ -746,7 +746,7 @@
       "title": "Danger zone",
       "description": "Irreversible actions. Proceed with care.",
       "deleteTitle": "Delete community",
-      "deleteDesc": "The community disappears immediately and its address becomes available. Content is kept for 30 days, then permanently removed.",
+      "deleteDesc": "The community disappears immediately and its address becomes available. Uploaded images, videos and attachments are deleted straight away; other content is kept for 30 days, then permanently removed.",
       "confirmLabel": "Type {slug} to confirm",
       "deleteButton": "Delete this community"
     },

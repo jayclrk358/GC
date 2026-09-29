@@ -30,6 +30,7 @@ start(QUEUES.maintenance, 1);
 start(QUEUES.notify, 8);
 start(QUEUES.previews, 4);
 start(QUEUES.integrations, 4);
+start(QUEUES.media, 2);
 
 // Sample partitions must exist before the first poll lands; rollups catch up after downtime.
 await backfillHistory().catch((err) => log.error({ err }, 'history backfill failed'));

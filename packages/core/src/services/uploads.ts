@@ -1,4 +1,4 @@
-import { inArray } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { db, schema } from '@magnox/db';
 import { newId, Permission, planLimits } from '@magnox/shared';
 import { getMemberContext, requirePerm } from '../access';
@@ -6,7 +6,7 @@ import { processImage, UPLOAD_PURPOSES, type UploadPurpose } from '../images';
 import { processVideo } from '../video';
 import { AppError } from '../errors';
 import { enforceRateLimit } from '../ratelimit';
-import { mediaUrl, storage } from '../storage';
+import { cleanFilename, downloadFilename, mediaUrl, storage } from '../storage';
 import { communityPlan } from './billing';
 
 export interface UploadResult {
@@ -53,6 +53,8 @@ export async function saveUpload(opts: {
   communityId?: string | null;
   data: Buffer;
   alt?: string;
+  /** The file's name on the uploader's device, used again when it's downloaded. */
+  filename?: string | null;
 }): Promise<UploadResult> {
   await enforceRateLimit(
     `upload:${opts.userId}`,
@@ -101,6 +103,7 @@ export async function saveUpload(opts: {
     animated: img.animated,
     posterKey: img.poster?.key ?? null,
     alt: (opts.alt ?? '').slice(0, 1000),
+    filename: cleanFilename(opts.filename),
   });
   return {
     key: img.key,
@@ -120,4 +123,13 @@ export async function posterKeysFor(keys: string[]): Promise<Map<string, string>
     .from(schema.uploads)
     .where(inArray(schema.uploads.key, keys));
   return new Map(rows.flatMap((r) => (r.posterKey ? [[r.key, r.posterKey] as const] : [])));
+}
+
+/** What an upload is saved as when downloaded: the name it was uploaded with, where known. */
+export async function uploadDownloadName(key: string): Promise<string> {
+  const row = await db.query.uploads.findFirst({
+    columns: { filename: true },
+    where: eq(schema.uploads.key, key),
+  });
+  return downloadFilename(row?.filename, key);
 }

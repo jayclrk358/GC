@@ -11,8 +11,8 @@ const TYPES: Record<string, string> = {
 
 /**
  * Serves uploads in local-storage mode (development). In production, media comes from its own
- * origin through Caddy, which does the same: byte ranges for video seeking, and `?download=1`
- * to save the file instead of opening it.
+ * origin through Caddy, which does the same (byte ranges for video seeking). Downloads go
+ * through /api/media/download.
  */
 export async function GET(req: Request, { params }: { params: Promise<{ key: string[] }> }) {
   if (env().STORAGE_DRIVER !== 'local') return new Response('Not found', { status: 404 });
@@ -30,9 +30,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ key: str
     'cross-origin-resource-policy': 'same-site',
     'accept-ranges': 'bytes',
   };
-  if (new URL(req.url).searchParams.has('download')) {
-    headers['content-disposition'] = `attachment; filename="magnox-${key.slice(2)}"`;
-  }
   const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.get('range') ?? '');
   if (range && (range[1] || range[2])) {
     const size = body.byteLength;
