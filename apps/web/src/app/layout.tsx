@@ -38,9 +38,13 @@ const SITE_TOKENS = themeToCss(DEFAULT_THEME, ':root', 'mx-tokens');
 const TZ_SCRIPT = `try{var z=Intl.DateTimeFormat().resolvedOptions().timeZone;if(z&&document.cookie.indexOf('mx-tz='+encodeURIComponent(z))<0)document.cookie='mx-tz='+encodeURIComponent(z)+';path=/;max-age=31536000;samesite=lax'}catch(e){}`;
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.APP_URL ?? 'http://localhost:3000'),
   title: { default: 'Magnox', template: '%s · Magnox' },
   description: 'Customisable, accessible community hubs for games and game servers.',
   applicationName: 'Magnox',
+  openGraph: { siteName: 'Magnox', type: 'website' },
+  twitter: { card: 'summary_large_image' },
+  appleWebApp: { capable: true, title: 'Magnox', statusBarStyle: 'black-translucent' },
 };
 
 export const viewport: Viewport = {

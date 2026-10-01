@@ -1807,7 +1807,23 @@
       "forever": "Until I unmute"
     },
     "mutedToast": "{name} muted.",
-    "unmutedToast": "{name} unmuted."
+    "unmutedToast": "{name} unmuted.",
+    "digest": "Email round-up",
+    "digestHint": "A summary of notifications you haven’t read yet. Only sent when there’s something new.",
+    "digestOff": "Don’t send",
+    "digestDaily": "Daily",
+    "digestWeekly": "Weekly",
+    "push": {
+      "title": "Push notifications",
+      "description": "Get notified on this phone or computer even when Magnox isn’t open. Turn it on separately on each device.",
+      "thisDevice": "Notifications on this device",
+      "thisDeviceHint": "Not sent while you’re using Magnox somewhere else.",
+      "unsupported": "This browser can’t receive push notifications. On iPhone and iPad, add Magnox to your Home Screen first (Share → Add to Home Screen).",
+      "blocked": "Notifications are blocked for this site in your browser’s settings. Allow them there, then come back.",
+      "turnedOn": "Push notifications are on for this device",
+      "turnedOff": "Push notifications are off for this device",
+      "failed": "Couldn’t turn on push notifications. Please try again."
+    }
   },
   "privacy": {
     "title": "Privacy & safety",

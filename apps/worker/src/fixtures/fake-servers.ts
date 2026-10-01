@@ -15,6 +15,8 @@
  *   GET  /go/:name     a redirect to /page/:name
  *   GET  /og.png       the preview image
  *   GET  /votes        votes the fake NuVotifier accepted, newest last
+ *   POST /push/:id     a fake Web Push service (accepts like one would: 201)
+ *   GET  /pushes       what it received, newest last (headers only: the payload is encrypted)
  *   Stripe (HTTP)                     : control port, see fake-stripe.ts (STRIPE_API_URL)
  * Requires SERVER_QUERY_ALLOW_PRIVATE=true in the app, because these listen on localhost.
  */
@@ -222,6 +224,14 @@ const OG_PNG = Buffer.from(
   'base64',
 );
 
+const pushes: {
+  id: string;
+  bytes: number;
+  encoding: string;
+  authorization: string;
+  ttl: string;
+}[] = [];
+
 const ctl = createHttpServer((req, res) => {
   if (handleStripe(req, res)) return;
   if (req.method === 'GET' && req.url === '/health') {
@@ -246,6 +256,26 @@ const ctl = createHttpServer((req, res) => {
   const go = req.url?.match(/^\/go\/([a-z0-9-]{1,40})$/);
   if (req.method === 'GET' && go) {
     res.writeHead(302, { location: `/page/${go[1]}` }).end();
+    return;
+  }
+  const push = req.url?.match(/^\/push\/([a-zA-Z0-9_-]{1,64})$/);
+  if (req.method === 'POST' && push) {
+    let size = 0;
+    req.on('data', (c: Buffer) => (size += c.length));
+    req.on('end', () => {
+      pushes.push({
+        id: push[1]!,
+        bytes: size,
+        encoding: String(req.headers['content-encoding'] ?? ''),
+        authorization: String(req.headers.authorization ?? '').split(' ')[0] ?? '',
+        ttl: String(req.headers.ttl ?? ''),
+      });
+      res.writeHead(201).end();
+    });
+    return;
+  }
+  if (req.method === 'GET' && req.url === '/pushes') {
+    res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ pushes }));
     return;
   }
   if (req.method === 'GET' && req.url === '/votes') {

@@ -30,6 +30,11 @@ else
   site="$host"; media="media.$host"; media_url="https://media.$host"
 fi
 
+# A Web Push key pair (P-256), made with openssl so the server needs nothing else.
+vapid_key=$(openssl ecparam -name prime256v1 -genkey -noout)
+vapid_private=$(printf '%s\n' "$vapid_key" | openssl ec -outform DER 2>/dev/null | tail -c +8 | head -c 32 | base64 | tr '+/' '-_' | tr -d '=\n')
+vapid_public=$(printf '%s\n' "$vapid_key" | openssl ec -pubout -outform DER 2>/dev/null | tail -c 65 | base64 | tr '+/' '-_' | tr -d '=\n')
+
 cat > .env <<ENV
 # Magnox server settings (created by scripts/linux/server-env.sh). Keep this file private.
 # Plain \`docker compose\` commands use the server overrides too, and start voice (LiveKit).
@@ -41,6 +46,12 @@ MEDIA_ADDRESS=$media
 MEDIA_BASE_URL=$media_url
 BETTER_AUTH_SECRET=$(openssl rand -base64 32)
 POSTGRES_PASSWORD=$(openssl rand -hex 24)
+
+# Push notifications on phones and computers (Web Push). Keep these: changing them signs
+# everyone's devices out of push.
+VAPID_PUBLIC_KEY=$vapid_public
+VAPID_PRIVATE_KEY=$vapid_private
+VAPID_SUBJECT=mailto:admin@$site
 
 # Email. Empty sends everything to the built-in Mailpit inbox (http://localhost:8025 on the
 # server). For real email: SMTP_URL=smtps://user:password@smtp.example.com:465

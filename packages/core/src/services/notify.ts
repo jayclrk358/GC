@@ -21,6 +21,7 @@ import { rateLimit } from '../ratelimit';
 import { realtime } from '../emitter';
 import { cacheRedis } from '../redis';
 import { rooms } from '../rooms';
+import { queuePush } from './push';
 
 const log = logger('notify');
 
@@ -74,6 +75,16 @@ export async function deliver(items: NotificationInput[]): Promise<void> {
         .to(rooms.user(n.userId))
         .emit('notification:new', { id: n.id, type: n.type, url: n.url, data: n.data });
     }
+    // And to their phones and computers, for people not on Magnox right now.
+    await queuePush(
+      batch.map((n) => ({
+        userId: n.userId,
+        title: n.data.title ?? 'New notification',
+        body: [n.data.community, n.data.excerpt].filter(Boolean).join(' · '),
+        url: n.url,
+        tag: n.targetId ? `${n.type}:${n.targetId}` : undefined,
+      })),
+    );
   }
 }
 
@@ -660,6 +671,7 @@ const settingsSchema = z.object({
   emailModeration: z.boolean(),
   emailEvents: z.boolean().default(true),
   autoFollow: z.boolean(),
+  digest: z.enum(['off', 'daily', 'weekly']).default('off'),
 });
 
 export async function getNotificationSettings(userId: string) {
@@ -672,6 +684,7 @@ export async function getNotificationSettings(userId: string) {
     emailModeration: row?.emailModeration ?? true,
     emailEvents: row?.emailEvents ?? true,
     autoFollow: row?.autoFollow ?? true,
+    digest: row?.digest ?? ('off' as const),
   };
 }
 

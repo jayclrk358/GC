@@ -294,6 +294,7 @@ export async function deleteAccount(userId: string | null, raw: unknown): Promis
     }
     const mine = <T extends { userId: unknown }>(t: T) => eq(t.userId as never, userId);
     await tx.delete(schema.sessions).where(mine(schema.sessions));
+    await tx.delete(schema.pushSubscriptions).where(mine(schema.pushSubscriptions));
     await tx.delete(schema.accounts).where(mine(schema.accounts));
     await tx.delete(schema.twoFactors).where(mine(schema.twoFactors));
     await tx.delete(schema.verifications).where(eq(schema.verifications.identifier, user.email));

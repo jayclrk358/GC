@@ -218,6 +218,23 @@ everyone else the page doesn't exist). It has:
 `docker compose run --rm migrate pnpm --filter @magnox/db admin:grant you@example.com`). Add
 `--revoke` to take it away. Emails in `PLATFORM_ADMIN_EMAILS` also count, once they're confirmed.
 
+## Notifications, search and installing
+
+- **Push notifications** reach phones and computers even with Magnox closed (not while you're
+  using Magnox somewhere else). People turn them on per device in Settings → Notifications. On
+  iPhone and iPad they work once Magnox is added to the Home Screen.
+  - New servers set up with `scripts/linux/server-env.sh` get push keys automatically. For a
+    server set up before, run `bash scripts/linux/push-keys.sh` in the Magnox folder, then
+    `docker compose up -d`. Elsewhere, set `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` (make a pair
+    with `npx web-push generate-vapid-keys`). Without keys the push setting is hidden.
+- **Email round-ups:** people can ask for a daily or weekly email of notifications they haven't
+  read (Settings → Notifications). It's only sent when there's something new.
+- **Install as an app:** Magnox has a web app manifest and icons, so browsers offer to install
+  it (Chrome's install button, Safari's Add to Home Screen).
+- **Search engines and link previews:** `/sitemap.xml` lists public communities and listed
+  servers, `/robots.txt` keeps search engines out of settings and sign-in pages, and links to a
+  community show a preview card in its own colours.
+
 ## Terms, privacy and your data
 
 - **Terms of Service** (`/legal/terms`) and **Privacy Policy** (`/legal/privacy`) are linked from

@@ -61,6 +61,11 @@ const schema = z.object({
   LIVEKIT_API_KEY: z.string().default(''),
   LIVEKIT_API_SECRET: z.string().default(''),
   PLATFORM_ADMIN_EMAILS: z.string().default(''),
+  /** Web Push (notifications on devices). Make a pair with `npx web-push generate-vapid-keys`. */
+  VAPID_PUBLIC_KEY: z.string().optional(),
+  VAPID_PRIVATE_KEY: z.string().optional(),
+  /** Who push services can contact about this site: a mailto: or https: address. */
+  VAPID_SUBJECT: z.string().optional(),
   /** Shown on the terms and privacy pages for questions and requests. */
   CONTACT_EMAIL: z
     .string()

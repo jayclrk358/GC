@@ -7,6 +7,8 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { BellOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Field } from '@/components/ui/field';
+import { Select } from '@/components/ui/input';
 import { SwitchField } from '@/components/ui/switch';
 import { formatDateTime } from '@/lib/format';
 import { setMuteAction, updateNotificationSettingsAction } from '@/app/actions/notifications';
@@ -17,6 +19,7 @@ interface Settings {
   emailModeration: boolean;
   emailEvents: boolean;
   autoFollow: boolean;
+  digest: 'off' | 'daily' | 'weekly';
 }
 
 export function NotificationSettingsForm({ initial }: { initial: Settings }) {
@@ -24,7 +27,7 @@ export function NotificationSettingsForm({ initial }: { initial: Settings }) {
   const [s, setS] = React.useState(initial);
   const [status, setStatus] = React.useState('');
 
-  async function change(key: keyof Settings, value: boolean) {
+  async function change<K extends keyof Settings>(key: K, value: Settings[K]) {
     const next = { ...s, [key]: value };
     setS(next);
     const r = await updateNotificationSettingsAction(next);
@@ -69,6 +72,21 @@ export function NotificationSettingsForm({ initial }: { initial: Settings }) {
           checked={s.emailEvents}
           onCheckedChange={(v) => void change('emailEvents', v)}
         />
+        <div className="py-3">
+          <Field label={t('digest')} description={t('digestHint')}>
+            {(p) => (
+              <Select
+                {...p}
+                value={s.digest}
+                onValueChange={(v) => void change('digest', v as Settings['digest'])}
+              >
+                <option value="off">{t('digestOff')}</option>
+                <option value="daily">{t('digestDaily')}</option>
+                <option value="weekly">{t('digestWeekly')}</option>
+              </Select>
+            )}
+          </Field>
+        </div>
       </div>
       <h2 className="mt-4 text-lg font-bold">{t('followingTitle')}</h2>
       <SwitchField

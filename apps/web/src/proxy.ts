@@ -32,6 +32,9 @@ export function proxy(request: NextRequest) {
     `font-src 'self' data:`,
     `connect-src 'self' ${rt} ${rtWs}${voice}${dev ? ' ws: http://localhost:*' : ''}`.trim(),
     `frame-src https://www.youtube-nocookie.com https://player.twitch.tv${turnstile}`,
+    // The service worker (push notifications) is our own script at /sw.js.
+    `worker-src 'self'`,
+    `manifest-src 'self'`,
     `frame-ancestors 'none'`,
     `base-uri 'self'`,
     `form-action 'self'`,

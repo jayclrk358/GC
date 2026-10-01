@@ -53,6 +53,11 @@ export const notificationSettings = pgTable('notification_settings', {
   emailEvents: boolean('email_events').notNull().default(true),
   /** Automatically follow threads you create or reply to. */
   autoFollow: boolean('auto_follow').notNull().default(true),
+  /** An email round-up of unread notifications. */
+  digest: text('digest', { enum: ['off', 'daily', 'weekly'] })
+    .notNull()
+    .default('off'),
+  lastDigestAt: tz('last_digest_at'),
 });
 
 /** Mute a community, channel or thread (optionally until a time). */

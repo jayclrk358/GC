@@ -48,3 +48,6 @@ export * from './services/emoji';
 export * from './services/analytics';
 export * from './services/admin';
 export * from './services/account';
+export * from './services/seo';
+export * from './services/push';
+export * from './services/digest';

@@ -10,7 +10,10 @@ import {
   type MediaCleanup,
   processFanout,
   processLinkPreviews,
+  sendDigests,
   sendEventReminders,
+  sendPushes,
+  type PushItem,
   type FanoutJob,
 } from '@magnox/core';
 import { pollEndpoint, pollTick, wakeHotDormant } from './poll';
@@ -45,6 +48,7 @@ export const handlers: Record<string, Handler> = {
     return deliverVotifierVote(voteId, address, final);
   },
   'media-cleanup': async (job) => ({ removed: await cleanupMedia(job.data as MediaCleanup) }),
+  push: async (job) => ({ sent: await sendPushes((job.data as { items: PushItem[] }).items) }),
   'media-variants': async () => {
     let done = 0;
     for (let n = await backfillImageVariants(); n > 0; n = await backfillImageVariants()) done += n;
@@ -56,6 +60,7 @@ export const handlers: Record<string, Handler> = {
     await wakeHotDormant();
     const removed = await cleanupUnverifiedServers();
     const giftsEnded = await expirePlanGifts();
-    return { removed, giftsEnded };
+    const digests = await sendDigests();
+    return { removed, giftsEnded, digests };
   },
 };

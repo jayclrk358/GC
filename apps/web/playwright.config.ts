@@ -14,6 +14,11 @@ const env = {
   STRIPE_PRICE_PRO_MONTHLY: 'price_pro_month',
   STRIPE_PRICE_PRO_YEARLY: 'price_pro_year',
   STRIPE_API_URL: 'http://127.0.0.1:25591',
+  // A throwaway Web Push key pair for tests only (pushes go to the fixture server).
+  VAPID_PUBLIC_KEY:
+    'BNDNhJBOgSwXMSgnTMLiLkh5rNSgWddiDuCpl2jVCelYpD2oNAIq3eSZAs_IWU8ZE_RDH3o7FLU25N1Nt5P_6KU',
+  VAPID_PRIVATE_KEY: '2jwxRUay8xvRuWsi09LeXcBXoeb5hgH2ZkZGhPoT3v0',
+  VAPID_SUBJECT: 'mailto:e2e@example.test',
 };
 const chromiumPath = process.env.PW_CHROMIUM_PATH;
 
