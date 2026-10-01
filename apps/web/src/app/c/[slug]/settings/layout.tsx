@@ -31,6 +31,7 @@ export default async function CommunitySettingsLayout({
     { href: `${base}/onboarding`, label: t('nav.onboarding'), show: perms.manage },
     { href: `${base}/roles`, label: t('nav.roles'), show: perms.manageRoles },
     { href: `${base}/channels`, label: t('nav.channels'), show: perms.manageChannels },
+    { href: `${base}/emoji`, label: t('nav.emoji'), show: perms.manageEmoji },
     {
       href: `${base}/members`,
       label: t('nav.members'),

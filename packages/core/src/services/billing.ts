@@ -154,7 +154,7 @@ const PLAN_NAMES: Record<PlanId, string> = { free: 'Free', plus: 'Plus', pro: 'P
 /** Refuse to go past a plan limit, pointing at an upgrade when there is one. */
 export async function assertUnderPlanLimit(
   communityId: string,
-  key: 'servers' | 'roles' | 'channels' | 'voiceChannels',
+  key: 'servers' | 'roles' | 'channels' | 'voiceChannels' | 'emoji',
   current: number,
   noun: string,
 ): Promise<void> {

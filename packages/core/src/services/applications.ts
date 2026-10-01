@@ -16,7 +16,14 @@ import {
 import { z } from 'zod';
 import { requireMember, requirePerm, type MemberContext } from '../access';
 import { communityChanged } from '../emitter';
-import { AppError, conflict, forbidden, notFound, unauthorized } from '../errors';
+import {
+  AppError,
+  conflict,
+  forbidden,
+  isUniqueViolation,
+  notFound,
+  unauthorized,
+} from '../errors';
 import { logger } from '../logger';
 import { enforceRateLimit } from '../ratelimit';
 import { audit } from './audit';
@@ -109,7 +116,7 @@ export async function submitApplication(ctx: MemberContext, raw: unknown): Promi
     });
   } catch (e) {
     // The partial unique index: one open application at a time.
-    if ((e as { code?: string }).code === '23505') {
+    if (isUniqueViolation(e)) {
       throw conflict('Your application is already waiting for a reply.');
     }
     throw e;

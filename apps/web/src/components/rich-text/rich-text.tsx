@@ -1,6 +1,12 @@
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
-import { docHeadings, isSafeHref, type RichMark, type RichNode } from '@magnox/shared';
+import {
+  docHeadings,
+  emojiImagePath,
+  isSafeHref,
+  type RichMark,
+  type RichNode,
+} from '@magnox/shared';
 import { imgSources } from '@/lib/media';
 import { cn } from '@/lib/utils';
 import { MediaScope } from '@/components/media/media-scope';
@@ -123,8 +129,23 @@ function renderNode(n: RichNode, key: React.Key, opts: RenderOpts): React.ReactN
         </span>
       );
     }
-    case 'emoji':
-      return <span key={key}>:{String(n.attrs?.name ?? '')}:</span>;
+    case 'emoji': {
+      const name = String(n.attrs?.name ?? '');
+      const id = typeof n.attrs?.id === 'string' ? n.attrs.id : '';
+      if (!/^[0-9a-f-]{36}$/.test(id)) return <span key={key}>:{name}:</span>;
+      return (
+        // eslint-disable-next-line @next/next/no-img-element -- tiny images served by redirect
+        <img
+          key={key}
+          src={emojiImagePath(id)}
+          alt={`:${name}:`}
+          title={`:${name}:`}
+          draggable={false}
+          loading="lazy"
+          className="mx-emoji"
+        />
+      );
+    }
     case 'text':
       return renderText(n.text ?? '', n.marks, key);
     default:

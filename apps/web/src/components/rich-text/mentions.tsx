@@ -132,7 +132,7 @@ export function isSuggesting(dom: Element): boolean {
   return suggesting.has(dom);
 }
 
-function setComboboxAttrs(dom: HTMLElement, listId: string | null) {
+export function setComboboxAttrs(dom: HTMLElement, listId: string | null) {
   // The editor keeps its textbox role; aria-expanded isn't valid there, but autocomplete,
   // controls and active-descendant are, and together they describe the suggestion list.
   if (listId) {
@@ -147,7 +147,7 @@ function setComboboxAttrs(dom: HTMLElement, listId: string | null) {
   }
 }
 
-async function place(element: HTMLElement, rect: DOMRect | null | undefined) {
+export async function place(element: HTMLElement, rect: DOMRect | null | undefined) {
   if (!rect) return;
   const virtual = { getBoundingClientRect: () => rect };
   const { x, y } = await computePosition(virtual, element, {

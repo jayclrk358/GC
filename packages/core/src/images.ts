@@ -26,7 +26,9 @@ export const UPLOAD_PURPOSES = {
   },
   gallery: { maxBytes: 10_000_000, width: 2560, height: 2560, fit: 'inside' as const },
   content: { maxBytes: 10_000_000, width: 2560, height: 2560, fit: 'inside' as const },
-  emoji: { maxBytes: 1_000_000, width: 128, height: 128, fit: 'contain' as const },
+  // Shown inline in messages, so a still image like role icons (a GIF keeps its first frame):
+  // animations there can't be paused, and many people turn motion off.
+  emoji: { maxBytes: 1_000_000, width: 128, height: 128, fit: 'contain' as const, still: true },
   // Shown beside every name, so always a still image (a GIF keeps its first frame).
   'role-icon': {
     maxBytes: 1_000_000,

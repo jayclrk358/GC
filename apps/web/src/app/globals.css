@@ -41,6 +41,15 @@
   background-color: color-mix(in oklab, var(--c-surface) 25%, var(--c-bg));
 }
 
+/* A custom emoji inline with text: a little bigger than the letters, sitting on the baseline. */
+@utility mx-emoji {
+  display: inline-block;
+  width: 1.375em;
+  height: 1.375em;
+  object-fit: contain;
+  vertical-align: -0.3em;
+}
+
 @layer mx-tokens {
   :root {
     --mx-density: 1;

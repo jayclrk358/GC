@@ -35,6 +35,7 @@ describe('plans', () => {
       videoMb: 50,
       voiceChannels: 0,
       voiceParticipants: 0,
+      emoji: 50,
     });
   });
 

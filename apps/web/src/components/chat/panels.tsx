@@ -326,18 +326,24 @@ function MembersPanel() {
               {g.members.map((m) => (
                 <li
                   key={m.id}
-                  className={cn(
-                    'flex items-center gap-2.5 rounded-ui-sm px-2 py-1 hover:bg-fg/[0.07]',
-                    !m.online && 'opacity-55 hover:opacity-100',
-                  )}
+                  className="group/member flex items-center gap-2.5 rounded-ui-sm px-2 py-1 hover:bg-fg/[0.07]"
                 >
-                  <Avatar
-                    src={m.image}
-                    name={m.nickname || m.name}
-                    size={32}
-                    presence={m.online ? m.id : undefined}
-                  />
-                  <span className="min-w-0 leading-tight">
+                  {/* Offline people look faded: a grey picture and muted name (not see-through,
+                      which would take their names below readable contrast). */}
+                  <span
+                    className={cn(
+                      'shrink-0',
+                      !m.online && 'grayscale group-hover/member:grayscale-0',
+                    )}
+                  >
+                    <Avatar
+                      src={m.image}
+                      name={m.nickname || m.name}
+                      size={32}
+                      presence={m.online ? m.id : undefined}
+                    />
+                  </span>
+                  <span className={cn('min-w-0 leading-tight', !m.online && 'text-muted')}>
                     {m.username ? (
                       <UserLink
                         username={m.username}

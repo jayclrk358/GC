@@ -7,7 +7,13 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { AtSign, Hash, Megaphone, Pin, Search, Users } from 'lucide-react';
 import type { MessagePage, MessageView } from '@magnox/core';
-import { docToText, mentionsMe, type ChatVerbosity, type RichNode } from '@magnox/shared';
+import {
+  docToText,
+  mentionsMe,
+  type ChatVerbosity,
+  type CustomEmoji,
+  type RichNode,
+} from '@magnox/shared';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import {
@@ -22,6 +28,7 @@ import { Alert } from '@/components/ui/misc';
 import { usePrefs } from '@/components/shell/prefs-provider';
 import type { ImgSources } from '@/lib/media';
 import { ReportDialog } from '@/components/moderation/report-dialog';
+import { EmojiProvider } from '@/components/emoji/emoji-context';
 import { MuteMenu } from '@/components/notifications/mute-menu';
 import { useReconnect, useRoom } from '@/lib/realtime';
 import { useStored } from '@/lib/use-stored';
@@ -61,9 +68,12 @@ interface Props {
   notice: React.ReactNode;
   /** A picture behind the messages (a paid perk), dimmed by `dim` percent. */
   background?: { image: ImgSources; dim: number } | null;
+  /** The community's custom emoji, for reactions. */
+  emoji?: CustomEmoji[];
 }
 
 const TYPING_TTL = 7000;
+const NO_EMOJI: CustomEmoji[] = [];
 
 export function ChatView(props: Props) {
   const t = useTranslations('chat');
@@ -527,236 +537,240 @@ export function ChatView(props: Props) {
 
   return (
     <ChatProvider value={context}>
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <header className="flex min-h-12 shrink-0 items-center gap-2 border-b border-border/70 px-4 py-1.5 shadow-[0_1px_2px_rgb(0_0_0/0.06)]">
-          <h2 className="flex min-w-0 items-center gap-1.5 text-base font-bold">
-            <Hash className="size-6 shrink-0 text-muted" aria-hidden />
-            <span className="truncate">{channel.name}</span>
-          </h2>
-          {channel.topic && (
-            <>
-              <span aria-hidden className="mx-1 hidden h-6 w-px shrink-0 bg-border md:block" />
-              <p className="hidden min-w-0 flex-1 truncate text-sm text-muted md:block">
-                {channel.topic}
-              </p>
-            </>
-          )}
-          <div className="ms-auto flex items-center gap-0.5">
-            {panelButton('pins', t('pinsTitle'), <Pin aria-hidden />)}
-            {me &&
-              perms.member &&
-              panelButton('mentions', t('mentionsTitle'), <AtSign aria-hidden />)}
-            <Button
-              size="icon-sm"
-              variant="ghost"
-              aria-label={t('membersTitle')}
-              title={t('membersTitle')}
-              aria-pressed={panel === 'members' || membersOpen}
-              onClick={toggleMembers}
-              className={cn(
-                'text-muted hover:text-fg',
-                (panel === 'members' || membersOpen) && 'xl:bg-fg/10 xl:text-fg',
-                panel === 'members' && 'bg-fg/10 text-fg',
-              )}
-            >
-              <Users aria-hidden />
-            </Button>
-            {/* Search looks like a box on wide screens, as in Discord. */}
-            <button
-              type="button"
-              aria-label={t('searchTitle')}
-              aria-expanded={panel === 'search'}
-              aria-controls={panel === 'search' ? 'chat-panel' : undefined}
-              onClick={() => setPanel((p) => (p === 'search' ? null : 'search'))}
-              className="mx-1 hidden h-7 w-36 items-center justify-between rounded-ui-sm bg-bg/70 px-2 text-sm text-muted hover:text-fg lg:flex"
-            >
-              {t('searchShort')}
-              <Search aria-hidden className="size-4" />
-            </button>
-            <span className="lg:hidden">
-              {panelButton('search', t('searchTitle'), <Search aria-hidden />)}
-            </span>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  size="icon-sm"
-                  variant="ghost"
-                  aria-label={`${t('announceShort')}: ${t(`verbosity.${verbosity}`)}`}
-                  title={t('announceMenu')}
-                  className="text-muted hover:text-fg"
-                >
-                  <Megaphone aria-hidden />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>{t('announceMenu')}</DropdownMenuLabel>
-                <DropdownMenuRadioGroup
-                  value={verbosity}
-                  onValueChange={(v) =>
-                    void savePrefs({ ...prefs, chatAnnouncements: v as ChatVerbosity })
-                  }
-                >
-                  {(['all', 'mentions', 'off'] as const).map((v) => (
-                    <DropdownMenuRadioItem key={v} value={v}>
-                      {t(`verbosity.${v}`)}
-                    </DropdownMenuRadioItem>
-                  ))}
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            {me && perms.member && (
-              <MuteMenu
-                targetType="channel"
-                targetId={channel.id}
-                name={`#${channel.name}`}
-                muted={props.muted}
-                iconOnly
-                compact
-              />
+      <EmojiProvider emoji={props.emoji ?? NO_EMOJI}>
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <header className="flex min-h-12 shrink-0 items-center gap-2 border-b border-border/70 px-4 py-1.5 shadow-[0_1px_2px_rgb(0_0_0/0.06)]">
+            <h2 className="flex min-w-0 items-center gap-1.5 text-base font-bold">
+              <Hash className="size-6 shrink-0 text-muted" aria-hidden />
+              <span className="truncate">{channel.name}</span>
+            </h2>
+            {channel.topic && (
+              <>
+                <span aria-hidden className="mx-1 hidden h-6 w-px shrink-0 bg-border md:block" />
+                <p className="hidden min-w-0 flex-1 truncate text-sm text-muted md:block">
+                  {channel.topic}
+                </p>
+              </>
             )}
-          </div>
-        </header>
-
-        <div className="relative isolate flex min-h-0 flex-1">
-          {props.background && (
-            <div
-              aria-hidden
-              data-decorative
-              className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                {...props.background.image}
-                alt=""
-                decoding="async"
-                className="size-full object-cover"
-              />
-              {/* Dims the picture towards the page colour so messages stay easy to read. */}
-              <div
-                className="absolute inset-0 bg-surface"
-                style={{ opacity: props.background.dim / 100 }}
-              />
+            <div className="ms-auto flex items-center gap-0.5">
+              {panelButton('pins', t('pinsTitle'), <Pin aria-hidden />)}
+              {me &&
+                perms.member &&
+                panelButton('mentions', t('mentionsTitle'), <AtSign aria-hidden />)}
+              <Button
+                size="icon-sm"
+                variant="ghost"
+                aria-label={t('membersTitle')}
+                title={t('membersTitle')}
+                aria-pressed={panel === 'members' || membersOpen}
+                onClick={toggleMembers}
+                className={cn(
+                  'text-muted hover:text-fg',
+                  (panel === 'members' || membersOpen) && 'xl:bg-fg/10 xl:text-fg',
+                  panel === 'members' && 'bg-fg/10 text-fg',
+                )}
+              >
+                <Users aria-hidden />
+              </Button>
+              {/* Search looks like a box on wide screens, as in Discord. */}
+              <button
+                type="button"
+                aria-label={t('searchTitle')}
+                aria-expanded={panel === 'search'}
+                aria-controls={panel === 'search' ? 'chat-panel' : undefined}
+                onClick={() => setPanel((p) => (p === 'search' ? null : 'search'))}
+                className="mx-1 hidden h-7 w-36 items-center justify-between rounded-ui-sm bg-bg/70 px-2 text-sm text-muted hover:text-fg lg:flex"
+              >
+                {t('searchShort')}
+                <Search aria-hidden className="size-4" />
+              </button>
+              <span className="lg:hidden">
+                {panelButton('search', t('searchTitle'), <Search aria-hidden />)}
+              </span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    aria-label={`${t('announceShort')}: ${t(`verbosity.${verbosity}`)}`}
+                    title={t('announceMenu')}
+                    className="text-muted hover:text-fg"
+                  >
+                    <Megaphone aria-hidden />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>{t('announceMenu')}</DropdownMenuLabel>
+                  <DropdownMenuRadioGroup
+                    value={verbosity}
+                    onValueChange={(v) =>
+                      void savePrefs({ ...prefs, chatAnnouncements: v as ChatVerbosity })
+                    }
+                  >
+                    {(['all', 'mentions', 'off'] as const).map((v) => (
+                      <DropdownMenuRadioItem key={v} value={v}>
+                        {t(`verbosity.${v}`)}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              {me && perms.member && (
+                <MuteMenu
+                  targetType="channel"
+                  targetId={channel.id}
+                  name={`#${channel.name}`}
+                  muted={props.muted}
+                  iconOnly
+                  compact
+                />
+              )}
             </div>
-          )}
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-            {unreadBanner && firstUnread && (
-              <div className="flex flex-wrap items-center justify-between gap-2 bg-primary px-4 py-1.5 text-sm text-on-primary">
-                <span>
-                  {t('unreadSince', { time: formatTime(firstUnread.createdAt, prefs.timeFormat) })}
-                </span>
-                <span className="flex gap-3">
-                  <button
-                    type="button"
-                    className="font-semibold underline"
-                    onClick={() => void jumpTo(dividerId!, true)}
-                  >
-                    {t('jumpToUnread')}
-                  </button>
-                  <button
-                    type="button"
-                    className="font-semibold underline"
-                    onClick={() => {
-                      const last = [...state.messages].reverse().find((m) => !m.pending);
-                      if (last) {
-                        acked.current = last.id;
-                        void ackChannelAction(communityId, channel.id, last.id);
-                      }
-                      setUnreadBanner(false);
-                    }}
-                  >
-                    {t('markRead')}
-                  </button>
-                </span>
+          </header>
+
+          <div className="relative isolate flex min-h-0 flex-1">
+            {props.background && (
+              <div
+                aria-hidden
+                data-decorative
+                className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  {...props.background.image}
+                  alt=""
+                  decoding="async"
+                  className="size-full object-cover"
+                />
+                {/* Dims the picture towards the page colour so messages stay easy to read. */}
+                <div
+                  className="absolute inset-0 bg-surface"
+                  style={{ opacity: props.background.dim / 100 }}
+                />
               </div>
             )}
-            <MessageList
-              messages={state.messages}
-              hasMoreBefore={state.hasMoreBefore}
-              hasMoreAfter={state.hasMoreAfter}
-              history={state.history}
-              loading={loading}
-              unreadDividerId={dividerId}
-              highlightId={highlightId}
-              unseen={unseen}
-              scrollRequest={scrollRequest}
-              onLoadOlder={loadOlder}
-              onLoadNewer={loadNewer}
-              onJumpToPresent={() => void jumpToPresent()}
-              onAtBottomChange={(b) => {
-                atBottom.current = b;
-                if (b) {
-                  setUnseen(0);
-                  maybeAck();
-                }
-              }}
-            />
-            <TypingIndicator names={typingNames} />
-            {perms.send && me ? (
-              <Composer
-                ref={composerRef}
-                replyTo={replyTo}
-                requireAlt={props.requireAlt}
-                onCancelReply={() => setReplyTo(null)}
-                onEditLast={editLast}
-                onSend={(input) => send(input)}
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+              {unreadBanner && firstUnread && (
+                <div className="flex flex-wrap items-center justify-between gap-2 bg-primary px-4 py-1.5 text-sm text-on-primary">
+                  <span>
+                    {t('unreadSince', {
+                      time: formatTime(firstUnread.createdAt, prefs.timeFormat),
+                    })}
+                  </span>
+                  <span className="flex gap-3">
+                    <button
+                      type="button"
+                      className="font-semibold underline"
+                      onClick={() => void jumpTo(dividerId!, true)}
+                    >
+                      {t('jumpToUnread')}
+                    </button>
+                    <button
+                      type="button"
+                      className="font-semibold underline"
+                      onClick={() => {
+                        const last = [...state.messages].reverse().find((m) => !m.pending);
+                        if (last) {
+                          acked.current = last.id;
+                          void ackChannelAction(communityId, channel.id, last.id);
+                        }
+                        setUnreadBanner(false);
+                      }}
+                    >
+                      {t('markRead')}
+                    </button>
+                  </span>
+                </div>
+              )}
+              <MessageList
+                messages={state.messages}
+                hasMoreBefore={state.hasMoreBefore}
+                hasMoreAfter={state.hasMoreAfter}
+                history={state.history}
+                loading={loading}
+                unreadDividerId={dividerId}
+                highlightId={highlightId}
+                unseen={unseen}
+                scrollRequest={scrollRequest}
+                onLoadOlder={loadOlder}
+                onLoadNewer={loadNewer}
+                onJumpToPresent={() => void jumpToPresent()}
+                onAtBottomChange={(b) => {
+                  atBottom.current = b;
+                  if (b) {
+                    setUnseen(0);
+                    maybeAck();
+                  }
+                }}
+              />
+              <TypingIndicator names={typingNames} />
+              {perms.send && me ? (
+                <Composer
+                  ref={composerRef}
+                  replyTo={replyTo}
+                  requireAlt={props.requireAlt}
+                  onCancelReply={() => setReplyTo(null)}
+                  onEditLast={editLast}
+                  onSend={(input) => send(input)}
+                />
+              ) : (
+                <div className="px-4 pb-3">{props.notice}</div>
+              )}
+            </div>
+            {panel ? (
+              <ChatPanel
+                kind={panel}
+                onClose={() => setPanel(null)}
+                onOpen={openFromPanel}
+                pinsVersion={pinsVersion}
               />
             ) : (
-              <div className="px-4 pb-3">{props.notice}</div>
+              membersOpen && <MemberColumn />
             )}
           </div>
-          {panel ? (
-            <ChatPanel
-              kind={panel}
-              onClose={() => setPanel(null)}
-              onOpen={openFromPanel}
-              pinsVersion={pinsVersion}
-            />
-          ) : (
-            membersOpen && <MemberColumn />
-          )}
+          <ChatAnnouncer ref={announcer} verbosity={verbosity} />
         </div>
-        <ChatAnnouncer ref={announcer} verbosity={verbosity} />
-      </div>
 
-      <Dialog open={Boolean(deleting)} onOpenChange={(o) => !o && setDeleting(null)}>
-        {deleting && (
-          <DialogContent size="sm" title={t('deleteTitle')} description={t('deleteConfirm')}>
-            <blockquote className="line-clamp-4 rounded-ui border-s-4 border-border bg-surface-2 px-3 py-2 text-sm">
-              {deleting.content || t('imageOnly')}
-            </blockquote>
-            <div className="mt-4 flex justify-end gap-2">
-              <Button variant="ghost" onClick={() => setDeleting(null)}>
-                {t('cancel')}
-              </Button>
-              <Button
-                variant="danger"
-                autoFocus
-                onClick={async () => {
-                  const m = deleting;
-                  setDeleting(null);
-                  const r = await deleteMessageAction(communityId, m.id);
-                  if (r.ok) dispatch({ type: 'remove', id: m.id });
-                  else toast.error(r.error);
-                  composerRef.current?.focus();
-                }}
-              >
-                {t('delete')}
-              </Button>
-            </div>
-          </DialogContent>
+        <Dialog open={Boolean(deleting)} onOpenChange={(o) => !o && setDeleting(null)}>
+          {deleting && (
+            <DialogContent size="sm" title={t('deleteTitle')} description={t('deleteConfirm')}>
+              <blockquote className="line-clamp-4 rounded-ui border-s-4 border-border bg-surface-2 px-3 py-2 text-sm">
+                {deleting.content || t('imageOnly')}
+              </blockquote>
+              <div className="mt-4 flex justify-end gap-2">
+                <Button variant="ghost" onClick={() => setDeleting(null)}>
+                  {t('cancel')}
+                </Button>
+                <Button
+                  variant="danger"
+                  autoFocus
+                  onClick={async () => {
+                    const m = deleting;
+                    setDeleting(null);
+                    const r = await deleteMessageAction(communityId, m.id);
+                    if (r.ok) dispatch({ type: 'remove', id: m.id });
+                    else toast.error(r.error);
+                    composerRef.current?.focus();
+                  }}
+                >
+                  {t('delete')}
+                </Button>
+              </div>
+            </DialogContent>
+          )}
+        </Dialog>
+
+        {reporting && (
+          <ReportDialog
+            open
+            onOpenChange={(o) => !o && setReporting(null)}
+            communityId={communityId}
+            targetType="message"
+            targetId={reporting.id}
+            what={t('thisMessage')}
+          />
         )}
-      </Dialog>
-
-      {reporting && (
-        <ReportDialog
-          open
-          onOpenChange={(o) => !o && setReporting(null)}
-          communityId={communityId}
-          targetType="message"
-          targetId={reporting.id}
-          what={t('thisMessage')}
-        />
-      )}
+      </EmojiProvider>
     </ChatProvider>
   );
 }

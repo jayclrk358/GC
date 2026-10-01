@@ -23,7 +23,9 @@ export type MediaCleanup =
   | { kind: 'posts'; ids: string[] }
   | { kind: 'threads'; ids: string[] }
   | { kind: 'wiki-page'; id: string }
-  | { kind: 'community'; id: string };
+  | { kind: 'community'; id: string }
+  /** A deleted custom emoji's image. */
+  | { kind: 'emoji'; communityId: string; key: string };
 
 /** Uploads people put in what they write: chat attachments, forum and wiki images. */
 const CONTENT_PURPOSES = ['content', 'video'];
@@ -109,7 +111,30 @@ export async function cleanupMedia(job: MediaCleanup): Promise<number> {
       return purgeRefs(await wikiRefs(sql`w.id = ${job.id} and w.deleted_at is not null`));
     case 'community':
       return purgeCommunity(job.id);
+    case 'emoji':
+      return purgeEmojiImage(job.communityId, job.key);
   }
+}
+
+/** A custom emoji's image, once no emoji in its community uses it. */
+async function purgeEmojiImage(communityId: string, key: string): Promise<number> {
+  if (!KEY_RE.test(key)) return 0;
+  const used = await db.query.customEmoji.findFirst({
+    where: eq(schema.customEmoji.imageKey, key),
+    columns: { id: true },
+  });
+  if (used) return 0;
+  const rows = await db
+    .select({ key: schema.uploads.key, posterKey: schema.uploads.posterKey })
+    .from(schema.uploads)
+    .where(
+      and(
+        eq(schema.uploads.key, key),
+        eq(schema.uploads.communityId, communityId),
+        eq(schema.uploads.purpose, 'emoji'),
+      ),
+    );
+  return removeUploads(rows);
 }
 
 const uuidArray = (ids: string[]) =>

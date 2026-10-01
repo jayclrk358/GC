@@ -35,6 +35,7 @@ import { mediaUrl } from '@/lib/media';
 import { cn } from '@/lib/utils';
 import { mentionExtension } from './mentions';
 import { Spoiler } from './extensions';
+import { emojiExtension } from './emoji-suggest';
 
 /** Images reference upload keys; the editor maps them to URLs only for display. */
 const UploadImage = Image.extend({
@@ -122,6 +123,7 @@ export function RichTextEditor({
       Spoiler,
       Placeholder.configure({ placeholder: placeholder ?? t('placeholder') }),
       ...(mentions ? [mentionExtension(mentions)] : []),
+      emojiExtension(mentions ?? communityId),
     ],
     content: value ?? undefined,
     editorProps: {

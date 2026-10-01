@@ -25,6 +25,8 @@ export interface PlanLimits {
   voiceChannels: number;
   /** People in one voice channel at a time. */
   voiceParticipants: number;
+  /** Custom emoji. */
+  emoji: number;
 }
 
 export interface PlanPerks {
@@ -56,6 +58,7 @@ export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
     videoMb: 50,
     voiceChannels: 0,
     voiceParticipants: 0,
+    emoji: 50,
   },
   plus: {
     servers: 50,
@@ -66,6 +69,7 @@ export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
     videoMb: 100,
     voiceChannels: 3,
     voiceParticipants: 15,
+    emoji: 150,
   },
   pro: {
     servers: 100,
@@ -76,6 +80,7 @@ export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
     videoMb: 150,
     voiceChannels: 10,
     voiceParticipants: 50,
+    emoji: 300,
   },
 };
 
@@ -121,6 +126,7 @@ export const MAX_PLAN_LIMITS: PlanLimits = {
   videoMb: Math.max(...PLAN_IDS.map((p) => PLAN_LIMITS[p].videoMb)),
   voiceChannels: Math.max(...PLAN_IDS.map((p) => PLAN_LIMITS[p].voiceChannels)),
   voiceParticipants: Math.max(...PLAN_IDS.map((p) => PLAN_LIMITS[p].voiceParticipants)),
+  emoji: Math.max(...PLAN_IDS.map((p) => PLAN_LIMITS[p].emoji)),
 };
 
 /**

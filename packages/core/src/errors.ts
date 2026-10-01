@@ -53,3 +53,9 @@ export const badRequest = (message: string) => new AppError('bad_request', messa
 export function isAppError(e: unknown): e is AppError {
   return e instanceof AppError;
 }
+
+/** A Postgres unique-constraint violation (Drizzle wraps the driver's error as its cause). */
+export function isUniqueViolation(e: unknown): boolean {
+  const code = (x: unknown) => (x as { code?: string } | null)?.code;
+  return code(e) === '23505' || code((e as { cause?: unknown } | null)?.cause) === '23505';
+}

@@ -44,3 +44,4 @@ export * from './services/events';
 export * from './services/applications';
 export * from './services/automod';
 export * from './services/mod-queue';
+export * from './services/emoji';

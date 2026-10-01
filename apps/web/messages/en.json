@@ -710,7 +710,8 @@
       "applications": "Applications",
       "onboarding": "Welcome steps",
       "automod": "Automod",
-      "modQueue": "Mod queue"
+      "modQueue": "Mod queue",
+      "emoji": "Emoji"
     },
     "general": {
       "title": "General",
@@ -2142,7 +2143,11 @@
     "todayAt": "Today at {time}",
     "yesterdayAt": "Yesterday at {time}",
     "rulesFirst": "Agree to the rules in the welcome steps to start posting.",
-    "rulesFirstLink": "Read the rules"
+    "rulesFirstLink": "Read the rules",
+    "deletedEmoji": "deleted emoji",
+    "standardEmoji": "Emoji",
+    "communityEmoji": "This community’s emoji",
+    "findEmoji": "Find an emoji"
   },
   "serverPage": {
     "verified": "Verified",
@@ -2265,7 +2270,8 @@
       "pageBackground": "Community background image",
       "chatBackgrounds": "Chat channel backgrounds",
       "separators": "Custom separators in channel lists",
-      "screenShare": "Screen sharing in voice channels"
+      "screenShare": "Screen sharing in voice channels",
+      "emoji": "{count} custom emoji"
     },
     "compare": {
       "caption": "Compare plans",
@@ -2290,7 +2296,8 @@
       "pageBackground": "Community background image",
       "chatBackgrounds": "Chat backgrounds",
       "separators": "Custom separators",
-      "screenShare": "Screen sharing"
+      "screenShare": "Screen sharing",
+      "emoji": "Custom emoji"
     },
     "mb": "{count} MB",
     "lock": {
@@ -2769,5 +2776,31 @@
     "rejectedBy": "Rejected by {name} · {when}",
     "someone": "someone",
     "view": "View post"
+  },
+  "emoji": {
+    "title": "Emoji",
+    "description": "Your community’s own emoji. Anyone here can use them by typing : and the name, and react with them in chat.",
+    "addTitle": "Add an emoji",
+    "addHint": "A square PNG, WebP, JPEG or GIF works best. It’s shown small, as a still image.",
+    "image": "Image",
+    "preview": "The new emoji",
+    "choose": "Choose image",
+    "replace": "Choose another",
+    "uploading": "Uploading…",
+    "name": "Name",
+    "nameHint": "What people type after “:”. Letters, numbers and underscores.",
+    "add": "Add emoji",
+    "added": ":{name}: added",
+    "full": "You’ve used all {count} emoji on this plan. Remove some, or upgrade for more.",
+    "listTitle": "Emoji ({count} of {limit})",
+    "none": "No emoji yet.",
+    "rename": "Rename :{name}:",
+    "renameLabel": "New name for :{name}:",
+    "renamed": "Emoji renamed",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Remove :{name}:",
+    "confirmDelete": "Remove :{name}:? Posts that used it will show its name instead.",
+    "deleted": ":{name}: removed"
   }
 }

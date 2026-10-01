@@ -134,6 +134,13 @@
       "when": 1790889026908,
       "tag": "0018_automod",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1790890412265,
+      "tag": "0019_custom_emoji",
+      "breakpoints": true
     }
   ]
 }

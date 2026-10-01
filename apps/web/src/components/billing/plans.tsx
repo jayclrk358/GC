@@ -75,6 +75,7 @@ export function PlanFeatures({ plan, className }: { plan: PlanId; className?: st
     t('features.attachments', { count: l.attachments }),
     t('features.imageMb', { count: l.imageMb }),
     t('features.videoMb', { count: l.videoMb }),
+    t('features.emoji', { count: l.emoji }),
   ];
   if (l.voiceChannels) {
     items.push(
@@ -188,6 +189,7 @@ const ROWS: (keyof PlanLimits | keyof PlanPerks)[] = [
   'videoMb',
   'voiceChannels',
   'voiceParticipants',
+  'emoji',
   'screenShare',
   'nameEffects',
   'roleIcons',

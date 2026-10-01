@@ -9,6 +9,7 @@ import { Bold, Code, EyeOff, Italic, List, Quote, SquareCode, Strikethrough } fr
 import { docToText, emptyDoc, isSafeHref, type RichNode } from '@magnox/shared';
 import { mentionExtension, isSuggesting } from '@/components/rich-text/mentions';
 import { Spoiler } from '@/components/rich-text/extensions';
+import { emojiExtension } from '@/components/rich-text/emoji-suggest';
 import { cn } from '@/lib/utils';
 
 /**
@@ -75,6 +76,7 @@ export const ChatEditor = React.forwardRef<ChatEditorHandle, Props>(
         Spoiler,
         Placeholder.configure({ placeholder: props.placeholder }),
         mentionExtension(props.communityId),
+        emojiExtension(props.communityId),
       ],
       editorProps: {
         attributes: {

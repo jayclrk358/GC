@@ -17,6 +17,7 @@ import {
 import { db, schema, type MessageAttachment, type MessageEmbed } from '@magnox/db';
 import {
   collectMentions,
+  customReactionId,
   docToText,
   extractLinks,
   has,
@@ -49,6 +50,7 @@ import { mediaUrl } from '../storage';
 import { audit } from './audit';
 import { enforceAutomod } from './automod';
 import { communityLimits } from './billing';
+import { isCommunityEmojiReaction } from './emoji';
 import { getChannelById, listVisibleChannels, type ChannelView } from './channels';
 import { queueMediaCleanup } from './media-cleanup';
 import { queueFanout } from './notify';
@@ -804,7 +806,7 @@ export async function toggleMessageReaction(
   emoji: string,
 ): Promise<{ added: boolean }> {
   if (!ctx.userId) throw unauthorized();
-  if (!isChatReaction(emoji))
+  if (!isChatReaction(emoji) && !customReactionId(emoji))
     throw new AppError('validation', 'Pick one of the available reactions.');
   const { row, channel } = await loadOwnMessage(ctx, messageId);
   await enforceRateLimit(`react:${ctx.userId}`, 60, 60);
@@ -818,6 +820,9 @@ export async function toggleMessageReaction(
   else {
     if (!perm(channel, Permission.ADD_REACTIONS))
       throw forbidden("You can't react in this channel.");
+    // A custom emoji has to be one of this community's (taking one off is fine even once it's gone).
+    if (customReactionId(emoji) && !(await isCommunityEmojiReaction(ctx.community.id, emoji)))
+      throw new AppError('validation', 'That emoji isn’t available here.');
     const distinct = await db
       .selectDistinct({ emoji: schema.messageReactions.emoji })
       .from(schema.messageReactions)

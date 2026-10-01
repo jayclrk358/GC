@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import {
   isMuted,
   listBlockedUsers,
+  listEmoji,
   listMessages,
   syncVoicePeople,
   voiceEnabled,
@@ -63,7 +64,7 @@ export default async function ChatChannelPage({
 
   const unread = (await loadChatUnreads(slug)).get(channel.id);
   const lastReadId = unread?.unread ? unread.lastReadId : null;
-  const [initial, blocked, muted] = await Promise.all([
+  const [initial, blocked, muted, emoji] = await Promise.all([
     listMessages(
       data.ctx,
       channel.id,
@@ -72,6 +73,7 @@ export default async function ChatChannelPage({
     ),
     user ? listBlockedUsers(user.id) : [],
     user && member ? isMuted(user.id, 'channel', channel.id) : false,
+    listEmoji(data.community.id),
   ]);
 
   const canSend = member && has(perms, Permission.SEND_MESSAGES);
@@ -122,6 +124,7 @@ export default async function ChatChannelPage({
         slowmodeSeconds: channel.slowmodeSeconds,
       }}
       background={background}
+      emoji={emoji}
       me={
         user
           ? {
