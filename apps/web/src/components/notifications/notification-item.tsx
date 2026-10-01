@@ -94,7 +94,10 @@ export function NotificationItem({
         )}
         <span className="mt-0.5 block text-xs text-muted">
           {n.data.community && <>{n.data.community} · </>}
-          <time dateTime={new Date(n.createdAt).toISOString()}>{relativeTime(n.createdAt)}</time>
+          {/* Reads differently on the server and a moment later in the browser. */}
+          <time dateTime={new Date(n.createdAt).toISOString()} suppressHydrationWarning>
+            {relativeTime(n.createdAt)}
+          </time>
         </span>
       </span>
     </Link>

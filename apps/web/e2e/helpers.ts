@@ -19,6 +19,7 @@ export async function signUp(page: Page, user = uniqueUser(), next = '/') {
   await page.getByLabel('Username').fill(user.username);
   await page.getByLabel('Email').fill(user.email);
   await page.getByLabel('Password').fill(user.password);
+  await page.getByRole('checkbox', { name: /agree to the Terms of Service/ }).check();
   await page.getByRole('button', { name: 'Create account' }).click();
   await expect(page.getByRole('button', { name: `Account menu for ${user.name}` })).toBeVisible();
   return user;

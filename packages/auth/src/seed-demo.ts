@@ -33,6 +33,7 @@ import {
   voteThread,
 } from '@magnox/core';
 import {
+  CURRENT_TERMS_VERSION,
   docFromText,
   newId,
   randomToken,
@@ -52,13 +53,20 @@ const USERS = [
 
 async function ensureUser(u: (typeof USERS)[number]): Promise<string> {
   const existing = await db.query.users.findFirst({ where: eq(schema.users.email, u.email) });
-  if (existing) return existing.id;
-  const res = await auth().api.signUpEmail({ body: { ...u, password: PASSWORD } });
+  const id =
+    existing?.id ?? (await auth().api.signUpEmail({ body: { ...u, password: PASSWORD } })).user.id;
+  if (!existing) {
+    await db.update(schema.users).set({ emailVerified: true }).where(eq(schema.users.id, id));
+  }
+  // Demo people have agreed to the terms, so they can be used straight away.
   await db
-    .update(schema.users)
-    .set({ emailVerified: true })
-    .where(eq(schema.users.id, res.user.id));
-  return res.user.id;
+    .insert(schema.userConsents)
+    .values({ userId: id, termsVersion: CURRENT_TERMS_VERSION, termsAcceptedAt: new Date() })
+    .onConflictDoUpdate({
+      target: schema.userConsents.userId,
+      set: { termsVersion: CURRENT_TERMS_VERSION },
+    });
+  return id;
 }
 
 const text = (t: string): RichNode => ({ type: 'text', text: t });

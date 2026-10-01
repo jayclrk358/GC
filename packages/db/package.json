@@ -12,6 +12,7 @@
     "generate": "drizzle-kit generate",
     "migrate": "tsx src/migrate.ts",
     "seed": "tsx src/seed/index.ts",
+    "admin:grant": "tsx src/grant-admin.ts",
     "reset": "tsx src/reset.ts && tsx src/migrate.ts && tsx src/seed/index.ts",
     "studio": "drizzle-kit studio"
   },

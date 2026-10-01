@@ -94,7 +94,7 @@ export async function myApplication(ctx: MemberContext): Promise<MyApplication |
 export async function submitApplication(ctx: MemberContext, raw: unknown): Promise<{ id: string }> {
   if (!ctx.userId) throw unauthorized();
   if (ctx.isMember) throw new AppError('bad_request', "You're already a member.");
-  if (ctx.community.joinMode !== 'apply') {
+  if (ctx.community.joinMode !== 'apply' || ctx.community.archived) {
     throw new AppError('bad_request', "This community doesn't take applications.");
   }
   await enforceRateLimit(`apply:${ctx.userId}`, 5, 24 * 3600);

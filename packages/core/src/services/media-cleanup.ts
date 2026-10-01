@@ -25,7 +25,9 @@ export type MediaCleanup =
   | { kind: 'wiki-page'; id: string }
   | { kind: 'community'; id: string }
   /** A deleted custom emoji's image. */
-  | { kind: 'emoji'; communityId: string; key: string };
+  | { kind: 'emoji'; communityId: string; key: string }
+  /** A deleted account: its profile pictures, and (if they asked) files in what they wrote. */
+  | { kind: 'user'; userId: string; content: boolean };
 
 /** Uploads people put in what they write: chat attachments, forum and wiki images. */
 const CONTENT_PURPOSES = ['content', 'video'];
@@ -113,7 +115,38 @@ export async function cleanupMedia(job: MediaCleanup): Promise<number> {
       return purgeCommunity(job.id);
     case 'emoji':
       return purgeEmojiImage(job.communityId, job.key);
+    case 'user':
+      return purgeUserFiles(job.userId, job.content);
   }
+}
+
+/** A deleted account's own pictures, and its content files once nothing live shows them. */
+async function purgeUserFiles(userId: string, content: boolean): Promise<number> {
+  const rows = await db
+    .select({
+      key: schema.uploads.key,
+      ownerId: schema.uploads.ownerId,
+      communityId: schema.uploads.communityId,
+      posterKey: schema.uploads.posterKey,
+      purpose: schema.uploads.purpose,
+    })
+    .from(schema.uploads)
+    .where(
+      and(
+        eq(schema.uploads.ownerId, userId),
+        inArray(schema.uploads.purpose, ['avatar', 'banner', ...(content ? CONTENT_PURPOSES : [])]),
+      ),
+    );
+  // Profile pictures (no community); a community banner they uploaded stays with the community.
+  const own = rows.filter((r) => r.purpose !== 'banner' || !r.communityId);
+  const files = own.filter((r) => r.purpose === 'avatar' || r.purpose === 'banner');
+  const inUse = await stillInUse(own.filter((r) => CONTENT_PURPOSES.includes(r.purpose)));
+  const contentFiles = own.filter((r) => CONTENT_PURPOSES.includes(r.purpose) && !inUse.has(r.key));
+  let removed = 0;
+  for (const batch of chunks([...files, ...contentFiles], BATCH)) {
+    removed += await removeUploads(batch);
+  }
+  return removed;
 }
 
 /** A custom emoji's image, once no emoji in its community uses it. */

@@ -1,7 +1,7 @@
-import { boolean, jsonb, pgTable, text } from 'drizzle-orm/pg-core';
+import { boolean, integer, jsonb, pgTable, text } from 'drizzle-orm/pg-core';
 import type { Prefs } from '@magnox/shared';
 import { users } from './auth';
-import { updatedAt } from './_helpers';
+import { tz, updatedAt } from './_helpers';
 
 export interface ProfileLink {
   label: string;
@@ -40,4 +40,16 @@ export const userPreferences = pgTable('user_preferences', {
     .references(() => users.id, { onDelete: 'cascade' }),
   prefs: jsonb('prefs').$type<Partial<Prefs>>().notNull().default({}),
   updatedAt: updatedAt(),
+});
+
+/** What someone has agreed to: the terms (and that they're 13+), and that they're 18+. */
+export const userConsents = pgTable('user_consents', {
+  userId: text('user_id')
+    .primaryKey()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  /** The terms version they agreed to (0: none yet). */
+  termsVersion: integer('terms_version').notNull().default(0),
+  termsAcceptedAt: tz('terms_accepted_at'),
+  /** When they said they're 18 or over (for communities marked 18+). */
+  adultAt: tz('adult_at'),
 });

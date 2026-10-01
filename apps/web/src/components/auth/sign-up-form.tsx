@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Alert } from '@/components/ui/misc';
 import { Turnstile, type TurnstileHandle } from '@/components/ui/turnstile';
+import { acceptTermsAction } from '@/app/actions/account';
 import { authClient } from '@/lib/auth-client';
 import { captchaOptions, isCaptchaError } from './captcha';
 import { FormError } from './form-error';
@@ -44,6 +46,7 @@ export function SignUpForm({
     if (!USERNAME_RE.test(username)) errs.username = t('usernameHint');
     if (!/^\S+@\S+\.\S+$/.test(email)) errs.email = 'Enter a valid email address.';
     if (password.length < 10) errs.password = t('passwordHint');
+    if (form.get('terms') !== 'on') errs.terms = t('termsRequired');
     setFields(errs);
     if (Object.keys(errs).length) {
       setError('Please fix the highlighted fields.');
@@ -78,9 +81,11 @@ export function SignUpForm({
       return;
     }
     if (!res.data?.token) {
+      // They agree to the terms when they first sign in (after confirming their email).
       setVerifySent(true);
       return;
     }
+    await acceptTermsAction();
     router.push(next === '/' ? '/new?welcome=1' : next);
     router.refresh();
   }
@@ -137,10 +142,39 @@ export function SignUpForm({
           onToken={setCaptcha}
         />
       )}
+      <div className="flex flex-col gap-1">
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            name="terms"
+            className="mt-0.5 size-4 accent-[var(--c-primary)]"
+            aria-invalid={fields.terms ? true : undefined}
+            aria-describedby={fields.terms ? 'terms-error' : undefined}
+          />
+          <span>
+            {t.rich('termsAgree', {
+              terms: (c) => (
+                <Link href="/legal/terms" target="_blank" className="text-primary underline">
+                  {c}
+                </Link>
+              ),
+              privacy: (c) => (
+                <Link href="/legal/privacy" target="_blank" className="text-primary underline">
+                  {c}
+                </Link>
+              ),
+            })}
+          </span>
+        </label>
+        {fields.terms && (
+          <p id="terms-error" className="text-sm font-medium text-danger">
+            {fields.terms}
+          </p>
+        )}
+      </div>
       <Button type="submit" size="lg" loading={pending}>
         {t('signUpCta')}
       </Button>
-      <p className="text-center text-xs text-muted">{t('termsNote')}</p>
     </form>
   );
 }

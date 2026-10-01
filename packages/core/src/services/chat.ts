@@ -540,11 +540,13 @@ export async function sendMessage(
   if (!ctx.isMember) throw forbidden('Join the community to chat.');
   if (!perm(channel, Permission.SEND_MESSAGES)) {
     throw forbidden(
-      ctx.timedOut
-        ? "You're timed out and can't send messages right now."
-        : ctx.needsRules
-          ? 'Accept the rules in the welcome steps to start chatting.'
-          : "You can't send messages in this channel.",
+      ctx.community.archived
+        ? 'This community is archived, so it’s read-only.'
+        : ctx.timedOut
+          ? "You're timed out and can't send messages right now."
+          : ctx.needsRules
+            ? 'Accept the rules in the welcome steps to start chatting.'
+            : "You can't send messages in this channel.",
     );
   }
   if (input.nonce) {

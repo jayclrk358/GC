@@ -1,9 +1,15 @@
 import type { Metadata, Viewport } from 'next';
 import { cookies, headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { communitiesForUser } from '@magnox/core';
-import { DEFAULT_THEME, prefsToHtmlAttributes, themeToCss } from '@magnox/shared';
+import { communitiesForUser, getConsent } from '@magnox/core';
+import {
+  CURRENT_TERMS_VERSION,
+  DEFAULT_THEME,
+  prefsToHtmlAttributes,
+  themeToCss,
+} from '@magnox/shared';
 import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
 import '@fontsource-variable/lora';
@@ -56,6 +62,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     cookies(),
   ]);
   const nonce = h.get('x-nonce') ?? undefined;
+  // Signed in but not yet agreed to the (current) terms: that comes first.
+  if (user) {
+    const path = h.get('x-pathname') ?? '/';
+    const open = path === '/accept-terms' || path.startsWith('/legal/');
+    if (!open && (await getConsent(user.id)).termsVersion < CURRENT_TERMS_VERSION) {
+      redirect(`/accept-terms?next=${encodeURIComponent(path)}`);
+    }
+  }
   // The sidebar lists the communities you belong to, in the colours of each one's theme.
   const communities: SidebarCommunity[] = user
     ? (await communitiesForUser(user.id).catch(() => [])).slice(0, 40).map((c) => ({

@@ -13,7 +13,7 @@ export async function SiteFooter() {
             <span className="font-heading font-bold text-fg">Magnox</span> · {t('footerTagline')}
           </span>
         </div>
-        <nav aria-label="Footer">
+        <nav aria-label={t('footerNav')}>
           <ul className="flex flex-wrap gap-4">
             <li>
               <Link href="/explore" className="transition-colors hover:text-fg">
@@ -33,6 +33,16 @@ export async function SiteFooter() {
             <li>
               <Link href="/settings/accessibility" className="transition-colors hover:text-fg">
                 {t('accessibility')}
+              </Link>
+            </li>
+            <li>
+              <Link href="/legal/terms" className="transition-colors hover:text-fg">
+                {t('terms')}
+              </Link>
+            </li>
+            <li>
+              <Link href="/legal/privacy" className="transition-colors hover:text-fg">
+                {t('privacyPolicy')}
               </Link>
             </li>
           </ul>

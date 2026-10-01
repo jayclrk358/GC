@@ -61,6 +61,12 @@ const schema = z.object({
   LIVEKIT_API_KEY: z.string().default(''),
   LIVEKIT_API_SECRET: z.string().default(''),
   PLATFORM_ADMIN_EMAILS: z.string().default(''),
+  /** Shown on the terms and privacy pages for questions and requests. */
+  CONTACT_EMAIL: z
+    .string()
+    .email()
+    .optional()
+    .or(z.literal('').transform(() => undefined)),
   DISABLE_RATE_LIMITS: bool,
   WORKER_HEALTH_PORT: z.coerce.number().int().default(3002),
   LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'silent']).default('info'),
@@ -102,4 +108,9 @@ export function platformAdminEmails(): Set<string> {
       .map((e) => e.trim().toLowerCase())
       .filter(Boolean),
   );
+}
+
+/** Where people can write to the site's operators, if set. */
+export function contactEmail(): string | null {
+  return env().CONTACT_EMAIL ?? null;
 }

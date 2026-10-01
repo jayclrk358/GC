@@ -20,6 +20,8 @@ export const users = pgTable('users', {
   banned: boolean('banned').default(false),
   banReason: text('ban_reason'),
   banExpires: tz('ban_expires'),
+  /** The account was deleted: personal details are gone, and this row only holds up their posts. */
+  deletedAt: tz('deleted_at'),
 });
 
 export const sessions = pgTable(

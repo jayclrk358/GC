@@ -65,6 +65,9 @@ export async function joinCommunity(ctx: MemberContext): Promise<void> {
   if (ctx.community.joinMode === 'invite' || ctx.community.visibility === 'private') {
     throw forbidden('This community is invite-only. Ask a member for an invite link.');
   }
+  if (ctx.community.archived) {
+    throw forbidden('This community is archived and isn’t taking new members.');
+  }
   if (ctx.community.joinMode === 'apply') {
     throw forbidden('This community requires an application to join.');
   }

@@ -23,6 +23,7 @@ import {
 } from '@magnox/shared';
 import { z } from 'zod';
 import { requirePerm, type MemberContext } from '../access';
+import { communityChanged } from '../emitter';
 import { AppError, conflict, forbidden } from '../errors';
 import { enforceRateLimit } from '../ratelimit';
 import { TEMPLATES } from '../templates';
@@ -31,6 +32,7 @@ import { audit, diffOf } from './audit';
 import { cached } from '../cache';
 import { cancelCommunitySubscriptions } from './billing';
 import { queueMediaCleanup } from './media-cleanup';
+import { notifyUser } from './notify';
 import { endCommunityVoiceCalls } from './voice-rooms';
 
 const MAX_OWNED_COMMUNITIES = 10;
@@ -307,6 +309,96 @@ export async function deleteCommunity(ctx: MemberContext, confirmSlug: string): 
   await queueMediaCleanup({ kind: 'community', id: ctx.community.id });
 }
 
+const transferSchema = z.object({
+  /** The new owner: a member's username. */
+  username: z.string().trim().min(1, 'Choose who to hand it to.').max(40),
+  /** The community's address, typed to confirm. */
+  confirm: z.string(),
+});
+
+/**
+ * Hand the community to another member. The old owner stays a member with the roles they have
+ * (give yourself an admin role first to keep managing it).
+ */
+export async function transferOwnership(ctx: MemberContext, raw: unknown): Promise<void> {
+  if (!ctx.isOwner) throw forbidden('Only the owner can hand the community over.');
+  const input = transferSchema.parse(raw);
+  if (input.confirm.trim().toLowerCase() !== ctx.community.slug) {
+    throw new AppError('validation', 'Type the community address exactly to confirm.', {
+      fields: { confirm: 'Doesn’t match' },
+    });
+  }
+  const [target] = await db
+    .select({ id: schema.users.id, name: schema.users.name })
+    .from(schema.members)
+    .innerJoin(schema.users, eq(schema.users.id, schema.members.userId))
+    .where(
+      and(
+        eq(schema.members.communityId, ctx.community.id),
+        sql`lower(${schema.users.username}) = ${input.username.replace(/^@/, '').toLowerCase()}`,
+      ),
+    )
+    .limit(1);
+  if (!target) {
+    throw new AppError('validation', 'Nobody with that username is a member here.', {
+      fields: { username: 'Not a member' },
+    });
+  }
+  if (target.id === ctx.userId) {
+    throw new AppError('validation', 'You already own this community.', {
+      fields: { username: 'That’s you' },
+    });
+  }
+  await db.transaction(async (tx) => {
+    await tx
+      .update(schema.communities)
+      .set({
+        ownerId: target.id,
+        permVersion: sql`${schema.communities.permVersion} + 1`,
+      })
+      .where(eq(schema.communities.id, ctx.community.id));
+    await audit(tx, {
+      communityId: ctx.community.id,
+      actorId: ctx.userId,
+      action: 'community.transfer',
+      targetType: 'user',
+      targetId: target.id,
+      diff: { from: ctx.userId, to: target.id },
+    });
+  });
+  await notifyUser({
+    userId: target.id,
+    type: 'moderation',
+    communityId: ctx.community.id,
+    actorId: ctx.userId,
+    url: `/c/${ctx.community.slug}/settings`,
+    data: { title: `You're now the owner of ${ctx.community.name}`, community: ctx.community.name },
+  });
+  communityChanged(ctx.community.id, ctx.userId, 'content');
+}
+
+/**
+ * Archive (read-only for everyone but administrators, closed to new members, out of Explore) or
+ * bring back a community. Nothing is deleted.
+ */
+export async function setArchived(ctx: MemberContext, archived: boolean): Promise<void> {
+  if (!ctx.isOwner) throw forbidden('Only the owner can archive this community.');
+  await db
+    .update(schema.communities)
+    .set({
+      archivedAt: archived ? new Date() : null,
+      permVersion: sql`${schema.communities.permVersion} + 1`,
+    })
+    .where(eq(schema.communities.id, ctx.community.id));
+  await audit(db, {
+    communityId: ctx.community.id,
+    actorId: ctx.userId,
+    action: archived ? 'community.archive' : 'community.unarchive',
+  });
+  if (archived) await endCommunityVoiceCalls(ctx.community.id);
+  communityChanged(ctx.community.id, ctx.userId, 'content');
+}
+
 export interface ExploreFilters {
   q?: string;
   game?: string;
@@ -341,7 +433,12 @@ export async function exploreCommunities(
   const pageSize = Math.min(48, Math.max(1, f.pageSize ?? 24));
   const page = Math.max(0, f.page ?? 0);
   const c = schema.communities;
-  const where: SQL[] = [eq(c.visibility, 'public'), isNull(c.deletedAt)];
+  const where: SQL[] = [
+    eq(c.visibility, 'public'),
+    isNull(c.deletedAt),
+    isNull(c.archivedAt),
+    isNull(c.suspendedAt),
+  ];
   const q = f.q?.trim().slice(0, 100);
   if (q) {
     where.push(
@@ -424,6 +521,8 @@ export async function featuredCommunities(limit = 3): Promise<CommunityCard[]> {
       and(
         eq(c.visibility, 'public'),
         isNull(c.deletedAt),
+        isNull(c.archivedAt),
+        isNull(c.suspendedAt),
         eq(c.nsfw, false),
         inArray(
           c.plan,

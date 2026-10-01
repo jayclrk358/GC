@@ -189,6 +189,14 @@ export async function assertPlanPerk(
   );
 }
 
+/** A plan Magnox gave the community, if it's still running. */
+async function activeGift(communityId: string) {
+  const gift = await db.query.planGifts.findFirst({
+    where: eq(schema.planGifts.communityId, communityId),
+  });
+  return gift && (!gift.expiresAt || gift.expiresAt > new Date()) ? gift : null;
+}
+
 /** Recompute a community's plan from its subscriptions (the best one that is still paid up). */
 export async function syncCommunityPlan(communityId: string): Promise<PlanId> {
   const subs = await db
@@ -202,6 +210,9 @@ export async function syncCommunityPlan(communityId: string): Promise<PlanId> {
   for (const s of subs) {
     if (isActiveSubscriptionStatus(s.status) && planRank(s.plan) > planRank(plan)) plan = s.plan;
   }
+  // A plan Magnox gave for free counts too, while it lasts (the better plan wins).
+  const gift = await activeGift(communityId);
+  if (gift && planRank(gift.plan) > planRank(plan)) plan = gift.plan;
   const changed = await db
     .update(schema.communities)
     .set({ plan })
@@ -517,9 +528,10 @@ export async function getBilling(ctx: MemberContext) {
       .from(table)
       .where(eq(table.communityId, id))
       .then((r) => r[0]?.n ?? 0);
-  const [plan, sub, roles, channels, servers] = await Promise.all([
+  const [plan, sub, gift, roles, channels, servers] = await Promise.all([
     communityPlan(id),
     activeSubscription(id),
+    activeGift(id),
     count(schema.roles),
     count(schema.channels),
     db
@@ -539,6 +551,7 @@ export async function getBilling(ctx: MemberContext) {
     plan,
     limits: planLimits(plan),
     usage: { servers, roles, channels },
+    gift: gift ? { plan: gift.plan, expiresAt: gift.expiresAt?.toISOString() ?? null } : null,
     subscription: sub
       ? {
           plan: sub.plan,

@@ -363,6 +363,8 @@ export default async function ThreadPage({
             slug={slug}
             requireAlt={Boolean(data.community.settings.requireAltText)}
           />
+        ) : data.ctx.community.archived ? (
+          <Alert tone="info">{t('archivedNotice')}</Alert>
         ) : thread.locked ? (
           <Alert tone="warning" title={t('lockedTitle')}>
             {t('lockedBody')}
@@ -403,6 +405,7 @@ export default async function ThreadPage({
                 isOwner={false}
                 joinMode={data.community.joinMode}
                 visibility={data.community.visibility}
+                archived={Boolean(data.community.archivedAt)}
               />
             </span>
           </Alert>

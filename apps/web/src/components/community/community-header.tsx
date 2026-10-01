@@ -179,6 +179,7 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
               isOwner={ctx.isOwner}
               joinMode={community.joinMode}
               visibility={community.visibility}
+              archived={Boolean(community.archivedAt)}
             />
             {perms.createInvite && <InviteButton communityId={community.id} />}
             {user && ctx.isMember && (

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Accessibility, LogOut, Search, Settings, User } from 'lucide-react';
+import { Accessibility, LogOut, Search, Settings, ShieldCheck, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, Kbd } from '@/components/ui/misc';
 import {
@@ -43,8 +43,11 @@ export function PaletteButton() {
 
 export function UserMenu({
   user,
+  admin = false,
 }: {
   user: { id: string; name: string; username: string | null; image: string | null };
+  /** A Magnox admin: show the way to the admin console. */
+  admin?: boolean;
 }) {
   const t = useTranslations('shell');
   const router = useRouter();
@@ -88,6 +91,13 @@ export function UserMenu({
             <Accessibility aria-hidden /> {t('accessibility')}
           </Link>
         </DropdownMenuItem>
+        {admin && (
+          <DropdownMenuItem asChild>
+            <Link href="/admin">
+              <ShieldCheck aria-hidden /> {t('admin')}
+            </Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onSelect={async () => {

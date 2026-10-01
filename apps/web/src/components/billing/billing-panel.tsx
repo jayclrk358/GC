@@ -88,6 +88,14 @@ export function BillingPanel({
             )}
             {planName(billing.plan)}
           </p>
+          {billing.gift && (
+            <p className="text-sm" suppressHydrationWarning>
+              {t('gifted', {
+                plan: planName(billing.gift.plan),
+                until: billing.gift.expiresAt ? date(billing.gift.expiresAt) : 'none',
+              })}
+            </p>
+          )}
           {sub ? (
             <div className="flex flex-col gap-1 text-sm">
               <p>

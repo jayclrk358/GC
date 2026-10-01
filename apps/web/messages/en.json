@@ -52,7 +52,11 @@
     "menu": "Menu",
     "joinTitle": "Find your people",
     "joinBody": "Sign up to join communities, chat and vote for your favourite servers.",
-    "store": "Store"
+    "store": "Store",
+    "admin": "Admin console",
+    "terms": "Terms",
+    "privacyPolicy": "Privacy",
+    "footerNav": "Footer"
   },
   "palette": {
     "placeholder": "Search communities, pages and actions…",
@@ -113,11 +117,12 @@
     "backupCode": "Backup code",
     "trustDevice": "Trust this device for 30 days",
     "verifyEmailSent": "Check your inbox to confirm your email address.",
-    "termsNote": "By creating an account you agree to the community guidelines.",
     "signInCta": "Sign in",
     "signUpCta": "Create account",
     "captchaRequired": "Complete the security check first.",
-    "captchaFailed": "The security check didn't pass. Please try it again."
+    "captchaFailed": "The security check didn't pass. Please try it again.",
+    "termsAgree": "I’m 13 or older and I agree to the <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
+    "termsRequired": "Tick the box to agree to the terms."
   },
   "settings": {
     "title": "Settings",
@@ -282,7 +287,21 @@
     "connectionsDesc": "Sign in with these services in addition to your password.",
     "connect": "Connect {provider}",
     "connected": "Connected",
-    "noProviders": "No sign-in providers are configured on this server."
+    "noProviders": "No sign-in providers are configured on this server.",
+    "data": {
+      "title": "Your data",
+      "description": "Download everything Magnox keeps about you: your account, profile, settings, communities and what you’ve written, as a JSON file.",
+      "download": "Download my data"
+    },
+    "delete": {
+      "title": "Delete account",
+      "description": "Your profile, settings, sign-in methods and memberships are removed for good, and you’re signed out everywhere. What you’ve written stays, shown as “Deleted user”, unless you remove it too.",
+      "ownsFirst": "You own these communities. Hand them over to someone or delete them first:",
+      "removeContent": "Also remove my chat messages and forum replies",
+      "removeContentHint": "Threads you started stay, so other people’s replies aren’t lost.",
+      "confirmLabel": "Type {word} to confirm",
+      "button": "Delete my account"
+    }
   },
   "security": {
     "title": "Security",
@@ -389,7 +408,10 @@
     "playOnRoblox": "Play on Roblox (opens in a new tab)",
     "playOnSite": "Play on {host} (opens in a new tab)",
     "applyToJoin": "Apply to join",
-    "welcomeAndRoles": "Welcome steps & roles"
+    "welcomeAndRoles": "Welcome steps & roles",
+    "archivedNoJoin": "Archived: not taking new members",
+    "archivedTitle": "This community is archived",
+    "archivedBody": "Everything is still here to read, but nothing new can be posted."
   },
   "servers": {
     "copyAddress": "Copy server address {address}",
@@ -711,7 +733,8 @@
       "onboarding": "Welcome steps",
       "automod": "Automod",
       "modQueue": "Mod queue",
-      "emoji": "Emoji"
+      "emoji": "Emoji",
+      "analytics": "Analytics"
     },
     "general": {
       "title": "General",
@@ -758,7 +781,23 @@
       "deleteTitle": "Delete community",
       "deleteDesc": "The community disappears immediately and its address becomes available. Uploaded images, videos and attachments are deleted straight away; other content is kept for 30 days, then permanently removed.",
       "confirmLabel": "Type {slug} to confirm",
-      "deleteButton": "Delete this community"
+      "deleteButton": "Delete this community",
+      "transferTitle": "Hand over ownership",
+      "transferDesc": "Make another member the owner. You stay a member with the roles you have now, so give yourself an admin role first if you want to keep managing it.",
+      "newOwner": "New owner’s username",
+      "newOwnerHint": "They have to be a member already.",
+      "transferButton": "Hand over ownership",
+      "transferred": "{name} is now the owner",
+      "archiveTitle": "Archive this community",
+      "archiveDesc": "Keep everything readable but stop new posts, new members and voice calls, and take it out of Explore. Administrators can still change settings, and you can bring it back any time.",
+      "archiveButton": "Archive community",
+      "archiveConfirm": "Archive this community? It becomes read-only until you bring it back.",
+      "archived": "Community archived",
+      "unarchiveTitle": "This community is archived",
+      "unarchiveDesc": "It’s read-only and out of Explore. Bring it back to open it up again.",
+      "unarchiveButton": "Bring it back",
+      "unarchived": "Community is open again",
+      "transferConfirm": "Type {slug} to hand it over"
     },
     "openReports": "open reports",
     "playUrl": "Play link",
@@ -1599,7 +1638,8 @@
     "timedOutBody": "A moderator has paused your posting in this community until {date}. You can still read.",
     "rulesFirst": "Agree to the rules in the welcome steps to start posting.",
     "rulesFirstLink": "Read the rules",
-    "heldTitle": "Waiting for a moderator"
+    "heldTitle": "Waiting for a moderator",
+    "archivedNotice": "This community is archived, so replies are closed."
   },
   "report": {
     "title": "Report {what}",
@@ -2147,7 +2187,8 @@
     "deletedEmoji": "deleted emoji",
     "standardEmoji": "Emoji",
     "communityEmoji": "This community’s emoji",
-    "findEmoji": "Find an emoji"
+    "findEmoji": "Find an emoji",
+    "archivedNotice": "This community is archived, so the chat is read-only."
   },
   "serverPage": {
     "verified": "Verified",
@@ -2385,7 +2426,8 @@
     "confirming": "Payment received. The plan will switch on in a moment; refresh if it hasn’t.",
     "activated": "Thanks! {plan} is now on.",
     "failed": "That didn’t work. Please try again.",
-    "compare": "Compare all plans"
+    "compare": "Compare all plans",
+    "gifted": "Magnox has given this community the {plan} plan{until, select, none {, for good} other { until {until}}}."
   },
   "presence": {
     "online": "Online",
@@ -2802,5 +2844,176 @@
     "delete": "Remove :{name}:",
     "confirmDelete": "Remove :{name}:? Posts that used it will show its name instead.",
     "deleted": ":{name}: removed"
+  },
+  "analytics": {
+    "title": "Analytics",
+    "description": "The last 30 days. Worked out every few minutes (last at {time}).",
+    "stats": {
+      "members": "Members",
+      "membersDetail": "{week} joined this week, {month} in 30 days",
+      "active": "Active this week",
+      "activeDetail": "{month} people wrote something in 30 days",
+      "messages": "Chat messages",
+      "last30": "In the last 30 days",
+      "posts": "Forum posts",
+      "postsDetail": "Including {threads} new threads"
+    },
+    "charts": {
+      "joins": "New members per day",
+      "messages": "Chat messages per day",
+      "posts": "Forum posts per day"
+    },
+    "total": "{count} in total",
+    "max": "Most in a day: {count}",
+    "chartSummary": "{total} in 30 days. Busiest day: {day}, with {peak}.",
+    "chartEmpty": "Nothing in the last 30 days.",
+    "asTable": "Show as a table",
+    "day": "Day",
+    "count": "Count",
+    "topChannels": "Busiest channels",
+    "topMembers": "Most active members",
+    "posts": "{count, plural, one {# post} other {# posts}}",
+    "quiet": "Nothing posted in the last 30 days yet.",
+    "tableOf": "{title}, as a table"
+  },
+  "suspended": {
+    "title": "This community has been suspended",
+    "body": "It broke Magnox’s rules, so it’s offline for now. If you run it, check your notifications for the reason.",
+    "explore": "Find other communities"
+  },
+  "admin": {
+    "title": "Magnox admin",
+    "navLabel": "Admin",
+    "nav": {
+      "overview": "Overview",
+      "communities": "Communities",
+      "users": "People",
+      "reports": "Reports",
+      "log": "Log"
+    },
+    "overviewTitle": "Overview",
+    "overviewDescription": "The whole of Magnox at a glance.",
+    "stats": {
+      "users": "People",
+      "newUsers": "{count} joined in the last day",
+      "communities": "Communities",
+      "paid": "On a paid plan",
+      "gifted": "{count} given for free",
+      "messages": "Chat messages today",
+      "reports": "Open reports"
+    },
+    "communitiesTitle": "Communities",
+    "findCommunity": "Find a community by name or address",
+    "usersTitle": "People",
+    "findUser": "Find someone by name, username or email",
+    "search": "Search",
+    "noResults": "Nothing matches.",
+    "col": {
+      "community": "Community",
+      "owner": "Owner",
+      "plan": "Plan",
+      "members": "Members",
+      "created": "Created",
+      "person": "Person",
+      "email": "Email",
+      "joined": "Joined"
+    },
+    "plans": {
+      "free": "Free",
+      "plus": "Plus",
+      "pro": "Pro"
+    },
+    "giftedShort": "Given by Magnox",
+    "suspended": "Suspended",
+    "archived": "Archived",
+    "banned": "Banned",
+    "adminBadge": "Admin",
+    "unverified": "email not verified",
+    "backToCommunities": "Back to communities",
+    "backToUsers": "Back to people",
+    "open": "Open community",
+    "profile": "Open profile",
+    "suspendedSince": "Suspended since {when}",
+    "subscriptions": "Subscriptions",
+    "none": "None",
+    "openReports": "Open reports",
+    "memberOf": "Member of",
+    "communitiesCount": "{count, plural, one {# community} other {# communities}}",
+    "owns": "Owns",
+    "signedIn": "Signed in on",
+    "sessionsCount": "{count, plural, one {# device} other {# devices}}",
+    "reported": "Reported",
+    "timesCount": "{count, plural, one {# time} other {# times}}",
+    "isAdmin": "They’re a Magnox admin, so they can’t be banned from here.",
+    "bannedUntil": "Banned until {date}",
+    "bannedForever": "Banned for good",
+    "reportsTitle": "Reports",
+    "reportsDescription": "Open reports from every community, newest first. Communities handle their own; step in when they don’t.",
+    "noReports": "No open reports anywhere.",
+    "someone": "someone",
+    "logTitle": "Log",
+    "logDescription": "Everything admins have done here.",
+    "noLog": "Nothing yet.",
+    "viewUser": "View person",
+    "viewCommunity": "View community",
+    "gift": {
+      "title": "Give a plan",
+      "description": "Give this community Plus or Pro for free, for a while or for good. It doesn’t touch any subscription; the better plan wins.",
+      "plan": "Plan",
+      "length": "For how long",
+      "forever": "For good",
+      "months": "{count, plural, one {# month} other {# months}}",
+      "note": "Note",
+      "noteHint": "Why, for the record (only admins see it).",
+      "give": "Give plan",
+      "update": "Change plan",
+      "given": "Plan given",
+      "currentUntil": "Has {plan} from Magnox until {date}.",
+      "currentForever": "Has {plan} from Magnox, for good.",
+      "remove": "Take it back",
+      "removed": "Plan taken back"
+    },
+    "suspend": {
+      "title": "Suspend community",
+      "description": "Take it offline for breaking the rules. Nothing is deleted, and you can bring it back.",
+      "reason": "Reason",
+      "reasonHint": "The owner is told this.",
+      "suspend": "Suspend community",
+      "done": "Community suspended",
+      "liftTitle": "Lift the suspension",
+      "liftDescription": "Put the community back online.",
+      "lift": "Lift suspension",
+      "lifted": "Community is back online"
+    },
+    "ban": {
+      "title": "Ban from Magnox",
+      "description": "They’re signed out everywhere and can’t sign in again until the ban ends.",
+      "reason": "Reason",
+      "length": "For how long",
+      "forever": "For good",
+      "days": "{count, plural, one {# day} other {# days}}",
+      "ban": "Ban",
+      "done": "Banned",
+      "liftTitle": "Lift the ban",
+      "lift": "Lift ban",
+      "lifted": "Ban lifted",
+      "sessionsTitle": "Sign out everywhere",
+      "sessionsDescription": "For an account that might have been taken over.",
+      "revoke": "Sign out everywhere",
+      "revoked": "Signed out everywhere"
+    }
+  },
+  "legal": {
+    "newTitle": "Before you start",
+    "updatedTitle": "We’ve updated our terms",
+    "newBody": "Please read and agree to Magnox’s terms to carry on.",
+    "updatedBody": "Our Terms of Service or Privacy Policy changed. Please have a look and agree to carry on.",
+    "agree": "I’m 13 or older and I agree to the <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
+    "tickFirst": "Tick the box to agree first.",
+    "continue": "Agree and continue",
+    "adultTitle": "{name} is for adults",
+    "adultBody": "Its owners have marked it 18+. It may show things that aren’t suitable for everyone.",
+    "adultConfirm": "I’m 18 or older",
+    "adultLeave": "Take me back"
   }
 }

@@ -25,3 +25,4 @@ export * from './events-schema';
 export * from './applications';
 export * from './automod';
 export * from './emoji';
+export * from './legal';

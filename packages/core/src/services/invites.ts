@@ -124,6 +124,9 @@ export async function acceptInvite(userId: string | null, code: string): Promise
       where: eq(schema.communities.id, invite.communityId),
     });
     if (!community || community.deletedAt) throw notFound('Community');
+    if (community.archivedAt) {
+      throw forbidden('This community is archived and isn’t taking new members.');
+    }
     const already = await tx.query.members.findFirst({
       where: and(eq(schema.members.communityId, community.id), eq(schema.members.userId, userId)),
       columns: { userId: true },

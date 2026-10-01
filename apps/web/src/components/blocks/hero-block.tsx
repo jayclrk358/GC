@@ -35,6 +35,7 @@ export function HeroBlock({
           isOwner={ctx.isOwner}
           joinMode={community.joinMode}
           visibility={community.visibility}
+          archived={Boolean(community.archivedAt)}
           size="lg"
           label={config.ctaLabel}
         />

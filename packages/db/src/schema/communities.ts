@@ -62,6 +62,11 @@ export const communities = pgTable(
     permVersion: integer('perm_version').notNull().default(0),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
+    /** Archived: kept and readable, but read-only, closed to new members and out of Explore. */
+    archivedAt: tz('archived_at'),
+    /** Taken offline by Magnox staff for breaking the rules (reversible). */
+    suspendedAt: tz('suspended_at'),
+    suspendReason: text('suspend_reason'),
     deletedAt: tz('deleted_at'),
     search: tsvector('search').generatedAlwaysAs(
       sql`to_tsvector('simple'::regconfig, coalesce(name, '') || ' ' || coalesce(tagline, ''))`,

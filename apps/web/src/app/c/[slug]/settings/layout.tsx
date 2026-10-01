@@ -24,6 +24,7 @@ export default async function CommunitySettingsLayout({
   const base = `/c/${slug}/settings`;
   const links = [
     { href: base, label: t('nav.general'), show: perms.manage, exact: true },
+    { href: `${base}/analytics`, label: t('nav.analytics'), show: perms.viewAnalytics },
     { href: `${base}/billing`, label: t('nav.billing'), show: perms.manage },
     { href: `${base}/appearance`, label: t('nav.appearance'), show: perms.manage },
     { href: `${base}/page`, label: t('nav.page'), show: perms.manage },

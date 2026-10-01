@@ -97,6 +97,8 @@ export const posts = pgTable(
   },
   (t) => [
     index('posts_thread_idx').on(t.threadId, t.id),
+    // Ids are time-ordered, so this also finds a community's posts over a period (analytics).
+    index('posts_community_idx').on(t.communityId, t.id),
     index('posts_author_idx').on(t.authorId),
     index('posts_search_idx').using('gin', t.search),
   ],

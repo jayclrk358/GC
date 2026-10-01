@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
-import { onlineInCommunity, voicePeople } from '@magnox/core';
+import { cookies } from 'next/headers';
+import { getTranslations } from 'next-intl/server';
+import { getConsent, onlineInCommunity, voicePeople } from '@magnox/core';
 import { loadCommunity } from '@/lib/community';
 import { planPerks } from '@magnox/shared';
 import { imgSources } from '@/lib/media';
@@ -9,6 +11,8 @@ import { DenseOnChat } from '@/components/community/dense-on-chat';
 import { CommunityLive } from '@/components/live/live';
 import { VoiceBar } from '@/components/voice/voice-bar';
 import { VoiceProvider } from '@/components/voice/voice-provider';
+import { Alert } from '@/components/ui/misc';
+import { AdultGate } from '@/components/legal/adult-gate';
 
 export async function generateMetadata({
   params,
@@ -31,9 +35,17 @@ export default async function CommunityLayout({
   params: Promise<{ slug: string }>;
 }) {
   const data = await loadCommunity((await params).slug);
-  const [online, voice] = await Promise.all([
+  // Communities marked 18+ ask visitors to say they're adults first.
+  if (data.community.nsfw && !data.ctx.isOwner) {
+    const adult = data.user
+      ? (await getConsent(data.user.id)).adult
+      : (await cookies()).get('mx-adult')?.value === '1';
+    if (!adult) return <AdultGate name={data.community.name} signedIn={Boolean(data.user)} />;
+  }
+  const [online, voice, t] = await Promise.all([
     onlineInCommunity(data.community.id),
     voicePeople(data.community.id),
+    getTranslations('community'),
   ]);
   // The background picture is a paid perk; a community on Free keeps it set but not shown.
   const bg = planPerks(data.community.plan).pageBackground
@@ -64,6 +76,11 @@ export default async function CommunityLayout({
         <DenseOnChat slug={data.community.slug}>
           <CommunityHeader data={data} online={online} />
           <div className="mx-auto flex w-full max-w-[100rem] flex-1 flex-col px-4 py-8 group-data-[dense=true]/dense:min-h-0 group-data-[dense=true]/dense:px-2 group-data-[dense=true]/dense:py-2 sm:px-6 sm:group-data-[dense=true]/dense:px-4 lg:px-8">
+            {data.community.archivedAt && (
+              <Alert tone="warning" title={t('archivedTitle')} className="mb-6">
+                {t('archivedBody')}
+              </Alert>
+            )}
             <VoiceBar slug={data.community.slug} />
             {children}
           </div>

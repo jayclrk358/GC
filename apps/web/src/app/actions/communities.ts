@@ -9,6 +9,8 @@ import {
   getOnboarding,
   joinCommunity,
   leaveCommunity,
+  setArchived,
+  transferOwnership,
   unauthorized,
   updateCommunityBasics,
   updateCommunityNav,
@@ -76,6 +78,23 @@ export async function deleteCommunityAction(communityId: string, confirmSlug: st
   return runAction(async () => {
     const ctx = await ctxFor(communityId);
     await deleteCommunity(ctx, confirmSlug);
+  });
+}
+
+export async function transferOwnershipAction(communityId: string, input: unknown) {
+  return runAction(async () => {
+    const ctx = await ctxFor(communityId);
+    await transferOwnership(ctx, input);
+    revalidatePath(`/c/${ctx.community.slug}`, 'layout');
+  });
+}
+
+export async function setArchivedAction(communityId: string, archived: boolean) {
+  return runAction(async () => {
+    const ctx = await ctxFor(communityId);
+    await setArchived(ctx, archived === true);
+    revalidatePath(`/c/${ctx.community.slug}`, 'layout');
+    revalidatePath('/explore');
   });
 }
 

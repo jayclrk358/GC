@@ -67,7 +67,7 @@ export function CreateWizard({ games }: { games: { id: string; name: string }[] 
     template: 'fanhub' as CommunityTemplate,
     preset: 'magnox' as PresetKey,
     visibility: 'public' as 'public' | 'unlisted' | 'private',
-    joinMode: 'open' as 'open' | 'invite',
+    joinMode: 'open' as 'open' | 'apply' | 'invite',
     region: 'global',
     language: 'en',
   });

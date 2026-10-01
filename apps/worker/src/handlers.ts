@@ -4,6 +4,7 @@ import {
   cleanupMedia,
   cleanupUnverifiedServers,
   deliverVotifierVote,
+  expirePlanGifts,
   logger,
   maintainHistory,
   type MediaCleanup,
@@ -54,6 +55,7 @@ export const handlers: Record<string, Handler> = {
   'maintenance-hourly': async () => {
     await wakeHotDormant();
     const removed = await cleanupUnverifiedServers();
-    return { removed };
+    const giftsEnded = await expirePlanGifts();
+    return { removed, giftsEnded };
   },
 };

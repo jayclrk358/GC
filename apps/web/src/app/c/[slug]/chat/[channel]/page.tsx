@@ -82,7 +82,9 @@ export default async function ChatChannelPage({
     ? imgSources(channel.settings.backgroundKey, 'md', '(min-width: 1024px) 70vw, 100vw')
     : null;
   const background = image ? { image, dim: channel.settings.backgroundDim ?? 70 } : null;
-  const notice = !user ? (
+  const notice = data.ctx.community.archived ? (
+    <ChatNotice>{t('archivedNotice')}</ChatNotice>
+  ) : !user ? (
     <SignInToChat
       href={`/sign-in?next=${encodeURIComponent(`/c/${slug}/chat/${channel.name}`)}`}
       label={t('signIn')}
@@ -99,6 +101,7 @@ export default async function ChatChannelPage({
           isOwner={false}
           joinMode={data.community.joinMode}
           visibility={data.community.visibility}
+          archived={Boolean(data.community.archivedAt)}
         />
       }
     >

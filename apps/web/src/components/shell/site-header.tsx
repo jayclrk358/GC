@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { Plus } from 'lucide-react';
-import { unreadCount } from '@magnox/core';
+import { platformAdminFor, unreadCount } from '@magnox/core';
 import type { SessionUser } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { Logo, Wordmark } from './logo';
@@ -20,7 +20,13 @@ export async function SiteHeader({
   communities: SidebarCommunity[];
 }) {
   const t = await getTranslations('shell');
-  const unread = user ? await unreadCount(user.id).catch(() => 0) : 0;
+  const [unread, admin] = user
+    ? await Promise.all([
+        unreadCount(user.id).catch(() => 0),
+        // From the database, not the session: the session's copy of the account can be stale.
+        platformAdminFor(user.id).catch(() => null),
+      ])
+    : [0, null];
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-bg/85 backdrop-blur-md supports-[backdrop-filter]:bg-bg/70">
       <div className="flex h-14 items-center gap-2 px-3 sm:gap-3 sm:px-4">
@@ -48,6 +54,7 @@ export async function SiteHeader({
               </Button>
               <NotificationBell initialUnread={unread} />
               <UserMenu
+                admin={Boolean(admin)}
                 user={{
                   id: user.id,
                   name: user.name,

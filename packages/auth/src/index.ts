@@ -133,7 +133,8 @@ function createAuth<P extends BetterAuthPlugin[]>(extraPlugins: P) {
               .insert(schema.userPreferences)
               .values({ userId: user.id, prefs: {} })
               .onConflictDoNothing();
-            if (platformAdminEmails().has(user.email.toLowerCase())) {
+            // Only with a confirmed email, or anyone could claim a listed address by signing up.
+            if (user.emailVerified && platformAdminEmails().has(user.email.toLowerCase())) {
               await db
                 .update(schema.users)
                 .set({ role: 'admin' })

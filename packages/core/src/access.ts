@@ -22,6 +22,8 @@ export interface CommunityRef {
   deletedAt: Date | null;
   /** New members can only read until they accept the rules (welcome steps). */
   rulesGate: boolean;
+  /** Archived: read-only for everyone but administrators, and closed to new members. */
+  archived: boolean;
 }
 
 export interface MemberContext {
@@ -66,7 +68,12 @@ async function loadCommunity(where: { id?: string; slug?: string }): Promise<Com
       visibility: schema.communities.visibility,
       joinMode: schema.communities.joinMode,
       permVersion: schema.communities.permVersion,
-      deletedAt: schema.communities.deletedAt,
+      // Suspended by Magnox staff counts as gone, everywhere (pages, APIs, sockets).
+      deletedAt:
+        sql<Date | null>`coalesce(${schema.communities.deletedAt}, ${schema.communities.suspendedAt})`.mapWith(
+          schema.communities.deletedAt,
+        ),
+      archived: sql<boolean>`${schema.communities.archivedAt} is not null`,
       rulesGate: sql<boolean>`coalesce((${schema.communities.settings} #>> '{onboarding,enabled}')::boolean and (${schema.communities.settings} #>> '{onboarding,requireAccept}')::boolean, false)`,
     })
     .from(schema.communities)
@@ -139,8 +146,8 @@ export async function memberContextFor(
       everyone: everyone.permissions,
       roles: heldRoles.map((r) => r.permissions),
     });
-    // Timed out, or still to accept the rules: read only (administrators are exempt).
-    base = applyTimeout(base, timedOut || needsRules);
+    // Timed out, still to accept the rules, or archived: read only (administrators are exempt).
+    base = applyTimeout(base, timedOut || needsRules || community.archived);
   }
 
   return {
@@ -224,7 +231,7 @@ export async function channelPermissions(ctx: MemberContext, channel: ChannelRef
     memberRoleIds: ctx.roleIds,
     userId: ctx.userId ?? '',
     layers,
-    timedOut: ctx.timedOut || ctx.needsRules,
+    timedOut: ctx.timedOut || ctx.needsRules || ctx.community.archived,
   });
   return ctx.isMember ? perms : perms & GUEST_MASK;
 }
@@ -253,7 +260,7 @@ export async function channelPermissionsMany(
       memberRoleIds: ctx.roleIds,
       userId: ctx.userId ?? '',
       layers: layerIds.map((id) => ow.get(id) ?? []),
-      timedOut: ctx.timedOut || ctx.needsRules,
+      timedOut: ctx.timedOut || ctx.needsRules || ctx.community.archived,
     });
     out.set(c.id, ctx.isMember ? perms : perms & GUEST_MASK);
   }

@@ -25,6 +25,7 @@ export function JoinButton({
   visibility,
   size = 'md',
   label,
+  archived = false,
 }: {
   communityId: string;
   slug: string;
@@ -35,11 +36,21 @@ export function JoinButton({
   visibility: string;
   size?: 'md' | 'lg';
   label?: string;
+  /** Archived communities don't take new members. */
+  archived?: boolean;
 }) {
   const t = useTranslations('community');
   const router = useRouter();
   const pathname = usePathname();
   const [pending, setPending] = React.useState(false);
+
+  if (archived && !isMember) {
+    return (
+      <p className="rounded-ui border border-border px-3 py-2 text-sm text-muted">
+        {t('archivedNoJoin')}
+      </p>
+    );
+  }
 
   if (!signedIn) {
     return (

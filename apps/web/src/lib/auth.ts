@@ -4,6 +4,7 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { nextCookies } from 'better-auth/next-js';
 import { createAuth } from '@magnox/auth';
+import { sessionsRevoked } from '@magnox/core';
 
 const g = globalThis as unknown as { __mxAuth?: ReturnType<typeof make> };
 const make = () => createAuth([nextCookies()]);
@@ -17,8 +18,19 @@ export type SessionUser = SessionData['user'];
 
 /** Current session for this request (deduplicated per render). */
 export const getSession = cache(async (): Promise<SessionData | null> => {
-  return auth.api.getSession({ headers: await headers() });
+  const h = await headers();
+  const session = await auth.api.getSession({ headers: h });
+  // Signed out by an admin (e.g. banned): don't trust the cookie's cached copy of the session.
+  if (session && (await sessionsRevoked(session.user.id))) {
+    return auth.api.getSession({ headers: h, query: { disableCookieCache: true } });
+  }
+  return session;
 });
+
+/** End all of someone's sessions, wherever Better Auth keeps them (database and Redis). */
+export async function endSessions(userId: string): Promise<void> {
+  await (await auth.$context).internalAdapter.deleteUserSessions(userId);
+}
 
 export async function getUser(): Promise<SessionUser | null> {
   return (await getSession())?.user ?? null;

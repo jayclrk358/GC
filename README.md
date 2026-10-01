@@ -16,6 +16,8 @@ Magnox is built around two ideas: **deep customisation** and **first-class acces
   up" alerts posted in chat.
 - **Forum, wiki, events and chat:** persistent, searchable discussions plus real-time channels.
 - **Roles and permissions:** Discord-style permission bits with category and channel overrides.
+- **Moderation built in:** automod with a mod queue, applications to join, welcome steps with
+  rules, reports, timeouts, bans and an audit log.
 - **Light, dark or system colour scheme** from a toggle in the header, saved per browser and to
   your account. Every community theme defines both a light and a dark palette.
 - **Accessibility settings that always win:** high contrast, dyslexia-friendly fonts, text size
@@ -195,6 +197,46 @@ docker compose up -d --build
 
 Without the keys, voice channels say that voice isn't set up yet.
 
+## Admin console
+
+Magnox staff look after the whole site at **/admin** (it's in the account menu for admins; for
+everyone else the page doesn't exist). It has:
+
+- **Communities:** search, and for each one:
+  - **Give a plan:** Plus or Pro for free, for 1–24 months or for good. It doesn't touch Stripe
+    and sits alongside any subscription (the better plan wins). Gifts that run out end on their
+    own within the hour. Community managers see it on their Plan & billing page.
+  - **Suspend:** take it offline for breaking the rules, with a reason the owner is told. Its pages
+    say it's suspended and it leaves Explore. Nothing is deleted, and the suspension can be lifted.
+- **People:** search by name, username or email; sign someone out everywhere, or ban them from
+  Magnox (for a set time or for good), which also signs them out.
+- **Reports:** open reports from every community, to step in where a community doesn't.
+- **Log:** everything admins have done.
+
+**Making yourself an admin:** after signing up, run
+`pnpm --filter @magnox/db admin:grant you@example.com` (on the server with Docker:
+`docker compose run --rm migrate pnpm --filter @magnox/db admin:grant you@example.com`). Add
+`--revoke` to take it away. Emails in `PLATFORM_ADMIN_EMAILS` also count, once they're confirmed.
+
+## Terms, privacy and your data
+
+- **Terms of Service** (`/legal/terms`) and **Privacy Policy** (`/legal/privacy`) are linked from
+  the footer and the sign-up form. They're written for a typical Magnox site; read them through
+  and adjust them for your own (edit `apps/web/src/app/legal/*/page.tsx`). Set `CONTACT_EMAIL` to
+  show an address for questions.
+- **Agreeing:** signing up asks people to confirm they're 13 or older and agree. Anyone who hasn't
+  (for example after signing up with Discord) is asked before anything else. When you change the
+  terms in a way people should agree to again, raise `CURRENT_TERMS_VERSION` in
+  `packages/shared/src/legal.ts`.
+- **18+ communities:** communities marked "Mature content (18+)" ask visitors to confirm they're
+  adults before showing anything.
+- **Download your data:** Account settings → Your data gives a JSON file of everything Magnox keeps
+  about you.
+- **Delete your account:** Account settings → Delete account removes your profile, settings,
+  sign-in methods and memberships and signs you out everywhere. What you wrote stays as "Deleted
+  user", unless you also choose to remove your chat messages and forum replies. Owners hand over
+  or delete their communities first.
+
 ## Magnox for Windows
 
 `apps/desktop` is a Windows app that shows your Magnox site in its own window. None of the site is
@@ -287,5 +329,10 @@ Found a barrier? Please open an issue. Accessibility bugs are treated as high pr
       voting once a day with a verified email, optional Cloudflare Turnstile, and NuVotifier /
       Votifier v1 rewards; down and back-up alerts in a chosen chat channel; dormant servers
       paused after a week offline; steam:// connect links and copy-address buttons
-- [ ] **Phase 5 — Events, applications, automod, analytics**
+- [x] **Phase 5 — Events, applications, moderation, analytics:** events with a calendar,
+      RSVPs with places, repeats, time zones, reminders and iCal feeds; applying to join with a
+      question form and a review queue; welcome steps with rules to agree to and roles to pick;
+      automod (blocked words, link and invite filters, spam and flood limits, new-member checks,
+      raid protection) with a mod queue; custom emoji in posts and reactions; an analytics
+      dashboard; handing over ownership; archiving
 - [ ] **Phase 6 — Admin console, data export, SEO, PWA, public API, Discord integration**

@@ -1,6 +1,6 @@
 import 'server-only';
 import { cache } from 'react';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { eq } from 'drizzle-orm';
 import { db, schema } from '@magnox/db';
 import {
@@ -9,6 +9,7 @@ import {
   getCommunityRow,
   getMemberContext,
   isAppError,
+  isSuspended,
   listVisibleChannels,
   type MemberContext,
 } from '@magnox/core';
@@ -32,7 +33,11 @@ export const loadCommunity = cache(async (slug: string) => {
   try {
     ctx = await getMemberContext({ slug }, user?.id ?? null);
   } catch (e) {
-    if (isAppError(e) && e.code === 'not_found') notFound();
+    if (isAppError(e) && e.code === 'not_found') {
+      // Taken offline by Magnox staff: say so, rather than "not found".
+      if (await isSuspended(slug)) redirect('/community-suspended');
+      notFound();
+    }
     throw e;
   }
   const community = await getCommunityRow(ctx.community.id);
@@ -51,6 +56,7 @@ export const loadCommunity = cache(async (slug: string) => {
     manageReports: has(ctx.base, Permission.MANAGE_REPORTS),
     manageMessages: has(ctx.base, Permission.MANAGE_MESSAGES),
     manageEmoji: has(ctx.base, Permission.MANAGE_EMOJI),
+    viewAnalytics: has(ctx.base, Permission.VIEW_ANALYTICS),
     ban: has(ctx.base, Permission.BAN_MEMBERS),
     kick: has(ctx.base, Permission.KICK_MEMBERS),
     timeout: has(ctx.base, Permission.TIMEOUT_MEMBERS),
@@ -66,6 +72,7 @@ export const loadCommunity = cache(async (slug: string) => {
     perms.manageReports ||
     perms.manageMessages ||
     perms.manageEmoji ||
+    perms.viewAnalytics ||
     perms.ban ||
     perms.kick ||
     perms.timeout ||
