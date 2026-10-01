@@ -23,12 +23,15 @@ export function MuteMenu({
   name,
   muted: initial,
   iconOnly,
+  compact,
 }: {
   targetType: 'community' | 'channel';
   targetId: string;
   name: string;
   muted: boolean;
   iconOnly?: boolean;
+  /** A plain small icon, for toolbars like chat's header. */
+  compact?: boolean;
 }) {
   const t = useTranslations('notifications');
   const [muted, setMuted] = React.useState(initial);
@@ -49,9 +52,11 @@ export function MuteMenu({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="outline"
-          size={iconOnly ? 'icon' : 'sm'}
+          variant={compact ? 'ghost' : 'outline'}
+          size={compact ? 'icon-sm' : iconOnly ? 'icon' : 'sm'}
           aria-label={iconOnly ? label : undefined}
+          title={compact ? label : undefined}
+          className={compact ? 'text-muted hover:text-fg' : undefined}
         >
           {muted ? <BellOff aria-hidden /> : <Bell aria-hidden />}
           {!iconOnly && (muted ? t('muted') : t('mute'))}

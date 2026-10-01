@@ -1,4 +1,4 @@
-import { planPerks } from '@magnox/shared';
+import { planLimits, planPerks } from '@magnox/shared';
 import { loadChatChannels, loadChatUnreads, loadCommunity } from '@/lib/community';
 import { ChannelSidebar } from '@/components/chat/sidebar';
 
@@ -15,9 +15,22 @@ export default async function ChatLayout({
   const [{ tree }, unreads] = await Promise.all([loadChatChannels(slug), loadChatUnreads(slug)]);
   return (
     // Fills what's left of the window under the community header (see DenseOnChat).
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-ui-lg border border-border bg-surface md:flex-row">
+    // A chat app inside the page: channels on the left, then the channel (and its members).
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-ui-lg border border-border bg-surface shadow-sm md:flex-row">
       <ChannelSidebar
         slug={slug}
+        communityName={data.community.name}
+        user={
+          data.user
+            ? {
+                id: data.user.id,
+                name: data.user.name,
+                username: data.user.username ?? null,
+                image: data.user.image ?? null,
+              }
+            : null
+        }
+        voiceLimit={planLimits(data.community.plan).voiceParticipants}
         categories={tree.categories
           .map((c) => ({
             id: c.id,

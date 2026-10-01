@@ -29,6 +29,18 @@
   --radius-ui-lg: calc(var(--mx-radius) * 1.5);
 }
 
+/*
+ * Chat's side panels (channels, members) sit a step darker than the messages, as in Discord and
+ * TeamSpeak. Mixed from the theme's own colours, so every community theme (and high contrast,
+ * where both are black) still works.
+ */
+@utility bg-rail {
+  background-color: color-mix(in oklab, var(--c-surface) 55%, var(--c-bg));
+}
+@utility bg-rail-deep {
+  background-color: color-mix(in oklab, var(--c-surface) 25%, var(--c-bg));
+}
+
 @layer mx-tokens {
   :root {
     --mx-density: 1;

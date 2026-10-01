@@ -4,7 +4,6 @@ import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import {
   AtSign,
-  CornerUpLeft,
   Flag,
   Link2,
   MoreHorizontal,
@@ -31,7 +30,7 @@ import { useChat } from './chat-context';
 import { ChatEditor, type ChatEditorHandle } from './lazy-chat-editor';
 import { Attachments, Embeds } from './attachments';
 import { ReactionBar, ReactionPicker } from './reaction-bar';
-import { formatTime, fullDateTime } from './format';
+import { formatStamp, formatTime, fullDateTime } from './format';
 import type { ChatMessage } from './types';
 import { RoleIcon, StyledName } from '@/components/community/role-decor';
 import { UserLink } from '@/components/profile/user-hover-card';
@@ -80,16 +79,20 @@ export const MessageItem = React.memo(function MessageItem({
       aria-labelledby={headerId}
       className={cn(
         'group relative scroll-mt-16 scroll-mb-16 px-4 outline-none focus-visible:bg-surface-2 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset',
-        grouped ? 'py-0.5' : 'mt-2 pt-1.5 pb-0.5',
-        'hover:bg-surface-2/60',
+        grouped ? 'py-0.5' : 'mt-3.5 pt-0.5 pb-0.5',
+        'hover:bg-fg/[0.035]',
         pinged && 'border-s-2 border-warning bg-warning/10 hover:bg-warning/15',
         highlighted && 'bg-primary/10 ring-2 ring-primary ring-inset',
         m.pending && 'opacity-70',
       )}
     >
       {m.replyTo && (
-        <p className="ms-12 mb-0.5 flex min-w-0 items-center gap-1 text-xs text-muted">
-          <CornerUpLeft className="size-3.5 shrink-0" aria-hidden />
+        <p className="relative ms-14 mb-0.5 flex min-w-0 items-center gap-1 text-[0.8125rem] text-muted">
+          {/* Discord's reply line, from the avatar up to what's being answered. */}
+          <span
+            aria-hidden
+            className="absolute -start-9 top-1/2 h-[0.65rem] w-8 rounded-ss-md border-s-2 border-t-2 border-border"
+          />
           {m.replyTo.deleted ? (
             <span className="italic">{t('replyDeleted')}</span>
           ) : (
@@ -108,12 +111,12 @@ export const MessageItem = React.memo(function MessageItem({
           )}
         </p>
       )}
-      <div className="flex gap-3">
-        <div className="w-9 shrink-0 pt-0.5">
+      <div className="flex gap-4">
+        <div className="w-10 shrink-0 pt-0.5">
           {grouped ? (
             <span
               aria-hidden
-              className="invisible block pt-0.5 text-end text-[10px] text-muted tabular-nums group-focus-within:visible group-hover:visible"
+              className="invisible block pt-1 text-end text-[10px] text-muted tabular-nums group-focus-within:visible group-hover:visible"
             >
               {time}
             </span>
@@ -121,7 +124,7 @@ export const MessageItem = React.memo(function MessageItem({
             <Avatar
               src={m.author?.image}
               name={name}
-              size={36}
+              size={40}
               presence={m.authorId}
               presenceLabelled={false}
             />
@@ -139,13 +142,14 @@ export const MessageItem = React.memo(function MessageItem({
                 tabIndex={ctl}
                 className="hover:underline"
               >
-                <StyledName name={name} style={nameStyle} className="font-semibold" />
+                <StyledName name={name} style={nameStyle} className="text-[1rem] font-semibold" />
               </UserLink>
             ) : (
-              <StyledName name={name} style={nameStyle} className="font-semibold" />
+              <StyledName name={name} style={nameStyle} className="text-[1rem] font-semibold" />
             )}
             {m.author?.roleName && (
-              <span className="inline-flex items-center gap-1 text-xs text-muted">
+              // A group badge beside the name, as TeamSpeak shows it.
+              <span className="inline-flex items-center gap-1 rounded-full bg-fg/[0.06] px-1.5 py-px text-[11px] font-medium text-muted">
                 {grouped ? null : m.author.roleIcon ? (
                   <RoleIcon url={m.author.roleIcon.url} />
                 ) : (
@@ -166,7 +170,12 @@ export const MessageItem = React.memo(function MessageItem({
               title={fullDateTime(m.createdAt, prefs.timeFormat)}
               className="text-xs text-muted"
             >
-              {time}
+              {grouped
+                ? time
+                : formatStamp(m.createdAt, prefs.timeFormat, {
+                    today: (time) => t('todayAt', { time }),
+                    yesterday: (time) => t('yesterdayAt', { time }),
+                  })}
             </time>
             {pinged && (
               <span className="inline-flex items-center gap-0.5 text-xs font-semibold">
@@ -232,7 +241,7 @@ export const MessageItem = React.memo(function MessageItem({
       {live && !editing && (
         <div
           className={cn(
-            'absolute end-3 -top-3 flex items-center gap-0.5 rounded-ui border border-border bg-surface p-0.5 opacity-0 shadow-sm transition-opacity group-focus-within:opacity-100 group-hover:opacity-100',
+            'absolute end-4 -top-4 flex items-center gap-0.5 rounded-ui border border-border bg-surface p-0.5 opacity-0 shadow-md transition-opacity group-focus-within:opacity-100 group-hover:opacity-100',
             picker && 'opacity-100',
           )}
         >

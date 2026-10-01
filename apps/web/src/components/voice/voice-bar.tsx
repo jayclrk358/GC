@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Headphones, HeadphoneOff, Mic, MicOff, PhoneOff, Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { useVoice } from './voice-provider';
 
 /**
@@ -19,11 +20,16 @@ export function VoiceBar({ slug }: { slug: string }) {
   if (!voice || voice.status === 'idle' || !voice.channelName) return null;
   const href = `/c/${slug}/chat/${voice.channelName}`;
   if (pathname === href) return null;
+  // In chat, the channel list shows the call (below md, where that list folds away, this does).
+  const inChat = pathname.startsWith(`/c/${slug}/chat`);
   return (
     <aside
       aria-label={t('barLabel')}
       // In the page (not floating) so it never covers the chat box or anything else.
-      className="mb-3 flex shrink-0 items-center gap-2 rounded-ui-lg border border-border bg-surface p-1.5 group-data-[dense=true]/dense:mb-2"
+      className={cn(
+        'mb-3 flex shrink-0 items-center gap-2 rounded-ui-lg border border-border bg-surface p-1.5 group-data-[dense=true]/dense:mb-2',
+        inChat && 'md:hidden',
+      )}
     >
       <Link
         href={href}

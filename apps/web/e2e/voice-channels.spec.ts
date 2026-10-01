@@ -100,7 +100,9 @@ test('separators, chat backgrounds and voice channels come with Plus', async ({
   });
 
   // Muting shows for everyone in the call.
-  const mute = page.getByRole('button', { name: 'Mute', exact: true });
+  const mute = page
+    .getByRole('group', { name: 'Call controls' })
+    .getByRole('button', { name: 'Mute', exact: true });
   await expect(mute).toHaveAttribute('aria-pressed', 'false');
   await expect(room.getByRole('img', { name: 'Microphone off' })).toHaveCount(0);
   await mute.click();

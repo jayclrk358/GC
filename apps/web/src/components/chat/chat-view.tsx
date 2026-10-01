@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { AtSign, Hash, Pin, Search, Users } from 'lucide-react';
+import { AtSign, Hash, Megaphone, Pin, Search, Users } from 'lucide-react';
 import type { MessagePage, MessageView } from '@magnox/core';
 import { docToText, mentionsMe, type ChatVerbosity, type RichNode } from '@magnox/shared';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,8 @@ import type { ImgSources } from '@/lib/media';
 import { ReportDialog } from '@/components/moderation/report-dialog';
 import { MuteMenu } from '@/components/notifications/mute-menu';
 import { useReconnect, useRoom } from '@/lib/realtime';
+import { useStored } from '@/lib/use-stored';
+import { cn } from '@/lib/utils';
 import {
   ackChannelAction,
   deleteMessageAction,
@@ -39,7 +41,7 @@ import { authorName } from './message-item';
 import { systemText } from './system-message';
 import { Composer, type ComposerHandle, type SendInput } from './composer';
 import { ChatAnnouncer, TypingIndicator, type AnnouncerHandle } from './announcer';
-import { ChatPanel, type PanelKind } from './panels';
+import { ChatPanel, MemberColumn, type PanelKind } from './panels';
 import { formatTime } from './format';
 import type { ChatChannelInfo, ChatMe, ChatMessage, ChatPerms } from './types';
 
@@ -85,6 +87,9 @@ export function ChatView(props: Props) {
   const [deleting, setDeleting] = React.useState<ChatMessage | null>(null);
   const [reporting, setReporting] = React.useState<ChatMessage | null>(null);
   const [panel, setPanel] = React.useState<PanelKind | null>(null);
+  // The member list beside the messages on wide screens, remembered open or closed.
+  const [membersPref, setMembersPref] = useStored('mx-chat-members', 'open');
+  const membersOpen = membersPref === 'open';
   const [pinsVersion, setPinsVersion] = React.useState(0);
   const [typers, setTypers] = React.useState<Record<string, { name: string; until: number }>>({});
   const [unseen, setUnseen] = React.useState(0);
@@ -493,44 +498,87 @@ export function ChatView(props: Props) {
   const panelButton = (kind: PanelKind, label: string, icon: React.ReactNode) => (
     <Button
       size="icon-sm"
-      variant={panel === kind ? 'secondary' : 'ghost'}
+      variant="ghost"
       aria-label={label}
+      title={label}
       aria-expanded={panel === kind}
       aria-controls={panel === kind ? 'chat-panel' : undefined}
       onClick={() => setPanel((p) => (p === kind ? null : kind))}
+      className={cn('text-muted hover:text-fg', panel === kind && 'bg-fg/10 text-fg')}
     >
       {icon}
     </Button>
   );
 
+  // Wide screens keep the member list beside the messages; narrower ones show it over them.
+  function toggleMembers() {
+    if (window.matchMedia('(min-width: 80rem)').matches) {
+      setMembersPref(membersOpen ? 'closed' : 'open');
+      setPanel((p) => (p === 'members' ? null : p));
+    } else setPanel((p) => (p === 'members' ? null : 'members'));
+  }
+
   return (
     <ChatProvider value={context}>
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <header className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2">
-          <h2 className="flex min-w-0 items-center gap-1.5 text-lg font-bold">
-            <Hash className="size-5 text-muted" aria-hidden />
+        <header className="flex min-h-12 shrink-0 items-center gap-2 border-b border-border/70 px-4 py-1.5 shadow-[0_1px_2px_rgb(0_0_0/0.06)]">
+          <h2 className="flex min-w-0 items-center gap-1.5 text-base font-bold">
+            <Hash className="size-6 shrink-0 text-muted" aria-hidden />
             <span className="truncate">{channel.name}</span>
           </h2>
           {channel.topic && (
-            <p className="hidden min-w-0 flex-1 truncate text-sm text-muted md:block">
-              {channel.topic}
-            </p>
+            <>
+              <span aria-hidden className="mx-1 hidden h-6 w-px shrink-0 bg-border md:block" />
+              <p className="hidden min-w-0 flex-1 truncate text-sm text-muted md:block">
+                {channel.topic}
+              </p>
+            </>
           )}
           <div className="ms-auto flex items-center gap-0.5">
             {panelButton('pins', t('pinsTitle'), <Pin aria-hidden />)}
-            {panelButton('search', t('searchTitle'), <Search aria-hidden />)}
             {me &&
               perms.member &&
               panelButton('mentions', t('mentionsTitle'), <AtSign aria-hidden />)}
-            {panelButton('members', t('membersTitle'), <Users aria-hidden />)}
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              aria-label={t('membersTitle')}
+              title={t('membersTitle')}
+              aria-pressed={panel === 'members' || membersOpen}
+              onClick={toggleMembers}
+              className={cn(
+                'text-muted hover:text-fg',
+                (panel === 'members' || membersOpen) && 'xl:bg-fg/10 xl:text-fg',
+                panel === 'members' && 'bg-fg/10 text-fg',
+              )}
+            >
+              <Users aria-hidden />
+            </Button>
+            {/* Search looks like a box on wide screens, as in Discord. */}
+            <button
+              type="button"
+              aria-label={t('searchTitle')}
+              aria-expanded={panel === 'search'}
+              aria-controls={panel === 'search' ? 'chat-panel' : undefined}
+              onClick={() => setPanel((p) => (p === 'search' ? null : 'search'))}
+              className="mx-1 hidden h-7 w-36 items-center justify-between rounded-ui-sm bg-bg/70 px-2 text-sm text-muted hover:text-fg lg:flex"
+            >
+              {t('searchShort')}
+              <Search aria-hidden className="size-4" />
+            </button>
+            <span className="lg:hidden">
+              {panelButton('search', t('searchTitle'), <Search aria-hidden />)}
+            </span>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
-                  size="sm"
+                  size="icon-sm"
                   variant="ghost"
                   aria-label={`${t('announceShort')}: ${t(`verbosity.${verbosity}`)}`}
+                  title={t('announceMenu')}
+                  className="text-muted hover:text-fg"
                 >
-                  {t('announceShort')}
+                  <Megaphone aria-hidden />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -556,6 +604,7 @@ export function ChatView(props: Props) {
                 name={`#${channel.name}`}
                 muted={props.muted}
                 iconOnly
+                compact
               />
             )}
           </div>
@@ -648,13 +697,15 @@ export function ChatView(props: Props) {
               <div className="px-4 pb-3">{props.notice}</div>
             )}
           </div>
-          {panel && (
+          {panel ? (
             <ChatPanel
               kind={panel}
               onClose={() => setPanel(null)}
               onOpen={openFromPanel}
               pinsVersion={pinsVersion}
             />
+          ) : (
+            membersOpen && <MemberColumn />
           )}
         </div>
         <ChatAnnouncer ref={announcer} verbosity={verbosity} />

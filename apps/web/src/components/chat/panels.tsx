@@ -12,6 +12,7 @@ import { StyledName } from '@/components/community/role-decor';
 import { RichText } from '@/components/rich-text/rich-text';
 import { useChat } from './chat-context';
 import { formatDay, formatTime } from './format';
+import { cn } from '@/lib/utils';
 import { systemText } from './system-message';
 
 export type PanelKind = 'pins' | 'search' | 'mentions' | 'members';
@@ -289,48 +290,99 @@ function MembersPanel() {
     return () => clearInterval(id);
   }, []);
   const { data, loading, error } = useJson<{
-    members: (ChatAuthor & { rolePosition: number })[];
-    total: number;
-  }>(`/api/communities/${communityId}/chat/online`, [tick]);
-  const list = data?.members ?? [];
+    groups: {
+      id: string;
+      name: string;
+      color: string | null;
+      members: (ChatAuthor & { online: boolean })[];
+      total: number;
+    }[];
+    online: number;
+    members: number;
+  }>(`/api/communities/${communityId}/chat/members`, [tick]);
+  const groups = data?.groups ?? [];
   return (
     <>
-      {data && (
-        <p className="px-2 pb-2 text-sm text-muted">{t('onlineCount', { count: data.total })}</p>
-      )}
       <Status
         loading={loading && !data}
         error={error}
-        empty={Boolean(data) && !list.length}
+        empty={Boolean(data) && !groups.length}
         emptyText={t('nobodyOnline')}
       />
-      <ul className="flex flex-col">
-        {list.map((m) => (
-          <li key={m.id} className="flex items-center gap-2 rounded-ui-sm px-2 py-1.5">
-            <Avatar src={m.image} name={m.nickname || m.name} size={28} presence={m.id} />
-            <span className="min-w-0">
-              {m.username ? (
-                <UserLink
-                  username={m.username}
-                  communityId={communityId}
-                  className="block truncate text-sm font-semibold hover:underline"
+      {groups.map((g) => {
+        const heading =
+          g.id === 'offline' ? t('offlineGroup') : g.id === 'online' ? t('onlineGroup') : g.name;
+        const headingId = `members-${g.id}`;
+        return (
+          <section key={g.id} aria-labelledby={headingId} className="mb-4">
+            {/* "Moderators — 3", as Discord does. */}
+            <h3
+              id={headingId}
+              className="px-2 pt-2 pb-1 text-[11px] font-bold tracking-wider text-muted uppercase"
+            >
+              {heading} — {g.total}
+            </h3>
+            <ul className="flex flex-col gap-px">
+              {g.members.map((m) => (
+                <li
+                  key={m.id}
+                  className={cn(
+                    'flex items-center gap-2.5 rounded-ui-sm px-2 py-1 hover:bg-fg/[0.07]',
+                    !m.online && 'opacity-55 hover:opacity-100',
+                  )}
                 >
-                  <StyledName name={m.nickname || m.name} style={m.nameStyle} />
-                </UserLink>
-              ) : (
-                <span className="block truncate text-sm font-semibold">
-                  <StyledName name={m.nickname || m.name} style={m.nameStyle} />
-                </span>
-              )}
-              {m.roleName && (
-                <span className="block truncate text-xs text-muted">
-                  <StyledName name={m.roleName} style={m.roleStyle} />
-                </span>
-              )}
-            </span>
-          </li>
-        ))}
-      </ul>
+                  <Avatar
+                    src={m.image}
+                    name={m.nickname || m.name}
+                    size={32}
+                    presence={m.online ? m.id : undefined}
+                  />
+                  <span className="min-w-0 leading-tight">
+                    {m.username ? (
+                      <UserLink
+                        username={m.username}
+                        communityId={communityId}
+                        className="block truncate text-[0.9375rem] font-medium hover:underline"
+                      >
+                        <StyledName
+                          name={m.nickname || m.name}
+                          style={m.online ? m.nameStyle : null}
+                        />
+                      </UserLink>
+                    ) : (
+                      <span className="block truncate text-[0.9375rem] font-medium">
+                        <StyledName name={m.nickname || m.name} style={null} />
+                      </span>
+                    )}
+                    {m.roleName && g.id !== 'offline' && (
+                      <span className="block truncate text-xs text-muted">{m.roleName}</span>
+                    )}
+                  </span>
+                  {!m.online && <span className="sr-only">{t('offlineSr')}</span>}
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      })}
+      {data && data.groups.some((g) => g.members.length < g.total) && (
+        <p className="px-2 text-xs text-muted">{t('membersMore')}</p>
+      )}
     </>
+  );
+}
+
+/** The member list beside the messages on wide screens (Discord's right-hand column). */
+export function MemberColumn() {
+  const t = useTranslations('chat');
+  return (
+    <aside
+      aria-label={t('membersTitle')}
+      className="hidden w-60 shrink-0 flex-col border-s border-border/60 bg-rail xl:flex"
+    >
+      <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
+        <MembersPanel />
+      </div>
+    </aside>
   );
 }

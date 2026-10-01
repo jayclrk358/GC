@@ -2077,7 +2077,7 @@
     "pinsTitle": "Pinned messages",
     "searchTitle": "Search messages",
     "mentionsTitle": "Mentions",
-    "membersTitle": "Online now",
+    "membersTitle": "Members",
     "closePanel": "Close panel",
     "noPins": "No pinned messages in this channel.",
     "noMentions": "Nobody has mentioned you recently.",
@@ -2116,7 +2116,17 @@
     "videoBadge": "Video",
     "uploadingFile": "Uploading {name}",
     "videoUnplayable": "Your browser can't play this video, so others probably can't either. Use an MP4 (H.264) or WebM file.",
-    "voiceChannelSr": "(voice channel)"
+    "voiceChannelSr": "(voice channel)",
+    "searchShort": "Search",
+    "onlineGroup": "Online",
+    "offlineGroup": "Offline",
+    "offlineSr": "(offline)",
+    "membersMore": "Not everyone is listed here. The Members page has the full list.",
+    "userSettings": "User settings",
+    "signInToTalk": "to chat and join voice.",
+    "voiceCount": "{count}/{limit}",
+    "todayAt": "Today at {time}",
+    "yesterdayAt": "Yesterday at {time}"
   },
   "serverPage": {
     "verified": "Verified",
@@ -2393,7 +2403,10 @@
       "notMember": "Join this community to use its voice channels.",
       "noPermission": "You don't have permission to join this voice channel.",
       "notSetUp": "Voice isn't set up on this site yet."
-    }
+    },
+    "live": "Live",
+    "deafenedLabel": "Deafened",
+    "callControls": "Call controls"
   },
   "events": {
     "title": "Events",

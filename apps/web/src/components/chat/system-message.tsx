@@ -44,6 +44,7 @@ export const SystemMessage = React.memo(function SystemMessage({
   const headerId = `msg-${m.id}-h`;
   const Icon = down ? ServerCrash : ServerCog;
   return (
+    // A quiet line with a coloured icon where an avatar would be, as Discord shows its notices.
     <article
       id={`msg-${m.id}`}
       data-message-id={m.id}
@@ -52,37 +53,36 @@ export const SystemMessage = React.memo(function SystemMessage({
       onFocus={(e) => e.target === e.currentTarget && onFocus(m.id)}
       aria-labelledby={headerId}
       className={cn(
-        'mx-4 mt-2 flex scroll-mt-16 scroll-mb-16 items-start gap-3 rounded-ui border-s-4 px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-primary',
-        down ? 'border-danger bg-danger/10' : 'border-success bg-success/10',
-        highlighted && 'ring-2 ring-primary',
+        'mt-1 flex scroll-mt-16 scroll-mb-16 items-start gap-4 px-4 py-1 outline-none hover:bg-fg/[0.035] focus-visible:bg-surface-2 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset',
+        highlighted && 'bg-primary/10 ring-2 ring-primary ring-inset',
       )}
     >
-      <Icon
-        className={cn('mt-0.5 size-5 shrink-0', down ? 'text-danger' : 'text-success')}
-        aria-hidden
-      />
-      <div className="min-w-0 flex-1">
-        <p id={headerId} className="text-sm">
-          <span className="sr-only">{t('systemNotice')}: </span>
-          <span className="font-semibold">{systemText(m, t)}</span>{' '}
-          <time
-            dateTime={m.createdAt}
-            title={fullDateTime(m.createdAt, prefs.timeFormat)}
-            className="text-xs text-muted"
-          >
-            {formatTime(m.createdAt, prefs.timeFormat)}
-          </time>
-        </p>
+      <span className="flex w-10 shrink-0 justify-center pt-0.5">
+        <Icon className={cn('size-5', down ? 'text-danger' : 'text-success')} aria-hidden />
+      </span>
+      <p id={headerId} className="min-w-0 flex-1 text-[0.9375rem] text-muted">
+        <span className="sr-only">{t('systemNotice')}: </span>
+        <span className="font-medium text-fg">{systemText(m, t)}</span>{' '}
+        <time
+          dateTime={m.createdAt}
+          title={fullDateTime(m.createdAt, prefs.timeFormat)}
+          className="ms-1 text-xs"
+        >
+          {formatTime(m.createdAt, prefs.timeFormat)}
+        </time>
         {serverId && (
-          <Link
-            href={`/servers/${serverId}`}
-            tabIndex={tabIndex === 0 ? 0 : -1}
-            className="text-xs font-semibold text-muted underline-offset-2 hover:text-fg hover:underline"
-          >
-            {t('viewServer')}
-          </Link>
+          <>
+            {' · '}
+            <Link
+              href={`/servers/${serverId}`}
+              tabIndex={tabIndex === 0 ? 0 : -1}
+              className="text-xs font-semibold underline-offset-2 hover:text-fg hover:underline"
+            >
+              {t('viewServer')}
+            </Link>
+          </>
         )}
-      </div>
+      </p>
     </article>
   );
 });

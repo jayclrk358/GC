@@ -86,6 +86,7 @@ export function VoiceProvider({
   const room = React.useRef<Room | null>(null);
   const audio = React.useRef<HTMLDivElement>(null);
   const deafRef = React.useRef(false);
+  const mutedRef = React.useRef(false);
   const mutedBeforeDeafen = React.useRef(false);
 
   useRoom(`community:${communityId}`, {
@@ -115,7 +116,8 @@ export function VoiceProvider({
       }),
     );
     setSharing(r.localParticipant.isScreenShareEnabled);
-    setMuted(!r.localParticipant.isMicrophoneEnabled);
+    mutedRef.current = !r.localParticipant.isMicrophoneEnabled;
+    setMuted(mutedRef.current);
   }, []);
 
   const reset = React.useCallback(() => {
@@ -125,8 +127,6 @@ export function VoiceProvider({
     setMembers([]);
     setScreens([]);
     setSharing(false);
-    setDeafened(false);
-    deafRef.current = false;
     if (audio.current) audio.current.replaceChildren();
   }, []);
 
@@ -142,6 +142,8 @@ export function VoiceProvider({
         if (channel?.id === channelId) return;
         leave();
       }
+      // Read before connecting: the room's events update the mute state as it connects.
+      const startMuted = mutedRef.current || deafRef.current;
       setChannel({ id: channelId, name: channelName });
       setStatus('connecting');
       const ticket = await joinVoiceAction(communityId, channelId);
@@ -188,7 +190,8 @@ export function VoiceProvider({
         await r.connect(ticket.data.url, ticket.data.token);
         await r.startAudio();
         setRights({ canSpeak: ticket.data.canSpeak, canShare: ticket.data.canShare });
-        if (ticket.data.canSpeak) {
+        // Muted (or deafened) beforehand from the user panel: join that way.
+        if (ticket.data.canSpeak && !startMuted) {
           await r.localParticipant.setMicrophoneEnabled(true).catch(() => {
             toast.error(t('noMicrophone'));
           });
@@ -205,7 +208,13 @@ export function VoiceProvider({
 
   const toggleMute = React.useCallback(() => {
     const r = room.current;
-    if (!r || !rights.canSpeak) return;
+    if (!r) {
+      // Not in a call: remember it for the next one.
+      mutedRef.current = !mutedRef.current;
+      setMuted(mutedRef.current);
+      return;
+    }
+    if (!rights.canSpeak) return;
     const on = !r.localParticipant.isMicrophoneEnabled;
     void r.localParticipant
       .setMicrophoneEnabled(on)
@@ -215,10 +224,10 @@ export function VoiceProvider({
 
   const toggleDeafen = React.useCallback(() => {
     const r = room.current;
-    if (!r) return;
     const next = !deafRef.current;
     deafRef.current = next;
     setDeafened(next);
+    if (!r) return; // Not in a call: the next one starts deafened (and so muted).
     for (const el of audio.current?.querySelectorAll('audio') ?? []) el.muted = next;
     // Like other voice apps, deafening also mutes you, and undeafening restores how you were.
     if (rights.canSpeak) {

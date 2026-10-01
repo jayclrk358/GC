@@ -1075,42 +1075,110 @@ export async function mentionsInbox(
   return views.map((m) => ({ message: m, channelName: names.get(m.channelId) ?? '' }));
 }
 
-/** Members who are connected right now (up to 100), highest role first. */
-export async function onlineMembers(
-  ctx: MemberContext,
-): Promise<{ members: (ChatAuthor & { rolePosition: number })[]; total: number }> {
+/** A section of the member list: a role shown separately, "Online", or "Offline". */
+export interface MemberListGroup {
+  /** A hoisted role's id, or 'online' / 'offline'. */
+  id: string;
+  /** The role's name ('' for the Online and Offline sections, which the page names). */
+  name: string;
+  color: string | null;
+  members: (ChatAuthor & { online: boolean })[];
+  /** Everyone in the section, when more exist than are listed. */
+  total: number;
+}
+
+/** How many people each section lists at most. */
+const MEMBER_LIST_MAX = 100;
+
+/**
+ * The chat's member list, as Discord shows it: people online under their highest role that's
+ * shown separately (or "Online"), highest roles first, then some of those offline.
+ */
+export async function memberList(ctx: MemberContext): Promise<{
+  groups: MemberListGroup[];
+  online: number;
+  members: number;
+}> {
   const all = await db
     .select({ userId: schema.members.userId })
     .from(schema.members)
     .where(eq(schema.members.communityId, ctx.community.id))
     .limit(2000);
-  if (!all.length) return { members: [], total: 0 };
+  if (!all.length) return { groups: [], online: 0, members: 0 };
   const flags = await cacheRedis().mget(...all.map((m) => `presence:${m.userId}`));
-  const online = all.filter((_, i) => flags[i]).map((m) => m.userId);
-  const authors = await loadAuthors(ctx.community.id, online.slice(0, 100));
-  const positions = online.length
-    ? await db
-        .select({
-          userId: schema.memberRoles.userId,
-          position: sql<number>`max(${schema.roles.position})::int`,
-        })
-        .from(schema.memberRoles)
-        .innerJoin(schema.roles, eq(schema.roles.id, schema.memberRoles.roleId))
-        .where(
-          and(
-            eq(schema.memberRoles.communityId, ctx.community.id),
-            inArray(schema.memberRoles.userId, online.slice(0, 100)),
-          ),
-        )
-        .groupBy(schema.memberRoles.userId)
-    : [];
-  const pos = new Map(positions.map((p) => [p.userId, p.position]));
-  const members = [...authors.values()]
-    .map((a) => ({ ...a, rolePosition: pos.get(a.id) ?? 0 }))
-    .sort(
-      (a, b) => b.rolePosition - a.rolePosition || displayName(a).localeCompare(displayName(b)),
-    );
-  return { members, total: online.length };
+  const onlineIds = all.filter((_, i) => flags[i]).map((m) => m.userId);
+  const offlineIds = all.filter((_, i) => !flags[i]).map((m) => m.userId);
+  const shownOnline = onlineIds.slice(0, MEMBER_LIST_MAX);
+  // Offline people are many and rarely looked for: only some, and only for smaller communities.
+  const shownOffline = all.length <= 1000 ? offlineIds.slice(0, MEMBER_LIST_MAX) : [];
+  const [authors, hoisted] = await Promise.all([
+    loadAuthors(ctx.community.id, [...shownOnline, ...shownOffline]),
+    shownOnline.length
+      ? db
+          .select({
+            userId: schema.memberRoles.userId,
+            roleId: schema.roles.id,
+            name: schema.roles.name,
+            color: schema.roles.color,
+            position: schema.roles.position,
+          })
+          .from(schema.memberRoles)
+          .innerJoin(schema.roles, eq(schema.roles.id, schema.memberRoles.roleId))
+          .where(
+            and(
+              eq(schema.memberRoles.communityId, ctx.community.id),
+              eq(schema.roles.hoist, true),
+              inArray(schema.memberRoles.userId, shownOnline),
+            ),
+          )
+      : [],
+  ]);
+  // Each online person's highest hoisted role.
+  const top = new Map<string, (typeof hoisted)[number]>();
+  for (const h of hoisted) {
+    const current = top.get(h.userId);
+    if (!current || h.position > current.position) top.set(h.userId, h);
+  }
+  const byName = (a: ChatAuthor, b: ChatAuthor) => displayName(a).localeCompare(displayName(b));
+  const sections = new Map<string, MemberListGroup & { position: number }>();
+  for (const id of shownOnline) {
+    const author = authors.get(id);
+    if (!author) continue;
+    const role = top.get(id);
+    const key = role?.roleId ?? 'online';
+    let section = sections.get(key);
+    if (!section) {
+      section = {
+        id: key,
+        name: role?.name ?? '',
+        color: role?.color ?? null,
+        members: [],
+        total: 0,
+        position: role?.position ?? -1,
+      };
+      sections.set(key, section);
+    }
+    section.members.push({ ...author, online: true });
+    section.total++;
+  }
+  const groups: MemberListGroup[] = [...sections.values()]
+    .sort((a, b) => b.position - a.position)
+    .map(({ position: _position, ...g }) => ({ ...g, members: g.members.sort(byName) }));
+  const offline = shownOffline
+    .map((id) => authors.get(id))
+    .filter((a): a is ChatAuthor => Boolean(a))
+    .sort(byName)
+    .map((a) => ({ ...a, online: false }));
+  if (offline.length) {
+    groups.push({
+      id: 'offline',
+      name: '',
+      color: null,
+      members: offline,
+      total: offlineIds.length,
+    });
+  }
+  return { groups, online: onlineIds.length, members: all.length };
 }
 
 // ── Worker: link previews ──────────────────────────────────────────────────

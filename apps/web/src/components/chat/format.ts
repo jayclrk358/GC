@@ -43,3 +43,19 @@ export function fullDateTime(
     hour12: timeFormat === 'auto' ? undefined : timeFormat === '12h',
   }).format(new Date(d));
 }
+
+/** "Today at 3:04 PM", "Yesterday at 3:04 PM" or "02/10/2026 3:04 PM" (as Discord writes it). */
+export function formatStamp(
+  d: string | Date,
+  timeFormat: Prefs['timeFormat'],
+  labels: { today: (time: string) => string; yesterday: (time: string) => string },
+  locale = 'en',
+): string {
+  const date = new Date(d);
+  const time = formatTime(date, timeFormat, locale);
+  const today = new Date();
+  const yesterday = new Date(today.getTime() - 86400000);
+  if (date.toDateString() === today.toDateString()) return labels.today(time);
+  if (date.toDateString() === yesterday.toDateString()) return labels.yesterday(time);
+  return `${new Intl.DateTimeFormat(locale, { dateStyle: 'short' }).format(date)} ${time}`;
+}

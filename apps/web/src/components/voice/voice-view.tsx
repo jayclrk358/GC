@@ -61,13 +61,18 @@ export function VoiceView({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <header className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2">
-        <h2 className="flex min-w-0 items-center gap-1.5 text-lg font-bold">
-          <Volume2 aria-hidden className="size-5 shrink-0 text-muted" />
+      <header className="flex min-h-12 flex-wrap items-center gap-2 border-b border-border/70 px-4 py-1.5 shadow-[0_1px_2px_rgb(0_0_0/0.06)]">
+        <h2 className="flex min-w-0 items-center gap-1.5 text-base font-bold">
+          <Volume2 aria-hidden className="size-6 shrink-0 text-muted" />
           <span className="truncate">{channel.name}</span>
           <span className="sr-only"> {t('voiceChannel')}</span>
         </h2>
-        {channel.topic && <p className="truncate text-sm text-muted">{channel.topic}</p>}
+        {channel.topic && (
+          <>
+            <span aria-hidden className="mx-1 h-6 w-px bg-border" />
+            <p className="min-w-0 flex-1 truncate text-sm text-muted">{channel.topic}</p>
+          </>
+        )}
       </header>
       <p role="status" className="sr-only">
         {announce}
@@ -85,32 +90,36 @@ export function VoiceView({
         {people.length ? (
           <ul
             aria-label={t('inChannel', { count: people.length })}
-            className="grid grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-3"
+            className="grid grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] gap-3"
           >
             {people.map((p) => (
+              // A video-call tile: dark, the avatar in the middle, the name in the corner, and a
+              // green outline while they talk.
               <li
                 key={p.id}
                 className={cn(
-                  'flex flex-col items-center gap-2 rounded-ui-lg border border-border bg-surface-2 p-4 text-center',
+                  'group relative flex aspect-video flex-col items-center justify-center rounded-ui-lg border-2 border-transparent bg-rail-deep transition-colors',
                   p.speaking && 'border-success',
                 )}
               >
                 <Avatar
                   src={p.image}
                   name={p.name}
-                  size={64}
+                  size={80}
                   className={cn(
                     'transition-shadow',
-                    p.speaking && 'ring-4 ring-success ring-offset-2 ring-offset-surface-2',
+                    p.speaking && 'ring-4 ring-success ring-offset-4 ring-offset-[var(--c-bg)]',
                   )}
                 />
-                <p className="flex max-w-full items-center gap-1 font-semibold">
+                <p className="absolute start-2 bottom-2 flex max-w-[calc(100%-1rem)] items-center gap-1 rounded-ui-sm bg-black/60 px-2 py-0.5 text-sm font-semibold text-white">
+                  {p.muted && (
+                    <MicOff aria-label={t('micOff')} role="img" className="size-3.5 text-red-300" />
+                  )}
                   <span className="truncate">{p.me ? t('you', { name: p.name }) : p.name}</span>
-                  {p.muted && <MicOff aria-label={t('micOff')} role="img" className="size-4" />}
                 </p>
                 {p.speaking && <span className="sr-only">{t('speaking')}</span>}
                 {connected && canModerate && !p.me && (
-                  <div className="flex gap-1">
+                  <div className="absolute end-2 top-2 flex gap-1 rounded-ui bg-surface/90 p-0.5 opacity-0 shadow transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
                     <Button
                       size="icon-sm"
                       variant="ghost"
@@ -139,7 +148,11 @@ export function VoiceView({
         )}
       </div>
 
-      <footer className="flex flex-wrap items-center justify-center gap-2 border-t border-border p-3">
+      <footer
+        role="group"
+        aria-label={t('callControls')}
+        className="flex flex-wrap items-center justify-center gap-2 border-t border-border/70 bg-rail p-3"
+      >
         {blocked ? (
           <Blocked reason={blocked} slug={slug} />
         ) : !here || voice.status === 'idle' ? (

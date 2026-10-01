@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
-import { AtSign, Film, ImagePlus, SendHorizontal, Type, X } from 'lucide-react';
+import { AtSign, Film, CirclePlus, SendHorizontal, Type, X } from 'lucide-react';
 import { docToText, MAX_MESSAGE_CHARS, VIDEO_TYPES, type RichNode } from '@magnox/shared';
 import { Button } from '@/components/ui/button';
 import { discardUpload, uploadImage, UploadProgress } from '@/components/upload/image-upload';
@@ -243,7 +243,7 @@ export const Composer = React.forwardRef<
   return (
     <div className="px-4 pt-1 pb-3">
       {replyTo && (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-t-ui border border-b-0 border-border bg-surface-2 px-3 py-1.5 text-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-t-ui-lg border border-b-0 border-muted/60 bg-rail px-3 py-1.5 text-sm">
           <span className="min-w-0 truncate">{t('replyingTo', { name: authorName(replyTo) })}</span>
           <span className="flex items-center gap-1">
             <Button
@@ -268,7 +268,8 @@ export const Composer = React.forwardRef<
       )}
       <div
         className={cn(
-          'rounded-ui border border-muted/70 bg-surface focus-within:border-primary',
+          // Discord's rounded, filled message box, with a border you can still see (3:1).
+          'rounded-ui-lg border border-muted/60 bg-surface-2 transition-colors focus-within:border-primary',
           replyTo && 'rounded-t-none',
         )}
       >
@@ -359,10 +360,12 @@ export const Composer = React.forwardRef<
                 size="icon"
                 variant="ghost"
                 aria-label={t('attach')}
+                title={t('attach')}
                 disabled={attachments.length >= perms.maxAttachments}
                 onClick={() => document.getElementById(fileInputId)?.click()}
+                className="text-muted hover:text-fg [&_svg]:size-6"
               >
-                <ImagePlus aria-hidden />
+                <CirclePlus aria-hidden />
               </Button>
               <input
                 id={fileInputId}
