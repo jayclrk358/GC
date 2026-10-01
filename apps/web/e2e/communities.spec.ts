@@ -183,6 +183,7 @@ test.describe('community hubs', () => {
     await guest.getByLabel('Username').fill(guestUser.username);
     await guest.getByLabel('Email').fill(guestUser.email);
     await guest.getByLabel('Password').fill(guestUser.password);
+    await guest.getByRole('checkbox', { name: /agree to the Terms of Service/ }).check();
     await guest.getByRole('button', { name: 'Create account' }).click();
     await guest.getByRole('button', { name: 'Accept invite' }).click();
     await guest.waitForURL(new RegExp(`/c/${slug}$`));
