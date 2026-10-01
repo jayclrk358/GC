@@ -1,4 +1,9 @@
-import { AccessToken, TrackSource, WebhookReceiver, type ParticipantInfo } from 'livekit-server-sdk';
+import {
+  AccessToken,
+  TrackSource,
+  WebhookReceiver,
+  type ParticipantInfo,
+} from 'livekit-server-sdk';
 import { and, eq } from 'drizzle-orm';
 import { db, schema } from '@magnox/db';
 import { has, Permission, planLimits, planPerks } from '@magnox/shared';

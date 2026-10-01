@@ -1,0 +1,44 @@
+name: Windows app
+
+# Builds the Magnox for Windows installer whenever the app changes, or on demand from the
+# Actions tab (optionally for another Magnox site). Download it from the run's artifacts.
+on:
+  push:
+    paths: ['apps/desktop/**', '.github/workflows/desktop.yml']
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'Magnox site the app opens (leave empty for the one in apps/desktop/package.json)'
+        required: false
+
+jobs:
+  build:
+    name: Build the Windows installer
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: apps/desktop
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/desktop/package-lock.json
+      - run: npm ci
+      - name: Build
+        env:
+          MAGNOX_URL: ${{ inputs.url }}
+        run: |
+          if [ -n "$MAGNOX_URL" ]; then
+            npm run dist -- "-c.extraMetadata.magnoxUrl=$MAGNOX_URL"
+          else
+            npm run dist
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Magnox-Windows-installer
+          path: apps/desktop/release/Magnox-Setup-*.exe
+          if-no-files-found: error
+          retention-days: 30

@@ -18,3 +18,5 @@ next-env.d.ts
 
 # Redis snapshots from running redis-server in the repo folder
 dump.rdb
+# Windows app builds
+apps/desktop/release/

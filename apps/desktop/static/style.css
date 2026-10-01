@@ -1,0 +1,119 @@
+/* The app's own pages: the screen picker, server address and "can't connect" pages. */
+:root {
+  color-scheme: light dark;
+  --bg: #f3f4fb;
+  --surface: #ffffff;
+  --text: #12131c;
+  --muted: #4a4d63;
+  --border: #c9cbdc;
+  --primary: #5b21b6;
+  --on-primary: #ffffff;
+  --danger: #b42318;
+  --focus: #5b21b6;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #07080f;
+    --surface: #12131f;
+    --text: #f1f1f8;
+    --muted: #b4b6cc;
+    --border: #34364c;
+    --primary: #b794ff;
+    --on-primary: #12062e;
+    --danger: #ff8a80;
+    --focus: #c9a3ff;
+  }
+}
+@media (forced-colors: active) {
+  :root {
+    --focus: Highlight;
+  }
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+main {
+  padding: 24px;
+}
+h1 {
+  margin: 0 0 8px;
+  font-size: 1.4rem;
+}
+p {
+  margin: 0 0 12px;
+}
+.muted {
+  color: var(--muted);
+}
+button,
+input {
+  font: inherit;
+}
+button {
+  min-height: 36px;
+  padding: 6px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+button.primary {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--on-primary);
+  font-weight: 600;
+}
+button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+input[type='text'] {
+  width: 100%;
+  min-height: 38px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+}
+label {
+  font-weight: 600;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+.error {
+  color: var(--danger);
+  font-weight: 600;
+}
+.error:empty {
+  display: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  button {
+    transition: filter 0.15s;
+  }
+  button:not(:disabled):hover {
+    filter: brightness(1.08);
+  }
+}
+.actions .start {
+  margin-inline-end: auto;
+}

@@ -29,6 +29,7 @@ Magnox is built around two ideas: **deep customisation** and **first-class acces
 apps/web          Next.js 16 (App Router): UI, route handlers, server actions
 apps/realtime     Socket.IO server: authenticated room subscriptions, presence, typing
 apps/worker       BullMQ workers: game server polling, rollups, notifications, maintenance
+apps/desktop      Magnox for Windows: the website in its own window (Electron, built with npm)
 packages/shared   Isomorphic domain logic: permissions, theme tokens + contrast, prefs, rich text
 packages/db       Drizzle ORM schema, migrations and seed data (Postgres 16)
 packages/core     Server-side services: access control, rate limits, storage, email, queues
@@ -193,6 +194,39 @@ docker compose up -d --build
   if LiveKit no longer runs next to the app.
 
 Without the keys, voice channels say that voice isn't set up yet.
+
+## Magnox for Windows
+
+`apps/desktop` is a Windows app that shows your Magnox site in its own window. None of the site is
+bundled into it, so **every update to the website appears in the app straight away**, with
+nothing to reinstall. It adds what a desktop app should have:
+
+- Voice channels work fully: microphone, and screen sharing with a picker for the screen or window
+  to share (plus, optionally, the computer's sound).
+- Windows notifications, a taskbar progress bar for downloads, spellchecking with suggestions,
+  and a right-click menu (copy, paste, copy link, save image).
+- Back and forward with Alt+← / Alt+→ or the mouse's side buttons, zoom with Ctrl+= / Ctrl+-,
+  F11 for full screen. Press Alt for the menu.
+- It remembers its size and position, opens only one copy, and shows a "Can't reach Magnox"
+  page that retries by itself when the site is down or you're offline.
+- Links to other sites open in your normal browser. Sign-in (Discord, Twitch, Steam) and Stripe
+  checkout stay in the app, since they send you back to Magnox.
+
+**Getting the installer:** every push that changes `apps/desktop` builds `Magnox-Setup-<version>.exe`
+on GitHub (Actions → **Windows app** → the latest run → **Artifacts**). You can also start a build
+there by hand, optionally for another site address. To build it yourself on Windows:
+`cd apps/desktop`, `npm install`, `npm run dist`; the installer lands in `apps/desktop/release`.
+
+- **Which site it opens:** `magnoxUrl` in `apps/desktop/package.json`. People can point their copy
+  elsewhere from the app's menu (Alt → File → Server address…).
+- **Updating the app itself** is only needed for changes in `apps/desktop` (rare): raise
+  `version` in its `package.json` and build again. The new installer updates the installed app in
+  place and keeps people signed in.
+- **Unsigned:** Windows SmartScreen warns about apps without a code-signing certificate ("More
+  info" → "Run anyway"). A certificate (for example through Azure Trusted Signing) removes the
+  warning; electron-builder signs with it during the build.
+- **Google sign-in** may refuse to work inside apps like this one (Google blocks embedded browsers).
+  Email, Discord, Twitch and Steam sign-in work.
 
 ## Scripts
 

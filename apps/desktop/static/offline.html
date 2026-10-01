@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'"
+    />
+    <title>Can't reach Magnox</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="offline.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Can't reach Magnox</h1>
+      <p>Check your internet connection. Magnox will open as soon as it can be reached.</p>
+      <p class="muted" id="detail"></p>
+      <p class="muted" id="countdown"></p>
+      <p class="muted" role="status" id="status"></p>
+      <div class="actions">
+        <button type="button" id="server">Server address…</button>
+        <button type="button" class="primary" id="retry">Try again</button>
+      </div>
+    </main>
+    <script src="offline.js"></script>
+  </body>
+</html>

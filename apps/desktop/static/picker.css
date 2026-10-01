@@ -1,0 +1,59 @@
+fieldset {
+  margin: 0 0 16px;
+  padding: 0;
+  border: 0;
+}
+legend {
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+.source {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  font-weight: 400;
+  cursor: pointer;
+}
+.source:has(input:checked) {
+  border-color: var(--primary);
+}
+.source:has(input:focus-visible) {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.source input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.source img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: contain;
+  border-radius: 6px;
+  background: #000;
+}
+.source span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sound {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 400;
+}
+.sound input {
+  width: 18px;
+  height: 18px;
+}

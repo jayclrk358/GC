@@ -1,0 +1,47 @@
+{
+  "name": "magnox-desktop",
+  "productName": "Magnox",
+  "version": "1.0.0",
+  "description": "Magnox for Windows: the Magnox website in its own window.",
+  "author": "Magnox",
+  "private": true,
+  "main": "dist/main.js",
+  "magnoxUrl": "https://magnoxresources.com",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "npm run build && electron .",
+    "dist": "npm run build && electron-builder --win --x64 --publish never"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "electron": "^44.5.1",
+    "electron-builder": "^26.15.3",
+    "typescript": "~6.0.3"
+  },
+  "build": {
+    "appId": "com.magnox.desktop",
+    "productName": "Magnox",
+    "copyright": "Magnox",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "publish": null,
+    "files": [
+      "dist/**/*.js",
+      "static/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "artifactName": "Magnox-Setup-${version}.exe",
+      "shortcutName": "Magnox",
+      "uninstallDisplayName": "Magnox"
+    }
+  }
+}

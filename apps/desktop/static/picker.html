@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'; img-src data:"
+    />
+    <title>Share your screen</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="picker.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Share your screen</h1>
+      <p class="muted">Choose what everyone in the call will see.</p>
+      <p class="error" id="empty" hidden>
+        Nothing to share was found. Check that Magnox may record your screen in Windows settings
+        (Privacy &amp; security), then try again.
+      </p>
+      <form id="form">
+        <fieldset>
+          <legend>Screens</legend>
+          <div class="grid" id="screens"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Windows</legend>
+          <div class="grid" id="windows"></div>
+        </fieldset>
+        <label class="sound" id="sound-row" hidden>
+          <input type="checkbox" id="sound" disabled />
+          Also share your computer's sound (screens only)
+        </label>
+        <div class="actions">
+          <button type="button" id="cancel">Cancel</button>
+          <button type="submit" class="primary" id="share" disabled>Share</button>
+        </div>
+      </form>
+    </main>
+    <script src="picker.js"></script>
+  </body>
+</html>
