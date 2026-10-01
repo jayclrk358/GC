@@ -23,3 +23,4 @@ export * from './media';
 export * from './events';
 export * from './events-schema';
 export * from './applications';
+export * from './automod';

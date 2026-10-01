@@ -7,6 +7,7 @@ import { X } from 'lucide-react';
 import { docToText, emptyDoc, type RichNode } from '@magnox/shared';
 import { Button } from '@/components/ui/button';
 import { FormError } from '@/components/auth/form-error';
+import { Alert } from '@/components/ui/misc';
 import { RichTextEditor } from '@/components/rich-text/lazy-editor';
 import { createReplyAction } from '@/app/actions/forum';
 import { useThread } from './thread-context';
@@ -32,6 +33,8 @@ export function ReplyComposer({
   const [error, setError] = React.useState<string | null>(null);
   const [pending, setPending] = React.useState(false);
   const [status, setStatus] = React.useState('');
+  /** Automod is holding the last reply for a moderator. */
+  const [held, setHeld] = React.useState<string | null>(null);
 
   async function submit() {
     if (!docToText(body).trim() && !JSON.stringify(body).includes('"image"')) {
@@ -40,11 +43,20 @@ export function ReplyComposer({
     }
     setPending(true);
     setError(null);
+    setHeld(null);
     const r = await createReplyAction(communityId, threadId, {
       body,
       replyToId: replyTo?.postId ?? null,
     });
     setPending(false);
+    if (!r.ok && r.code === 'held') {
+      // Automod kept it back for a moderator to approve.
+      setBody(emptyDoc());
+      setKey((k) => k + 1);
+      setReplyTo(null);
+      setHeld(r.error);
+      return;
+    }
     if (!r.ok) {
       setError(r.error);
       return;
@@ -83,6 +95,11 @@ export function ReplyComposer({
         </p>
       )}
       <FormError message={error} />
+      {held && (
+        <Alert tone="info" live>
+          {held}
+        </Alert>
+      )}
       <RichTextEditor
         key={key}
         label={t('replyLabel')}

@@ -354,6 +354,13 @@ export function ChatView(props: Props) {
       dispatch({ type: 'sent', nonce, message: r.data });
       return { ok: true };
     }
+    if (r.code === 'held') {
+      // Automod kept it back for a moderator: it isn't in the channel (yet), so don't show it.
+      retryInputs.current.delete(nonce);
+      dispatch({ type: 'discard', nonce });
+      toast.info(r.error, { duration: 8000 });
+      return { ok: true };
+    }
     dispatch({ type: 'failed', nonce, error: r.error });
     return { ok: false, retryAfter: r.retryAfter };
   }

@@ -83,6 +83,8 @@ export function ThreadComposer({
   const [error, setError] = React.useState<string | null>(null);
   const [fields, setFields] = React.useState<Record<string, string>>({});
   const [pending, setPending] = React.useState(false);
+  /** Automod is holding the thread for a moderator to approve. */
+  const [held, setHeld] = React.useState<string | null>(null);
 
   // Autosave drafts to this browser once the writer has started (or chosen about the old draft).
   React.useEffect(() => {
@@ -136,6 +138,16 @@ export function ThreadComposer({
       flairId: flairId || null,
       poll: poll ? { ...poll, options: poll.options.map((o) => o.trim()).filter(Boolean) } : null,
     });
+    if (!r.ok && r.code === 'held') {
+      setPending(false);
+      try {
+        window.localStorage.removeItem(draftKey(channelId));
+      } catch {
+        /* ignore */
+      }
+      setHeld(r.error);
+      return;
+    }
     if (!r.ok) {
       setPending(false);
       setError(r.error);
@@ -148,6 +160,14 @@ export function ThreadComposer({
       /* ignore */
     }
     router.push(`/c/${r.data.slug}/t/${r.data.id}`);
+  }
+
+  if (held) {
+    return (
+      <Alert tone="info" live title={t('heldTitle')}>
+        {held}
+      </Alert>
+    );
   }
 
   return (

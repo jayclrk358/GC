@@ -708,7 +708,9 @@
       "bans": "Bans",
       "billing": "Plan & billing",
       "applications": "Applications",
-      "onboarding": "Welcome steps"
+      "onboarding": "Welcome steps",
+      "automod": "Automod",
+      "modQueue": "Mod queue"
     },
     "general": {
       "title": "General",
@@ -760,7 +762,8 @@
     "openReports": "open reports",
     "playUrl": "Play link",
     "playUrlHint": "Where people can play, such as your Roblox experience page. Shows a Play button on your community. Leave blank for none.",
-    "pendingApplications": "waiting for review"
+    "pendingApplications": "waiting for review",
+    "heldPosts": "posts waiting for review"
   },
   "theme": {
     "title": "Appearance",
@@ -1594,7 +1597,8 @@
     "timedOutTitle": "You're timed out",
     "timedOutBody": "A moderator has paused your posting in this community until {date}. You can still read.",
     "rulesFirst": "Agree to the rules in the welcome steps to start posting.",
-    "rulesFirstLink": "Read the rules"
+    "rulesFirstLink": "Read the rules",
+    "heldTitle": "Waiting for a moderator"
   },
   "report": {
     "title": "Report {what}",
@@ -2660,5 +2664,110 @@
       "save": "Save welcome steps",
       "saved": "Welcome steps saved"
     }
+  },
+  "automod": {
+    "title": "Automod",
+    "description": "Rules that check posts before anyone sees them, in chat and the forum.",
+    "exemptNote": "Moderators (anyone who can manage messages) and the roles you pick at the end are never checked.",
+    "actions": {
+      "block": "Stop it, and tell them why",
+      "hold": "Hold it for a moderator to approve"
+    },
+    "words": {
+      "title": "Blocked words",
+      "description": "Catches words even when they’re written with look-alike letters, like fr33 or sp@m.",
+      "enabled": "Check for blocked words",
+      "list": "Words and phrases",
+      "listHint": "One per line. Put * at the start or end to catch longer words too: scam* also catches scammer.",
+      "action": "When a post has one of these words"
+    },
+    "links": {
+      "title": "Links",
+      "description": "Only let people link to sites you trust. Links to this site are always fine.",
+      "enabled": "Only allow links to these sites",
+      "allow": "Sites that are fine",
+      "allowHint": "One per line, like youtube.com. Subdomains are included.",
+      "action": "When a post links anywhere else"
+    },
+    "invites": {
+      "enabled": "Catch invite links to other groups",
+      "description": "Discord, Guilded, Telegram and WhatsApp invites.",
+      "action": "When a post has an invite link"
+    },
+    "spam": {
+      "title": "Spam",
+      "description": "Stops floods of messages, mass mentions and the same thing over and over.",
+      "enabled": "Stop spam",
+      "maxMentions": "Most mentions in one post",
+      "maxPerTenSeconds": "Most messages in 10 seconds",
+      "timeoutMinutes": "Time out for (minutes)",
+      "timeoutHint": "For going over the message limit. 0 to just stop the messages.",
+      "duplicates": "Stop repeats",
+      "duplicatesHint": "The same message three times in a minute."
+    },
+    "newMembers": {
+      "title": "New members",
+      "description": "Brand new accounts and people who’ve only just joined are where most trouble comes from.",
+      "enabled": "Check new members’ posts",
+      "accountAge": "Account at least (hours old)",
+      "memberFor": "Member for at least (minutes)",
+      "action": "What happens to their posts until then"
+    },
+    "joins": {
+      "title": "Raid protection",
+      "description": "When lots of people join at once, pause joining for a while and let the team know.",
+      "enabled": "Pause joining during a rush",
+      "maxPerMinute": "Most joins in a minute",
+      "pauseMinutes": "Pause for (minutes)",
+      "paused": "Joining is paused until {until}",
+      "resume": "Let people join again",
+      "resumed": "People can join again"
+    },
+    "exempt": {
+      "title": "Roles automod leaves alone",
+      "description": "Trusted roles, like regulars or helpers."
+    },
+    "save": "Save automod",
+    "saved": "Automod saved"
+  },
+  "modQueue": {
+    "title": "Mod queue",
+    "description": "Posts automod held back. Approve them to post them as they were written.",
+    "rulesLink": "Change the rules",
+    "filter": "Show posts",
+    "statuses": {
+      "pending": "Waiting",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "emptyPending": "Nothing waiting. All clear.",
+    "empty": "Nothing here yet.",
+    "kinds": {
+      "message": "Chat message",
+      "thread": "New thread",
+      "reply": "Reply"
+    },
+    "inChannel": "in #{name}",
+    "inForum": "in {name}",
+    "inThread": "in “{title}”",
+    "rules": {
+      "words": "Blocked word",
+      "links": "Link",
+      "invites": "Invite link",
+      "mentions": "Too many mentions",
+      "newMember": "New member"
+    },
+    "content": "What they wrote",
+    "noText": "(No text, only attachments)",
+    "approve": "Approve",
+    "reject": "Reject",
+    "approveFor": "Approve post by {name}",
+    "rejectFor": "Reject post by {name}",
+    "approvedToast": "Posted {name}’s post",
+    "rejectedToast": "Rejected {name}’s post",
+    "approvedBy": "Approved by {name} · {when}",
+    "rejectedBy": "Rejected by {name} · {when}",
+    "someone": "someone",
+    "view": "View post"
   }
 }

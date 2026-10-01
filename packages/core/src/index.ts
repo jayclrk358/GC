@@ -42,3 +42,5 @@ export * from './services/billing';
 export * from './services/voice';
 export * from './services/events';
 export * from './services/applications';
+export * from './services/automod';
+export * from './services/mod-queue';

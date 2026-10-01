@@ -127,6 +127,13 @@
       "when": 1790887106160,
       "tag": "0017_applications",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790889026908,
+      "tag": "0018_automod",
+      "breakpoints": true
     }
   ]
 }

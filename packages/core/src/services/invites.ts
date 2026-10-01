@@ -5,6 +5,7 @@ import { requireMember, type MemberContext } from '../access';
 import { AppError, forbidden, notFound, unauthorized } from '../errors';
 import { enforceRateLimit } from '../ratelimit';
 import { audit } from './audit';
+import { checkJoinAllowed } from './automod';
 import { addMember } from './members';
 
 export async function createInvite(ctx: MemberContext, raw: unknown) {
@@ -123,6 +124,11 @@ export async function acceptInvite(userId: string | null, code: string): Promise
       where: eq(schema.communities.id, invite.communityId),
     });
     if (!community || community.deletedAt) throw notFound('Community');
+    const already = await tx.query.members.findFirst({
+      where: and(eq(schema.members.communityId, community.id), eq(schema.members.userId, userId)),
+      columns: { userId: true },
+    });
+    if (!already) await checkJoinAllowed(community);
     const added = await addMember(tx, community.id, userId);
     if (added) {
       await tx

@@ -7,6 +7,7 @@ import { cached } from '../cache';
 import { communityChanged } from '../emitter';
 import { cacheRedis } from '../redis';
 import { audit } from './audit';
+import { checkJoinAllowed } from './automod';
 import { removeFromVoice } from './voice-rooms';
 
 async function isBanned(tx: DbOrTx, communityId: string, userId: string): Promise<boolean> {
@@ -68,6 +69,7 @@ export async function joinCommunity(ctx: MemberContext): Promise<void> {
     throw forbidden('This community requires an application to join.');
   }
   await enforceRateLimit(`join:${ctx.userId}`, 30, 3600);
+  await checkJoinAllowed(ctx.community);
   await db.transaction(async (tx) => {
     await addMember(tx, ctx.community.id, ctx.userId!);
   });

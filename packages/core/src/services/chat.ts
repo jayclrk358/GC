@@ -47,6 +47,7 @@ import { cacheRedis } from '../redis';
 import { rooms } from '../rooms';
 import { mediaUrl } from '../storage';
 import { audit } from './audit';
+import { enforceAutomod } from './automod';
 import { communityLimits } from './billing';
 import { getChannelById, listVisibleChannels, type ChannelView } from './channels';
 import { queueMediaCleanup } from './media-cleanup';
@@ -528,6 +529,8 @@ export async function sendMessage(
   ctx: MemberContext,
   channelId: string,
   raw: unknown,
+  /** A moderator approved it from the mod queue: it was checked and limited when first sent. */
+  opts: { approved?: boolean } = {},
 ): Promise<MessageView> {
   if (!ctx.userId) throw unauthorized();
   const input = messageInputSchema.parse(raw);
@@ -561,8 +564,10 @@ export async function sendMessage(
   if (!content.trim() && !input.attachments.length) {
     throw new AppError('validation', 'Write something first.', { fields: { body: 'Empty' } });
   }
-  await enforceRateLimit(`chat:${ctx.userId}`, 10, 10, "You're sending messages too quickly.");
-  await enforceChatSlowmode(ctx, channel);
+  if (!opts.approved) {
+    await enforceRateLimit(`chat:${ctx.userId}`, 10, 10, "You're sending messages too quickly.");
+    await enforceChatSlowmode(ctx, channel);
+  }
 
   let replyAuthor: string | null = null;
   if (input.replyToId) {
@@ -586,6 +591,22 @@ export async function sendMessage(
     !mentions.mentionUserIds.includes(replyAuthor)
   ) {
     mentions.mentionUserIds.push(replyAuthor);
+  }
+  if (!opts.approved) {
+    await enforceAutomod(ctx, {
+      kind: 'message',
+      channelId: channel.id,
+      perms: BigInt(channel.perms),
+      text: content,
+      links: extractLinks(body, 50),
+      mentions: collectMentions(body).length,
+      payload: {
+        body,
+        attachments: input.attachments,
+        replyToId: input.replyToId,
+        mentionReplied: input.mentionReplied,
+      },
+    });
   }
 
   const id = newId();
@@ -708,6 +729,16 @@ export async function editMessage(
   }
   await enforceRateLimit(`chat-edit:${ctx.userId}`, 20, 60);
   const mentions = await resolveChatMentions(ctx, channel, body);
+  await enforceAutomod(ctx, {
+    kind: 'message',
+    channelId: channel.id,
+    perms: BigInt(channel.perms),
+    text: content,
+    links: extractLinks(body, 50),
+    mentions: collectMentions(body).length,
+    payload: {},
+    edit: true,
+  });
   // Keep a reply ping that was already there.
   const replyPing = row.mentionUserIds.filter(
     (id) => !collectMentions(row.body).some((m) => m.id === id),

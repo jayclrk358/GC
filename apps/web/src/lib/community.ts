@@ -49,6 +49,7 @@ export const loadCommunity = cache(async (slug: string) => {
     viewAudit: has(ctx.base, Permission.VIEW_AUDIT_LOG),
     manageChannels: has(ctx.base, Permission.MANAGE_CHANNELS),
     manageReports: has(ctx.base, Permission.MANAGE_REPORTS),
+    manageMessages: has(ctx.base, Permission.MANAGE_MESSAGES),
     ban: has(ctx.base, Permission.BAN_MEMBERS),
     kick: has(ctx.base, Permission.KICK_MEMBERS),
     timeout: has(ctx.base, Permission.TIMEOUT_MEMBERS),
@@ -62,6 +63,7 @@ export const loadCommunity = cache(async (slug: string) => {
     perms.viewAudit ||
     perms.manageChannels ||
     perms.manageReports ||
+    perms.manageMessages ||
     perms.ban ||
     perms.kick ||
     perms.timeout ||

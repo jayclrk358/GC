@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { openReportCount, pendingApplicationCount } from '@magnox/core';
+import { heldPostCount, openReportCount, pendingApplicationCount } from '@magnox/core';
 import { loadCommunityForSettings } from '@/lib/community';
 import { NavLink } from '@/components/shell/nav-link';
 import { BackLink } from '@/components/ui/back-link';
@@ -16,9 +16,10 @@ export default async function CommunitySettingsLayout({
   const { perms, ctx, community } = await loadCommunityForSettings(slug);
   const t = await getTranslations('csettings');
   const tBack = await getTranslations('common');
-  const [reports, applications] = await Promise.all([
+  const [reports, applications, held] = await Promise.all([
     perms.manageReports ? openReportCount(ctx) : 0,
     perms.reviewApplications ? pendingApplicationCount(ctx) : 0,
+    perms.manageMessages ? heldPostCount(ctx) : 0,
   ]);
   const base = `/c/${slug}/settings`;
   const links = [
@@ -43,6 +44,13 @@ export default async function CommunitySettingsLayout({
       badgeLabel: t('pendingApplications'),
     },
     {
+      href: `${base}/mod-queue`,
+      label: t('nav.modQueue'),
+      show: perms.manageMessages,
+      badge: held,
+      badgeLabel: t('heldPosts'),
+    },
+    {
       href: `${base}/reports`,
       label: t('nav.reports'),
       show: perms.manageReports,
@@ -50,6 +58,7 @@ export default async function CommunitySettingsLayout({
       badgeLabel: t('openReports'),
     },
     { href: `${base}/bans`, label: t('nav.bans'), show: perms.ban },
+    { href: `${base}/automod`, label: t('nav.automod'), show: perms.manage },
     {
       href: `${base}/invites`,
       label: t('nav.invites'),

@@ -5,7 +5,9 @@ export type ErrorCode =
   | 'not_found'
   | 'conflict'
   | 'rate_limited'
-  | 'validation';
+  | 'validation'
+  /** Not an error as such: it was received, and waits for a moderator (automod). */
+  | 'held';
 
 const STATUS: Record<ErrorCode, number> = {
   bad_request: 400,
@@ -15,6 +17,7 @@ const STATUS: Record<ErrorCode, number> = {
   conflict: 409,
   rate_limited: 429,
   validation: 422,
+  held: 202,
 };
 
 /** Errors that are safe to show to users. Anything else is logged and shown generically. */

@@ -1,7 +1,9 @@
 import { and, asc, count, desc, eq, inArray, isNull, lt, or, sql, type SQL } from 'drizzle-orm';
 import { db, schema, type Tx } from '@magnox/db';
 import {
+  collectMentions,
   docToText,
+  extractLinks,
   flairInputSchema,
   has,
   type NameStyleView,
@@ -26,6 +28,7 @@ import { realtime } from '../emitter';
 import { enforceRateLimit } from '../ratelimit';
 import { rooms } from '../rooms';
 import { audit } from './audit';
+import { enforceAutomod } from './automod';
 import { getChannelById, listVisibleChannels, type ChannelView } from './channels';
 import { queueMediaCleanup } from './media-cleanup';
 import { getNotificationSettings, notifyUser, queueFanout } from './notify';
@@ -501,7 +504,12 @@ function prepareBody(raw: unknown): { body: RichNode; text: string } {
   return { body, text };
 }
 
-export async function createThread(ctx: MemberContext, raw: unknown): Promise<{ id: string }> {
+export async function createThread(
+  ctx: MemberContext,
+  raw: unknown,
+  /** A moderator approved it from the mod queue: it was checked and limited when first sent. */
+  opts: { approved?: boolean } = {},
+): Promise<{ id: string }> {
   const input = threadInputSchema.parse(raw);
   const channel = await getChannelById(ctx, input.channelId);
   assertForum(channel);
@@ -514,8 +522,15 @@ export async function createThread(ctx: MemberContext, raw: unknown): Promise<{ 
   const isMod = has(BigInt(channel.perms), Permission.MANAGE_THREADS);
   if (channel.type === 'announcement' && !isMod)
     throw forbidden('Only moderators can post announcements.');
-  await enforceRateLimit(`thread:${ctx.userId}`, 10, 600, 'You are starting threads too quickly.');
-  await enforceSlowmode(ctx, channel);
+  if (!opts.approved) {
+    await enforceRateLimit(
+      `thread:${ctx.userId}`,
+      10,
+      600,
+      'You are starting threads too quickly.',
+    );
+    await enforceSlowmode(ctx, channel);
+  }
 
   if (input.flairId) {
     const flair = await db.query.flairs.findFirst({
@@ -533,6 +548,18 @@ export async function createThread(ctx: MemberContext, raw: unknown): Promise<{ 
     });
   }
   const { body, text } = prepareBody(input.body);
+  if (!opts.approved) {
+    await enforceAutomod(ctx, {
+      kind: 'thread',
+      channelId: channel.id,
+      perms: BigInt(channel.perms),
+      title: input.title,
+      text,
+      links: extractLinks(body, 50),
+      mentions: collectMentions(body).length,
+      payload: { ...input, body },
+    });
+  }
   const threadId = newId();
   const postId = newId();
 
@@ -587,6 +614,8 @@ export async function createReply(
   ctx: MemberContext,
   threadId: string,
   raw: unknown,
+  /** A moderator approved it from the mod queue: it was checked and limited when first sent. */
+  opts: { approved?: boolean } = {},
 ): Promise<{ id: string }> {
   const input = postInputSchema.parse(raw);
   const { thread, channel, isMod } = await loadThreadForWrite(ctx, threadId);
@@ -597,8 +626,10 @@ export async function createReply(
     "You can't reply in this channel.",
   );
   if (thread.locked && !isMod) throw forbidden('This thread is locked.');
-  await enforceRateLimit(`reply:${ctx.userId}`, 30, 300, 'You are replying too quickly.');
-  await enforceSlowmode(ctx, channel);
+  if (!opts.approved) {
+    await enforceRateLimit(`reply:${ctx.userId}`, 30, 300, 'You are replying too quickly.');
+    await enforceSlowmode(ctx, channel);
+  }
   if (input.replyToId) {
     const parent = await db.query.posts.findFirst({
       where: and(eq(schema.posts.id, input.replyToId), eq(schema.posts.threadId, thread.id)),
@@ -606,6 +637,18 @@ export async function createReply(
     if (!parent) throw new AppError('validation', 'The post you replied to no longer exists.');
   }
   const { body, text } = prepareBody(input.body);
+  if (!opts.approved) {
+    await enforceAutomod(ctx, {
+      kind: 'reply',
+      channelId: channel.id,
+      threadId: thread.id,
+      perms: BigInt(channel.perms),
+      text,
+      links: extractLinks(body, 50),
+      mentions: collectMentions(body).length,
+      payload: { body, replyToId: input.replyToId },
+    });
+  }
   const postId = newId();
   await db.transaction(async (tx) => {
     await tx.insert(schema.posts).values({
@@ -670,13 +713,25 @@ export async function editPost(
   if (!post) throw notFound('Post');
   if (!ctx.userId || post.authorId !== ctx.userId)
     throw forbidden('You can only edit your own posts.');
-  const { thread } = await loadThreadForWrite(ctx, post.threadId);
+  const { thread, channel } = await loadThreadForWrite(ctx, post.threadId);
   if (thread.locked) throw forbidden('This thread is locked.');
   const input = postInputSchema.pick({ body: true }).parse(raw);
   const { body, text } = prepareBody(input.body);
   const title =
     opts.title !== undefined ? z.string().trim().min(3).max(200).parse(opts.title) : undefined;
   await enforceRateLimit(`edit:${ctx.userId}`, 30, 300);
+  await enforceAutomod(ctx, {
+    kind: post.isOp ? 'thread' : 'reply',
+    channelId: channel.id,
+    threadId: thread.id,
+    perms: BigInt(channel.perms),
+    title: post.isOp && title !== thread.title ? title : undefined,
+    text,
+    links: extractLinks(body, 50),
+    mentions: collectMentions(body).length,
+    payload: {},
+    edit: true,
+  });
   await db.transaction(async (tx) => {
     await tx
       .insert(schema.postRevisions)
