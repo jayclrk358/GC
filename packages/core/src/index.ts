@@ -41,3 +41,4 @@ export * from './services/server-browser';
 export * from './services/billing';
 export * from './services/voice';
 export * from './services/events';
+export * from './services/applications';

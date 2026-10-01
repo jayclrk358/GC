@@ -1,4 +1,4 @@
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import { db, schema } from '@magnox/db';
 import {
   ALL_PERMISSIONS,
@@ -20,6 +20,8 @@ export interface CommunityRef {
   joinMode: 'open' | 'apply' | 'invite';
   permVersion: number;
   deletedAt: Date | null;
+  /** New members can only read until they accept the rules (welcome steps). */
+  rulesGate: boolean;
 }
 
 export interface MemberContext {
@@ -30,6 +32,8 @@ export interface MemberContext {
   banned: boolean;
   timedOut: boolean;
   timeoutUntil: Date | null;
+  /** A member who hasn't accepted the rules yet, where that's required: read-only until then. */
+  needsRules: boolean;
   everyoneRoleId: string;
   roleIds: string[];
   /** Highest role position the member holds (owner = Infinity). */
@@ -63,6 +67,7 @@ async function loadCommunity(where: { id?: string; slug?: string }): Promise<Com
       joinMode: schema.communities.joinMode,
       permVersion: schema.communities.permVersion,
       deletedAt: schema.communities.deletedAt,
+      rulesGate: sql<boolean>`coalesce((${schema.communities.settings} #>> '{onboarding,enabled}')::boolean and (${schema.communities.settings} #>> '{onboarding,requireAccept}')::boolean, false)`,
     })
     .from(schema.communities)
     .where(cond)
@@ -86,13 +91,16 @@ export async function memberContextFor(
   const everyone = roles.find((r) => r.isDefault);
   if (!everyone) throw new Error(`Community ${community.id} has no @everyone role`);
 
-  let member: { timeoutUntil: Date | null } | undefined;
+  let member: { timeoutUntil: Date | null; onboardedAt: Date | null } | undefined;
   let roleIds: string[] = [];
   let banned = false;
   if (userId) {
     const [m, mr, ban] = await Promise.all([
       db
-        .select({ timeoutUntil: schema.members.timeoutUntil })
+        .select({
+          timeoutUntil: schema.members.timeoutUntil,
+          onboardedAt: schema.members.onboardedAt,
+        })
         .from(schema.members)
         .where(and(eq(schema.members.communityId, community.id), eq(schema.members.userId, userId)))
         .limit(1),
@@ -120,6 +128,7 @@ export async function memberContextFor(
   const isMember = Boolean(member) || isOwner;
   const heldRoles = roles.filter((r) => roleIds.includes(r.id));
   const timedOut = Boolean(member?.timeoutUntil && member.timeoutUntil > new Date());
+  const needsRules = Boolean(member && !isOwner && community.rulesGate && !member.onboardedAt);
 
   let base: bigint;
   if (banned) base = 0n;
@@ -130,7 +139,8 @@ export async function memberContextFor(
       everyone: everyone.permissions,
       roles: heldRoles.map((r) => r.permissions),
     });
-    base = applyTimeout(base, timedOut);
+    // Timed out, or still to accept the rules: read only (administrators are exempt).
+    base = applyTimeout(base, timedOut || needsRules);
   }
 
   return {
@@ -141,6 +151,7 @@ export async function memberContextFor(
     banned,
     timedOut,
     timeoutUntil: member?.timeoutUntil ?? null,
+    needsRules,
     everyoneRoleId: everyone.id,
     roleIds,
     topPosition: isOwner
@@ -213,7 +224,7 @@ export async function channelPermissions(ctx: MemberContext, channel: ChannelRef
     memberRoleIds: ctx.roleIds,
     userId: ctx.userId ?? '',
     layers,
-    timedOut: ctx.timedOut,
+    timedOut: ctx.timedOut || ctx.needsRules,
   });
   return ctx.isMember ? perms : perms & GUEST_MASK;
 }
@@ -242,7 +253,7 @@ export async function channelPermissionsMany(
       memberRoleIds: ctx.roleIds,
       userId: ctx.userId ?? '',
       layers: layerIds.map((id) => ow.get(id) ?? []),
-      timedOut: ctx.timedOut,
+      timedOut: ctx.timedOut || ctx.needsRules,
     });
     out.set(c.id, ctx.isMember ? perms : perms & GUEST_MASK);
   }

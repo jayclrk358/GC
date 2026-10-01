@@ -214,6 +214,7 @@ export function GeneralSettings({
                   onValueChange={(value) => set('joinMode', value as Initial['joinMode'])}
                 >
                   <option value="open">{tcr('joinModes.open.name')}</option>
+                  <option value="apply">{tcr('joinModes.apply.name')}</option>
                   <option value="invite">{tcr('joinModes.invite.name')}</option>
                 </Select>
               )}

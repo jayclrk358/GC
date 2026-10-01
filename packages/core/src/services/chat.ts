@@ -537,7 +537,9 @@ export async function sendMessage(
     throw forbidden(
       ctx.timedOut
         ? "You're timed out and can't send messages right now."
-        : "You can't send messages in this channel.",
+        : ctx.needsRules
+          ? 'Accept the rules in the welcome steps to start chatting.'
+          : "You can't send messages in this channel.",
     );
   }
   if (input.nonce) {

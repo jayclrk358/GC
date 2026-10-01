@@ -409,6 +409,38 @@ async function canMentionEveryoneIn(
   }
 }
 
+/**
+ * The owner and everyone with a role granting `permission` (or Administrator), e.g. the people
+ * to tell about a new report or application.
+ */
+export async function holdersOf(
+  communityId: string,
+  ownerId: string,
+  permission: bigint,
+): Promise<Set<string>> {
+  const roles = await db
+    .select({ id: schema.roles.id, permissions: schema.roles.permissions })
+    .from(schema.roles)
+    .where(eq(schema.roles.communityId, communityId));
+  const granting = roles
+    .filter((r) => has(r.permissions, permission) || has(r.permissions, Permission.ADMINISTRATOR))
+    .map((r) => r.id);
+  const out = new Set<string>([ownerId]);
+  if (granting.length) {
+    const rows = await db
+      .selectDistinct({ userId: schema.memberRoles.userId })
+      .from(schema.memberRoles)
+      .where(
+        and(
+          eq(schema.memberRoles.communityId, communityId),
+          inArray(schema.memberRoles.roleId, granting),
+        ),
+      );
+    for (const r of rows) out.add(r.userId);
+  }
+  return out;
+}
+
 async function fanoutReport(reportId: string): Promise<void> {
   const report = await db.query.reports.findFirst({ where: eq(schema.reports.id, reportId) });
   if (!report) return;
@@ -416,30 +448,7 @@ async function fanoutReport(reportId: string): Promise<void> {
     where: eq(schema.communities.id, report.communityId),
   });
   if (!community) return;
-  const roles = await db
-    .select()
-    .from(schema.roles)
-    .where(eq(schema.roles.communityId, community.id));
-  const modRoles = roles
-    .filter(
-      (r) =>
-        has(r.permissions, Permission.MANAGE_REPORTS) ||
-        has(r.permissions, Permission.ADMINISTRATOR),
-    )
-    .map((r) => r.id);
-  const mods = new Set<string>([community.ownerId]);
-  if (modRoles.length) {
-    const rows = await db
-      .selectDistinct({ userId: schema.memberRoles.userId })
-      .from(schema.memberRoles)
-      .where(
-        and(
-          eq(schema.memberRoles.communityId, community.id),
-          inArray(schema.memberRoles.roleId, modRoles),
-        ),
-      );
-    for (const r of rows) mods.add(r.userId);
-  }
+  const mods = await holdersOf(community.id, community.ownerId, Permission.MANAGE_REPORTS);
   if (report.reporterId) mods.delete(report.reporterId);
   await deliver(
     [...mods].slice(0, 100).map((userId) => ({

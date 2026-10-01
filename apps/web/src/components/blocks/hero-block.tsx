@@ -29,6 +29,7 @@ export function HeroBlock({
       cta = ctx.isMember ? null : (
         <JoinButton
           communityId={community.id}
+          slug={community.slug}
           signedIn={Boolean(user)}
           isMember={ctx.isMember}
           isOwner={ctx.isOwner}

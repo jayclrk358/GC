@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { openReportCount } from '@magnox/core';
+import { openReportCount, pendingApplicationCount } from '@magnox/core';
 import { loadCommunityForSettings } from '@/lib/community';
 import { NavLink } from '@/components/shell/nav-link';
 import { BackLink } from '@/components/ui/back-link';
@@ -16,7 +16,10 @@ export default async function CommunitySettingsLayout({
   const { perms, ctx, community } = await loadCommunityForSettings(slug);
   const t = await getTranslations('csettings');
   const tBack = await getTranslations('common');
-  const reports = perms.manageReports ? await openReportCount(ctx) : 0;
+  const [reports, applications] = await Promise.all([
+    perms.manageReports ? openReportCount(ctx) : 0,
+    perms.reviewApplications ? pendingApplicationCount(ctx) : 0,
+  ]);
   const base = `/c/${slug}/settings`;
   const links = [
     { href: base, label: t('nav.general'), show: perms.manage, exact: true },
@@ -24,6 +27,7 @@ export default async function CommunitySettingsLayout({
     { href: `${base}/appearance`, label: t('nav.appearance'), show: perms.manage },
     { href: `${base}/page`, label: t('nav.page'), show: perms.manage },
     { href: `${base}/navigation`, label: t('nav.navigation'), show: perms.manage },
+    { href: `${base}/onboarding`, label: t('nav.onboarding'), show: perms.manage },
     { href: `${base}/roles`, label: t('nav.roles'), show: perms.manageRoles },
     { href: `${base}/channels`, label: t('nav.channels'), show: perms.manageChannels },
     {
@@ -31,7 +35,20 @@ export default async function CommunitySettingsLayout({
       label: t('nav.members'),
       show: perms.manageRoles || perms.kick || perms.ban || perms.timeout,
     },
-    { href: `${base}/reports`, label: t('nav.reports'), show: perms.manageReports, badge: reports },
+    {
+      href: `${base}/applications`,
+      label: t('nav.applications'),
+      show: perms.reviewApplications,
+      badge: applications,
+      badgeLabel: t('pendingApplications'),
+    },
+    {
+      href: `${base}/reports`,
+      label: t('nav.reports'),
+      show: perms.manageReports,
+      badge: reports,
+      badgeLabel: t('openReports'),
+    },
     { href: `${base}/bans`, label: t('nav.bans'), show: perms.ban },
     {
       href: `${base}/invites`,
@@ -56,7 +73,7 @@ export default async function CommunitySettingsLayout({
                     {'badge' in l && l.badge ? (
                       <span className="rounded-full bg-danger px-1.5 text-xs text-bg">
                         {l.badge}
-                        <span className="sr-only"> {t('openReports')}</span>
+                        <span className="sr-only"> {l.badgeLabel}</span>
                       </span>
                     ) : null}
                   </span>

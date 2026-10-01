@@ -6,6 +6,7 @@ import {
   createCommunity,
   deleteCommunity,
   getMemberContext,
+  getOnboarding,
   joinCommunity,
   leaveCommunity,
   unauthorized,
@@ -83,6 +84,7 @@ export async function joinAction(communityId: string) {
     const ctx = await ctxFor(communityId);
     await joinCommunity(ctx);
     revalidatePath(`/c/${ctx.community.slug}`, 'layout');
+    return { welcome: (await getOnboarding(ctx.community.id)).enabled };
   });
 }
 

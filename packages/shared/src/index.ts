@@ -22,3 +22,4 @@ export * from './plans';
 export * from './media';
 export * from './events';
 export * from './events-schema';
+export * from './applications';

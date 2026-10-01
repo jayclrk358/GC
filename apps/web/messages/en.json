@@ -313,7 +313,6 @@
     "left": "You left the community.",
     "leave": "Leave community",
     "inviteOnly": "Invite only",
-    "applicationsSoon": "Applications required",
     "welcome": "Welcome to the community!",
     "details": "Community details",
     "memberCount": "{count, plural, one {# member} other {{formatted} members}}",
@@ -388,7 +387,9 @@
     "customise": "Customise its look and page",
     "play": "Play",
     "playOnRoblox": "Play on Roblox (opens in a new tab)",
-    "playOnSite": "Play on {host} (opens in a new tab)"
+    "playOnSite": "Play on {host} (opens in a new tab)",
+    "applyToJoin": "Apply to join",
+    "welcomeAndRoles": "Welcome steps & roles"
   },
   "servers": {
     "copyAddress": "Copy server address {address}",
@@ -663,6 +664,10 @@
         "name": "Anyone can join",
         "description": "One click to become a member."
       },
+      "apply": {
+        "name": "Apply to join",
+        "description": "People answer a few questions and your team decides."
+      },
       "invite": {
         "name": "Invite only",
         "description": "Members join with an invite link."
@@ -701,7 +706,9 @@
       "channels": "Channels",
       "reports": "Reports",
       "bans": "Bans",
-      "billing": "Plan & billing"
+      "billing": "Plan & billing",
+      "applications": "Applications",
+      "onboarding": "Welcome steps"
     },
     "general": {
       "title": "General",
@@ -752,7 +759,8 @@
     },
     "openReports": "open reports",
     "playUrl": "Play link",
-    "playUrlHint": "Where people can play, such as your Roblox experience page. Shows a Play button on your community. Leave blank for none."
+    "playUrlHint": "Where people can play, such as your Roblox experience page. Shows a Play button on your community. Leave blank for none.",
+    "pendingApplications": "waiting for review"
   },
   "theme": {
     "title": "Appearance",
@@ -1584,7 +1592,9 @@
     "votesFor": "Votes for {title}",
     "goToForum": "Go to the forum",
     "timedOutTitle": "You're timed out",
-    "timedOutBody": "A moderator has paused your posting in this community until {date}. You can still read."
+    "timedOutBody": "A moderator has paused your posting in this community until {date}. You can still read.",
+    "rulesFirst": "Agree to the rules in the welcome steps to start posting.",
+    "rulesFirstLink": "Read the rules"
   },
   "report": {
     "title": "Report {what}",
@@ -2126,7 +2136,9 @@
     "signInToTalk": "to chat and join voice.",
     "voiceCount": "{count}/{limit}",
     "todayAt": "Today at {time}",
-    "yesterdayAt": "Yesterday at {time}"
+    "yesterdayAt": "Yesterday at {time}",
+    "rulesFirst": "Agree to the rules in the welcome steps to start posting.",
+    "rulesFirstLink": "Read the rules"
   },
   "serverPage": {
     "verified": "Verified",
@@ -2529,6 +2541,124 @@
       "create": "Create event",
       "saved": "Event saved.",
       "created": "Event created."
+    }
+  },
+  "applications": {
+    "title": "Apply to join {name}",
+    "subtitle": "Answer a few questions and the team will get back to you.",
+    "notTaking": "This community isn’t taking applications right now.",
+    "signInToApply": "Sign in to apply",
+    "pendingTitle": "Your application is in",
+    "pendingBody": "The team will look at it soon. We’ll let you know when they reply.",
+    "rejectedTitle": "Your last application wasn’t accepted",
+    "rejectedAgain": "You’re welcome to apply again.",
+    "sent": "Application sent",
+    "send": "Send application",
+    "required": "required",
+    "withdraw": "Withdraw application",
+    "withdrawn": "Application withdrawn",
+    "queueTitle": "Applications",
+    "queueDescription": "Read what people wrote and let them in, or turn them down.",
+    "editForm": "Edit questions",
+    "modeOff": "New people can’t apply at the moment: the join mode isn’t set to “Apply to join”.",
+    "modeOffLink": "Change it in General settings",
+    "filter": "Show applications",
+    "statuses": {
+      "pending": "Waiting",
+      "approved": "Accepted",
+      "rejected": "Turned down"
+    },
+    "emptyPending": "No applications waiting. Nice and tidy.",
+    "empty": "Nothing here yet.",
+    "appliedWhen": "Applied {when}",
+    "accountAge": "Account made {when}",
+    "accept": "Accept",
+    "reject": "Turn down",
+    "acceptFor": "Accept {name}",
+    "rejectFor": "Turn down {name}",
+    "acceptTitle": "Accept {name}?",
+    "rejectTitle": "Turn down {name}?",
+    "acceptExplain": "They’ll become a member straight away and get a notification.",
+    "rejectExplain": "They’ll get a notification and can apply again later.",
+    "messageLabel": "Message (optional)",
+    "messageHint": "Sent to them with your decision.",
+    "messageSent": "Message sent",
+    "acceptedToast": "{name} is now a member",
+    "rejectedToast": "Turned down {name}’s application",
+    "acceptedBy": "Accepted by {name} · {when}",
+    "rejectedBy": "Turned down by {name} · {when}",
+    "someone": "someone",
+    "noAnswer": "No answer",
+    "cancel": "Cancel",
+    "form": {
+      "title": "Application questions",
+      "description": "What people answer when they apply to join.",
+      "back": "Back to applications",
+      "introTitle": "Introduction",
+      "introHint": "Shown above the questions. Say what you’re looking for.",
+      "intro": "Introduction",
+      "questionsTitle": "Questions",
+      "questionN": "Question {n}",
+      "question": "Question",
+      "kind": "Answer type",
+      "kinds": {
+        "short": "Short answer",
+        "long": "Paragraph",
+        "choice": "Pick one",
+        "checkboxes": "Pick any"
+      },
+      "required": "Needs an answer",
+      "options": "Options",
+      "optionsHint": "One per line, at least two.",
+      "movedUp": "Question {n} moved up",
+      "movedDown": "Question {n} moved down",
+      "moveUp": "Move question {n} up",
+      "moveDown": "Move question {n} down",
+      "remove": "Remove",
+      "add": "Add a question",
+      "save": "Save questions",
+      "saved": "Questions saved"
+    }
+  },
+  "welcome": {
+    "title": "Welcome to {name}",
+    "subtitle": "A couple of quick steps before you dive in.",
+    "subtitleDone": "Look back over the rules or change your roles.",
+    "messageHeading": "A note from the team",
+    "rulesHeading": "Rules",
+    "agree": "I’ve read and agree to the rules",
+    "agreeFirst": "Tick the box to agree to the rules first.",
+    "rolesHeading": "Pick your roles",
+    "rolesHint": "Choose what fits. You can change these any time.",
+    "finish": "Finish and go to the community",
+    "saveAndGo": "Save and go to the community",
+    "done": "You’re all set",
+    "editor": {
+      "pageTitle": "Welcome steps",
+      "pageDescription": "What new members see when they join: a message, rules to agree to and roles to pick.",
+      "title": "Show welcome steps",
+      "description": "New members land here after joining. Anyone can come back to it from the members menu.",
+      "enabled": "Show welcome steps to new members",
+      "enabledHint": "Roles people can pick are shown even when this is off.",
+      "messageTitle": "Welcome message",
+      "message": "Message",
+      "messageHint": "A short hello. Plain text.",
+      "rulesTitle": "Rules",
+      "rulesHint": "Keep each rule short and clear.",
+      "ruleN": "Rule {n}",
+      "moveUp": "Move rule {n} up",
+      "moveDown": "Move rule {n} down",
+      "movedUp": "Rule {n} moved up",
+      "movedDown": "Rule {n} moved down",
+      "remove": "Remove rule {n}",
+      "addRule": "Add a rule",
+      "requireAccept": "Read-only until they agree",
+      "requireAcceptHint": "New members can read but can’t post, react or talk until they agree to the rules. People who are already members aren’t affected.",
+      "rolesTitle": "Roles to pick",
+      "rolesCount": "{count, plural, =0 {No roles can be picked yet.} one {# role can be picked.} other {# roles can be picked.}}",
+      "rolesLink": "Choose which on the roles page",
+      "save": "Save welcome steps",
+      "saved": "Welcome steps saved"
     }
   }
 }

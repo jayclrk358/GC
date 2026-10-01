@@ -86,6 +86,8 @@ export interface CommunityOpts {
   template?: 'Game server' | 'Clan or guild' | 'Fan hub' | 'Creator community';
   preset?: string;
   inviteOnly?: boolean;
+  /** People apply and the team decides. */
+  apply?: boolean;
 }
 
 /** Create a community through the wizard and return its slug. */
@@ -100,6 +102,7 @@ export async function createCommunity(page: Page, opts: CommunityOpts = {}) {
   if (opts.preset) await page.getByRole('radio', { name: opts.preset }).click();
   await page.getByRole('button', { name: 'Continue' }).click();
   if (opts.inviteOnly) await page.getByRole('radio', { name: /Invite only/ }).click();
+  if (opts.apply) await page.getByRole('radio', { name: /Apply to join/ }).click();
   await page.getByRole('button', { name: 'Create community' }).click();
   await page.waitForURL(/\/c\/[a-z0-9-]+\?created=1/);
   const slug = new URL(page.url()).pathname.split('/')[2]!;

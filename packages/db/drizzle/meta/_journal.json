@@ -120,6 +120,13 @@
       "when": 1790883457125,
       "tag": "0016_events",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1790887106160,
+      "tag": "0017_applications",
+      "breakpoints": true
     }
   ]
 }

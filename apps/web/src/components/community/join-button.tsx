@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { Check, ChevronDown, LogOut } from 'lucide-react';
+import { Check, ChevronDown, LogOut, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -17,6 +17,7 @@ import { joinAction, leaveAction } from '@/app/actions/communities';
 
 export function JoinButton({
   communityId,
+  slug,
   signedIn,
   isMember,
   isOwner,
@@ -26,6 +27,7 @@ export function JoinButton({
   label,
 }: {
   communityId: string;
+  slug: string;
   signedIn: boolean;
   isMember: boolean;
   isOwner: boolean;
@@ -57,6 +59,11 @@ export function JoinButton({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem asChild>
+            <Link href={`/c/${slug}/welcome`}>
+              <Sparkles aria-hidden /> {t('welcomeAndRoles')}
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuItem
             destructive
             onSelect={async () => {
@@ -83,9 +90,9 @@ export function JoinButton({
   }
   if (joinMode === 'apply') {
     return (
-      <p className="rounded-ui border border-border px-3 py-2 text-sm text-muted">
-        {t('applicationsSoon')}
-      </p>
+      <Button asChild size={size}>
+        <Link href={`/c/${slug}/apply`}>{t('applyToJoin')}</Link>
+      </Button>
     );
   }
 
@@ -99,6 +106,8 @@ export function JoinButton({
         setPending(false);
         if (r.ok) {
           toast.success(t('welcome'));
+          // Communities with welcome steps (rules, roles to pick) start there.
+          if (r.data.welcome) router.push(`/c/${slug}/welcome`);
           router.refresh();
         } else toast.error(r.error);
       }}

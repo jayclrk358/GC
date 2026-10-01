@@ -12,7 +12,7 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import type { NameStyle, NavConfig, Theme } from '@magnox/shared';
+import type { NameStyle, NavConfig, Onboarding, Theme } from '@magnox/shared';
 import { users } from './auth';
 import { games } from './games';
 import { createdAt, tsvector, tz, updatedAt } from './_helpers';
@@ -23,6 +23,8 @@ export interface CommunitySettings {
   showMemberCount?: boolean;
   defaultChannelId?: string | null;
   serverAlertsChannelId?: string | null;
+  /** Welcome steps for new members: a message, rules to accept, and roles to pick. */
+  onboarding?: Onboarding;
 }
 
 export const communities = pgTable(

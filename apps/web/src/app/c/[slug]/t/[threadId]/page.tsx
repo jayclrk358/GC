@@ -367,6 +367,15 @@ export default async function ThreadPage({
           <Alert tone="warning" title={t('lockedTitle')}>
             {t('lockedBody')}
           </Alert>
+        ) : data.ctx.needsRules ? (
+          <Alert tone="info">
+            <span className="flex flex-wrap items-center justify-between gap-2">
+              {t('rulesFirst')}
+              <Button asChild size="sm">
+                <Link href={`${base}/welcome`}>{t('rulesFirstLink')}</Link>
+              </Button>
+            </span>
+          </Alert>
         ) : data.ctx.timedOut && data.ctx.timeoutUntil ? (
           <Alert tone="warning" title={t('timedOutTitle')}>
             {t('timedOutBody', { date: formatDateTime(data.ctx.timeoutUntil) })}
@@ -388,6 +397,7 @@ export default async function ThreadPage({
               {t('joinToReply')}
               <JoinButton
                 communityId={data.community.id}
+                slug={data.community.slug}
                 signedIn
                 isMember={false}
                 isOwner={false}

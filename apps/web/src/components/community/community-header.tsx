@@ -173,6 +173,7 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
             )}
             <JoinButton
               communityId={community.id}
+              slug={community.slug}
               signedIn={Boolean(user)}
               isMember={ctx.isMember}
               isOwner={ctx.isOwner}

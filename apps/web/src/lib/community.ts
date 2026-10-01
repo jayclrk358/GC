@@ -52,6 +52,7 @@ export const loadCommunity = cache(async (slug: string) => {
     ban: has(ctx.base, Permission.BAN_MEMBERS),
     kick: has(ctx.base, Permission.KICK_MEMBERS),
     timeout: has(ctx.base, Permission.TIMEOUT_MEMBERS),
+    reviewApplications: has(ctx.base, Permission.REVIEW_APPLICATIONS),
   };
   const canOpenSettings =
     perms.manage ||
@@ -63,7 +64,8 @@ export const loadCommunity = cache(async (slug: string) => {
     perms.manageReports ||
     perms.ban ||
     perms.kick ||
-    perms.timeout;
+    perms.timeout ||
+    perms.reviewApplications;
   return { ctx, community, game, nav, user, perms: { ...perms, settings: canOpenSettings } };
 });
 

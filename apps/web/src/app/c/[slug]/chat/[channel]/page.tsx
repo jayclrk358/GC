@@ -91,6 +91,7 @@ export default async function ChatChannelPage({
       action={
         <JoinButton
           communityId={data.community.id}
+          slug={data.community.slug}
           signedIn
           isMember={false}
           isOwner={false}
@@ -101,6 +102,8 @@ export default async function ChatChannelPage({
     >
       {t('joinToChat')}
     </ChatNotice>
+  ) : data.ctx.needsRules ? (
+    <SignInToChat href={`/c/${slug}/welcome`} label={t('rulesFirstLink')} text={t('rulesFirst')} />
   ) : data.ctx.timedOut && data.ctx.timeoutUntil ? (
     <ChatNotice>{t('timedOut', { date: formatDateTime(data.ctx.timeoutUntil) })}</ChatNotice>
   ) : (

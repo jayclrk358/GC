@@ -342,8 +342,8 @@ export function CreateWizard({ games }: { games: { id: string; name: string }[] 
                 label={t('joinMode')}
                 value={v.joinMode}
                 onValueChange={(val) => set('joinMode', val)}
-                columns={2}
-                options={(['open', 'invite'] as const).map((key) => ({
+                columns={3}
+                options={(['open', 'apply', 'invite'] as const).map((key) => ({
                   value: key,
                   label: t(`joinModes.${key}.name`),
                   description: t(`joinModes.${key}.description`),
