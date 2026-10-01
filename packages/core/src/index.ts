@@ -40,3 +40,4 @@ export * from './services/server-alerts';
 export * from './services/server-browser';
 export * from './services/billing';
 export * from './services/voice';
+export * from './services/events';

@@ -259,7 +259,8 @@ export async function resolveMentions(
   return { users, roleUsers, everyone };
 }
 
-async function maybeEmail(
+/** Email a notification too, if the person wants that kind by email and isn't online. */
+export async function maybeEmail(
   userId: string,
   type: NotificationType,
   subject: string,
@@ -275,9 +276,11 @@ async function maybeEmail(
       ? (settings?.emailMentions ?? true)
       : type === 'reply' || type === 'thread_reply'
         ? (settings?.emailReplies ?? false)
-        : type === 'moderation'
+        : type === 'moderation' || type === 'application'
           ? (settings?.emailModeration ?? true)
-          : false;
+          : type === 'event'
+            ? (settings?.emailEvents ?? true)
+            : false;
   if (!wants) return;
   // Don't email people who are online right now; they'll see it in the app.
   if (await cacheRedis().get(`presence:${userId}`)) return;
@@ -646,6 +649,7 @@ const settingsSchema = z.object({
   emailMentions: z.boolean(),
   emailReplies: z.boolean(),
   emailModeration: z.boolean(),
+  emailEvents: z.boolean().default(true),
   autoFollow: z.boolean(),
 });
 
@@ -657,6 +661,7 @@ export async function getNotificationSettings(userId: string) {
     emailMentions: row?.emailMentions ?? true,
     emailReplies: row?.emailReplies ?? false,
     emailModeration: row?.emailModeration ?? true,
+    emailEvents: row?.emailEvents ?? true,
     autoFollow: row?.autoFollow ?? true,
   };
 }

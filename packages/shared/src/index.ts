@@ -20,3 +20,5 @@ export * from './profile';
 export * from './name-style';
 export * from './plans';
 export * from './media';
+export * from './events';
+export * from './events-schema';

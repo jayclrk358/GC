@@ -8,11 +8,11 @@ import { FeaturedThreadsBlock } from './featured-threads-block';
 import { GalleryBlock } from './gallery-block';
 import { HeroBlock } from './hero-block';
 import { LinksBlock } from './links-block';
-import { PlaceholderBlock } from './placeholder-block';
 import { RulesBlock } from './rules-block';
 import { ServerStatusBlock } from './server-status-block';
 import { StaffBlock } from './staff-block';
 import { StatsBlock } from './stats-block';
+import { UpcomingEventsBlock } from './upcoming-events-block';
 
 export function renderBlock(block: Block, data: LoadedCommunity) {
   switch (block.type) {
@@ -42,14 +42,7 @@ export function renderBlock(block: Block, data: LoadedCommunity) {
     case 'featuredThreads':
       return <FeaturedThreadsBlock id={block.id} config={block.config} data={data} />;
     case 'upcomingEvents':
-      return (
-        <PlaceholderBlock
-          id={block.id}
-          type={block.type}
-          heading={block.config.heading}
-          data={data}
-        />
-      );
+      return <UpcomingEventsBlock id={block.id} config={block.config} data={data} />;
     default:
       return null;
   }

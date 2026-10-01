@@ -5,7 +5,9 @@ import { useTranslations } from 'next-intl';
 import {
   AtSign,
   BookOpen,
+  CalendarDays,
   CheckCircle2,
+  ClipboardList,
   Flag,
   Gavel,
   Info,
@@ -39,6 +41,8 @@ const ICONS: Record<
   report: Flag,
   moderation: Gavel,
   role: Shield,
+  event: CalendarDays,
+  application: ClipboardList,
   system: Info,
 };
 

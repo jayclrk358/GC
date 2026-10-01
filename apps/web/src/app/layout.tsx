@@ -28,6 +28,9 @@ import { SIDEBAR_COOKIE } from '@/lib/sidebar';
 
 const SITE_TOKENS = themeToCss(DEFAULT_THEME, ':root', 'mx-tokens');
 
+// Tell the server the browser's time zone (a cookie), so event times show on the viewer's clock.
+const TZ_SCRIPT = `try{var z=Intl.DateTimeFormat().resolvedOptions().timeZone;if(z&&document.cookie.indexOf('mx-tz='+encodeURIComponent(z))<0)document.cookie='mx-tz='+encodeURIComponent(z)+';path=/;max-age=31536000;samesite=lax'}catch(e){}`;
+
 export const metadata: Metadata = {
   title: { default: 'Magnox', template: '%s · Magnox' },
   description: 'Customisable, accessible community hubs for games and game servers.',
@@ -76,6 +79,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <style nonce={nonce} dangerouslySetInnerHTML={{ __html: SITE_TOKENS }} />
         <meta name="mx-media-base" content={mediaBase()} />
         <script nonce={nonce} dangerouslySetInnerHTML={{ __html: MEDIA_FALLBACK }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: TZ_SCRIPT }} />
       </head>
       <body className="min-h-dvh">
         <NextIntlClientProvider>

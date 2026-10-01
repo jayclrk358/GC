@@ -113,6 +113,13 @@
       "when": 1790709441176,
       "tag": "0015_voice_permissions",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1790883457125,
+      "tag": "0016_events",
+      "breakpoints": true
     }
   ]
 }

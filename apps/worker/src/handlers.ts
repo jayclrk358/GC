@@ -9,6 +9,7 @@ import {
   type MediaCleanup,
   processFanout,
   processLinkPreviews,
+  sendEventReminders,
   type FanoutJob,
 } from '@magnox/core';
 import { pollEndpoint, pollTick, wakeHotDormant } from './poll';
@@ -49,6 +50,7 @@ export const handlers: Record<string, Handler> = {
     return { done };
   },
   'history-maintenance': async () => maintainHistory(),
+  'event-reminders': async () => ({ reminded: await sendEventReminders() }),
   'maintenance-hourly': async () => {
     await wakeHotDormant();
     const removed = await cleanupUnverifiedServers();

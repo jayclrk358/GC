@@ -11,3 +11,4 @@ export * from './notifications';
 export * from './moderation';
 export * from './chat';
 export * from './billing';
+export * from './events';

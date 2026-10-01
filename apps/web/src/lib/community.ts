@@ -15,12 +15,13 @@ import {
 import { has, normalizeNav, Permission, type NavTab } from '@magnox/shared';
 import { getUser } from './auth';
 
-/** Tabs whose features exist. Events arrive in a later phase. */
+/** Tabs whose features exist. */
 export const AVAILABLE_TABS: ReadonlySet<NavTab> = new Set([
   'home',
   'forum',
   'chat',
   'wiki',
+  'events',
   'members',
   'servers',
 ]);

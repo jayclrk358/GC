@@ -15,6 +15,7 @@ interface Settings {
   emailMentions: boolean;
   emailReplies: boolean;
   emailModeration: boolean;
+  emailEvents: boolean;
   autoFollow: boolean;
 }
 
@@ -61,6 +62,12 @@ export function NotificationSettingsForm({ initial }: { initial: Settings }) {
           description={t('emailModerationHint')}
           checked={s.emailModeration}
           onCheckedChange={(v) => void change('emailModeration', v)}
+        />
+        <SwitchField
+          label={t('emailEvents')}
+          description={t('emailEventsHint')}
+          checked={s.emailEvents}
+          onCheckedChange={(v) => void change('emailEvents', v)}
         />
       </div>
       <h2 className="mt-4 text-lg font-bold">{t('followingTitle')}</h2>

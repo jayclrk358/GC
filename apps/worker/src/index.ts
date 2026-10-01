@@ -48,6 +48,13 @@ await queue(QUEUES.maintenance).upsertJobScheduler(
   { name: 'maintenance-hourly' },
 );
 
+// Event reminders, an hour before each occurrence (each goes out once, however often this runs).
+await queue(QUEUES.notify).upsertJobScheduler(
+  'event-reminders',
+  { every: 5 * 60 * 1000 },
+  { name: 'event-reminders' },
+);
+
 // Smaller copies of images uploaded before they were made (quick once there are none left).
 await queue(QUEUES.media).add(
   'media-variants',

@@ -12,6 +12,8 @@ export const NOTIFICATION_TYPES = [
   'report',
   'moderation',
   'role',
+  'event',
+  'application',
   'system',
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
@@ -47,6 +49,8 @@ export const notificationSettings = pgTable('notification_settings', {
   emailMentions: boolean('email_mentions').notNull().default(true),
   emailReplies: boolean('email_replies').notNull().default(false),
   emailModeration: boolean('email_moderation').notNull().default(true),
+  /** Event reminders, an hour before events you're going to. */
+  emailEvents: boolean('email_events').notNull().default(true),
   /** Automatically follow threads you create or reply to. */
   autoFollow: boolean('auto_follow').notNull().default(true),
 });
