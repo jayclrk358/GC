@@ -153,6 +153,12 @@ export interface Schedule {
   recurrence: Recurrence | null;
 }
 
+/**
+ * How far ahead an event's dates are ever looked for: past any real plan, and well short of where
+ * JavaScript dates run out (a date near that limit makes time zone conversion throw).
+ */
+export const EVENT_HORIZON_MS = 10 * 366 * 86_400_000;
+
 /** Hard stop for runaway schedules (a daily event for 25 years). */
 const MAX_STEPS = 10_000;
 
@@ -302,12 +308,13 @@ export function icalRRule(rule: Recurrence, s: Schedule): string {
   return parts.join(';');
 }
 
+/** Text as iCalendar escapes it. Every line break goes, a lone carriage return included. */
 function icalText(s: string): string {
   return s
     .replace(/\\/g, '\\\\')
     .replace(/;/g, '\\;')
     .replace(/,/g, '\\,')
-    .replace(/\r?\n/g, '\\n');
+    .replace(/\r\n|\r|\n/g, '\\n');
 }
 
 /** Fold to 75 octets per line, as the format requires. */

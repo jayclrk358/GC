@@ -49,6 +49,7 @@ start(QUEUES.maintenance, 1);
 start(QUEUES.notify, 8);
 start(QUEUES.previews, 4);
 start(QUEUES.integrations, 4);
+start(QUEUES.webhooks, 8);
 start(QUEUES.media, 2);
 
 // Sample partitions must exist before the first poll lands; rollups catch up after downtime.

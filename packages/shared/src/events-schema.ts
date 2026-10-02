@@ -7,7 +7,11 @@ import {
   type Recurrence,
 } from './events';
 
-const localDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Choose a date.');
+// A real date: the pattern alone would let "2026-13-45" through.
+const localDate = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Choose a date.')
+  .refine((v) => parseLocal(`${v}T00:00`) !== null, 'Choose a date.');
 
 export const recurrenceSchema = z.object({
   freq: z.enum(RECURRENCE_FREQS),

@@ -95,6 +95,7 @@ export async function getInvitePreview(code: string) {
       theme: schema.communities.theme,
       memberCount: schema.communities.memberCount,
       deletedAt: schema.communities.deletedAt,
+      suspendedAt: schema.communities.suspendedAt,
       inviterName: schema.users.name,
     })
     .from(schema.invites)
@@ -103,7 +104,7 @@ export async function getInvitePreview(code: string) {
     .where(eq(schema.invites.code, code))
     .limit(1);
   const row = rows[0];
-  if (!row || row.deletedAt) return null;
+  if (!row || row.deletedAt || row.suspendedAt) return null;
   return { ...row, valid: inviteUsable(row) };
 }
 
@@ -123,7 +124,8 @@ export async function acceptInvite(userId: string | null, code: string): Promise
     const community = await tx.query.communities.findFirst({
       where: eq(schema.communities.id, invite.communityId),
     });
-    if (!community || community.deletedAt) throw notFound('Community');
+    // Suspended by staff counts as gone, as it does everywhere else.
+    if (!community || community.deletedAt || community.suspendedAt) throw notFound('Community');
     if (community.archivedAt) {
       throw forbidden('This community is archived and isn’t taking new members.');
     }
@@ -131,7 +133,7 @@ export async function acceptInvite(userId: string | null, code: string): Promise
       where: and(eq(schema.members.communityId, community.id), eq(schema.members.userId, userId)),
       columns: { userId: true },
     });
-    if (!already) await checkJoinAllowed(community);
+    if (!already) await checkJoinAllowed(community, userId);
     const added = await addMember(tx, community.id, userId);
     if (added) {
       await tx

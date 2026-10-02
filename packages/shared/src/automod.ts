@@ -203,9 +203,11 @@ export function findBlockedWord(text: string, list: readonly string[]): string |
 // ── Links ───────────────────────────────────────────────────────────────────
 
 const URL_RE = /\b(?:https?:\/\/|www\.)[^\s<>"'`]+/gi;
-// Bare domains ("free-nitro.gift"), with the endings spam tends to use.
+// Bare domains ("free-nitro.gift"), with the endings spam tends to use. At most eight labels
+// before the ending: unbounded, text like "x.x.x.x…" took time growing with the square of its
+// length (seconds for one long post). A longer name is still found, from a later label.
 const BARE_RE =
-  /\b(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:com|net|org|gg|io|co|xyz|ru|me|tv|app|dev|link|ly|to|info|biz|site|online|shop|club|top|live|store|us|uk|de|fr|eu|cc|ws|su|tk|ml|ga|cf|gq|pw|gift|click|fun|icu|cn|ai|vip|win|lol)\b(?:\/[^\s<>"'`]*)?/gi;
+  /\b(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.){1,8}(?:com|net|org|gg|io|co|xyz|ru|me|tv|app|dev|link|ly|to|info|biz|site|online|shop|club|top|live|store|us|uk|de|fr|eu|cc|ws|su|tk|ml|ga|cf|gq|pw|gift|click|fun|icu|cn|ai|vip|win|lol)\b(?:\/[^\s<>"'`]*)?/gi;
 
 /** The host of a link, without "www.", or null if it doesn't look like one. */
 export function linkHost(link: string): string | null {

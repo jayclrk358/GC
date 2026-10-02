@@ -349,6 +349,42 @@ export async function transferOwnership(ctx: MemberContext, raw: unknown): Promi
     });
   }
   await db.transaction(async (tx) => {
+    // Hold the community while checking, so two hand-overs (or one racing a ban or a departure)
+    // can't leave it owned by someone who isn't a member in good standing.
+    const [community] = await tx
+      .select({
+        ownerId: schema.communities.ownerId,
+        deletedAt: schema.communities.deletedAt,
+        suspendedAt: schema.communities.suspendedAt,
+      })
+      .from(schema.communities)
+      .where(eq(schema.communities.id, ctx.community.id))
+      .for('update');
+    if (!community || community.deletedAt || community.suspendedAt) {
+      throw forbidden('This community can’t be handed over right now.');
+    }
+    if (community.ownerId !== ctx.userId) {
+      throw forbidden('Only the owner can hand the community over.');
+    }
+    const [member] = await tx
+      .select({ banned: schema.users.banned, deletedAt: schema.users.deletedAt })
+      .from(schema.members)
+      .innerJoin(schema.users, eq(schema.users.id, schema.members.userId))
+      .where(
+        and(eq(schema.members.communityId, ctx.community.id), eq(schema.members.userId, target.id)),
+      )
+      .for('share');
+    const [ban] = await tx
+      .select({ expiresAt: schema.bans.expiresAt })
+      .from(schema.bans)
+      .where(and(eq(schema.bans.communityId, ctx.community.id), eq(schema.bans.userId, target.id)))
+      .limit(1);
+    const bannedHere = Boolean(ban && (!ban.expiresAt || ban.expiresAt > new Date()));
+    if (!member || member.banned || member.deletedAt || bannedHere) {
+      throw new AppError('validation', 'That person can’t take over this community.', {
+        fields: { username: 'Not a member in good standing' },
+      });
+    }
     await tx
       .update(schema.communities)
       .set({

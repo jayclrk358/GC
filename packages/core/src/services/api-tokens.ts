@@ -3,12 +3,15 @@ import { and, desc, eq, sql } from 'drizzle-orm';
 import { db, schema } from '@magnox/db';
 import { apiTokenInputSchema, newId, type ApiScope } from '@magnox/shared';
 import { AppError, notFound, unauthorized } from '../errors';
-import { rateLimit } from '../ratelimit';
+import { enforceRateLimit, rateLimit } from '../ratelimit';
 
 // Personal API tokens: the public API acts as the person who made the token, with their access.
 
 const hash = (token: string) => createHash('sha256').update(token).digest('hex');
 const MAX_TOKENS = 20;
+/** Requests a minute for one token, and for one person across all their tokens. */
+const PER_TOKEN_PER_MINUTE = 120;
+const PER_USER_PER_MINUTE = 300;
 
 export interface ApiTokenView {
   id: string;
@@ -42,6 +45,13 @@ export async function createApiToken(
   raw: unknown,
 ): Promise<{ token: string; view: ApiTokenView }> {
   if (!userId) throw unauthorized();
+  // Deleting and making tokens again mustn't hand out fresh rate-limit buckets.
+  await enforceRateLimit(
+    `api-token-create:${userId}`,
+    10,
+    3600,
+    'You are making tokens too quickly. Try again later.',
+  );
   const input = apiTokenInputSchema.parse(raw);
   const [count] = await db
     .select({ n: sql<number>`count(*)::int` })
@@ -92,7 +102,7 @@ export interface ApiCaller {
 
 /**
  * Who an `Authorization: Bearer mx_…` header belongs to, or an error. Each token gets 120
- * requests a minute.
+ * requests a minute, and each person 300 a minute across all their tokens.
  */
 export async function authenticateApiToken(header: string | null): Promise<ApiCaller> {
   const token = header?.match(/^Bearer\s+(mx_[\w-]{20,64})$/i)?.[1];
@@ -110,11 +120,22 @@ export async function authenticateApiToken(header: string | null): Promise<ApiCa
   });
   if (!user || user.banned || user.deletedAt)
     throw new AppError('unauthorized', 'This account can’t use the API.');
-  const limit = await rateLimit(`api:${row.id}`, 120, 60);
+  const limit = await rateLimit(`api:${row.id}`, PER_TOKEN_PER_MINUTE, 60);
   if (!limit.ok) {
-    throw new AppError('rate_limited', 'Too many requests: up to 120 a minute per token.', {
-      retryAfter: limit.resetIn,
-    });
+    throw new AppError(
+      'rate_limited',
+      `Too many requests: up to ${PER_TOKEN_PER_MINUTE} a minute per token.`,
+      { retryAfter: limit.resetIn },
+    );
+  }
+  // Summed across the person's tokens, so making more of them doesn't raise the ceiling.
+  const userLimit = await rateLimit(`api-user:${row.userId}`, PER_USER_PER_MINUTE, 60);
+  if (!userLimit.ok) {
+    throw new AppError(
+      'rate_limited',
+      `Too many requests: up to ${PER_USER_PER_MINUTE} a minute across all your tokens.`,
+      { retryAfter: userLimit.resetIn },
+    );
   }
   // Note when it was last used (not on every request).
   if (!row.lastUsedAt || Date.now() - row.lastUsedAt.getTime() > 5 * 60_000) {

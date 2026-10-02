@@ -2,16 +2,19 @@ import { and, asc, count, desc, eq, inArray, isNull, lt, or, sql, type SQL } fro
 import { db, schema, type Tx } from '@magnox/db';
 import {
   collectMentions,
+  docSizeProblem,
   docToText,
   extractLinks,
   flairInputSchema,
   has,
+  isUuid,
   type NameStyleView,
   nameStyleView,
   newId,
   Permission,
   pickRoleDecor,
   planPerks,
+  POST_DOC_LIMITS,
   postInputSchema,
   REACTIONS,
   type RichNode,
@@ -84,6 +87,25 @@ async function requireChannelPerm(
   if (!has(BigInt(channel.perms), flag)) throw forbidden(message);
 }
 
+/** Ids from URLs and forms: one that isn't a UUID matches nothing (and Postgres would reject it). */
+function assertId(id: string, what: string): void {
+  if (!isUuid(id)) throw notFound(what);
+}
+
+/** A page number from a URL: a whole number from 0, and never absurdly large. */
+function pageNumber(raw: number | undefined): number {
+  const n = Math.floor(Number(raw ?? 0));
+  return Number.isFinite(n) ? Math.min(Math.max(0, n), 100_000) : 0;
+}
+
+/** Why a member can't write here, when it's because the community is read-only for them. */
+function readOnlyReason(ctx: MemberContext, fallback: string): string {
+  if (ctx.community.archived) return 'This community is archived, so it’s read-only.';
+  if (ctx.timedOut) return "You're timed out and can't post right now.";
+  if (ctx.needsRules) return 'Accept the rules in the welcome steps first.';
+  return fallback;
+}
+
 function assertForum(channel: ChannelView) {
   if (channel.type !== 'forum' && channel.type !== 'announcement') {
     throw new AppError('bad_request', 'That channel is not a forum.');
@@ -98,13 +120,14 @@ export async function listThreads(
   opts: { sort?: ThreadSort; flairId?: string; page?: number; pageSize?: number } = {},
 ): Promise<{ items: ThreadListItem[]; total: number; page: number; pageSize: number }> {
   const pageSize = Math.min(50, opts.pageSize ?? 25);
-  const page = Math.max(0, opts.page ?? 0);
+  const page = pageNumber(opts.page);
   const sort: ThreadSort = THREAD_SORTS.includes(opts.sort as ThreadSort)
     ? (opts.sort as ThreadSort)
     : (channel.settings.defaultSort ?? 'latest');
   const t = schema.threads;
   const where: SQL[] = [eq(t.channelId, channel.id), isNull(t.deletedAt)];
-  if (opts.flairId) where.push(eq(t.flairId, opts.flairId));
+  // An id that can't be a flair's matches nothing, so the filter is dropped rather than failing.
+  if (opts.flairId && isUuid(opts.flairId)) where.push(eq(t.flairId, opts.flairId));
   if (sort === 'unanswered')
     where.push(channel.settings.qa ? isNull(t.solutionPostId) : eq(t.replyCount, 0));
 
@@ -245,6 +268,7 @@ export async function recentThreads(
 export type ThreadRow = typeof schema.threads.$inferSelect;
 
 export async function getThread(ctx: MemberContext, threadId: string) {
+  assertId(threadId, 'Thread');
   const thread = await db.query.threads.findFirst({
     where: and(
       eq(schema.threads.id, threadId),
@@ -305,8 +329,8 @@ export async function listPosts(
   opts: { page?: number; pageSize?: number } = {},
 ): Promise<{ posts: PostView[]; total: number; page: number; pageSize: number }> {
   const pageSize = Math.min(100, opts.pageSize ?? 30);
-  const page = Math.max(0, opts.page ?? 0);
-  const [rows, totals] = await Promise.all([
+  let page = pageNumber(opts.page);
+  const fetchPage = (n: number) =>
     db
       .select({
         id: schema.posts.id,
@@ -326,9 +350,19 @@ export async function listPosts(
       .where(eq(schema.posts.threadId, threadId))
       .orderBy(asc(schema.posts.id))
       .limit(pageSize)
-      .offset(page * pageSize),
+      .offset(n * pageSize);
+  const [firstRows, totals] = await Promise.all([
+    fetchPage(page),
     db.select({ n: count() }).from(schema.posts).where(eq(schema.posts.threadId, threadId)),
   ]);
+  // Past the end (an old link, or replies deleted since): show the last page instead. Deleted
+  // posts still take their place in the thread, so this counts them like the listing does.
+  let rows = firstRows;
+  const lastPage = Math.max(0, Math.ceil((totals[0]?.n ?? 0) / pageSize) - 1);
+  if (page > lastPage) {
+    page = lastPage;
+    rows = await fetchPage(page);
+  }
   const postIds = rows.map((r) => r.id);
   const authorIds = [
     ...new Set(rows.map((r) => r.authorId).filter((x): x is string => Boolean(x))),
@@ -465,6 +499,7 @@ export async function locatePost(
   pageSize = 30,
 ): Promise<number> {
   await getThread(ctx, threadId);
+  assertId(postId, 'Post');
   const post = await db.query.posts.findFirst({
     where: and(eq(schema.posts.id, postId), eq(schema.posts.threadId, threadId)),
   });
@@ -496,6 +531,9 @@ async function enforceSlowmode(ctx: MemberContext, channel: ChannelView) {
 
 function prepareBody(raw: unknown): { body: RichNode; text: string } {
   const body = sanitizeDoc(raw);
+  // Size first: every edit also keeps the previous version as a revision.
+  const tooBig = docSizeProblem(body, POST_DOC_LIMITS);
+  if (tooBig) throw new AppError('validation', tooBig, { fields: { body: tooBig } });
   const text = docToText(body, 50_000);
   if (!text.trim() && !JSON.stringify(body).includes('"image"')) {
     throw new AppError('validation', 'Write something first.', {
@@ -733,6 +771,10 @@ export async function editPost(
   raw: unknown,
   opts: { title?: string } = {},
 ): Promise<void> {
+  if (!ctx.userId) throw unauthorized();
+  // Before any validation, so edits that are turned away still count.
+  await enforceRateLimit(`edit:${ctx.userId}`, 30, 300);
+  assertId(postId, 'Post');
   const post = await db.query.posts.findFirst({
     where: and(
       eq(schema.posts.id, postId),
@@ -741,15 +783,21 @@ export async function editPost(
     ),
   });
   if (!post) throw notFound('Post');
-  if (!ctx.userId || post.authorId !== ctx.userId)
-    throw forbidden('You can only edit your own posts.');
+  if (post.authorId !== ctx.userId) throw forbidden('You can only edit your own posts.');
   const { thread, channel } = await loadThreadForWrite(ctx, post.threadId);
+  // Editing takes what writing it took, so a timeout, the rules gate or an archived community
+  // (all read-only) stop edits too.
+  await requireChannelPerm(
+    ctx,
+    channel,
+    post.isOp ? Permission.CREATE_THREADS : Permission.REPLY_IN_THREADS,
+    readOnlyReason(ctx, "You can't edit posts in this channel."),
+  );
   if (thread.locked) throw forbidden('This thread is locked.');
   const input = postInputSchema.pick({ body: true }).parse(raw);
   const { body, text } = prepareBody(input.body);
   const title =
     opts.title !== undefined ? z.string().trim().min(3).max(200).parse(opts.title) : undefined;
-  await enforceRateLimit(`edit:${ctx.userId}`, 30, 300);
   await enforceAutomod(ctx, {
     kind: post.isOp ? 'thread' : 'reply',
     channelId: channel.id,
@@ -784,6 +832,7 @@ export async function deletePost(
   postId: string,
   reason?: string,
 ): Promise<{ threadDeleted: boolean }> {
+  assertId(postId, 'Post');
   const post = await db.query.posts.findFirst({
     where: and(
       eq(schema.posts.id, postId),
@@ -797,29 +846,28 @@ export async function deletePost(
   const canModerate = has(BigInt(channel.perms), Permission.MANAGE_MESSAGES) || isMod;
   if (!own && !canModerate) throw forbidden();
   const now = new Date();
-  await db.transaction(async (tx) => {
+  const changed = await db.transaction(async (tx) => {
+    // Only the first of two deletes at once does anything (and counts the reply off).
+    const deleted = await tx
+      .update(schema.posts)
+      .set({ deletedAt: now, deletedBy: ctx.userId })
+      .where(and(eq(schema.posts.id, postId), isNull(schema.posts.deletedAt)))
+      .returning({ id: schema.posts.id });
+    if (!deleted.length) return false;
     if (post.isOp) {
       // Removing the opening post removes the whole thread.
       await tx
         .update(schema.threads)
         .set({ deletedAt: now })
         .where(eq(schema.threads.id, thread.id));
-    }
-    await tx
-      .update(schema.posts)
-      .set({ deletedAt: now, deletedBy: ctx.userId })
-      .where(eq(schema.posts.id, postId));
-    if (!post.isOp) {
+    } else {
       await tx
         .update(schema.threads)
-        .set({ replyCount: sql`greatest(${schema.threads.replyCount} - 1, 0)` })
+        .set({
+          replyCount: sql`greatest(${schema.threads.replyCount} - 1, 0)`,
+          solutionPostId: sql`nullif(${schema.threads.solutionPostId}, ${postId}::uuid)`,
+        })
         .where(eq(schema.threads.id, thread.id));
-      if (thread.solutionPostId === postId) {
-        await tx
-          .update(schema.threads)
-          .set({ solutionPostId: null })
-          .where(eq(schema.threads.id, thread.id));
-      }
     }
     if (!own) {
       await audit(tx, {
@@ -832,7 +880,9 @@ export async function deletePost(
         reason,
       });
     }
+    return true;
   });
+  if (!changed) throw notFound('Post');
   realtime()
     .to(rooms.thread(thread.id))
     .emit('post:deleted', { threadId: thread.id, postId, actorId: ctx.userId });
@@ -843,11 +893,16 @@ export async function deletePost(
 }
 
 export async function postHistory(ctx: MemberContext, postId: string) {
+  assertId(postId, 'Post');
   const post = await db.query.posts.findFirst({
     where: and(eq(schema.posts.id, postId), eq(schema.posts.communityId, ctx.community.id)),
   });
   if (!post) throw notFound('Post');
-  await getThread(ctx, post.threadId);
+  const { channel } = await getThread(ctx, post.threadId);
+  // A deleted post's earlier versions go with it, except for moderators.
+  if (post.deletedAt && !has(BigInt(channel.perms), Permission.MANAGE_THREADS)) {
+    throw notFound('Post');
+  }
   return db
     .select({
       id: schema.postRevisions.id,
@@ -867,6 +922,7 @@ export async function toggleReaction(
 ): Promise<{ added: boolean }> {
   if (!(REACTIONS as readonly string[]).includes(emoji))
     throw new AppError('validation', 'Unknown reaction.');
+  assertId(postId, 'Post');
   const post = await db.query.posts.findFirst({
     where: and(
       eq(schema.posts.id, postId),
@@ -885,7 +941,13 @@ export async function toggleReaction(
   );
   const existing = await db.query.postReactions.findFirst({ where: key });
   if (existing) await db.delete(schema.postReactions).where(key);
-  else await db.insert(schema.postReactions).values({ postId, userId: ctx.userId!, emoji });
+  else {
+    // A double click can get here twice: the second insert finds it there already.
+    await db
+      .insert(schema.postReactions)
+      .values({ postId, userId: ctx.userId!, emoji })
+      .onConflictDoNothing();
+  }
   realtime()
     .to(rooms.thread(post.threadId))
     .emit('post:reactions', { threadId: post.threadId, postId, actorId: ctx.userId });
@@ -940,20 +1002,41 @@ export interface PollResults {
 }
 
 export async function pollResults(ctx: MemberContext, pollId: string): Promise<PollResults> {
+  assertId(pollId, 'Poll');
   const poll = await db.query.polls.findFirst({ where: eq(schema.polls.id, pollId) });
   if (!poll) throw notFound('Poll');
-  const votes = await db.select().from(schema.pollVotes).where(eq(schema.pollVotes.pollId, pollId));
+  const v = schema.pollVotes;
+  // Counted in the database: a popular poll has far more votes than it's worth loading.
+  const [perOption, [voters], mine] = await Promise.all([
+    db
+      .select({ optionId: v.optionId, n: count() })
+      .from(v)
+      .where(eq(v.pollId, pollId))
+      .groupBy(v.optionId),
+    db
+      .select({ n: sql<number>`count(distinct ${v.userId})::int` })
+      .from(v)
+      .where(eq(v.pollId, pollId)),
+    ctx.userId
+      ? db
+          .select({ optionId: v.optionId })
+          .from(v)
+          .where(and(eq(v.pollId, pollId), eq(v.userId, ctx.userId)))
+      : [],
+  ]);
+  const votesFor = new Map(perOption.map((r) => [r.optionId, r.n]));
+  const myOptions = new Set(mine.map((r) => r.optionId));
   return {
     id: poll.id,
     question: poll.question,
     multiple: poll.multiple,
     closesAt: poll.closesAt,
     closed: Boolean(poll.closesAt && poll.closesAt < new Date()),
-    totalVoters: new Set(votes.map((v) => v.userId)).size,
+    totalVoters: voters?.n ?? 0,
     options: poll.options.map((o) => ({
       ...o,
-      votes: votes.filter((v) => v.optionId === o.id).length,
-      mine: votes.some((v) => v.optionId === o.id && v.userId === ctx.userId),
+      votes: votesFor.get(o.id) ?? 0,
+      mine: myOptions.has(o.id),
     })),
   };
 }
@@ -963,7 +1046,10 @@ export async function votePoll(
   pollId: string,
   rawOptions: unknown,
 ): Promise<PollResults> {
+  if (!ctx.userId) throw unauthorized();
+  await enforceRateLimit(`poll-vote:${ctx.userId}`, 30, 60, 'You are voting too quickly.');
   const optionIds = z.array(z.string().max(8)).max(10).parse(rawOptions);
+  assertId(pollId, 'Poll');
   const poll = await db.query.polls.findFirst({ where: eq(schema.polls.id, pollId) });
   if (!poll) throw notFound('Poll');
   const { channel } = await loadThreadForWrite(ctx, poll.threadId);
@@ -974,6 +1060,11 @@ export async function votePoll(
   const chosen = [...new Set(optionIds)].filter((id) => valid.has(id));
   if (!poll.multiple && chosen.length > 1) throw new AppError('validation', 'Choose one option.');
   await db.transaction(async (tx) => {
+    // One vote at a time per person and poll: two at once could otherwise both clear the old
+    // choice and both add theirs, leaving two choices in a single-choice poll.
+    await tx.execute(
+      sql`select pg_advisory_xact_lock(hashtextextended(${`poll:${pollId}:${ctx.userId}`}, 0))`,
+    );
     await tx
       .delete(schema.pollVotes)
       .where(and(eq(schema.pollVotes.pollId, pollId), eq(schema.pollVotes.userId, ctx.userId!)));
@@ -1056,6 +1147,7 @@ export async function markSolution(
     throw forbidden('Only the author or a moderator can pick the answer.');
   let solutionAuthor: string | null = null;
   if (postId) {
+    if (!isUuid(postId)) throw new AppError('validation', 'Pick a reply as the answer.');
     const post = await db.query.posts.findFirst({
       where: and(
         eq(schema.posts.id, postId),
@@ -1218,6 +1310,7 @@ export async function searchForum(ctx: MemberContext, rawQ: string, limit = 30) 
 
 /** Channel perms for a thread (used by the realtime server). */
 export async function canViewThread(ctx: MemberContext, threadId: string): Promise<boolean> {
+  if (!isUuid(threadId)) return false;
   const thread = await db.query.threads.findFirst({ where: eq(schema.threads.id, threadId) });
   if (!thread || thread.communityId !== ctx.community.id || thread.deletedAt) return false;
   const channel = await db.query.channels.findFirst({

@@ -40,8 +40,14 @@ export async function getAutomod(communityId: string): Promise<AutomodState> {
   const row = await db.query.automodSettings.findFirst({
     where: eq(schema.automodSettings.communityId, communityId),
   });
+  // Stored rules that no longer fit the schema (an older shape, say) fall back to the defaults
+  // rather than failing every post in the community.
+  const parsed = row ? automodSchema.safeParse(row.config) : null;
+  if (parsed && !parsed.success) {
+    log.warn({ communityId, err: parsed.error.message }, 'stored automod config is invalid');
+  }
   const value = {
-    config: row ? automodSchema.parse(row.config) : DEFAULT_AUTOMOD,
+    config: parsed?.success ? parsed.data : DEFAULT_AUTOMOD,
     joinsPausedUntil: row?.joinsPausedUntil ?? null,
   };
   if (cache.size > 5000) cache.clear();
@@ -292,19 +298,44 @@ async function holdPost(ctx: MemberContext, target: AutomodTarget, hit: AutomodH
 
 // ── Joins (raid protection) ─────────────────────────────────────────────────
 
+/** Banned from the community (a ban that hasn't run out). */
+async function bannedFrom(communityId: string, userId: string): Promise<boolean> {
+  const [ban] = await db
+    .select({ expiresAt: schema.bans.expiresAt })
+    .from(schema.bans)
+    .where(and(eq(schema.bans.communityId, communityId), eq(schema.bans.userId, userId)))
+    .limit(1);
+  return Boolean(ban && (!ban.expiresAt || ban.expiresAt > new Date()));
+}
+
+/** How long a join counts towards the limit, and a rejoin is ignored. */
+const JOIN_WINDOW_SECONDS = 60;
+
 /**
- * Called before someone joins: refuses while joining is paused, and pauses it when too many
- * people join at once.
+ * Called before someone (not yet a member) joins: refuses while joining is paused, and pauses it
+ * when too many people join at once. Only distinct newcomers count: not someone banned here
+ * (they're turned away anyway), and not someone leaving and joining again within the minute, so
+ * one account can't lock everyone else out.
  */
 export async function checkJoinAllowed(
   community: Pick<MemberContext['community'], 'id' | 'ownerId' | 'slug' | 'name'>,
+  userId: string,
 ): Promise<void> {
   const { config, joinsPausedUntil } = await getAutomod(community.id);
   if (joinsPausedUntil && joinsPausedUntil > new Date()) {
     throw forbidden('New joins are paused for a few minutes. Please try again soon.');
   }
   if (!config.joins.enabled) return;
-  const joins = await bump(`am:joins:${community.id}`, 60);
+  if (await bannedFrom(community.id, userId)) return;
+  const first = await cacheRedis().set(
+    `am:joiner:${community.id}:${userId}`,
+    '1',
+    'EX',
+    JOIN_WINDOW_SECONDS,
+    'NX',
+  );
+  if (!first) return;
+  const joins = await bump(`am:joins:${community.id}`, JOIN_WINDOW_SECONDS);
   if (joins <= config.joins.maxPerMinute) return;
   const until = new Date(Date.now() + config.joins.pauseMinutes * 60_000);
   await db

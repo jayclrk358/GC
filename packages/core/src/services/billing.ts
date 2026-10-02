@@ -27,6 +27,7 @@ import { env } from '../env';
 import { AppError, forbidden } from '../errors';
 import { logger } from '../logger';
 import { enforceRateLimit } from '../ratelimit';
+import { cacheRedis } from '../redis';
 
 const log = logger('billing');
 
@@ -394,31 +395,115 @@ export async function createCheckout(
   }
   const userId = ctx.userId!;
   await enforceRateLimit(`checkout:${userId}`, 10, 600, 'Too many attempts. Try again soon.');
-  if (await activeSubscription(ctx.community.id)) {
-    throw new AppError(
-      'conflict',
-      'This community already has a plan. Change it from Plan & billing in its settings.',
-    );
+  // One checkout at a time per community: two tabs (or two managers) could otherwise each pay.
+  const lockKey = `checkout-lock:${ctx.community.id}`;
+  const lockToken = newId();
+  if ((await cacheRedis().set(lockKey, lockToken, 'PX', 30_000, 'NX')) !== 'OK') {
+    throw new AppError('conflict', 'A checkout is already starting for this community.');
   }
-  const metadata = {
-    communityId: ctx.community.id,
-    plan: input.plan,
-    interval: input.interval,
-    purchaserId: userId,
-  };
-  const session = await stripe().checkout.sessions.create({
-    mode: 'subscription',
-    customer: await customerFor(userId),
-    line_items: [{ price: priceFor(input.plan, input.interval), quantity: 1 }],
-    client_reference_id: ctx.community.id,
-    metadata,
-    subscription_data: { metadata },
-    allow_promotion_codes: true,
-    success_url: communityUrl(ctx, '/settings/billing?checkout={CHECKOUT_SESSION_ID}'),
-    cancel_url: `${env().APP_URL.replace(/\/$/, '')}/store?community=${ctx.community.slug}`,
-  });
-  if (!session.url) throw new AppError('bad_request', 'Stripe did not start checkout.');
-  return { url: session.url };
+  try {
+    if (await activeSubscription(ctx.community.id)) {
+      throw new AppError(
+        'conflict',
+        'This community already has a plan. Change it from Plan & billing in its settings.',
+      );
+    }
+    const open = await openCheckout(ctx.community.id);
+    if (open?.status === 'complete') {
+      throw new AppError('conflict', 'This community’s plan is being set up. Refresh in a moment.');
+    }
+    if (open) {
+      // The same person picking the same plan again (say, from another tab) carries on there.
+      const same =
+        open.purchaserId === userId && open.plan === input.plan && open.interval === input.interval;
+      if (same && open.url) return { url: open.url };
+      throw new AppError(
+        'conflict',
+        'A checkout for this community is already open. Finish it, or try again in half an hour once it has run out.',
+      );
+    }
+    const metadata = {
+      communityId: ctx.community.id,
+      plan: input.plan,
+      interval: input.interval,
+      purchaserId: userId,
+    };
+    const session = await stripe().checkout.sessions.create({
+      mode: 'subscription',
+      customer: await customerFor(userId),
+      line_items: [{ price: priceFor(input.plan, input.interval), quantity: 1 }],
+      client_reference_id: ctx.community.id,
+      metadata,
+      subscription_data: { metadata },
+      allow_promotion_codes: true,
+      success_url: communityUrl(ctx, '/settings/billing?checkout={CHECKOUT_SESSION_ID}'),
+      cancel_url: `${env().APP_URL.replace(/\/$/, '')}/store?community=${ctx.community.slug}`,
+      // As soon as Stripe allows, so an abandoned checkout stops holding the community up.
+      expires_at: Math.floor(Date.now() / 1000) + CHECKOUT_OPEN_SECONDS,
+    });
+    if (!session.url) throw new AppError('bad_request', 'Stripe did not start checkout.');
+    const record: OpenCheckout = {
+      id: session.id,
+      purchaserId: userId,
+      plan: input.plan,
+      interval: input.interval,
+    };
+    await cacheRedis().set(
+      openCheckoutKey(ctx.community.id),
+      JSON.stringify(record),
+      'EX',
+      CHECKOUT_OPEN_SECONDS,
+    );
+    return { url: session.url };
+  } finally {
+    // Only our own lock (it runs out by itself if this took longer than that).
+    const held = await cacheRedis()
+      .get(lockKey)
+      .catch(() => null);
+    if (held === lockToken)
+      await cacheRedis()
+        .del(lockKey)
+        .catch(() => undefined);
+  }
+}
+
+/** How long a checkout stays payable (Stripe's shortest is 30 minutes, with a little to spare). */
+const CHECKOUT_OPEN_SECONDS = 35 * 60;
+
+interface OpenCheckout {
+  id: string;
+  purchaserId: string;
+  plan: string;
+  interval: string;
+}
+
+const openCheckoutKey = (communityId: string) => `checkout-open:${communityId}`;
+
+/**
+ * The community's checkout that can still be paid (or has just been), if any. Only the latest is
+ * remembered, for as long as it can be paid.
+ */
+async function openCheckout(
+  communityId: string,
+): Promise<(OpenCheckout & { status: 'open' | 'complete'; url: string | null }) | null> {
+  const raw = await cacheRedis().get(openCheckoutKey(communityId));
+  if (!raw) return null;
+  let open: OpenCheckout;
+  try {
+    open = JSON.parse(raw) as OpenCheckout;
+  } catch {
+    return null;
+  }
+  try {
+    const session = await stripe().checkout.sessions.retrieve(open.id);
+    // Paid but not recorded yet (the webhook is on its way) counts too.
+    const status =
+      session.status === 'open' ? 'open' : session.status === 'complete' ? 'complete' : null;
+    return status ? { ...open, status, url: session.url ?? null } : null;
+  } catch (err) {
+    log.warn({ err, sessionId: open.id }, 'could not look up the open checkout');
+    return null;
+  }
 }
 
 /**

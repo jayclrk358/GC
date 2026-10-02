@@ -18,7 +18,7 @@ import { logger } from '../logger';
 import { BlockedAddressError, resolveTarget, UnresolvableHostError } from '../net/ssrf';
 import { safePost } from '../net/safe-fetch';
 import { enqueue, QUEUES } from '../queues';
-import { enforceRateLimit } from '../ratelimit';
+import { enforceRateLimit, rateLimit } from '../ratelimit';
 import { cacheRedis } from '../redis';
 import { audit } from './audit';
 
@@ -31,6 +31,13 @@ const MAX_WEBHOOKS = 10;
 /** Failed deliveries in a row before a webhook is switched off. */
 export const WEBHOOK_MAX_FAILURES = 20;
 const USER_AGENT = 'MagnoxWebhooks/1.0 (+https://magnoxresources.com/developers)';
+/** Most deliveries a community can queue in a minute, across its webhooks; the rest are dropped. */
+const DELIVERIES_PER_MINUTE = 600;
+/** A burst of chat messages goes to a Discord webhook together, at most this often. */
+const BATCH_MS = 2000;
+/** Most messages in one batch (more in the same two seconds are dropped). */
+const MAX_BATCH = 10;
+const RETRIES = { attempts: 5, backoff: { type: 'exponential', delay: 15_000 } } as const;
 
 export interface WebhookView {
   id: string;
@@ -186,6 +193,15 @@ export async function setWebhookActive(
   active: boolean,
 ): Promise<void> {
   requirePerm(ctx, Permission.MANAGE_COMMUNITY);
+  // Switching back on starts the failure count again, so it can't be done over and over.
+  if (active) {
+    await enforceRateLimit(
+      `webhook-enable:${ctx.community.id}`,
+      10,
+      3600,
+      'Webhooks have been switched back on a lot lately. Try again later.',
+    );
+  }
   const row = await loadHook(ctx, id);
   await db
     .update(schema.webhooks)
@@ -243,7 +259,7 @@ export async function testWebhook(
     community: communityInfo(ctx.community),
     data: {},
   };
-  const result = await send(row, payload);
+  const result = await send(row, [payload]);
   await record(row.id, result, true);
   return { ok: result.ok, status: result.status, error: result.error };
 }
@@ -268,6 +284,15 @@ const RED = 0xef4444;
 const BLUE = 0x6366f1;
 const AMBER = 0xf59e0b;
 
+/**
+ * Text people wrote, as Discord should show it: as typed, not as Markdown, masked links or
+ * mentions (`**bold**`, `[text](url)`, `<@id>`, `@everyone`). For the parts Discord formats
+ * (titles, descriptions, field values); the author line and footer are shown as they are.
+ */
+export function discordText(text: unknown): string {
+  return (typeof text === 'string' ? text : '').replace(/[\\*_~`|>[\]()@<#]/g, '\\$&');
+}
+
 /** How a delivery reads as a Discord message. Nobody is ever pinged by it. */
 export function discordMessage(p: WebhookPayload): Record<string, unknown> {
   const d = p.data;
@@ -278,18 +303,19 @@ export function discordMessage(p: WebhookPayload): Record<string, unknown> {
     timestamp: p.occurredAt,
   };
   const by = user.name ? { author: { name: clip(user.name, 200), url: user.url } } : {};
+  const who = discordText(user.name);
   switch (p.event) {
     case 'ping':
       Object.assign(embed, {
         title: 'Connected to Magnox',
-        description: `News from ${p.community.name} will show up here.`,
+        description: clip(`News from ${discordText(p.community.name)} will show up here.`, 400),
         url: p.community.url,
         color: BLUE,
       });
       break;
     case 'member.joined':
       Object.assign(embed, {
-        title: clip(`${user.name} joined`, 250),
+        title: clip(`${who} joined`, 250),
         url: user.url,
         color: GREEN,
       });
@@ -297,7 +323,7 @@ export function discordMessage(p: WebhookPayload): Record<string, unknown> {
     case 'member.left':
       Object.assign(embed, {
         title: clip(
-          `${user.name} ${d.reason === 'kicked' || d.reason === 'banned' ? 'was removed' : 'left'}`,
+          `${who} ${d.reason === 'kicked' || d.reason === 'banned' ? 'was removed' : 'left'}`,
           250,
         ),
         url: user.url,
@@ -309,10 +335,10 @@ export function discordMessage(p: WebhookPayload): Record<string, unknown> {
       const m = (d.message ?? {}) as { content?: string; url?: string };
       Object.assign(embed, by, {
         title: clip(
-          `${p.event === 'announcement.created' ? 'Announcement' : 'New message'} in #${channel.name}`,
+          `${p.event === 'announcement.created' ? 'Announcement' : 'New message'} in #${discordText(channel.name)}`,
           250,
         ),
-        description: clip(m.content, 1500),
+        description: clip(discordText(m.content), 1500),
         url: m.url,
         color: p.event === 'announcement.created' ? AMBER : BLUE,
       });
@@ -321,11 +347,11 @@ export function discordMessage(p: WebhookPayload): Record<string, unknown> {
     case 'thread.created': {
       const t = (d.thread ?? {}) as { title?: string; excerpt?: string; url?: string };
       Object.assign(embed, by, {
-        title: clip(t.title, 250),
-        description: clip(t.excerpt, 1000),
+        title: clip(discordText(t.title), 250),
+        description: clip(discordText(t.excerpt), 1000),
         url: t.url,
         color: BLUE,
-        fields: [{ name: 'Forum', value: clip(channel.name, 100), inline: true }],
+        fields: [{ name: 'Forum', value: clip(discordText(channel.name), 100), inline: true }],
       });
       break;
     }
@@ -333,8 +359,8 @@ export function discordMessage(p: WebhookPayload): Record<string, unknown> {
       const t = (d.thread ?? {}) as { title?: string };
       const post = (d.post ?? {}) as { excerpt?: string; url?: string };
       Object.assign(embed, by, {
-        title: clip(`Reply: ${t.title}`, 250),
-        description: clip(post.excerpt, 1000),
+        title: clip(`Reply: ${discordText(t.title)}`, 250),
+        description: clip(discordText(post.excerpt), 1000),
         url: post.url,
         color: BLUE,
       });
@@ -343,8 +369,8 @@ export function discordMessage(p: WebhookPayload): Record<string, unknown> {
     case 'event.created': {
       const e = (d.event ?? {}) as { title?: string; when?: string; url?: string };
       Object.assign(embed, by, {
-        title: clip(`New event: ${e.title}`, 250),
-        description: clip(e.when, 300),
+        title: clip(`New event: ${discordText(e.title)}`, 250),
+        description: clip(discordText(e.when), 300),
         url: e.url,
         color: AMBER,
       });
@@ -352,7 +378,7 @@ export function discordMessage(p: WebhookPayload): Record<string, unknown> {
     }
     case 'application.submitted':
       Object.assign(embed, {
-        title: clip(`${user.name} applied to join`, 250),
+        title: clip(`${who} applied to join`, 250),
         url: (d.reviewUrl as string) ?? p.community.url,
         color: BLUE,
       });
@@ -360,13 +386,14 @@ export function discordMessage(p: WebhookPayload): Record<string, unknown> {
     case 'server.down':
     case 'server.up': {
       const s = (d.server ?? {}) as { name?: string; url?: string };
+      const name = discordText(s.name);
       const down = p.event === 'server.down';
       const after =
         !down && typeof d.downtimeMs === 'number' && d.downtimeMs > 0
           ? ` after ${formatDuration(d.downtimeMs)}`
           : '';
       Object.assign(embed, {
-        title: clip(down ? `${s.name} is down` : `${s.name} is back up${after}`, 250),
+        title: clip(down ? `${name} is down` : `${name} is back up${after}`, 250),
         url: s.url,
         color: down ? RED : GREEN,
       });
@@ -381,6 +408,34 @@ export function discordMessage(p: WebhookPayload): Record<string, unknown> {
   };
 }
 
+/** Several chat messages as one Discord message: a line each, under one heading. */
+export function discordBatchMessage(payloads: WebhookPayload[]): Record<string, unknown> {
+  const last = payloads[payloads.length - 1]!;
+  const message = discordMessage(last);
+  if (payloads.length === 1) return message;
+  const channels = new Set(payloads.map((p) => (p.data.channel as Named | undefined)?.name));
+  const lines = payloads.map((p) => {
+    const author = (p.data.author ?? {}) as Person;
+    const channel = (p.data.channel ?? {}) as Named;
+    const m = (p.data.message ?? {}) as { content?: string };
+    const where = channels.size > 1 ? ` in #${discordText(channel.name)}` : '';
+    return `**${discordText(author.name ?? 'Someone')}**${where}: ${clip(discordText(m.content), 300)}`;
+  });
+  const [embed] = message.embeds as Record<string, unknown>[];
+  const only = channels.size === 1 ? ` in #${discordText([...channels][0])}` : '';
+  const { author: _author, ...rest } = embed!;
+  return {
+    ...message,
+    embeds: [
+      {
+        ...rest,
+        title: clip(`${payloads.length} new messages${only}`, 250),
+        description: clip(lines.join('\n'), 4000),
+      },
+    ],
+  };
+}
+
 interface SendResult {
   ok: boolean;
   status: number | null;
@@ -389,11 +444,13 @@ interface SendResult {
   retry: boolean;
 }
 
+/** Send one delivery (several chat messages at once only to Discord, as one message). */
 async function send(
   hook: { url: string; kind: string; secret: string },
-  payload: WebhookPayload,
+  payloads: WebhookPayload[],
 ): Promise<SendResult> {
-  const body = JSON.stringify(hook.kind === 'discord' ? discordMessage(payload) : payload);
+  const payload = payloads[0]!;
+  const body = JSON.stringify(hook.kind === 'discord' ? discordBatchMessage(payloads) : payload);
   const timestamp = String(Math.floor(Date.now() / 1000));
   const headers: Record<string, string> = { 'content-type': 'application/json' };
   if (hook.kind === 'json') {
@@ -424,7 +481,11 @@ async function send(
   }
 }
 
-/** Note how a delivery went. `final`: no more tries for it, so a failure counts. */
+/**
+ * Note how a delivery went. A failure counts when it's the last try, when trying again won't help,
+ * or when the address timed out or couldn't be reached at all: each of those ties up a worker,
+ * so an address that's gone is switched off soon rather than after a hundred tries.
+ */
 async function record(id: string, r: SendResult, final: boolean) {
   if (r.ok) {
     await db
@@ -433,7 +494,7 @@ async function record(id: string, r: SendResult, final: boolean) {
       .where(eq(schema.webhooks.id, id));
     return;
   }
-  const counts = final || !r.retry;
+  const counts = final || !r.retry || r.status === null;
   const [row] = await db
     .update(schema.webhooks)
     .set({
@@ -452,7 +513,56 @@ async function record(id: string, r: SendResult, final: boolean) {
 
 export interface WebhookJob {
   webhookId: string;
-  payload: WebhookPayload;
+  /** What to send; a batch of chat messages for Discord waits in Redis instead. */
+  payload?: WebhookPayload;
+  batch?: boolean;
+}
+
+// Chat messages for a Discord webhook wait in a short list; the first opens a job that sends them
+// together two seconds later, so a busy channel makes one delivery every two seconds, not one per
+// message (Discord would turn most of those away).
+const batchKey = (webhookId: string) => `webhook-batch:${webhookId}`;
+/** Long enough to outlast the retries of the job that sends them. */
+const BATCH_TTL_SECONDS = 600;
+
+/** Add a message to a webhook's batch. True when it starts a batch, which then needs a job. */
+async function addToBatch(webhookId: string, payload: WebhookPayload): Promise<boolean> {
+  const key = batchKey(webhookId);
+  const redis = cacheRedis();
+  await redis
+    .multi()
+    .rpush(key, JSON.stringify(payload))
+    // A burst beyond what one delivery holds is dropped (the oldest are kept).
+    .ltrim(key, 0, MAX_BATCH - 1)
+    .expire(key, BATCH_TTL_SECONDS)
+    .exec();
+  return (await redis.set(`${key}:open`, '1', 'PX', BATCH_MS, 'NX')) === 'OK';
+}
+
+async function takeBatch(webhookId: string): Promise<WebhookPayload[]> {
+  const key = batchKey(webhookId);
+  const [[, items]] = (await cacheRedis().multi().lrange(key, 0, -1).del(key).exec()) as [
+    [null, string[]],
+    [null, number],
+  ];
+  return items.flatMap((s) => {
+    try {
+      return [JSON.parse(s) as WebhookPayload];
+    } catch {
+      return [];
+    }
+  });
+}
+
+/** Put a batch that failed back at the front, for the next try (this job's or a newer one's). */
+async function returnBatch(webhookId: string, payloads: WebhookPayload[]): Promise<void> {
+  const key = batchKey(webhookId);
+  await cacheRedis()
+    .multi()
+    .lpush(key, ...payloads.map((p) => JSON.stringify(p)).reverse())
+    .ltrim(key, 0, MAX_BATCH - 1)
+    .expire(key, BATCH_TTL_SECONDS)
+    .exec();
 }
 
 /**
@@ -465,10 +575,16 @@ export async function deliverWebhook(
 ): Promise<'sent' | 'skipped' | 'failed' | 'retry'> {
   const hook = await db.query.webhooks.findFirst({ where: eq(schema.webhooks.id, job.webhookId) });
   if (!hook || !hook.active) return 'skipped';
-  const r = await send(hook, job.payload);
+  const payloads = job.batch ? await takeBatch(hook.id) : job.payload ? [job.payload] : [];
+  if (!payloads.length) return 'skipped';
+  const r = await send(hook, payloads);
   await record(hook.id, r, final);
   if (r.ok) return 'sent';
-  return r.retry && !final ? 'retry' : 'failed';
+  if (r.retry && !final) {
+    if (job.batch) await returnBatch(hook.id, payloads);
+    return 'retry';
+  }
+  return 'failed';
 }
 
 // ── Emitting ───────────────────────────────────────────────────────────────
@@ -477,10 +593,32 @@ export async function deliverWebhook(
 function activeHooks(communityId: string) {
   return cached(hooksKey(communityId), 60, async () =>
     db
-      .select({ id: schema.webhooks.id, events: schema.webhooks.events })
+      .select({
+        id: schema.webhooks.id,
+        events: schema.webhooks.events,
+        kind: schema.webhooks.kind,
+      })
       .from(schema.webhooks)
       .where(and(eq(schema.webhooks.communityId, communityId), eq(schema.webhooks.active, true))),
   );
+}
+
+/**
+ * Whether another delivery fits in the community's budget for this minute. Past it, deliveries
+ * are dropped (and that's logged once a minute), so one busy or abusive community can't fill the
+ * queue for everyone.
+ */
+async function withinBudget(communityId: string, event: WebhookEvent): Promise<boolean> {
+  const r = await rateLimit(`webhook-budget:${communityId}`, DELIVERIES_PER_MINUTE, 60);
+  if (r.ok) return true;
+  const first = await cacheRedis().set(`webhook-budget-noted:${communityId}`, '1', 'EX', 60, 'NX');
+  if (first) {
+    log.warn(
+      { communityId, event, perMinute: DELIVERIES_PER_MINUTE },
+      'webhook deliveries over budget; dropping them for the rest of the minute',
+    );
+  }
+  return false;
 }
 
 /**
@@ -512,10 +650,17 @@ export function emitWebhook(
       data: payloadData,
     };
     for (const h of hooks) {
-      await enqueue(QUEUES.integrations, 'webhook', { webhookId: h.id, payload } as WebhookJob, {
-        attempts: 5,
-        backoff: { type: 'exponential', delay: 15_000 },
-      });
+      if (event === 'message.created' && h.kind === 'discord') {
+        // Joins the batch already on its way, if there is one.
+        if (!(await addToBatch(h.id, payload))) continue;
+        if (!(await withinBudget(communityId, event))) continue;
+        const job: WebhookJob = { webhookId: h.id, batch: true };
+        await enqueue(QUEUES.webhooks, 'webhook', job, { ...RETRIES, delay: BATCH_MS });
+        continue;
+      }
+      if (!(await withinBudget(communityId, event))) continue;
+      const job: WebhookJob = { webhookId: h.id, payload };
+      await enqueue(QUEUES.webhooks, 'webhook', job, RETRIES);
     }
   })().catch((err: Error) => log.warn({ err: err.message, event }, 'webhook not queued'));
 }

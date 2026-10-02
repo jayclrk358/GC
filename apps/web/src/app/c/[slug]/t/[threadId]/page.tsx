@@ -73,11 +73,11 @@ export default async function ThreadPage({
   const member = data.ctx.isMember;
 
   const pageSize = 30;
-  const lastPage = Math.max(0, Math.ceil((thread.replyCount + 1) / pageSize) - 1);
   const requested = Number((await searchParams).page ?? 0) || 0;
-  const page = Math.min(Math.max(0, requested), lastPage);
-  const [{ posts, total }, results, flairs, forums, prefs] = await Promise.all([
-    listPosts(data.ctx, thread.id, { page, pageSize }),
+  // listPosts brings a page past the end back to the last one. It counts deleted replies (they
+  // keep their place), which the thread's reply count leaves out, so it decides, not that count.
+  const [{ posts, total, page }, results, flairs, forums, prefs] = await Promise.all([
+    listPosts(data.ctx, thread.id, { page: requested, pageSize }),
     poll ? pollResults(data.ctx, poll.id) : null,
     isMod || isAuthor ? listFlairs(data.community.id, channel.id) : [],
     isMod ? listVisibleChannels(data.ctx, { types: ['forum', 'announcement'] }) : null,

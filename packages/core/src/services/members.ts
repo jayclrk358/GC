@@ -73,7 +73,7 @@ export async function joinCommunity(ctx: MemberContext): Promise<void> {
     throw forbidden('This community requires an application to join.');
   }
   await enforceRateLimit(`join:${ctx.userId}`, 30, 3600);
-  await checkJoinAllowed(ctx.community);
+  await checkJoinAllowed(ctx.community, ctx.userId);
   const added = await db.transaction((tx) => addMember(tx, ctx.community.id, ctx.userId!));
   communityChanged(ctx.community.id, ctx.userId, 'members');
   if (added) memberJoined(ctx.community.id, ctx.userId);

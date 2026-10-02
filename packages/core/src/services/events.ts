@@ -2,11 +2,13 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 import { and, asc, eq, gt, gte, inArray, isNull, lt, lte, or, sql } from 'drizzle-orm';
 import { db, schema } from '@magnox/db';
 import {
+  EVENT_HORIZON_MS,
   eventInputSchema,
   has,
   isOccurrence,
   newId,
   occurrencesBetween,
+  occurrenceStarts,
   parseLocal,
   Permission,
   RSVP_STATUSES,
@@ -32,7 +34,9 @@ const log = logger('events');
 
 type EventRow = typeof schema.events.$inferSelect;
 
-const scheduleOf = (e: EventRow): Schedule => ({
+const scheduleOf = (
+  e: Pick<EventRow, 'startsAt' | 'endsAt' | 'timezone' | 'recurrence'>,
+): Schedule => ({
   startsAt: e.startsAt,
   endsAt: e.endsAt,
   timezone: e.timezone,
@@ -75,6 +79,20 @@ async function loadEvent(ctx: MemberContext, id: string): Promise<EventRow> {
   });
   if (!row) throw notFound('Event');
   return row;
+}
+
+/**
+ * Whether `at` is in the range of this event's dates: from its first to its last, and never past
+ * the horizon. Anything else can't be one of them, and working dates out far enough ahead throws.
+ */
+function withinSeries(
+  event: Pick<EventRow, 'startsAt' | 'seriesEndsAt'>,
+  at: Date | null | undefined,
+): at is Date {
+  const t = at?.getTime() ?? Number.NaN;
+  if (!Number.isFinite(t) || t < event.startsAt.getTime()) return false;
+  const horizon = Math.max(Date.now(), event.startsAt.getTime()) + EVENT_HORIZON_MS;
+  return t <= Math.min(event.seriesEndsAt?.getTime() ?? horizon, horizon);
 }
 
 async function exceptionsFor(ids: string[]): Promise<Map<string, Set<number>>> {
@@ -239,7 +257,7 @@ export async function getEventDetail(ctx: MemberContext, id: string, at?: Date |
   const length = event.endsAt.getTime() - event.startsAt.getTime();
   let start: Date | null = null;
   let cancelledDate = false;
-  if (at && !Number.isNaN(at.getTime()) && isOccurrence(schedule, at)) {
+  if (withinSeries(event, at) && isOccurrence(schedule, at)) {
     start = at;
     cancelledDate = exceptions.has(at.getTime());
   }
@@ -346,6 +364,8 @@ function toStored(raw: unknown) {
     capacity: input.capacity,
     recurrence,
     seriesEndsAt: seriesEnd(schedule),
+    // The reminder job works out the next date afresh.
+    nextOccurrenceAt: null,
   };
 }
 
@@ -507,7 +527,9 @@ export async function cancelEvent(ctx: MemberContext, id: string): Promise<void>
 export async function cancelOccurrence(ctx: MemberContext, id: string, at: Date): Promise<void> {
   requirePerm(ctx, Permission.MANAGE_EVENTS);
   const event = await loadEvent(ctx, id);
-  if (!isOccurrence(scheduleOf(event), at)) throw notFound('That date');
+  if (!withinSeries(event, at) || !isOccurrence(scheduleOf(event), at)) {
+    throw notFound('That date');
+  }
   await db.transaction(async (tx) => {
     await tx
       .insert(schema.eventExceptions)
@@ -563,7 +585,7 @@ export async function rsvpEvent(
   const event = await loadEvent(ctx, id);
   if (event.cancelledAt) throw new AppError('bad_request', 'This event was cancelled.');
   const schedule = scheduleOf(event);
-  if (Number.isNaN(at.getTime()) || !isOccurrence(schedule, at)) throw notFound('That date');
+  if (!withinSeries(event, at) || !isOccurrence(schedule, at)) throw notFound('That date');
   const exceptions = (await exceptionsFor([id])).get(id);
   if (exceptions?.has(at.getTime())) throw new AppError('bad_request', 'That date was cancelled.');
   const end = at.getTime() + (event.endsAt.getTime() - event.startsAt.getTime());
@@ -614,86 +636,158 @@ export async function rsvpEvent(
 /** How long before an event its reminder goes out. */
 const REMINDER_LEAD_MS = 60 * 60 * 1000;
 
+/** What the reminder job needs of an event (not its description and the rest). */
+interface ReminderEvent {
+  id: string;
+  communityId: string;
+  title: string;
+  location: string;
+  timezone: string;
+  startsAt: Date;
+  endsAt: Date;
+  allDay: boolean;
+  recurrence: Recurrence | null;
+  seriesEndsAt: Date | null;
+  updatedAt: Date;
+  slug: string;
+  community: string;
+}
+
+/** The first start strictly after `after`, or null once the series is over. */
+function nextStartAfter(s: Schedule, after: Date): Date | null {
+  for (const start of occurrenceStarts(s, after)) {
+    if (start.getTime() > after.getTime()) return start;
+  }
+  return null;
+}
+
+/**
+ * Remind those going (or maybe going) about one occurrence. The reminder is claimed before it's
+ * sent, so it goes out at most once even if sending fails part way.
+ */
+async function remindOccurrence(event: ReminderEvent, start: Date): Promise<number> {
+  const claimed = await db
+    .insert(schema.eventReminders)
+    .values({ eventId: event.id, occurrence: start })
+    .onConflictDoNothing()
+    .returning({ eventId: schema.eventReminders.eventId });
+  if (!claimed.length) return 0;
+  const people = await db
+    .select({ userId: schema.eventRsvps.userId })
+    .from(schema.eventRsvps)
+    .where(
+      and(
+        eq(schema.eventRsvps.eventId, event.id),
+        eq(schema.eventRsvps.occurrence, start),
+        inArray(schema.eventRsvps.status, ['going', 'maybe']),
+      ),
+    );
+  if (!people.length) return 0;
+  const { slug, community } = event;
+  const when = eventTimeLabel(start, event.timezone, event.allDay);
+  const url = `/c/${slug}/events/${event.id}?at=${encodeURIComponent(start.toISOString())}`;
+  const excerpt = [when, event.location].filter(Boolean).join(' · ');
+  await deliver(
+    people.map((p) => ({
+      userId: p.userId,
+      type: 'event' as const,
+      communityId: event.communityId,
+      actorId: null,
+      targetType: 'event',
+      targetId: event.id,
+      url,
+      data: { title: `Starting soon: ${event.title}`, excerpt, community },
+    })),
+  );
+  for (const p of people) {
+    await maybeEmail(
+      p.userId,
+      'event',
+      `Starting soon: ${event.title}`,
+      `${event.title} (${community}) starts ${when}.${event.location ? ` Where: ${event.location}.` : ''}`,
+      url,
+      `event:${event.id}`,
+    ).catch((err: Error) => log.warn({ err: err.message }, 'event reminder email failed'));
+  }
+  return people.length;
+}
+
 /**
  * Remind people going (or maybe going) about occurrences starting within the hour. Runs every
- * few minutes; each occurrence's reminder is sent once.
+ * few minutes; each occurrence's reminder is sent once. Only events whose next date is near (or
+ * not worked out yet) are looked at, and each then notes its following date.
  */
 export async function sendEventReminders(): Promise<number> {
   const now = new Date();
   const soon = new Date(now.getTime() + REMINDER_LEAD_MS);
-  const rows = await db
+  const e = schema.events;
+  const rows: ReminderEvent[] = await db
     .select({
-      event: schema.events,
+      id: e.id,
+      communityId: e.communityId,
+      title: e.title,
+      location: e.location,
+      timezone: e.timezone,
+      startsAt: e.startsAt,
+      endsAt: e.endsAt,
+      allDay: e.allDay,
+      recurrence: e.recurrence,
+      seriesEndsAt: e.seriesEndsAt,
+      updatedAt: e.updatedAt,
       slug: schema.communities.slug,
       community: schema.communities.name,
     })
-    .from(schema.events)
-    .innerJoin(schema.communities, eq(schema.communities.id, schema.events.communityId))
+    .from(e)
+    .innerJoin(schema.communities, eq(schema.communities.id, e.communityId))
     .where(
       and(
-        isNull(schema.events.cancelledAt),
+        isNull(e.cancelledAt),
         isNull(schema.communities.deletedAt),
-        lte(schema.events.startsAt, soon),
-        or(isNull(schema.events.seriesEndsAt), gt(schema.events.seriesEndsAt, now)),
+        isNull(schema.communities.suspendedAt),
+        lte(e.startsAt, soon),
+        or(isNull(e.seriesEndsAt), gt(e.seriesEndsAt, now)),
+        or(isNull(e.nextOccurrenceAt), lte(e.nextOccurrenceAt, soon)),
       ),
     )
     .limit(5000);
-  const exceptions = await exceptionsFor(
-    rows.filter((r) => r.event.recurrence).map((r) => r.event.id),
-  );
+  const exceptions = await exceptionsFor(rows.filter((r) => r.recurrence).map((r) => r.id));
   let sent = 0;
-  for (const { event, slug, community } of rows) {
-    const due = occurrencesBetween(
-      scheduleOf(event),
-      now,
-      soon,
-      3,
-      exceptions.get(event.id),
-    ).filter((o) => o.start.getTime() > now.getTime());
-    for (const o of due) {
-      const claimed = await db
-        .insert(schema.eventReminders)
-        .values({ eventId: event.id, occurrence: o.start })
-        .onConflictDoNothing()
-        .returning({ eventId: schema.eventReminders.eventId });
-      if (!claimed.length) continue;
-      const people = await db
-        .select({ userId: schema.eventRsvps.userId })
-        .from(schema.eventRsvps)
+  for (const event of rows) {
+    // One event going wrong (or one date of it) mustn't hold up everyone else's reminders.
+    try {
+      const schedule = scheduleOf(event);
+      const due = occurrencesBetween(schedule, now, soon, 3, exceptions.get(event.id)).filter(
+        (o) => o.start.getTime() > now.getTime(),
+      );
+      for (const o of due) {
+        try {
+          sent += await remindOccurrence(event, o.start);
+        } catch (err) {
+          log.error(
+            { err, eventId: event.id, occurrence: o.start.toISOString() },
+            'event reminder failed',
+          );
+        }
+      }
+      // Nothing more to do here until the date after this window comes near (once the series is
+      // over, its end: it drops out of the search then). Not if it was edited meanwhile, which
+      // clears this to be worked out again. updatedAt stays the last change a person made
+      // (calendar files show it).
+      await db
+        .update(e)
+        .set({
+          nextOccurrenceAt: nextStartAfter(schedule, soon) ?? event.seriesEndsAt,
+          updatedAt: event.updatedAt,
+        })
         .where(
           and(
-            eq(schema.eventRsvps.eventId, event.id),
-            eq(schema.eventRsvps.occurrence, o.start),
-            inArray(schema.eventRsvps.status, ['going', 'maybe']),
+            eq(e.id, event.id),
+            // Stored to the microsecond, read back to the millisecond.
+            sql`date_trunc('milliseconds', ${e.updatedAt}) = ${event.updatedAt.toISOString()}::timestamptz`,
           ),
         );
-      if (!people.length) continue;
-      const when = eventTimeLabel(o.start, event.timezone, event.allDay);
-      const url = `/c/${slug}/events/${event.id}?at=${encodeURIComponent(o.start.toISOString())}`;
-      const excerpt = [when, event.location].filter(Boolean).join(' · ');
-      await deliver(
-        people.map((p) => ({
-          userId: p.userId,
-          type: 'event' as const,
-          communityId: event.communityId,
-          actorId: null,
-          targetType: 'event',
-          targetId: event.id,
-          url,
-          data: { title: `Starting soon: ${event.title}`, excerpt, community },
-        })),
-      );
-      for (const p of people) {
-        await maybeEmail(
-          p.userId,
-          'event',
-          `Starting soon: ${event.title}`,
-          `${event.title} (${community}) starts ${when}.${event.location ? ` Where: ${event.location}.` : ''}`,
-          url,
-          `event:${event.id}`,
-        ).catch((err: Error) => log.warn({ err: err.message }, 'event reminder email failed'));
-      }
-      sent += people.length;
+    } catch (err) {
+      log.error({ err, eventId: event.id }, 'event reminders failed');
     }
   }
   return sent;

@@ -162,6 +162,15 @@ describe('eventInputSchema', () => {
       }).success,
     ).toBe(false);
   });
+
+  it('only takes a last date that exists', () => {
+    const until = (d: string) =>
+      eventInputSchema.safeParse({ ...base, recurrence: { freq: 'weekly', until: d } }).success;
+    expect(until('2026-12-31')).toBe(true);
+    expect(until('2026-13-45')).toBe(false);
+    expect(until('2027-02-29')).toBe(false);
+    expect(until('2028-02-29')).toBe(true);
+  });
 });
 
 describe('toIcal', () => {
@@ -190,6 +199,30 @@ describe('toIcal', () => {
     expect(ics).toContain('SUMMARY:Raid\\, night\\; part 1');
     expect(ics).toContain('DESCRIPTION:Bring\\nsnacks');
     expect(ics.split('\r\n').every((l) => new TextEncoder().encode(l).length <= 75)).toBe(true);
+  });
+
+  it('escapes every kind of line break, so text can’t start a line of its own', () => {
+    const s = schedule('2026-10-02T20:00', 60, 'UTC', null);
+    const ics = toIcal(
+      [
+        {
+          ...s,
+          uid: 'e2@magnox',
+          title: 'A\rSTATUS:CANCELLED',
+          description: 'one\r\ntwo\nthree\rfour',
+          location: '',
+          url: 'https://magnox.example/c/x/events/e2',
+          allDay: false,
+          cancelled: false,
+          updatedAt: new Date('2026-09-01Z'),
+          exceptions: [],
+        },
+      ],
+      'Test',
+    );
+    expect(ics).toContain('SUMMARY:A\\nSTATUS:CANCELLED');
+    expect(ics).toContain('DESCRIPTION:one\\ntwo\\nthree\\nfour');
+    expect(ics.replace(/\r\n/g, '')).not.toMatch(/[\r\n]/);
   });
 });
 

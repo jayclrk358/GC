@@ -22,6 +22,7 @@ import {
   extractLinks,
   has,
   isChatReaction,
+  isUuid,
   MAX_MESSAGE_CHARS,
   messageEditSchema,
   messageInputSchema,
@@ -383,6 +384,8 @@ export async function getMessage(
   ctx: MemberContext,
   messageId: string,
 ): Promise<{ message: MessageView; channel: ChannelView }> {
+  // From a URL: an id that isn't a UUID can't be a message (and Postgres would reject it).
+  if (!isUuid(messageId)) throw notFound('Message');
   const row = await db.query.messages.findFirst({
     where: and(
       eq(schema.messages.id, messageId),
@@ -419,7 +422,7 @@ async function resolveChatMentions(ctx: MemberContext, channel: ChannelView, bod
     50,
   );
   const roleIds = [...new Set(mentions.filter((m) => m.kind === 'role').map((m) => m.id))]
-    .filter((id) => /^[0-9a-f-]{36}$/.test(id))
+    .filter(isUuid)
     .slice(0, 10);
   const [members, roles] = await Promise.all([
     userIds.length
@@ -552,6 +555,11 @@ export async function sendMessage(
   opts: { approved?: boolean } = {},
 ): Promise<MessageView> {
   if (!ctx.userId) throw unauthorized();
+  // Counted before anything is validated, so messages that are turned away count too. (Not when a
+  // moderator approves one from the queue: it was counted when first sent.)
+  if (!opts.approved) {
+    await enforceRateLimit(`chat:${ctx.userId}`, 10, 10, "You're sending messages too quickly.");
+  }
   const input = messageInputSchema.parse(raw);
   const channel = await getChatChannel(ctx, channelId);
   if (!ctx.isMember) throw forbidden('Join the community to chat.');
@@ -585,10 +593,7 @@ export async function sendMessage(
   if (!content.trim() && !input.attachments.length) {
     throw new AppError('validation', 'Write something first.', { fields: { body: 'Empty' } });
   }
-  if (!opts.approved) {
-    await enforceRateLimit(`chat:${ctx.userId}`, 10, 10, "You're sending messages too quickly.");
-    await enforceChatSlowmode(ctx, channel);
-  }
+  if (!opts.approved) await enforceChatSlowmode(ctx, channel);
 
   let replyAuthor: string | null = null;
   if (input.replyToId) {
@@ -729,6 +734,7 @@ export async function postSystemMessage(
 }
 
 async function loadOwnMessage(ctx: MemberContext, messageId: string) {
+  if (!isUuid(messageId)) throw notFound('Message');
   const row = await db.query.messages.findFirst({
     where: and(
       eq(schema.messages.id, messageId),
@@ -747,6 +753,8 @@ export async function editMessage(
   raw: unknown,
 ): Promise<void> {
   if (!ctx.userId) throw unauthorized();
+  // Before validating, so edits that are turned away still count.
+  await enforceRateLimit(`chat-edit:${ctx.userId}`, 20, 60);
   const { row, channel } = await loadOwnMessage(ctx, messageId);
   if (row.authorId !== ctx.userId) throw forbidden('You can only edit your own messages.');
   if (!perm(channel, Permission.SEND_MESSAGES))
@@ -756,7 +764,6 @@ export async function editMessage(
   if (!content.trim() && !row.attachments.length) {
     throw new AppError('validation', 'A message needs some text. Delete it instead.');
   }
-  await enforceRateLimit(`chat-edit:${ctx.userId}`, 20, 60);
   const mentions = await resolveChatMentions(ctx, channel, body);
   await enforceAutomod(ctx, {
     kind: 'message',
