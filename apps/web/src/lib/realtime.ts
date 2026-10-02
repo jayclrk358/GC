@@ -5,29 +5,78 @@ import { io, type Socket } from 'socket.io-client';
 
 let socket: Socket | null = null;
 const refCounts = new Map<string, number>();
+const resyncs = new Set<() => void>();
+
+/**
+ * Rooms with a full live feed (every message, reply or status change). A tab hidden for a while
+ * leaves them, and catches up when it's shown again: chat refetches what it missed, and other
+ * pages are redrawn on return anyway (see AutoRefresh, which does so after two minutes away).
+ */
+const PAUSABLE = /^(chat|thread|server):/;
+const PAUSE_AFTER_MS = 3 * 60_000;
+let paused = false;
+
+/** First retry after a disconnect; later ones back off up to 30 s. */
+const RETRY_MS = 1_000;
 
 /** One shared Socket.IO connection per tab, created lazily. */
 export function getSocket(): Socket {
   if (!socket) {
     const url = process.env.NEXT_PUBLIC_REALTIME_URL || undefined;
-    socket = io(url, {
+    const s = io(url, {
       withCredentials: true,
       transports: ['websocket', 'polling'],
       autoConnect: true,
+      reconnectionDelay: RETRY_MS,
+      reconnectionDelayMax: 30_000,
+      randomizationFactor: 0.5,
     });
+    socket = s;
     // Re-join rooms after reconnects (the server forgets subscriptions).
-    socket.on('connect', () => {
-      for (const room of refCounts.keys()) socket!.emit('subscribe', room);
+    s.on('connect', () => {
+      s.io.reconnectionDelay(RETRY_MS);
+      for (const room of refCounts.keys()) if (!isPaused(room)) s.emit('subscribe', room);
+    });
+    // A deploy drops everyone at once: spread the reconnects over several seconds so they don't
+    // all land on the new server together.
+    s.on('server:restarting', () => {
+      s.io.reconnectionDelay(RETRY_MS + Math.random() * 9_000);
+    });
+    let pauseTimer: number | undefined;
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        pauseTimer = window.setTimeout(pause, PAUSE_AFTER_MS);
+        return;
+      }
+      window.clearTimeout(pauseTimer);
+      if (paused) resume();
     });
   }
   return socket;
+}
+
+function isPaused(room: string): boolean {
+  return paused && PAUSABLE.test(room);
+}
+
+function pause() {
+  paused = true;
+  if (!socket?.connected) return;
+  for (const room of refCounts.keys()) if (PAUSABLE.test(room)) socket.emit('unsubscribe', room);
+}
+
+function resume() {
+  paused = false;
+  if (!socket?.connected) return; // the reconnect re-joins everything
+  for (const room of refCounts.keys()) if (PAUSABLE.test(room)) socket.emit('subscribe', room);
+  for (const fn of resyncs) fn();
 }
 
 function subscribe(room: string) {
   const n = refCounts.get(room) ?? 0;
   refCounts.set(room, n + 1);
   const s = getSocket();
-  if (n === 0 && s.connected) s.emit('subscribe', room);
+  if (n === 0 && s.connected && !isPaused(room)) s.emit('subscribe', room);
 }
 
 function unsubscribe(room: string) {
@@ -116,7 +165,10 @@ export function useRooms(roomList: string[], handlers: Handlers): void {
   }, [key]);
 }
 
-/** Run a callback whenever the socket reconnects (to refetch what was missed). */
+/**
+ * Run a callback whenever the socket reconnects, or a hidden tab picks its live feeds back up
+ * (to refetch what was missed).
+ */
 export function useReconnect(fn: () => void): void {
   const ref = React.useRef(fn);
   React.useEffect(() => {
@@ -132,11 +184,14 @@ export function useReconnect(fn: () => void): void {
       }
       ref.current();
     };
+    const onResync = () => ref.current();
     // The initial connect isn't a reconnect.
     if (s.connected) first = false;
     s.on('connect', onConnect);
+    resyncs.add(onResync);
     return () => {
       s.off('connect', onConnect);
+      resyncs.delete(onResync);
     };
   }, []);
 }

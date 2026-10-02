@@ -258,10 +258,16 @@ export function ChatView(props: Props) {
     return () => clearInterval(id);
   }, []);
 
-  // After a reconnect, fetch whatever arrived while we were away.
+  // After a reconnect (or a long spell in a hidden tab), fetch whatever arrived while we were
+  // away. Someone at the bottom gets the latest page afresh, which also brings in edits,
+  // deletions and reactions they missed; someone reading further up just gets the new messages.
   useReconnect(() => {
     const s = stateRef.current;
     if (s.hasMoreAfter) return;
+    if (atBottom.current) {
+      void fetchPage('').then((page) => page && dispatch({ type: 'replace', page }));
+      return;
+    }
     const last = [...s.messages].reverse().find((m) => !m.pending && !m.failed);
     void fetchPage(last ? `?after=${last.id}&limit=100` : '').then((page) => {
       if (!page) return;
