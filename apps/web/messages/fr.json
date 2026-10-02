@@ -2317,9 +2317,9 @@
       "pro": "Pro"
     },
     "taglines": {
-      "free": "Tout ce qu’il faut pour lancer une communauté.",
-      "plus": "Plus d’espace, des salons vocaux, des fonds de chat, des effets de pseudo et un badge Plus.",
-      "pro": "Les limites les plus élevées, des appels vocaux plus grands, le partage d’écran, ton propre domaine, un badge Pro et une place dans À la une."
+      "free": "Tout ce qu’il faut à une nouvelle communauté, gratuit pour de bon.",
+      "plus": "Pour les communautés qui grandissent : salons vocaux, plus de place et un style à vous.",
+      "pro": "Pour les grandes communautés actives : le plus de place, de grands appels vocaux, votre domaine et une place dans la sélection."
     },
     "interval": "Période de facturation",
     "monthly": "Mensuel",
@@ -2332,30 +2332,30 @@
     "current": "Offre actuelle",
     "popular": "La plus populaire",
     "features": {
-      "servers": "{count} serveurs de jeu reliés",
-      "roles": "{count} rôles",
-      "channels": "{count} salons",
-      "attachments": "{count} fichiers par message de chat",
-      "imageMb": "Images jusqu’à {count} Mo",
-      "videoMb": "Vidéos de chat jusqu’à {count} Mo",
-      "badge": "Badge {plan} sur ta communauté",
-      "featured": "Mise en avant dans Explorer",
-      "voiceChannels": "{count, plural, one {# salon vocal} other {# salons vocaux}}, jusqu’à {people} personnes chacun",
-      "nameEffects": "Effets et animations de pseudo et de rôle",
-      "roleIcons": "Icônes de rôle",
-      "pageBackground": "Image de fond de la communauté",
-      "chatBackgrounds": "Fonds des salons de chat",
-      "separators": "Séparateurs personnalisés dans les listes de salons",
-      "screenShare": "Partage d’écran dans les salons vocaux",
-      "emoji": "{count} émojis personnalisés",
-      "customDomain": "Ton propre domaine pour les pages de la communauté"
+      "core": "Forum, wiki, événements, chat et statut des serveurs en direct",
+      "room": "{servers} serveurs de jeu, {channels} salons, {roles} rôles",
+      "extras": "{emoji} émojis personnalisés et {webhooks} webhooks",
+      "media": "Images de {image}, vidéos de {video}, {daily} d’envois par jour et par membre",
+      "voice": "{count, plural, one {# salon vocal} other {# salons vocaux}}, jusqu’à {people} personnes chacun",
+      "voicePro": "{count, plural, one {# salon vocal} other {# salons vocaux}}, jusqu’à {people} personnes chacun, avec partage d’écran",
+      "style": "Effets de nom, icônes de rôle, arrière-plans et séparateurs de salons",
+      "customDomain": "Votre propre domaine pour les pages de la communauté",
+      "featured": "Une place dans la sélection d’Explorer",
+      "badge": "Badge {plan} sur votre communauté"
     },
     "compare": {
       "caption": "Comparer les offres",
       "feature": "Fonctionnalité",
       "yes": "Inclus",
       "no": "Non inclus",
-      "none": "Aucun"
+      "none": "Aucun",
+      "groups": {
+        "community": "Communauté",
+        "media": "Envois et médias",
+        "voice": "Vocal",
+        "style": "Apparence",
+        "reach": "Visibilité"
+      }
     },
     "rows": {
       "servers": "Serveurs de jeu reliés",
@@ -2375,14 +2375,19 @@
       "separators": "Séparateurs personnalisés",
       "screenShare": "Partage d’écran",
       "emoji": "Émojis personnalisés",
-      "customDomain": "Domaine personnalisé"
+      "customDomain": "Domaine personnalisé",
+      "dailyUploadMb": "Envois par membre et par jour",
+      "webhooks": "Webhooks"
     },
     "mb": "{count} Mo",
     "lock": {
       "needs": "{what} : disponible avec {plan}.",
       "kept": "Tout ce qui est déjà configuré est conservé et réapparaît après le passage à une offre supérieure.",
       "cta": "Obtenir {plan}"
-    }
+    },
+    "includes": "Tout ce qu’offre {plan}, et en plus :",
+    "gb": "{count} Go",
+    "perDay": "{size} par jour"
   },
   "store": {
     "title": "Boutique",

@@ -2317,9 +2317,9 @@
       "pro": "Pro"
     },
     "taglines": {
-      "free": "Everything you need to start a community.",
-      "plus": "More room, voice channels, chat backgrounds, name effects and a Plus badge.",
-      "pro": "The biggest limits, bigger voice calls, screen sharing, your own domain, a Pro badge and a place in Featured."
+      "free": "Everything a new community needs, free for good.",
+      "plus": "For growing communities: voice channels, more room and a custom look.",
+      "pro": "For big, busy communities: the most room, big voice calls, your own domain and a spot in Featured."
     },
     "interval": "Billing period",
     "monthly": "Monthly",
@@ -2332,30 +2332,30 @@
     "current": "Current plan",
     "popular": "Most popular",
     "features": {
-      "servers": "{count} linked game servers",
-      "roles": "{count} roles",
-      "channels": "{count} channels",
-      "attachments": "{count} files per chat message",
-      "imageMb": "{count} MB image uploads",
-      "videoMb": "{count} MB chat videos",
-      "badge": "{plan} badge on your community",
-      "featured": "Featured on Explore",
-      "voiceChannels": "{count, plural, one {# voice channel} other {# voice channels}}, up to {people} people each",
-      "nameEffects": "Name and role effects and animations",
-      "roleIcons": "Role icons",
-      "pageBackground": "Community background image",
-      "chatBackgrounds": "Chat channel backgrounds",
-      "separators": "Custom separators in channel lists",
-      "screenShare": "Screen sharing in voice channels",
-      "emoji": "{count} custom emoji",
-      "customDomain": "Your own domain for the community’s pages"
+      "core": "Forum, wiki, events, chat and live server status",
+      "room": "{servers} game servers, {channels} channels, {roles} roles",
+      "extras": "{emoji} custom emoji and {webhooks} webhooks",
+      "media": "{image} images, {video} videos, {daily} of uploads a day per member",
+      "voice": "{count, plural, one {# voice channel} other {# voice channels}}, up to {people} people each",
+      "voicePro": "{count, plural, one {# voice channel} other {# voice channels}}, up to {people} people each, with screen sharing",
+      "style": "Name effects, role icons, backgrounds and channel separators",
+      "customDomain": "Your own domain for the community’s pages",
+      "featured": "A place in Featured on Explore",
+      "badge": "{plan} badge on your community"
     },
     "compare": {
       "caption": "Compare plans",
       "feature": "Feature",
       "yes": "Included",
       "no": "Not included",
-      "none": "None"
+      "none": "None",
+      "groups": {
+        "community": "Community",
+        "media": "Uploads and media",
+        "voice": "Voice",
+        "style": "Look and feel",
+        "reach": "Reach"
+      }
     },
     "rows": {
       "servers": "Linked game servers",
@@ -2375,14 +2375,19 @@
       "separators": "Custom separators",
       "screenShare": "Screen sharing",
       "emoji": "Custom emoji",
-      "customDomain": "Custom domain"
+      "customDomain": "Custom domain",
+      "dailyUploadMb": "Uploads per member per day",
+      "webhooks": "Webhooks"
     },
     "mb": "{count} MB",
     "lock": {
       "needs": "{what} need {plan}.",
       "kept": "Anything already set up is kept, and shows again after upgrading.",
       "cta": "Get {plan}"
-    }
+    },
+    "includes": "Everything in {plan}, plus:",
+    "gb": "{count} GB",
+    "perDay": "{size} a day"
   },
   "store": {
     "title": "Store",

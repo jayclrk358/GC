@@ -2317,9 +2317,9 @@
       "pro": "Pro"
     },
     "taglines": {
-      "free": "Todo lo que necesitas para empezar una comunidad.",
-      "plus": "Más espacio, canales de voz, fondos de chat, efectos de nombre y una insignia Plus.",
-      "pro": "Los límites más altos, llamadas de voz más grandes, compartir pantalla, tu propio dominio, una insignia Pro y un lugar en Destacadas."
+      "free": "Todo lo que necesita una comunidad nueva, gratis para siempre.",
+      "plus": "Para comunidades que crecen: canales de voz, más espacio y un aspecto propio.",
+      "pro": "Para comunidades grandes y activas: el máximo espacio, llamadas de voz grandes, tu propio dominio y un hueco en Destacadas."
     },
     "interval": "Periodo de facturación",
     "monthly": "Mensual",
@@ -2332,30 +2332,30 @@
     "current": "Plan actual",
     "popular": "El más popular",
     "features": {
-      "servers": "{count} servidores de juego vinculados",
-      "roles": "{count} roles",
-      "channels": "{count} canales",
-      "attachments": "{count} archivos por mensaje de chat",
-      "imageMb": "Imágenes de hasta {count} MB",
-      "videoMb": "Vídeos de chat de hasta {count} MB",
-      "badge": "Insignia {plan} en tu comunidad",
-      "featured": "Destacada en Explorar",
-      "voiceChannels": "{count, plural, one {# canal de voz} other {# canales de voz}}, de hasta {people} personas cada uno",
-      "nameEffects": "Efectos y animaciones de nombre y de rol",
-      "roleIcons": "Iconos de rol",
-      "pageBackground": "Imagen de fondo de la comunidad",
-      "chatBackgrounds": "Fondos de los canales de chat",
-      "separators": "Separadores personalizados en las listas de canales",
-      "screenShare": "Compartir pantalla en los canales de voz",
-      "emoji": "{count} emojis personalizados",
-      "customDomain": "Tu propio dominio para las páginas de la comunidad"
+      "core": "Foro, wiki, eventos, chat y estado de servidores en directo",
+      "room": "{servers} servidores de juego, {channels} canales, {roles} roles",
+      "extras": "{emoji} emojis propios y {webhooks} webhooks",
+      "media": "Imágenes de {image}, vídeos de {video} y {daily} de subidas al día por miembro",
+      "voice": "{count, plural, one {# canal de voz} other {# canales de voz}}, hasta {people} personas cada uno",
+      "voicePro": "{count, plural, one {# canal de voz} other {# canales de voz}}, hasta {people} personas cada uno, con pantalla compartida",
+      "style": "Efectos de nombre, iconos de rol, fondos y separadores de canales",
+      "customDomain": "Tu propio dominio para las páginas de la comunidad",
+      "featured": "Un sitio en Destacadas de Explorar",
+      "badge": "Insignia {plan} en tu comunidad"
     },
     "compare": {
       "caption": "Comparar planes",
       "feature": "Función",
       "yes": "Incluido",
       "no": "No incluido",
-      "none": "Ninguno"
+      "none": "Ninguno",
+      "groups": {
+        "community": "Comunidad",
+        "media": "Subidas y multimedia",
+        "voice": "Voz",
+        "style": "Aspecto",
+        "reach": "Alcance"
+      }
     },
     "rows": {
       "servers": "Servidores de juego vinculados",
@@ -2375,14 +2375,19 @@
       "separators": "Separadores personalizados",
       "screenShare": "Compartir pantalla",
       "emoji": "Emojis personalizados",
-      "customDomain": "Dominio personalizado"
+      "customDomain": "Dominio personalizado",
+      "dailyUploadMb": "Subidas por miembro al día",
+      "webhooks": "Webhooks"
     },
     "mb": "{count} MB",
     "lock": {
       "needs": "{what}: solo con {plan}.",
       "kept": "Todo lo que ya tengas configurado se conserva y vuelve a aparecer al mejorar el plan.",
       "cta": "Conseguir {plan}"
-    }
+    },
+    "includes": "Todo lo de {plan}, y además:",
+    "gb": "{count} GB",
+    "perDay": "{size} al día"
   },
   "store": {
     "title": "Tienda",

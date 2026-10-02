@@ -21,13 +21,13 @@ import { enqueue, QUEUES } from '../queues';
 import { enforceRateLimit, rateLimit } from '../ratelimit';
 import { cacheRedis } from '../redis';
 import { audit } from './audit';
+import { assertUnderPlanLimit } from './billing';
 
 // Webhooks: a community sends news of what happens in it to other places, either as signed JSON
 // to its own code or as messages in a Discord channel.
 
 const log = logger('webhooks');
 
-const MAX_WEBHOOKS = 10;
 /** Failed deliveries in a row before a webhook is switched off. */
 export const WEBHOOK_MAX_FAILURES = 20;
 const USER_AGENT = 'MagnoxWebhooks/1.0 (+https://magnoxresources.com/developers)';
@@ -146,9 +146,7 @@ export async function createWebhook(
     .select({ n: sql<number>`count(*)::int` })
     .from(schema.webhooks)
     .where(eq(schema.webhooks.communityId, ctx.community.id));
-  if ((count?.n ?? 0) >= MAX_WEBHOOKS) {
-    throw new AppError('conflict', `A community can have up to ${MAX_WEBHOOKS} webhooks.`);
-  }
+  await assertUnderPlanLimit(ctx.community.id, 'webhooks', count?.n ?? 0, 'webhooks');
   const kind = isDiscordWebhookUrl(input.url) ? 'discord' : 'json';
   const secret = `whsec_${randomBytes(24).toString('base64url')}`;
   const [row] = await db

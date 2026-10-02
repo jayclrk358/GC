@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { PLAN_LIMITS } from '@magnox/shared';
 import {
   createCommunity,
   expectAccessible,
@@ -40,7 +41,7 @@ test('buy a plan in the store, change it, cancel it and let it end', async ({ pa
   await expect(current.getByText(/Renews on/)).toBeVisible();
   await expect(page.getByRole('meter', { name: 'Linked game servers' })).toHaveAttribute(
     'aria-valuemax',
-    '50',
+    String(PLAN_LIMITS.plus.servers),
   );
   await expectAccessible(page, 'plan & billing');
 

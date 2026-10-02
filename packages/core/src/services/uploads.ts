@@ -2,6 +2,7 @@ import { and, asc, eq, inArray } from 'drizzle-orm';
 import { db, schema } from '@magnox/db';
 import {
   isUuid,
+  MAX_PLAN_LIMITS,
   newId,
   Permission,
   planLimits,
@@ -52,12 +53,8 @@ const PLAN_SIZED = new Set<UploadPurpose>([
  * How many bytes one person may store in a day (counting each file's still and smaller copies),
  * by the plan of the community it's for. Uploads that aren't for a community count as Free.
  */
-export const DAILY_UPLOAD_BYTES: Record<PlanId, number> = {
-  free: 500_000_000,
-  plus: 1_000_000_000,
-  pro: 2_000_000_000,
-};
-const MOST_DAILY_UPLOAD_BYTES = Math.max(...Object.values(DAILY_UPLOAD_BYTES));
+const dailyUploadBytes = (plan: PlanId) => planLimits(plan).dailyUploadMb * 1_000_000;
+const MOST_DAILY_UPLOAD_BYTES = MAX_PLAN_LIMITS.dailyUploadMb * 1_000_000;
 const DAY_SECONDS = 86_400;
 const uploadBytesKey = (userId: string) => `rl:upload-bytes:${userId}`;
 const OVER_DAILY = "You've uploaded a lot today. Please try again tomorrow.";
@@ -200,7 +197,7 @@ export async function saveUpload(opts: {
   const giveBack = await takeUploadBytes(
     opts.userId,
     files.reduce((n, f) => n + f.body.byteLength, 0),
-    DAILY_UPLOAD_BYTES[plan],
+    dailyUploadBytes(plan),
   );
   try {
     await Promise.all(files.map((f) => storage().put(f.key, f.body, f.mime)));

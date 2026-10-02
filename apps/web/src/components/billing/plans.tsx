@@ -63,47 +63,62 @@ export function usePrice() {
       : null;
 }
 
-/** The plan's headline limits and perks, as a checklist. */
+/** Sizes as people say them: MB under a gigabyte, GB from there. */
+function useSize() {
+  const t = useTranslations('plans');
+  return (mb: number) => (mb >= 1000 ? t('gb', { count: mb / 1000 }) : t('mb', { count: mb }));
+}
+
+/** The plan below, which each card builds on ("Everything in Plus, plus:"). */
+const BUILDS_ON: Partial<Record<PlanId, PlanId>> = { plus: 'free', pro: 'plus' };
+
+/** A plan's highlights, as a checklist: what it's for, not every number (that's the table). */
 export function PlanFeatures({ plan, className }: { plan: PlanId; className?: string }) {
   const t = useTranslations('plans');
+  const size = useSize();
   const l = PLAN_LIMITS[plan];
-  const perks = PLAN_PERKS[plan];
-  const items: string[] = [
-    t('features.servers', { count: l.servers }),
-    t('features.roles', { count: l.roles }),
-    t('features.channels', { count: l.channels }),
-    t('features.attachments', { count: l.attachments }),
-    t('features.imageMb', { count: l.imageMb }),
-    t('features.videoMb', { count: l.videoMb }),
-    t('features.emoji', { count: l.emoji }),
-  ];
-  if (l.voiceChannels) {
-    items.push(
-      t('features.voiceChannels', { count: l.voiceChannels, people: l.voiceParticipants }),
-    );
-  }
-  if (perks.screenShare) items.push(t('features.screenShare'));
-  if (perks.customDomain) items.push(t('features.customDomain'));
-  for (const perk of [
-    'nameEffects',
-    'roleIcons',
-    'pageBackground',
-    'chatBackgrounds',
-    'separators',
-  ] as const) {
-    if (perks[perk]) items.push(t(`features.${perk}`));
-  }
-  if (perks.badge) items.push(t('features.badge', { plan: t(`names.${plan}`) }));
-  if (perks.featured) items.push(t('features.featured'));
+  const room = t('features.room', { servers: l.servers, channels: l.channels, roles: l.roles });
+  const media = t('features.media', {
+    image: size(l.imageMb),
+    video: size(l.videoMb),
+    daily: size(l.dailyUploadMb),
+  });
+  const extras = t('features.extras', { emoji: l.emoji, webhooks: l.webhooks });
+  const voice = t('features.voice', { count: l.voiceChannels, people: l.voiceParticipants });
+  const items =
+    plan === 'free'
+      ? [t('features.core'), room, extras, media]
+      : plan === 'plus'
+        ? [
+            room,
+            voice,
+            t('features.style'),
+            extras,
+            media,
+            t('features.badge', { plan: t('names.plus') }),
+          ]
+        : [
+            room,
+            t('features.voicePro', { count: l.voiceChannels, people: l.voiceParticipants }),
+            t('features.customDomain'),
+            t('features.featured'),
+            extras,
+            media,
+            t('features.badge', { plan: t('names.pro') }),
+          ];
+  const base = BUILDS_ON[plan];
   return (
-    <ul className={cn('flex flex-col gap-2 text-sm', className)}>
-      {items.map((item) => (
-        <li key={item} className="flex items-start gap-2">
-          <Check aria-hidden className="mt-0.5 size-4 shrink-0 text-success" />
-          {item}
-        </li>
-      ))}
-    </ul>
+    <div className={cn('flex flex-col gap-2 text-sm', className)}>
+      {base && <p className="font-semibold">{t('includes', { plan: t(`names.${base}`) })}</p>}
+      <ul className="flex flex-col gap-2">
+        {items.map((item) => (
+          <li key={item} className="flex items-start gap-2">
+            <Check aria-hidden className="mt-0.5 size-4 shrink-0 text-success" />
+            {item}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -181,25 +196,18 @@ export function PlanCard({
   );
 }
 
-const ROWS: (keyof PlanLimits | keyof PlanPerks)[] = [
-  'servers',
-  'roles',
-  'channels',
-  'attachments',
-  'imageMb',
-  'videoMb',
-  'voiceChannels',
-  'voiceParticipants',
-  'emoji',
-  'screenShare',
-  'customDomain',
-  'nameEffects',
-  'roleIcons',
-  'pageBackground',
-  'chatBackgrounds',
-  'separators',
-  'badge',
-  'featured',
+type Row = keyof PlanLimits | keyof PlanPerks;
+
+/** The comparison, in sections. */
+const GROUPS: { id: 'community' | 'media' | 'voice' | 'style' | 'reach'; rows: Row[] }[] = [
+  { id: 'community', rows: ['servers', 'channels', 'roles', 'emoji', 'webhooks'] },
+  { id: 'media', rows: ['attachments', 'imageMb', 'videoMb', 'dailyUploadMb'] },
+  { id: 'voice', rows: ['voiceChannels', 'voiceParticipants', 'screenShare'] },
+  {
+    id: 'style',
+    rows: ['nameEffects', 'roleIcons', 'pageBackground', 'chatBackgrounds', 'separators'],
+  },
+  { id: 'reach', rows: ['badge', 'customDomain', 'featured'] },
 ];
 
 const isPerk = (row: string): row is keyof PlanPerks => row in PLAN_PERKS.free;
@@ -207,6 +215,7 @@ const isPerk = (row: string): row is keyof PlanPerks => row in PLAN_PERKS.free;
 /** Every limit and perk, side by side. */
 export function ComparisonTable() {
   const t = useTranslations('plans');
+  const size = useSize();
   return (
     <div className="overflow-x-auto rounded-ui-lg border border-border bg-surface">
       <table className="w-full text-sm">
@@ -223,46 +232,59 @@ export function ComparisonTable() {
             ))}
           </tr>
         </thead>
-        <tbody>
-          {ROWS.map((row) => (
-            <tr key={row} className="border-b border-border last:border-b-0">
-              <th scope="row" className="p-2 text-start font-medium sm:p-3">
-                {t(`rows.${row}`)}
+        {GROUPS.map((group) => (
+          <tbody key={group.id}>
+            <tr className="border-b border-border bg-surface-2/60">
+              <th
+                scope="colgroup"
+                colSpan={PLAN_IDS.length + 1}
+                className="p-2 text-start text-xs font-bold tracking-wide text-muted uppercase sm:px-3"
+              >
+                {t(`compare.groups.${group.id}`)}
               </th>
-              {PLAN_IDS.map((p) => {
-                let cell: React.ReactNode;
-                if (isPerk(row)) {
-                  cell = PLAN_PERKS[p][row] ? (
-                    <Check
-                      aria-label={t('compare.yes')}
-                      role="img"
-                      className="mx-auto size-4 text-success"
-                    />
-                  ) : (
-                    <Minus
-                      aria-label={t('compare.no')}
-                      role="img"
-                      className="mx-auto size-4 text-muted"
-                    />
-                  );
-                } else {
-                  const v = PLAN_LIMITS[p][row as keyof PlanLimits];
-                  cell =
-                    row === 'imageMb' || row === 'videoMb'
-                      ? t('mb', { count: v })
-                      : v === 0
-                        ? t('compare.none')
-                        : v;
-                }
-                return (
-                  <td key={p} className="p-2 text-center whitespace-nowrap tabular-nums sm:p-3">
-                    {cell}
-                  </td>
-                );
-              })}
             </tr>
-          ))}
-        </tbody>
+            {group.rows.map((row) => (
+              <tr key={row} className="border-b border-border">
+                <th scope="row" className="p-2 text-start font-medium sm:p-3">
+                  {t(`rows.${row}`)}
+                </th>
+                {PLAN_IDS.map((p) => {
+                  let cell: React.ReactNode;
+                  if (isPerk(row)) {
+                    cell = PLAN_PERKS[p][row] ? (
+                      <Check
+                        aria-label={t('compare.yes')}
+                        role="img"
+                        className="mx-auto size-4 text-success"
+                      />
+                    ) : (
+                      <Minus
+                        aria-label={t('compare.no')}
+                        role="img"
+                        className="mx-auto size-4 text-muted"
+                      />
+                    );
+                  } else {
+                    const v = PLAN_LIMITS[p][row as keyof PlanLimits];
+                    cell =
+                      v === 0
+                        ? t('compare.none')
+                        : row === 'imageMb' || row === 'videoMb'
+                          ? size(v)
+                          : row === 'dailyUploadMb'
+                            ? t('perDay', { size: size(v) })
+                            : v;
+                  }
+                  return (
+                    <td key={p} className="p-2 text-center whitespace-nowrap tabular-nums sm:p-3">
+                      {cell}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        ))}
       </table>
     </div>
   );

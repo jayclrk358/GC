@@ -53,7 +53,9 @@ describe('processVideo', () => {
 
   it('rejects videos over the size limit', () => {
     const big = Buffer.concat([ftyp('mp42'), Buffer.alloc(PLAN_LIMITS.free.videoMb * 1_000_000)]);
-    expect(() => processVideo(big)).toThrow(/too large \(max 50 MB\)/);
+    expect(() => processVideo(big)).toThrow(
+      new RegExp(`too large \\(max ${PLAN_LIMITS.free.videoMb} MB\\)`),
+    );
     // A bigger plan allows it.
     expect(processVideo(big, PLAN_LIMITS.plus.videoMb * 1_000_000).mime).toBe('video/mp4');
   });

@@ -155,7 +155,7 @@ const PLAN_NAMES: Record<PlanId, string> = { free: 'Free', plus: 'Plus', pro: 'P
 /** Refuse to go past a plan limit, pointing at an upgrade when there is one. */
 export async function assertUnderPlanLimit(
   communityId: string,
-  key: 'servers' | 'roles' | 'channels' | 'voiceChannels' | 'emoji',
+  key: 'servers' | 'roles' | 'channels' | 'voiceChannels' | 'emoji' | 'webhooks',
   current: number,
   noun: string,
 ): Promise<void> {
@@ -607,18 +607,26 @@ export async function cancelCommunitySubscriptions(communityId: string): Promise
 export async function getBilling(ctx: MemberContext) {
   requirePerm(ctx, Permission.MANAGE_COMMUNITY);
   const id = ctx.community.id;
-  const count = (table: typeof schema.roles | typeof schema.channels) =>
+  const count = (
+    table:
+      | typeof schema.roles
+      | typeof schema.channels
+      | typeof schema.customEmoji
+      | typeof schema.webhooks,
+  ) =>
     db
       .select({ n: sql<number>`count(*)::int` })
       .from(table)
       .where(eq(table.communityId, id))
       .then((r) => r[0]?.n ?? 0);
-  const [plan, sub, gift, roles, channels, servers] = await Promise.all([
+  const [plan, sub, gift, roles, channels, emoji, webhooks, servers] = await Promise.all([
     communityPlan(id),
     activeSubscription(id),
     activeGift(id),
     count(schema.roles),
     count(schema.channels),
+    count(schema.customEmoji),
+    count(schema.webhooks),
     db
       .select({ n: sql<number>`count(*)::int` })
       .from(schema.gameServers)
@@ -635,7 +643,7 @@ export async function getBilling(ctx: MemberContext) {
     enabled: billingEnabled(),
     plan,
     limits: planLimits(plan),
-    usage: { servers, roles, channels },
+    usage: { servers, roles, channels, emoji, webhooks },
     gift: gift ? { plan: gift.plan, expiresAt: gift.expiresAt?.toISOString() ?? null } : null,
     subscription: sub
       ? {

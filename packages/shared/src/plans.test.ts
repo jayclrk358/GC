@@ -25,18 +25,27 @@ describe('plans', () => {
     }
   });
 
-  it('keeps Free at the limits communities had before plans existed', () => {
-    expect(PLAN_LIMITS.free).toEqual({
-      servers: 25,
-      roles: 100,
-      channels: 200,
-      attachments: 4,
-      imageMb: 10,
-      videoMb: 50,
-      voiceChannels: 0,
-      voiceParticipants: 0,
-      emoji: 50,
-    });
+  it('gives each paid plan a real step up on the one below', () => {
+    // The limits people compare plans by grow at least threefold from Free to Pro.
+    for (const key of [
+      'servers',
+      'roles',
+      'channels',
+      'emoji',
+      'dailyUploadMb',
+      'webhooks',
+    ] as const) {
+      expect(PLAN_LIMITS.plus[key], key).toBeGreaterThan(PLAN_LIMITS.free[key]);
+      expect(PLAN_LIMITS.pro[key], key).toBeGreaterThanOrEqual(PLAN_LIMITS.free[key] * 3);
+    }
+    // Voice starts with Plus.
+    expect(PLAN_LIMITS.free.voiceChannels).toBe(0);
+    expect(PLAN_LIMITS.plus.voiceChannels).toBeGreaterThan(0);
+  });
+
+  it('keeps uploads under the web server request limit (160 MB)', () => {
+    expect(MAX_PLAN_LIMITS.videoMb + 6).toBeLessThan(160);
+    expect(MAX_PLAN_LIMITS.imageMb + 6).toBeLessThan(160);
   });
 
   it('keeps effects, icons, backgrounds, separators and voice for paying communities', () => {

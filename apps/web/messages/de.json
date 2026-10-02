@@ -2317,9 +2317,9 @@
       "pro": "Pro"
     },
     "taglines": {
-      "free": "Alles, was du zum Start einer Community brauchst.",
-      "plus": "Mehr Platz, Sprachkanäle, Chat-Hintergründe, Namenseffekte und ein Plus-Abzeichen.",
-      "pro": "Die höchsten Limits, größere Sprachanrufe, Bildschirmfreigabe, eine eigene Domain, ein Pro-Abzeichen und ein Platz unter „Empfohlen“."
+      "free": "Alles, was eine neue Community braucht – dauerhaft kostenlos.",
+      "plus": "Für wachsende Communitys: Sprachkanäle, mehr Platz und ein eigener Look.",
+      "pro": "Für große, aktive Communitys: am meisten Platz, große Sprachanrufe, eigene Domain und ein Platz unter „Empfohlen“."
     },
     "interval": "Abrechnungszeitraum",
     "monthly": "Monatlich",
@@ -2332,30 +2332,30 @@
     "current": "Aktueller Tarif",
     "popular": "Am beliebtesten",
     "features": {
-      "servers": "{count} verknüpfte Gameserver",
-      "roles": "{count} Rollen",
-      "channels": "{count} Kanäle",
-      "attachments": "{count} Dateien pro Chatnachricht",
-      "imageMb": "Bild-Uploads bis {count} MB",
-      "videoMb": "Chatvideos bis {count} MB",
-      "badge": "{plan}-Abzeichen für deine Community",
-      "featured": "Empfohlen unter „Entdecken“",
-      "voiceChannels": "{count, plural, one {# Sprachkanal} other {# Sprachkanäle}} mit je bis zu {people} Personen",
-      "nameEffects": "Effekte und Animationen für Namen und Rollen",
-      "roleIcons": "Rollensymbole",
-      "pageBackground": "Hintergrundbild für die Community",
-      "chatBackgrounds": "Hintergründe für Chatkanäle",
-      "separators": "Eigene Trennlinien in Kanallisten",
-      "screenShare": "Bildschirmfreigabe in Sprachkanälen",
-      "emoji": "{count} eigene Emojis",
-      "customDomain": "Eigene Domain für die Seiten der Community"
+      "core": "Forum, Wiki, Events, Chat und Live-Serverstatus",
+      "room": "{servers} Gameserver, {channels} Kanäle, {roles} Rollen",
+      "extras": "{emoji} eigene Emojis und {webhooks} Webhooks",
+      "media": "Bilder bis {image}, Videos bis {video}, {daily} Uploads pro Mitglied und Tag",
+      "voice": "{count, plural, one {# Sprachkanal} other {# Sprachkanäle}}, bis zu {people} Personen pro Kanal",
+      "voicePro": "{count, plural, one {# Sprachkanal} other {# Sprachkanäle}}, bis zu {people} Personen pro Kanal, mit Bildschirmübertragung",
+      "style": "Namenseffekte, Rollen-Icons, Hintergründe und Kanaltrenner",
+      "customDomain": "Eigene Domain für die Seiten der Community",
+      "featured": "Ein Platz unter „Empfohlen“ auf Entdecken",
+      "badge": "{plan}-Abzeichen für deine Community"
     },
     "compare": {
       "caption": "Tarife vergleichen",
       "feature": "Funktion",
       "yes": "Inklusive",
       "no": "Nicht enthalten",
-      "none": "Keine"
+      "none": "Keine",
+      "groups": {
+        "community": "Community",
+        "media": "Uploads und Medien",
+        "voice": "Sprache",
+        "style": "Aussehen",
+        "reach": "Reichweite"
+      }
     },
     "rows": {
       "servers": "Verknüpfte Gameserver",
@@ -2375,14 +2375,19 @@
       "separators": "Eigene Trennlinien",
       "screenShare": "Bildschirmfreigabe",
       "emoji": "Eigene Emojis",
-      "customDomain": "Eigene Domain"
+      "customDomain": "Eigene Domain",
+      "dailyUploadMb": "Uploads pro Mitglied und Tag",
+      "webhooks": "Webhooks"
     },
     "mb": "{count} MB",
     "lock": {
       "needs": "{what} gibt es ab {plan}.",
       "kept": "Alles, was schon eingerichtet ist, bleibt erhalten und erscheint nach dem Upgrade wieder.",
       "cta": "{plan} holen"
-    }
+    },
+    "includes": "Alles aus {plan}, dazu:",
+    "gb": "{count} GB",
+    "perDay": "{size} pro Tag"
   },
   "store": {
     "title": "Shop",

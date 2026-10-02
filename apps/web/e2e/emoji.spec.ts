@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { PLAN_LIMITS } from '@magnox/shared';
 import { createCommunity, expectAccessible, signUp, uniqueUser } from './helpers';
 
 const PNG = Buffer.from(
@@ -29,7 +30,9 @@ test('custom emoji: add, use in chat, react with, rename and remove', async ({ p
   await page.getByRole('button', { name: 'Add emoji' }).click();
   await expect(page.getByText(':gg: added')).toBeVisible();
   await expect(page.getByText(':gg:', { exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Emoji (1 of 50)' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: `Emoji (1 of ${PLAN_LIMITS.free.emoji})` }),
+  ).toBeVisible();
 
   // Names are unique.
   await page

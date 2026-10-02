@@ -1,5 +1,6 @@
-// Community plans: what each one allows. Free keeps the limits every community had before plans
-// existed; paid plans raise them and unlock perks (effects, backgrounds, voice and more).
+// Community plans: what each one allows. Free covers everything a community needs to get going;
+// Plus adds room to grow, voice and a custom look; Pro is for big, busy communities. Lowering a
+// limit never takes anything away: a community over it keeps what it has, it just can't add more.
 
 export const PLAN_IDS = ['free', 'plus', 'pro'] as const;
 export type PlanId = (typeof PLAN_IDS)[number];
@@ -27,6 +28,10 @@ export interface PlanLimits {
   voiceParticipants: number;
   /** Custom emoji. */
   emoji: number;
+  /** What one person may upload to the community in a day (files and their smaller copies), MB. */
+  dailyUploadMb: number;
+  /** Webhooks sending the community's activity elsewhere. */
+  webhooks: number;
 }
 
 export interface PlanPerks {
@@ -52,37 +57,44 @@ export interface PlanPerks {
 
 export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
   free: {
-    servers: 25,
-    roles: 100,
-    channels: 200,
+    servers: 3,
+    roles: 25,
+    channels: 50,
     attachments: 4,
     imageMb: 10,
-    videoMb: 50,
+    videoMb: 25,
     voiceChannels: 0,
     voiceParticipants: 0,
-    emoji: 50,
+    emoji: 25,
+    dailyUploadMb: 500,
+    webhooks: 2,
   },
   plus: {
-    servers: 50,
-    roles: 200,
-    channels: 350,
+    servers: 15,
+    roles: 100,
+    channels: 150,
     attachments: 8,
-    imageMb: 20,
+    imageMb: 25,
     videoMb: 100,
-    voiceChannels: 3,
-    voiceParticipants: 15,
-    emoji: 150,
+    voiceChannels: 5,
+    voiceParticipants: 25,
+    emoji: 100,
+    dailyUploadMb: 2000,
+    webhooks: 10,
   },
   pro: {
-    servers: 100,
+    servers: 50,
     roles: 250,
     channels: 500,
     attachments: 10,
-    imageMb: 25,
+    imageMb: 50,
+    // Uploads also have to fit under the web server's request limit (160 MB).
     videoMb: 150,
-    voiceChannels: 10,
+    voiceChannels: 20,
     voiceParticipants: 50,
-    emoji: 300,
+    emoji: 250,
+    dailyUploadMb: 5000,
+    webhooks: 25,
   },
 };
 
@@ -120,17 +132,12 @@ export function planFor(perk: keyof PlanPerks): PaidPlanId {
 }
 
 /** The highest value of each limit on any plan (for input validation before the plan is known). */
-export const MAX_PLAN_LIMITS: PlanLimits = {
-  servers: Math.max(...PLAN_IDS.map((p) => PLAN_LIMITS[p].servers)),
-  roles: Math.max(...PLAN_IDS.map((p) => PLAN_LIMITS[p].roles)),
-  channels: Math.max(...PLAN_IDS.map((p) => PLAN_LIMITS[p].channels)),
-  attachments: Math.max(...PLAN_IDS.map((p) => PLAN_LIMITS[p].attachments)),
-  imageMb: Math.max(...PLAN_IDS.map((p) => PLAN_LIMITS[p].imageMb)),
-  videoMb: Math.max(...PLAN_IDS.map((p) => PLAN_LIMITS[p].videoMb)),
-  voiceChannels: Math.max(...PLAN_IDS.map((p) => PLAN_LIMITS[p].voiceChannels)),
-  voiceParticipants: Math.max(...PLAN_IDS.map((p) => PLAN_LIMITS[p].voiceParticipants)),
-  emoji: Math.max(...PLAN_IDS.map((p) => PLAN_LIMITS[p].emoji)),
-};
+export const MAX_PLAN_LIMITS = Object.fromEntries(
+  (Object.keys(PLAN_LIMITS.free) as (keyof PlanLimits)[]).map((k) => [
+    k,
+    Math.max(...PLAN_IDS.map((p) => PLAN_LIMITS[p][k])),
+  ]),
+) as unknown as PlanLimits;
 
 /**
  * Prices to show when Stripe can't be asked (payments not set up, or Stripe unreachable), in

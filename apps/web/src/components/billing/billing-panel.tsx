@@ -125,7 +125,7 @@ export function BillingPanel({
 
       <SettingsSection id="usage" title={t('usage')} description={t('usageDescription')}>
         <ul className="grid gap-4 sm:grid-cols-3">
-          {(['servers', 'roles', 'channels'] as const).map((k) => {
+          {(['servers', 'channels', 'roles', 'emoji', 'webhooks'] as const).map((k) => {
             const used = billing.usage[k];
             const limit = billing.limits[k];
             const pct = Math.min(100, Math.round((used / limit) * 100));
