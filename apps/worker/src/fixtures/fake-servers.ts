@@ -347,12 +347,18 @@ const ctl = createHttpServer((req, res) => {
       .end(JSON.stringify({ universeId: Number(universe[1]) + 1000 }));
     return;
   }
-  const games = req.url?.match(/^\/roblox\/v1\/games\?universeIds=(\d+)$/);
+  const games = req.url?.match(/^\/roblox\/v1\/games\?universeIds=([\d,]+)$/);
   if (req.method === 'GET' && games) {
-    const id = Number(games[1]);
+    const ids = games[1]!.split(',').map(Number);
     res.writeHead(200, { 'content-type': 'application/json' }).end(
       JSON.stringify({
-        data: [{ id, rootPlaceId: id - 1000, maxPlayers: 30, visits: 123456, ...state.roblox }],
+        data: ids.map((id) => ({
+          id,
+          rootPlaceId: id - 1000,
+          maxPlayers: 30,
+          visits: 123456,
+          ...state.roblox,
+        })),
       }),
     );
     return;

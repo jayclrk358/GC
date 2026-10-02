@@ -124,26 +124,76 @@ async function robloxJson<T>(url: string): Promise<T | null> {
   return (await res.json()) as T;
 }
 
+interface RobloxGame {
+  id?: number;
+  name?: string;
+  description?: string | null;
+  playing?: number;
+}
+
+/** Roblox's games API takes up to 50 experiences a request. */
+const ROBLOX_BATCH = 50;
+/** How long a lookup waits for others to share its request (polls are enqueued together). */
+const ROBLOX_BATCH_MS = 250;
+type GameWaiter = {
+  resolve: (g: RobloxGame | null | 'rate_limited') => void;
+  reject: (e: unknown) => void;
+};
+const robloxWaiting = new Map<string, GameWaiter[]>();
+let robloxTimer: NodeJS.Timeout | null = null;
+
+/** One experience's details, fetched alongside any others asked for at about the same time. */
+function robloxGame(universeId: string): Promise<RobloxGame | null | 'rate_limited'> {
+  return new Promise((resolve, reject) => {
+    const list = robloxWaiting.get(universeId) ?? [];
+    list.push({ resolve, reject });
+    robloxWaiting.set(universeId, list);
+    if (robloxWaiting.size >= ROBLOX_BATCH) void flushRoblox();
+    else robloxTimer ??= setTimeout(() => void flushRoblox(), ROBLOX_BATCH_MS);
+  });
+}
+
+async function flushRoblox(): Promise<void> {
+  if (robloxTimer) clearTimeout(robloxTimer);
+  robloxTimer = null;
+  const batch = new Map(robloxWaiting);
+  robloxWaiting.clear();
+  if (!batch.size) return;
+  const settle = (id: string, fn: (w: GameWaiter) => void) => batch.get(id)?.forEach(fn);
+  try {
+    // Shared budget so a burst of listings can't hammer Roblox's API.
+    if (!(await rateLimit('poll-roblox', 120, 60)).ok) {
+      for (const id of batch.keys()) settle(id, (w) => w.resolve('rate_limited'));
+      return;
+    }
+    const games = await robloxJson<{ data?: RobloxGame[] }>(
+      robloxUrl('games', [...batch.keys()].join(',')),
+    );
+    const byId = new Map((games?.data ?? []).map((g) => [String(g.id), g]));
+    for (const id of batch.keys()) settle(id, (w) => w.resolve(byId.get(id) ?? null));
+  } catch (e) {
+    for (const id of batch.keys()) settle(id, (w) => w.reject(e));
+  }
+}
+
 /**
  * A Roblox experience: name, description and how many people are playing right now, from
  * Roblox's public games API. The description carries the ownership code, like a MOTD.
  */
 async function queryRoblox(placeId: string): Promise<QueryOutcome> {
-  // Shared budget so a burst of listings can't hammer Roblox's API.
-  if (!(await rateLimit('poll-roblox', 120, 60)).ok) return { ok: false, error: 'rate_limited' };
   try {
     const key = `roblox-universe:${placeId}`;
     let universeId = await cacheRedis().get(key);
     if (!universeId) {
+      if (!(await rateLimit('poll-roblox', 120, 60)).ok)
+        return { ok: false, error: 'rate_limited' };
       const u = await robloxJson<{ universeId: number | null }>(robloxUrl('universe', placeId));
       if (!u?.universeId) return { ok: false, error: 'dns' };
       universeId = String(u.universeId);
       await cacheRedis().set(key, universeId, 'EX', 86_400);
     }
-    const games = await robloxJson<{
-      data: { name?: string; description?: string | null; playing?: number }[];
-    }>(robloxUrl('games', universeId));
-    const game = games?.data?.[0];
+    const game = await robloxGame(universeId);
+    if (game === 'rate_limited') return { ok: false, error: 'rate_limited' };
     if (!game) return { ok: false, error: 'dns' };
     const result = {
       name: game.name ?? '',
