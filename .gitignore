@@ -23,3 +23,6 @@ apps/desktop/release/
 
 # Server backups (scripts/linux/backup.sh)
 backups/
+
+# Agent worktrees
+.claude/worktrees/

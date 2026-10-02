@@ -163,6 +163,10 @@ export async function sendPushes(items: PushItem[]): Promise<number> {
   const push = await client();
   const base = env().APP_URL.replace(/\/$/, '');
   let sent = 0;
+  // Written once at the end rather than per send.
+  const delivered = new Set<string>();
+  const gone = new Set<string>();
+  const failed = new Set<string>();
   for (const item of items) {
     if (online.has(item.userId)) continue;
     const payload = JSON.stringify({
@@ -193,24 +197,33 @@ export async function sendPushes(items: PushItem[]): Promise<number> {
           });
         }
         sent++;
-        await db
-          .update(schema.pushSubscriptions)
-          .set({ failures: 0, lastSentAt: new Date() })
-          .where(eq(schema.pushSubscriptions.id, sub.id));
+        delivered.add(sub.id);
       } catch (err) {
         const status = (err as { statusCode?: number }).statusCode;
         // Gone (unsubscribed or expired), or failing for a long time: stop trying.
-        if (status === 404 || status === 410 || sub.failures >= 9) {
-          await db.delete(schema.pushSubscriptions).where(eq(schema.pushSubscriptions.id, sub.id));
-        } else {
-          await db
-            .update(schema.pushSubscriptions)
-            .set({ failures: sql`${schema.pushSubscriptions.failures} + 1` })
-            .where(eq(schema.pushSubscriptions.id, sub.id));
+        if (status === 404 || status === 410 || sub.failures >= 9) gone.add(sub.id);
+        else {
+          failed.add(sub.id);
           log.warn({ status, err: (err as Error).message }, 'push failed');
         }
       }
     }
   }
+  const ps = schema.pushSubscriptions;
+  for (const id of gone) failed.delete(id);
+  for (const id of delivered) failed.delete(id);
+  await Promise.all([
+    delivered.size &&
+      db
+        .update(ps)
+        .set({ failures: 0, lastSentAt: new Date() })
+        .where(inArray(ps.id, [...delivered])),
+    failed.size &&
+      db
+        .update(ps)
+        .set({ failures: sql`${ps.failures} + 1` })
+        .where(inArray(ps.id, [...failed])),
+    gone.size && db.delete(ps).where(inArray(ps.id, [...gone])),
+  ]);
   return sent;
 }

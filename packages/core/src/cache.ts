@@ -3,6 +3,14 @@ import { cacheRedis } from './redis';
 
 const log = logger('cache');
 
+/** Hot keys are also kept in this process for a few seconds, saving a Redis round trip each. */
+const LOCAL_MS = 5_000;
+const LOCAL_MAX = 5_000;
+// Stored as JSON so each caller gets its own copy (some sort or extend what they get back).
+const local = new Map<string, { json: string; until: number }>();
+/** Loads in progress: concurrent misses on one key wait for the same load. */
+const inflight = new Map<string, Promise<string>>();
+
 /**
  * Read-through cache for small results that are the same for everyone (platform counts, the game
  * catalogue), so busy pages don't repeat the same queries. If Redis is unavailable the value is
@@ -14,15 +22,41 @@ export async function cached<T>(
   load: () => Promise<T>,
 ): Promise<T> {
   const k = `cache:${key}`;
-  try {
-    const hit = await cacheRedis().get(k);
-    if (hit !== null) return JSON.parse(hit) as T;
-  } catch (err) {
-    log.warn({ err: (err as Error).message, key }, 'cache read failed');
+  const hit = local.get(k);
+  if (hit && hit.until > Date.now()) return JSON.parse(hit.json) as T;
+
+  let running = inflight.get(k);
+  if (!running) {
+    running = (async () => {
+      let json: string | null = null;
+      try {
+        json = await cacheRedis().get(k);
+      } catch (err) {
+        log.warn({ err: (err as Error).message, key }, 'cache read failed');
+      }
+      if (json === null) {
+        json = JSON.stringify(await load()) ?? 'null';
+        cacheRedis()
+          .set(k, json, 'EX', ttlSeconds)
+          .catch((err: Error) => log.warn({ err: err.message, key }, 'cache write failed'));
+      }
+      if (local.size >= LOCAL_MAX) local.delete(local.keys().next().value!);
+      local.set(k, { json, until: Date.now() + Math.min(LOCAL_MS, ttlSeconds * 1000) });
+      return json;
+    })();
+    inflight.set(k, running);
+    running.then(
+      () => inflight.delete(k),
+      () => inflight.delete(k),
+    );
   }
-  const value = await load();
-  cacheRedis()
-    .set(k, JSON.stringify(value), 'EX', ttlSeconds)
-    .catch((err: Error) => log.warn({ err: err.message, key }, 'cache write failed'));
-  return value;
+  return JSON.parse(await running) as T;
+}
+
+/** Drop a cached value (here and in Redis), e.g. after the data behind it changed. */
+export async function uncache(key: string): Promise<void> {
+  local.delete(`cache:${key}`);
+  await cacheRedis()
+    .del(`cache:${key}`)
+    .catch((err: Error) => log.warn({ err: err.message, key }, 'cache delete failed'));
 }

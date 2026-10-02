@@ -284,10 +284,11 @@ function MembersPanel() {
   const { communityId } = useChat();
   const [tick, setTick] = React.useState(0);
   React.useEffect(() => {
-    // Only while someone's looking: a hidden tab catches up when it's shown again.
+    // Only while someone's looking: a hidden tab catches up when it's shown again. Presence dots
+    // update live; this just regroups who's online now and then.
     const id = setInterval(() => {
       if (document.visibilityState === 'visible') setTick((n) => n + 1);
-    }, 60_000);
+    }, 180_000);
     return () => clearInterval(id);
   }, []);
   const { data, loading, error } = useJson<{
@@ -379,17 +380,32 @@ function MembersPanel() {
   );
 }
 
+const WIDE = '(min-width: 80rem)';
+
+/** Whether the screen is wide enough to show the member column (Tailwind's `xl`). */
+function useWide(): boolean {
+  return React.useSyncExternalStore(
+    (onChange) => {
+      const mq = window.matchMedia(WIDE);
+      mq.addEventListener('change', onChange);
+      return () => mq.removeEventListener('change', onChange);
+    },
+    () => window.matchMedia(WIDE).matches,
+    () => false,
+  );
+}
+
 /** The member list beside the messages on wide screens (Discord's right-hand column). */
 export function MemberColumn() {
   const t = useTranslations('chat');
+  // Narrower screens hide the column, so don't load (and keep refreshing) a list nobody sees.
+  const wide = useWide();
   return (
     <aside
       aria-label={t('membersTitle')}
       className="hidden w-60 shrink-0 flex-col border-s border-border/60 bg-rail xl:flex"
     >
-      <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
-        <MembersPanel />
-      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">{wide && <MembersPanel />}</div>
     </aside>
   );
 }

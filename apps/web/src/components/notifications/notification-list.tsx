@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { CheckCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useAutoUpdates, useLiveRefresh } from '@/lib/live';
+import { useAutoUpdates } from '@/lib/live';
 import { useUserEvents } from '@/lib/realtime';
 import { markReadAction } from '@/app/actions/notifications';
 import { NotificationItem, type NotificationData } from './notification-item';
@@ -35,13 +35,28 @@ export function NotificationList({
   }
 
   const auto = useAutoUpdates();
-  const refresh = useLiveRefresh();
-  // A refresh reloads the first page, so once older pages are loaded, offer it instead.
-  const paged = items.length > initial.length;
+  // New ones are fetched and added at the top (a burst at once), rather than redrawing the page.
+  const pending = React.useRef<number | undefined>(undefined);
+  React.useEffect(() => () => window.clearTimeout(pending.current), []);
+  const fetchNewest = React.useCallback(() => {
+    window.clearTimeout(pending.current);
+    pending.current = window.setTimeout(async () => {
+      const r = await fetch(`/api/notifications${unreadOnly ? '?unread=1' : ''}`, {
+        cache: 'no-store',
+      });
+      if (!r.ok) return;
+      const data = (await r.json()) as { items: NotificationData[] };
+      setItems((list) => {
+        const known = new Set(list.map((i) => i.id));
+        const added = data.items.filter((i) => !known.has(i.id));
+        return added.length ? [...added, ...list] : list;
+      });
+    }, 800);
+  }, [unreadOnly]);
 
   useUserEvents({
     'notification:new': () => {
-      if (auto && !paged) refresh();
+      if (auto) fetchNewest();
       else setFresh((n) => n + 1);
     },
     'notification:read': (p: { ids: 'all' | string[] }) =>

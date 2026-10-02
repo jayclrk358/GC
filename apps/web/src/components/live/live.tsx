@@ -15,7 +15,10 @@ export function AutoRefresh({
   every?: number | null;
   away?: number;
 }) {
-  useAutoRefresh(every, away);
+  // Chat stays current over its live connection (and catches up itself after a reconnect), so
+  // redrawing it on every return to the tab would only resend what's already there.
+  const live = /^\/c\/[^/]+\/chat(\/|$)/.test(usePathname());
+  useAutoRefresh(live ? null : every, live ? Infinity : away);
   return null;
 }
 

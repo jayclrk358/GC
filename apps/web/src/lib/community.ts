@@ -1,8 +1,6 @@
 import 'server-only';
 import { cache } from 'react';
 import { notFound, redirect } from 'next/navigation';
-import { eq } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
 import {
   channelUnreads,
   getChannelByName,
@@ -10,6 +8,7 @@ import {
   getMemberContext,
   isAppError,
   isSuspended,
+  listGames,
   listVisibleChannels,
   type MemberContext,
 } from '@magnox/core';
@@ -41,8 +40,9 @@ export const loadCommunity = cache(async (slug: string) => {
     throw e;
   }
   const community = await getCommunityRow(ctx.community.id);
+  // From the cached game catalogue rather than a query on every page.
   const game = community.gameId
-    ? ((await db.query.games.findFirst({ where: eq(schema.games.id, community.gameId) })) ?? null)
+    ? ((await listGames()).find((g) => g.id === community.gameId) ?? null)
     : null;
   const nav = normalizeNav(community.nav).filter((n) => n.visible && AVAILABLE_TABS.has(n.tab));
   const perms = {
