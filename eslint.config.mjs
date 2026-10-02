@@ -19,6 +19,7 @@ export default tseslint.config(
       'apps/web/test-results/**',
       'storage/**',
       'apps/desktop/release/**',
+      '.claude/**',
     ],
   },
   js.configs.recommended,

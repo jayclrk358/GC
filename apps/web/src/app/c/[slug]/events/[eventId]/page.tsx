@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
@@ -18,7 +19,8 @@ import { occurrenceHref } from '@/components/events/event-list';
 
 type Params = Promise<{ slug: string; eventId: string }>;
 
-async function load(slug: string, eventId: string, at?: string) {
+// Shared by the metadata and the page, so the event is loaded once per request.
+const load = cache(async (slug: string, eventId: string, at?: string) => {
   const data = await loadCommunity(slug);
   try {
     const when = at ? new Date(at) : null;
@@ -27,11 +29,18 @@ async function load(slug: string, eventId: string, at?: string) {
     if (isAppError(e) && e.code === 'not_found') notFound();
     throw e;
   }
-}
+});
 
-export async function generateMetadata({ params }: { params: Params }) {
+export async function generateMetadata({
+  params,
+  searchParams,
+}: {
+  params: Params;
+  searchParams: Promise<{ at?: string }>;
+}) {
   const { slug, eventId } = await params;
-  const { detail } = await load(slug, eventId);
+  const { at } = await searchParams;
+  const { detail } = await load(slug, eventId, at);
   return { title: detail.event.title };
 }
 

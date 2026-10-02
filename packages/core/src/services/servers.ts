@@ -172,7 +172,16 @@ export async function getServersByIds(communityId: string, ids: string[]): Promi
 
 export async function listPublicServers(
   opts: { q?: string; protocol?: string; limit?: number } = {},
-) {
+): Promise<ServerView[]> {
+  // The unsearched list (the home page's live servers) is the same for everyone; rows update
+  // their status live, so sharing the list itself for half a minute costs nothing visible.
+  if (opts.q?.trim()) return loadPublicServers(opts);
+  return cached(`public-servers:${opts.protocol ?? ''}:${opts.limit ?? 50}`, 30, () =>
+    loadPublicServers(opts),
+  );
+}
+
+function loadPublicServers(opts: { q?: string; protocol?: string; limit?: number }) {
   const where: SQL[] = [
     eq(schema.gameServers.listed, true),
     isNotNull(schema.gameServers.verifiedAt),

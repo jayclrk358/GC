@@ -424,9 +424,25 @@ export interface CommunityCard {
   plan: PlanId;
 }
 
-export async function exploreCommunities(
-  f: ExploreFilters,
-): Promise<{ items: CommunityCard[]; total: number; page: number; pageSize: number }> {
+type ExplorePage = { items: CommunityCard[]; total: number; page: number; pageSize: number };
+
+/** Cached results come back from JSON, so their dates need restoring. */
+function withDates<T extends { createdAt: Date | string }>(rows: T[]): T[] {
+  return rows.map((r) => ({ ...r, createdAt: new Date(r.createdAt) }));
+}
+
+export async function exploreCommunities(f: ExploreFilters): Promise<ExplorePage> {
+  // Searches go straight to the database; plain browsing (the home page, Explore without a
+  // search) looks the same for everyone, so it's shared for a minute.
+  if (f.q?.trim()) return loadExplore(f);
+  const key = [f.game, f.tag?.toLowerCase(), f.region, f.language, f.sort, f.page, f.pageSize]
+    .map((v) => v ?? '')
+    .join('|');
+  const result = await cached(`explore:${key}`, 60, () => loadExplore(f));
+  return { ...result, items: withDates(result.items) };
+}
+
+async function loadExplore(f: ExploreFilters): Promise<ExplorePage> {
   const pageSize = Math.min(48, Math.max(1, f.pageSize ?? 24));
   const page = Math.max(0, f.page ?? 0);
   const c = schema.communities;
@@ -494,6 +510,16 @@ export async function exploreCommunities(
 
 /** Pro communities for Explore's Featured row (a fresh pick each time). */
 export async function featuredCommunities(limit = 3): Promise<CommunityCard[]> {
+  // The pool is shared for a minute; each visit draws its own few from it.
+  const pool = withDates(await cached('featured-communities', 60, loadFeaturedPool));
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j]!, pool[i]!];
+  }
+  return pool.slice(0, limit);
+}
+
+function loadFeaturedPool(): Promise<CommunityCard[]> {
   const c = schema.communities;
   return db
     .select({
@@ -528,7 +554,7 @@ export async function featuredCommunities(limit = 3): Promise<CommunityCard[]> {
       ),
     )
     .orderBy(sql`random()`)
-    .limit(limit);
+    .limit(30);
 }
 
 export async function searchCommunities(q: string, limit = 6) {

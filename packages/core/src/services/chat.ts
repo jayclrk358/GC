@@ -40,6 +40,7 @@ import {
 } from '@magnox/shared';
 import { z } from 'zod';
 import type { MemberContext } from '../access';
+import { cached } from '../cache';
 import { AppError, forbidden, notFound, unauthorized } from '../errors';
 import { realtime } from '../emitter';
 import { QUEUES, enqueue } from '../queues';
@@ -1159,15 +1160,22 @@ const MEMBER_LIST_MAX = 100;
  * The chat's member list, as Discord shows it: people online under their highest role that's
  * shown separately (or "Online"), highest roles first, then some of those offline.
  */
-export async function memberList(ctx: MemberContext): Promise<{
+export async function memberList(ctx: MemberContext): Promise<MemberListView> {
+  // The same for everyone in the community, and every open chat asks for it now and then.
+  return cached(`memberlist:${ctx.community.id}`, 15, () => loadMemberList(ctx.community.id));
+}
+
+interface MemberListView {
   groups: MemberListGroup[];
   online: number;
   members: number;
-}> {
+}
+
+async function loadMemberList(communityId: string): Promise<MemberListView> {
   const all = await db
     .select({ userId: schema.members.userId })
     .from(schema.members)
-    .where(eq(schema.members.communityId, ctx.community.id))
+    .where(eq(schema.members.communityId, communityId))
     .limit(2000);
   if (!all.length) return { groups: [], online: 0, members: 0 };
   const flags = await cacheRedis().mget(...all.map((m) => `presence:${m.userId}`));
@@ -1177,7 +1185,7 @@ export async function memberList(ctx: MemberContext): Promise<{
   // Offline people are many and rarely looked for: only some, and only for smaller communities.
   const shownOffline = all.length <= 1000 ? offlineIds.slice(0, MEMBER_LIST_MAX) : [];
   const [authors, hoisted] = await Promise.all([
-    loadAuthors(ctx.community.id, [...shownOnline, ...shownOffline]),
+    loadAuthors(communityId, [...shownOnline, ...shownOffline]),
     shownOnline.length
       ? db
           .select({
@@ -1191,7 +1199,7 @@ export async function memberList(ctx: MemberContext): Promise<{
           .innerJoin(schema.roles, eq(schema.roles.id, schema.memberRoles.roleId))
           .where(
             and(
-              eq(schema.memberRoles.communityId, ctx.community.id),
+              eq(schema.memberRoles.communityId, communityId),
               eq(schema.roles.hoist, true),
               inArray(schema.memberRoles.userId, shownOnline),
             ),
