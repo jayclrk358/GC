@@ -63,6 +63,8 @@ EMAIL_FROM="Magnox <no-reply@$site>"
 # (see .env.example for all options).
 DISCORD_CLIENT_ID=
 DISCORD_CLIENT_SECRET=
+# A bot token on the same Discord app, for Discord role sync (optional).
+DISCORD_BOT_TOKEN=
 TURNSTILE_SITE_KEY=
 TURNSTILE_SECRET_KEY=
 PLATFORM_ADMIN_EMAILS=

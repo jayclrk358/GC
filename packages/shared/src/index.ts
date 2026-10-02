@@ -26,3 +26,6 @@ export * from './applications';
 export * from './automod';
 export * from './emoji';
 export * from './legal';
+export * from './integrations';
+export * from './domains';
+export * from './locales';

@@ -365,3 +365,27 @@ export async function canSubscribe(
       return false;
   }
 }
+
+/**
+ * Whether a member with no roles but @everyone can see this channel. Used to keep what goes to
+ * webhooks (other sites, Discord) to channels that aren't restricted.
+ */
+export async function everyoneCanView(channel: ChannelRef): Promise<boolean> {
+  const everyone = await db
+    .select({ id: schema.roles.id, permissions: schema.roles.permissions })
+    .from(schema.roles)
+    .where(and(eq(schema.roles.communityId, channel.communityId), eq(schema.roles.isDefault, true)))
+    .limit(1);
+  if (!everyone[0]) return false;
+  const ids = channel.parentId ? [channel.parentId, channel.id] : [channel.id];
+  const ow = await overwritesFor(ids);
+  const perms = computeChannelPermissions({
+    base: computeBasePermissions({ isOwner: false, everyone: everyone[0].permissions, roles: [] }),
+    everyoneRoleId: everyone[0].id,
+    memberRoleIds: [],
+    userId: '',
+    layers: ids.map((id) => ow.get(id) ?? []),
+    timedOut: false,
+  });
+  return has(perms, Permission.VIEW_CHANNEL);
+}

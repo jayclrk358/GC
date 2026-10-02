@@ -16,3 +16,4 @@ export * from './applications';
 export * from './emoji';
 export * from './admin';
 export * from './push';
+export * from './integrations';

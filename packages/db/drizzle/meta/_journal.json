@@ -169,6 +169,20 @@
       "when": 1790897398105,
       "tag": "0023_push_digests",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1790898076306,
+      "tag": "0024_integrations",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1790899604842,
+      "tag": "0025_custom_domains",
+      "breakpoints": true
     }
   ]
 }

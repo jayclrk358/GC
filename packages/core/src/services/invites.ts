@@ -6,7 +6,7 @@ import { AppError, forbidden, notFound, unauthorized } from '../errors';
 import { enforceRateLimit } from '../ratelimit';
 import { audit } from './audit';
 import { checkJoinAllowed } from './automod';
-import { addMember } from './members';
+import { addMember, memberJoined } from './members';
 
 export async function createInvite(ctx: MemberContext, raw: unknown) {
   requireMember(ctx);
@@ -110,7 +110,7 @@ export async function getInvitePreview(code: string) {
 export async function acceptInvite(userId: string | null, code: string): Promise<{ slug: string }> {
   if (!userId) throw unauthorized();
   await enforceRateLimit(`invite-accept:${userId}`, 30, 3600);
-  return db.transaction(async (tx) => {
+  const joined = await db.transaction(async (tx) => {
     const rows = await tx
       .select()
       .from(schema.invites)
@@ -146,6 +146,8 @@ export async function acceptInvite(userId: string | null, code: string): Promise
         targetId: code,
       });
     }
-    return { slug: community.slug };
+    return { slug: community.slug, communityId: community.id, added };
   });
+  if (joined.added) memberJoined(joined.communityId, userId);
+  return { slug: joined.slug };
 }

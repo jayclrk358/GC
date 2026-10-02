@@ -61,6 +61,8 @@ export default async function CommunitySettingsLayout({
     },
     { href: `${base}/bans`, label: t('nav.bans'), show: perms.ban },
     { href: `${base}/automod`, label: t('nav.automod'), show: perms.manage },
+    { href: `${base}/integrations`, label: t('nav.integrations'), show: perms.manage },
+    { href: `${base}/domain`, label: t('nav.domain'), show: perms.manage },
     {
       href: `${base}/invites`,
       label: t('nav.invites'),

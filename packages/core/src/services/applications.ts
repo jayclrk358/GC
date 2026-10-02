@@ -27,7 +27,8 @@ import {
 import { logger } from '../logger';
 import { enforceRateLimit } from '../ratelimit';
 import { audit } from './audit';
-import { addMember } from './members';
+import { addMember, memberJoined } from './members';
+import { emitWebhook, siteUrl, webhookUser } from './webhooks';
 import { deliver, holdersOf, maybeEmail } from './notify';
 
 const log = logger('applications');
@@ -127,6 +128,11 @@ export async function submitApplication(ctx: MemberContext, raw: unknown): Promi
   ]);
   const name = user?.name ?? 'Someone';
   const url = `/c/${ctx.community.slug}/settings/applications`;
+  const applicantId = ctx.userId;
+  emitWebhook(ctx.community.id, 'application.submitted', async () => {
+    const applicant = await webhookUser(applicantId);
+    return applicant ? { user: applicant, application: { id }, reviewUrl: siteUrl(url) } : null;
+  });
   await deliver(
     [...reviewers].slice(0, 100).map((userId) => ({
       userId,
@@ -274,7 +280,8 @@ export async function reviewApplication(
       .limit(1);
     if (!row) throw notFound('Application');
     if (row.status !== 'pending') throw conflict('Someone has already answered this application.');
-    if (input.decision === 'approve') await addMember(tx, ctx.community.id, row.userId);
+    const added =
+      input.decision === 'approve' && (await addMember(tx, ctx.community.id, row.userId));
     await tx
       .update(schema.applications)
       .set({
@@ -292,9 +299,10 @@ export async function reviewApplication(
       targetId: row.userId,
       reason: input.message || undefined,
     });
-    return row;
+    return { ...row, added };
   });
   if (input.decision === 'approve') communityChanged(ctx.community.id, app.userId, 'members');
+  if (app.added) memberJoined(ctx.community.id, app.userId);
   const approved = input.decision === 'approve';
   const title = approved
     ? `You're in! Your application to ${ctx.community.name} was accepted`

@@ -56,7 +56,8 @@
     "admin": "Admin console",
     "terms": "Terms",
     "privacyPolicy": "Privacy",
-    "footerNav": "Footer"
+    "footerNav": "Footer",
+    "developers": "Developers"
   },
   "palette": {
     "placeholder": "Search communities, pages and actions…",
@@ -133,7 +134,8 @@
     "accessibility": "Accessibility & display",
     "savedToast": "Settings saved",
     "notifications": "Notifications",
-    "privacy": "Privacy & safety"
+    "privacy": "Privacy & safety",
+    "developer": "Developer"
   },
   "prefs": {
     "title": "Accessibility & display",
@@ -233,7 +235,10 @@
       "announce": "Tell me, and wait until I load them"
     },
     "nameEffects": "Name effects",
-    "nameEffectsDesc": "Show role nametag effects such as gradients, glows and animations. Turn off to see every name as plain text."
+    "nameEffectsDesc": "Show role nametag effects such as gradients, glows and animations. Turn off to see every name as plain text.",
+    "language": "Language",
+    "languageHint": "Some pages, like the terms and the developer docs, are in English only.",
+    "languageAuto": "Automatic (your browser’s language)"
   },
   "home": {
     "eyebrow": "Community hubs for gamers",
@@ -734,7 +739,9 @@
       "automod": "Automod",
       "modQueue": "Mod queue",
       "emoji": "Emoji",
-      "analytics": "Analytics"
+      "analytics": "Analytics",
+      "integrations": "Integrations",
+      "domain": "Custom domain"
     },
     "general": {
       "title": "General",
@@ -2300,7 +2307,7 @@
     "taglines": {
       "free": "Everything you need to start a community.",
       "plus": "More room, voice channels, chat backgrounds, name effects and a Plus badge.",
-      "pro": "The biggest limits, bigger voice calls, screen sharing, a Pro badge and a place in Featured."
+      "pro": "The biggest limits, bigger voice calls, screen sharing, your own domain, a Pro badge and a place in Featured."
     },
     "interval": "Billing period",
     "monthly": "Monthly",
@@ -2328,7 +2335,8 @@
       "chatBackgrounds": "Chat channel backgrounds",
       "separators": "Custom separators in channel lists",
       "screenShare": "Screen sharing in voice channels",
-      "emoji": "{count} custom emoji"
+      "emoji": "{count} custom emoji",
+      "customDomain": "Your own domain for the community’s pages"
     },
     "compare": {
       "caption": "Compare plans",
@@ -2354,7 +2362,8 @@
       "chatBackgrounds": "Chat backgrounds",
       "separators": "Custom separators",
       "screenShare": "Screen sharing",
-      "emoji": "Custom emoji"
+      "emoji": "Custom emoji",
+      "customDomain": "Custom domain"
     },
     "mb": "{count} MB",
     "lock": {
@@ -3031,5 +3040,136 @@
     "adultBody": "Its owners have marked it 18+. It may show things that aren’t suitable for everyone.",
     "adultConfirm": "I’m 18 or older",
     "adultLeave": "Take me back"
+  },
+  "developer": {
+    "title": "Developer",
+    "description": "Personal API tokens let your own scripts and bots use the Magnox API as you, with exactly your access.",
+    "newTitle": "New API token",
+    "newHint": "Give each script or bot its own token, so you can delete one without breaking the others.",
+    "name": "Name",
+    "nameHint": "What it’s for, like “Server status bot”.",
+    "write": "Can post messages",
+    "writeHint": "Off: the token can only read. On: it can also post chat messages as you.",
+    "create": "Create token",
+    "docsLink": "Read the API docs",
+    "createdTitle": "Your new token",
+    "createdHint": "Copy it now and keep it somewhere safe: it won’t be shown again. Anyone with it can use Magnox as you.",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyFailed": "Couldn’t copy. Select it and copy it yourself.",
+    "done": "Done",
+    "listTitle": "Your tokens",
+    "none": "You haven’t made any tokens.",
+    "readOnly": "Read only",
+    "readWrite": "Read and post",
+    "lastUsed": "Last used {when}",
+    "neverUsed": "Never used",
+    "revoke": "Delete",
+    "revokeLabel": "Delete token {name}",
+    "confirmRevoke": "Delete the token “{name}”? Anything using it will stop working.",
+    "revoked": "Deleted “{name}”"
+  },
+  "integrations": {
+    "title": "Integrations",
+    "description": "Send what happens here to Discord or your own code, and give members matching Discord roles.",
+    "docs": "Webhook and API docs"
+  },
+  "webhooks": {
+    "newTitle": "Add a webhook",
+    "newHint": "Paste a Discord channel’s webhook URL (Channel settings → Integrations → Webhooks) to post there, or any https:// address to get signed JSON.",
+    "name": "Name",
+    "url": "Webhook URL",
+    "urlHint": "Discord webhook URLs post readable messages; any other address gets JSON.",
+    "events": "What to send",
+    "event": {
+      "member_joined": "Someone joins",
+      "member_left": "Someone leaves or is removed",
+      "message_created": "New chat messages",
+      "thread_created": "New forum threads",
+      "post_created": "Forum replies",
+      "announcement_created": "Announcements",
+      "event_created": "New events",
+      "application_submitted": "New applications",
+      "server_down": "A game server goes down",
+      "server_up": "A game server comes back up"
+    },
+    "add": "Add webhook",
+    "added": "Added “{name}”",
+    "secretTitle": "Signing secret",
+    "secretHint": "Use this to check deliveries really come from Magnox (see the docs). Copy it now: it won’t be shown again.",
+    "listTitle": "Webhooks",
+    "none": "No webhooks yet.",
+    "kindDiscord": "Discord",
+    "kindJson": "JSON",
+    "off": "Off",
+    "active": "On",
+    "activeLabel": "{name}: on",
+    "lastDelivered": "Last delivered {when}",
+    "lastError": "Last try failed: {error} ({failures, plural, =0 {will retry} one {# failure in a row} other {# failures in a row}})",
+    "notYet": "Nothing sent yet. Only content in channels everyone can see is sent.",
+    "test": "Send test",
+    "testLabel": "Send a test to {name}",
+    "testOk": "Test delivered",
+    "testFailed": "Test failed: {error}",
+    "delete": "Delete",
+    "deleteLabel": "Delete webhook {name}",
+    "confirmDelete": "Delete the webhook “{name}”?",
+    "deleted": "Deleted “{name}”"
+  },
+  "discord": {
+    "title": "Discord role sync",
+    "description": "Members who connect their Discord account get the Discord roles that match their roles here, and lose them when they lose the role or leave.",
+    "notSetUp": "Discord role sync isn’t set up on this site yet. The site’s operator needs to add a Discord bot token.",
+    "step1": "Add the Magnox bot to your Discord server.",
+    "addBot": "Add the bot",
+    "newTab": "(opens in a new tab)",
+    "step2": "In Discord, drag the bot’s role above the roles it should give out.",
+    "step3": "Turn on Developer Mode in Discord (Settings → Advanced), then right-click your server and roles to copy their IDs.",
+    "step4": "Paste them below. Members connect Discord in Settings → Account.",
+    "lastSync": "Last sync",
+    "guildId": "Discord server ID",
+    "guildIdHint": "Right-click the server icon → Copy Server ID.",
+    "roles": "Matching Discord roles",
+    "rolesHint": "Leave a role blank to not sync it.",
+    "roleLabel": "Discord role ID for {name}",
+    "rolePlaceholder": "Not synced",
+    "noRoles": "Make some roles first, then match them to Discord roles here.",
+    "save": "Save",
+    "saved": "Saved. Members’ Discord roles are being updated.",
+    "syncNow": "Sync now",
+    "syncing": "Syncing everyone’s Discord roles",
+    "remove": "Unlink",
+    "confirmRemove": "Unlink the Discord server? Roles already given in Discord stay as they are.",
+    "removed": "Discord server unlinked"
+  },
+  "customDomain": {
+    "pageTitle": "Custom domain",
+    "pageDescription": "Show your community’s pages on your own address, like forum.yourclan.gg.",
+    "title": "Your domain",
+    "description": "Visitors to your domain see your community’s pages. Signing in and everything else happens on this site.",
+    "locked": "Custom domains",
+    "domain": "Domain",
+    "domainHint": "A domain or subdomain you own. Usually a subdomain, like forum.example.com.",
+    "save": "Save",
+    "saved": "Saved. Now add the DNS records below.",
+    "remove": "Remove",
+    "confirmRemove": "Stop using {domain}? It stops showing your community straight away.",
+    "removed": "Domain removed",
+    "steps": "At your domain’s DNS provider, add these two records, then check them here. DNS changes can take up to a few hours to show up.",
+    "recordsTitle": "DNS records",
+    "type": "Type",
+    "host": "Name",
+    "value": "Value",
+    "check": "Check DNS",
+    "checkAgain": "Check again",
+    "checkFailed": "Not ready yet",
+    "notYet": "The DNS records aren’t right yet",
+    "verifiedToast": "Your domain is ready",
+    "live": "{domain} is set up",
+    "liveHint": "The secure certificate is fetched on the first visit, which can take a few seconds.",
+    "visit": "Open it",
+    "newTab": "(opens in a new tab)",
+    "lastChecked": "Last checked {when}",
+    "neverChecked": "Not checked yet"
   }
 }

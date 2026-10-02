@@ -12,6 +12,7 @@ export default async function SettingsLayout({ children }: { children: React.Rea
     { href: '/settings/privacy', label: t('privacy') },
     { href: '/settings/account', label: t('account') },
     { href: '/settings/security', label: t('security') },
+    { href: '/settings/developer', label: t('developer') },
   ];
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8">

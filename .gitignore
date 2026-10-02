@@ -20,3 +20,6 @@ next-env.d.ts
 dump.rdb
 # Windows app builds
 apps/desktop/release/
+
+# Server backups (scripts/linux/backup.sh)
+backups/

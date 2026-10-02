@@ -5,6 +5,7 @@ import { fromNodeHeaders } from 'better-auth/node';
 import { auth } from '@magnox/auth';
 // Just the modules needed here: the package's main entry also loads image processing, S3,
 // Stripe and the rest, which this process never uses.
+import { communityForDomain } from '@magnox/core/domain-lookup';
 import { env } from '@magnox/core/env';
 import { logger } from '@magnox/core/logger';
 import { cacheRedis } from '@magnox/core/redis';
@@ -46,8 +47,18 @@ export interface SocketData {
 io.use(async (socket, next) => {
   const origin = socket.handshake.headers.origin;
   if (origin && origin !== appOrigin) {
-    log.warn({ origin }, 'rejected socket from foreign origin');
-    return next(new Error('forbidden'));
+    // A community's own domain: visitors there aren't signed in (sessions live on the main site),
+    // so they connect as guests.
+    const host = URL.canParse(origin) ? new URL(origin).host : '';
+    if (!(await communityForDomain(host).catch(() => null))) {
+      log.warn({ origin }, 'rejected socket from foreign origin');
+      return next(new Error('forbidden'));
+    }
+    socket.data.userId = null;
+    socket.data.name = '';
+    socket.data.subscriptions = new Set<string>();
+    socket.data.lastTyping = 0;
+    return next();
   }
   try {
     const session = await auth().api.getSession({

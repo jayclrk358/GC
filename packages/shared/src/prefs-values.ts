@@ -21,6 +21,7 @@ export const DEFAULT_PREFS: Prefs = {
   nameEffects: true,
   density: 'comfortable',
   timeFormat: 'auto',
+  language: 'auto',
   simplifiedLayout: false,
   communityThemes: true,
   focusRing: 'default',

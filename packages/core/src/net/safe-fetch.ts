@@ -21,6 +21,11 @@ export interface SafeFetchOptions {
   strictSize?: boolean;
   timeoutMs?: number;
   maxRedirects?: number;
+  /** POST a body (webhooks). Redirects are never followed for these. */
+  method?: 'GET' | 'POST';
+  body?: string;
+  headers?: Record<string, string>;
+  userAgent?: string;
 }
 
 const USER_AGENT = 'MagnoxBot/1.0 (link previews; +https://github.com/magnox)';
@@ -62,11 +67,19 @@ async function requestOnce(url: URL, opts: SafeFetchOptions, allowPrivate: boole
         hostname: host,
         port,
         path: `${url.pathname}${url.search}`,
-        method: 'GET',
+        method: opts.method ?? 'GET',
         agent: false,
         lookup,
         servername: isIpLiteral(host) ? undefined : host,
-        headers: { 'user-agent': USER_AGENT, accept: opts.accept, 'accept-language': 'en' },
+        headers: {
+          'user-agent': opts.userAgent ?? USER_AGENT,
+          accept: opts.accept,
+          'accept-language': 'en',
+          ...(opts.body !== undefined
+            ? { 'content-length': String(Buffer.byteLength(opts.body)) }
+            : {}),
+          ...opts.headers,
+        },
       },
       (res) => {
         const status = res.statusCode ?? 0;
@@ -112,7 +125,7 @@ async function requestOnce(url: URL, opts: SafeFetchOptions, allowPrivate: boole
     const timer = setTimeout(() => req.destroy(new Error('Timed out')), timeoutMs);
     req.on('close', () => clearTimeout(timer));
     req.on('error', reject);
-    req.end();
+    req.end(opts.body);
   });
 }
 
@@ -141,4 +154,39 @@ export async function safeFetch(rawUrl: string, opts: SafeFetchOptions): Promise
     };
   }
   throw new Error('Too many redirects');
+}
+
+/**
+ * POST to a user-supplied URL (webhooks) behind the same guard as safeFetch. Redirects aren't
+ * followed: the caller gets the 3xx status back.
+ */
+export async function safePost(
+  rawUrl: string,
+  body: string,
+  headers: Record<string, string>,
+  opts: { timeoutMs?: number; userAgent?: string } = {},
+): Promise<SafeFetchResult> {
+  const allowPrivate = env().SERVER_QUERY_ALLOW_PRIVATE;
+  const url = new URL(rawUrl);
+  assertFetchable(url, allowPrivate);
+  const res = await requestOnce(
+    url,
+    {
+      accept: 'application/json, */*;q=0.5',
+      maxBytes: 16_384,
+      method: 'POST',
+      body,
+      headers,
+      timeoutMs: opts.timeoutMs ?? 8000,
+      userAgent: opts.userAgent,
+    },
+    allowPrivate,
+  );
+  return {
+    url: url.toString(),
+    status: res.status,
+    contentType: res.contentType,
+    body: res.body,
+    truncated: res.truncated,
+  };
 }

@@ -17,6 +17,13 @@
  *   GET  /votes        votes the fake NuVotifier accepted, newest last
  *   POST /push/:id     a fake Web Push service (accepts like one would: 201)
  *   GET  /pushes       what it received, newest last (headers only: the payload is encrypted)
+ *   POST /hook/:id     a webhook receiver (answers 204; /hook/fail answers 500)
+ *   GET  /hooks        deliveries it received, newest last (headers and parsed body)
+ *   PUT|DELETE /discord/api/guilds/:g/members/:u/roles/:r   a fake Discord API (DISCORD_API_URL
+ *                      http://127.0.0.1:25591/discord/api); member "404" isn't in the server
+ *   GET  /discord/calls   what the fake Discord API was asked to do
+ *   POST /dns {"name":"...","type":"TXT|CNAME|A","value":"..."}   add a record to the fake DNS
+ *                      server (UDP, FAKE_DNS_PORT, default 25593; set DNS_SERVERS to use it)
  *   Stripe (HTTP)                     : control port, see fake-stripe.ts (STRIPE_API_URL)
  * Requires SERVER_QUERY_ALLOW_PRIVATE=true in the app, because these listen on localhost.
  */
@@ -29,6 +36,7 @@ import { handleStripe } from './fake-stripe';
 const MC_PORT = Number(process.env.FAKE_MC_PORT ?? 25590);
 const A2S_PORT = Number(process.env.FAKE_A2S_PORT ?? 27090);
 const CTL_PORT = Number(process.env.FAKE_CTL_PORT ?? 25591);
+const DNS_PORT = Number(process.env.FAKE_DNS_PORT ?? 25593);
 const VOTIFIER_PORT = Number(process.env.FAKE_VOTIFIER_PORT ?? 25592);
 const VOTIFIER_TOKEN = 'fixture-token';
 
@@ -232,6 +240,10 @@ const pushes: {
   ttl: string;
 }[] = [];
 
+const hooks: { id: string; headers: Record<string, string>; body: unknown }[] = [];
+const discordCalls: { method: string; guild: string; user: string; role: string; bot: boolean }[] =
+  [];
+
 const ctl = createHttpServer((req, res) => {
   if (handleStripe(req, res)) return;
   if (req.method === 'GET' && req.url === '/health') {
@@ -272,6 +284,70 @@ const ctl = createHttpServer((req, res) => {
       });
       res.writeHead(201).end();
     });
+    return;
+  }
+  const hook = req.url?.match(/^\/hook\/([a-zA-Z0-9_-]{1,64})$/);
+  if (req.method === 'POST' && hook) {
+    let body = '';
+    req.on('data', (c: Buffer) => (body += c));
+    req.on('end', () => {
+      let parsed: unknown = null;
+      try {
+        parsed = JSON.parse(body);
+      } catch {
+        // Recorded as null.
+      }
+      const headers: Record<string, string> = {};
+      for (const [k, v] of Object.entries(req.headers)) {
+        if (k.startsWith('x-magnox-') || k === 'content-type' || k === 'user-agent') {
+          headers[k] = String(v);
+        }
+      }
+      // The raw body too, so tests can check the signature.
+      hooks.push({ id: hook[1]!, headers: { ...headers, raw: body }, body: parsed });
+      res.writeHead(hook[1] === 'fail' ? 500 : 204).end();
+    });
+    return;
+  }
+  if (req.method === 'GET' && req.url === '/hooks') {
+    res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ hooks }));
+    return;
+  }
+  const role = req.url?.match(/^\/discord\/api\/guilds\/(\d+)\/members\/(\d+)\/roles\/(\d+)$/);
+  if ((req.method === 'PUT' || req.method === 'DELETE') && role) {
+    discordCalls.push({
+      method: req.method,
+      guild: role[1]!,
+      user: role[2]!,
+      role: role[3]!,
+      bot: String(req.headers.authorization ?? '').startsWith('Bot '),
+    });
+    if (role[2] === '404') {
+      res
+        .writeHead(404, { 'content-type': 'application/json' })
+        .end(JSON.stringify({ message: 'Unknown Member', code: 10007 }));
+    } else res.writeHead(204).end();
+    return;
+  }
+  if (req.method === 'POST' && req.url === '/dns') {
+    let body = '';
+    req.on('data', (c: Buffer) => (body += c));
+    req.on('end', () => {
+      try {
+        const r = JSON.parse(body) as DnsRecord & { name: string };
+        const name = r.name.toLowerCase();
+        dnsRecords.set(name, [...(dnsRecords.get(name) ?? []), { type: r.type, value: r.value }]);
+        res.writeHead(204).end();
+      } catch {
+        res.writeHead(400).end();
+      }
+    });
+    return;
+  }
+  if (req.method === 'GET' && req.url === '/discord/calls') {
+    res
+      .writeHead(200, { 'content-type': 'application/json' })
+      .end(JSON.stringify({ discordCalls }));
     return;
   }
   if (req.method === 'GET' && req.url === '/pushes') {
@@ -346,3 +422,61 @@ const stop = () => {
 };
 process.on('SIGINT', stop);
 process.on('SIGTERM', stop);
+
+// ── Fake DNS (UDP) ──────────────────────────────────────────────────────────
+// Answers A, CNAME and TXT questions from records added through POST /dns; anything else gets
+// "no such name". Enough for checking custom domains in tests.
+interface DnsRecord {
+  type: 'A' | 'CNAME' | 'TXT';
+  value: string;
+}
+const dnsRecords = new Map<string, DnsRecord[]>();
+const DNS_TYPES: Record<DnsRecord['type'], number> = { A: 1, CNAME: 5, TXT: 16 };
+
+function dnsName(name: string): Buffer {
+  const parts = name.split('.').filter(Boolean);
+  return Buffer.concat([
+    ...parts.map((p) => Buffer.concat([Buffer.from([p.length]), Buffer.from(p)])),
+    Buffer.from([0]),
+  ]);
+}
+
+const dnsServer = createSocket('udp4');
+dnsServer.on('message', (msg, rinfo) => {
+  if (msg.length < 17) return;
+  let off = 12;
+  const labels: string[] = [];
+  while (off < msg.length && msg[off] !== 0) {
+    const len = msg[off]!;
+    labels.push(msg.subarray(off + 1, off + 1 + len).toString());
+    off += len + 1;
+  }
+  off += 1;
+  const qtype = msg.readUInt16BE(off);
+  const question = msg.subarray(12, off + 4);
+  const name = labels.join('.').toLowerCase();
+  const answers = (dnsRecords.get(name) ?? [])
+    .filter((r) => DNS_TYPES[r.type] === qtype)
+    .map((r) => {
+      const rdata =
+        r.type === 'TXT'
+          ? Buffer.concat([Buffer.from([r.value.length]), Buffer.from(r.value)])
+          : r.type === 'CNAME'
+            ? dnsName(r.value)
+            : Buffer.from(r.value.split('.').map(Number));
+      const head = Buffer.alloc(12);
+      head.writeUInt16BE(0xc00c, 0); // the name in the question
+      head.writeUInt16BE(qtype, 2);
+      head.writeUInt16BE(1, 4); // IN
+      head.writeUInt32BE(60, 6);
+      head.writeUInt16BE(rdata.length, 10);
+      return Buffer.concat([head, rdata]);
+    });
+  const header = Buffer.alloc(12);
+  header.writeUInt16BE(msg.readUInt16BE(0), 0);
+  header.writeUInt16BE(0x8180 | (dnsRecords.has(name) ? 0 : 3), 2); // answer; NXDOMAIN if unknown
+  header.writeUInt16BE(1, 4);
+  header.writeUInt16BE(answers.length, 6);
+  dnsServer.send(Buffer.concat([header, question, ...answers]), rinfo.port, rinfo.address);
+});
+dnsServer.bind(DNS_PORT, '127.0.0.1', () => console.log(`fake DNS on udp ${DNS_PORT}`));

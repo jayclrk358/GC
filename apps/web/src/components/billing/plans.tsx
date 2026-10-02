@@ -83,6 +83,7 @@ export function PlanFeatures({ plan, className }: { plan: PlanId; className?: st
     );
   }
   if (perks.screenShare) items.push(t('features.screenShare'));
+  if (perks.customDomain) items.push(t('features.customDomain'));
   for (const perk of [
     'nameEffects',
     'roleIcons',
@@ -191,6 +192,7 @@ const ROWS: (keyof PlanLimits | keyof PlanPerks)[] = [
   'voiceParticipants',
   'emoji',
   'screenShare',
+  'customDomain',
   'nameEffects',
   'roleIcons',
   'pageBackground',

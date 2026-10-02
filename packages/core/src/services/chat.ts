@@ -54,6 +54,7 @@ import { isCommunityEmojiReaction } from './emoji';
 import { getChannelById, listVisibleChannels, type ChannelView } from './channels';
 import { queueMediaCleanup } from './media-cleanup';
 import { queueFanout } from './notify';
+import { emitChannelEvent, siteUrl, webhookUser } from './webhooks';
 
 // ── Views ──────────────────────────────────────────────────────────────────
 
@@ -662,6 +663,16 @@ export async function sendMessage(
     await queueFanout({ kind: 'message', messageId: id });
   }
   if (perm(channel, Permission.EMBED_LINKS) && extractLinks(body).length) await queuePreviews(id);
+  const authorId = ctx.userId;
+  emitChannelEvent(ctx.community.id, channel, 'message.created', async () => ({
+    message: {
+      id,
+      content: content.slice(0, 2000),
+      url: siteUrl(`/c/${ctx.community.slug}/m/${id}`),
+      createdAt: now.toISOString(),
+    },
+    author: await webhookUser(authorId),
+  }));
   return view!;
 }
 

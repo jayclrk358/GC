@@ -19,6 +19,11 @@ const env = {
     'BNDNhJBOgSwXMSgnTMLiLkh5rNSgWddiDuCpl2jVCelYpD2oNAIq3eSZAs_IWU8ZE_RDH3o7FLU25N1Nt5P_6KU',
   VAPID_PRIVATE_KEY: '2jwxRUay8xvRuWsi09LeXcBXoeb5hgH2ZkZGhPoT3v0',
   VAPID_SUBJECT: 'mailto:e2e@example.test',
+  // Discord role sync talks to the fixture server's fake Discord API.
+  DISCORD_BOT_TOKEN: 'fixture-bot-token',
+  DISCORD_API_URL: 'http://127.0.0.1:25591/discord/api',
+  // Custom domains are checked against the fixture server's fake DNS.
+  DNS_SERVERS: '127.0.0.1:25593',
 };
 const chromiumPath = process.env.PW_CHROMIUM_PATH;
 

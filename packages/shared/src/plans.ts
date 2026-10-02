@@ -46,6 +46,8 @@ export interface PlanPerks {
   separators: boolean;
   /** Sharing a screen in voice channels. */
   screenShare: boolean;
+  /** The community's public pages on its own domain. */
+  customDomain: boolean;
 }
 
 export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
@@ -106,9 +108,10 @@ export const PLAN_PERKS: Record<PlanId, PlanPerks> = {
     chatBackgrounds: false,
     separators: false,
     screenShare: false,
+    customDomain: false,
   },
-  plus: { badge: true, featured: false, ...PAID_PERKS, screenShare: false },
-  pro: { badge: true, featured: true, ...PAID_PERKS, screenShare: true },
+  plus: { badge: true, featured: false, ...PAID_PERKS, screenShare: false, customDomain: false },
+  pro: { badge: true, featured: true, ...PAID_PERKS, screenShare: true, customDomain: true },
 };
 
 /** The cheapest plan with a perk, for "upgrade to …" prompts. */

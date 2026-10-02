@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { LOCALES } from './locales';
 import { DEFAULT_PREFS, FONT_SCALES, fromBase64Url } from './prefs-values';
 
 export const prefsSchema = z.object({
@@ -22,6 +23,8 @@ export const prefsSchema = z.object({
   nameEffects: z.boolean().default(true),
   density: z.enum(['compact', 'comfortable', 'spacious']).default('comfortable'),
   timeFormat: z.enum(['auto', '12h', '24h']).default('auto'),
+  /** The interface language; "auto" follows the browser. */
+  language: z.enum(['auto', ...LOCALES]).default('auto'),
   simplifiedLayout: z.boolean().default(false),
   communityThemes: z.boolean().default(true),
   focusRing: z.enum(['default', 'bold']).default('default'),

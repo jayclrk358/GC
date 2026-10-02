@@ -26,6 +26,7 @@ import { logger } from '../logger';
 import { enforceRateLimit } from '../ratelimit';
 import { audit } from './audit';
 import { deliver, maybeEmail, type NotificationInput } from './notify';
+import { emitWebhook, siteUrl, webhookExcerpt, webhookUser } from './webhooks';
 
 const log = logger('events');
 
@@ -366,6 +367,23 @@ export async function createEvent(ctx: MemberContext, raw: unknown): Promise<{ i
       diff: { title: values.title },
     });
   });
+  const creatorId = ctx.userId!;
+  emitWebhook(ctx.community.id, 'event.created', async () => ({
+    event: {
+      id,
+      title: values.title,
+      description: webhookExcerpt(values.description),
+      location: values.location,
+      startsAt: values.startsAt.toISOString(),
+      endsAt: values.endsAt.toISOString(),
+      timezone: values.timezone,
+      allDay: values.allDay,
+      recurring: Boolean(values.recurrence),
+      when: eventTimeLabel(values.startsAt, values.timezone, values.allDay),
+      url: siteUrl(`/c/${ctx.community.slug}/events/${id}`),
+    },
+    author: await webhookUser(creatorId),
+  }));
   return { id };
 }
 

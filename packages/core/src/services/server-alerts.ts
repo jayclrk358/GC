@@ -13,6 +13,7 @@ import { logger } from '../logger';
 import { BlockedAddressError, resolveTarget, UnresolvableHostError } from '../net/ssrf';
 import { audit } from './audit';
 import { postSystemMessage } from './chat';
+import { emitWebhook, siteUrl } from './webhooks';
 
 const log = logger('server-alerts');
 
@@ -70,6 +71,24 @@ export async function postServerAlerts(
     } catch (err) {
       log.warn({ err: (err as Error).message, serverId: r.serverId }, 'alert not posted');
     }
+  }
+  // Webhooks hear about every listing of the endpoint, with or without a chat alert channel.
+  const listings = await db
+    .select({
+      id: schema.gameServers.id,
+      name: schema.gameServers.name,
+      communityId: schema.gameServers.communityId,
+    })
+    .from(schema.gameServers)
+    .where(
+      and(eq(schema.gameServers.endpointId, endpointId), isNull(schema.gameServers.deletedAt)),
+    );
+  for (const l of listings) {
+    if (!l.communityId) continue;
+    emitWebhook(l.communityId, kind === 'server_down' ? 'server.down' : 'server.up', () => ({
+      server: { id: l.id, name: l.name, url: siteUrl(`/servers/${l.id}`) },
+      ...(info.downtimeMs ? { downtimeMs: info.downtimeMs } : {}),
+    }));
   }
   return rows.length;
 }

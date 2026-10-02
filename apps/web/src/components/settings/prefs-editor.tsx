@@ -2,7 +2,8 @@
 
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
-import { DEFAULT_PREFS, FONT_SCALES, type Prefs } from '@magnox/shared';
+import { useRouter } from 'next/navigation';
+import { DEFAULT_PREFS, FONT_SCALES, LOCALE_NAMES, LOCALES, type Prefs } from '@magnox/shared';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Select } from '@/components/ui/input';
@@ -17,6 +18,7 @@ export function PrefsEditor() {
   const t = useTranslations('prefs');
   const ts = useTranslations('shortcuts');
   const { prefs: saved, save } = usePrefs();
+  const router = useRouter();
   const [prefs, setPrefs] = React.useState<Prefs>(saved);
   const [status, setStatus] = React.useState('');
   const [capturing, setCapturing] = React.useState<string | null>(null);
@@ -192,6 +194,27 @@ export function PrefsEditor() {
           checked={prefs.underlineLinks}
           onCheckedChange={(v) => update({ underlineLinks: v })}
         />
+        <Field label={t('language')} description={t('languageHint')}>
+          {(p) => (
+            <Select
+              {...p}
+              value={prefs.language}
+              onValueChange={async (v) => {
+                // Saved straight away, then the page is drawn again in the new language.
+                const next = { ...prefs, language: v as Prefs['language'] };
+                setPrefs(next);
+                if (await save(next)) router.refresh();
+              }}
+            >
+              <option value="auto">{t('languageAuto')}</option>
+              {LOCALES.map((l) => (
+                <option key={l} value={l}>
+                  <span lang={l}>{LOCALE_NAMES[l]}</span>
+                </option>
+              ))}
+            </Select>
+          )}
+        </Field>
         <Field label={t('timeFormat')}>
           {(p) => (
             <Select

@@ -1,6 +1,11 @@
 {
 	# Browsers send no server name (SNI) when the site is reached by IP address; use the site's.
 	default_sni {$SITE_ADDRESS}
+	# Communities' own domains get a certificate on their first visit, but only once Magnox has
+	# verified them (the web app answers 200 for those).
+	on_demand_tls {
+		ask http://web:3000/api/domains/check
+	}
 }
 
 # App and realtime share one origin so the session cookie reaches Socket.IO with no CORS setup.
@@ -41,4 +46,18 @@
 		header Cache-Control "no-store"
 		respond "Not found" 404
 	}
+}
+
+# Communities' own domains (Settings → Custom domain). The web app shows the community's pages
+# there and sends everything else to the main site.
+https:// {
+	tls {
+		on_demand
+	}
+	encode zstd gzip
+
+	@socket path /socket.io/*
+	reverse_proxy @socket realtime:3001
+
+	reverse_proxy web:3000
 }

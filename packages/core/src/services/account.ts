@@ -87,6 +87,7 @@ export async function exportAccount(userId: string | null): Promise<Record<strin
     uploads,
     blocks,
     accounts,
+    apiTokens,
   ] = await Promise.all([
     db.query.userProfiles.findFirst({ where: eq(schema.userProfiles.userId, userId) }),
     db.query.userPreferences.findFirst({ where: eq(schema.userPreferences.userId, userId) }),
@@ -188,6 +189,16 @@ export async function exportAccount(userId: string | null): Promise<Record<strin
       .select({ provider: schema.accounts.providerId, createdAt: schema.accounts.createdAt })
       .from(schema.accounts)
       .where(eq(schema.accounts.userId, userId)),
+    db
+      .select({
+        name: schema.apiTokens.name,
+        prefix: schema.apiTokens.prefix,
+        scopes: schema.apiTokens.scopes,
+        lastUsedAt: schema.apiTokens.lastUsedAt,
+        createdAt: schema.apiTokens.createdAt,
+      })
+      .from(schema.apiTokens)
+      .where(eq(schema.apiTokens.userId, userId)),
   ]);
   return {
     exportedAt: new Date().toISOString(),
@@ -218,6 +229,7 @@ export async function exportAccount(userId: string | null): Promise<Record<strin
     reportsMade: reports,
     uploads: uploads.map((u) => ({ ...u, url: mediaUrl(u.key) })),
     blocked: blocks,
+    apiTokens,
     limits: `Each list holds up to ${EXPORT_LIMIT} items, newest first.`,
   };
 }
@@ -295,6 +307,7 @@ export async function deleteAccount(userId: string | null, raw: unknown): Promis
     const mine = <T extends { userId: unknown }>(t: T) => eq(t.userId as never, userId);
     await tx.delete(schema.sessions).where(mine(schema.sessions));
     await tx.delete(schema.pushSubscriptions).where(mine(schema.pushSubscriptions));
+    await tx.delete(schema.apiTokens).where(mine(schema.apiTokens));
     await tx.delete(schema.accounts).where(mine(schema.accounts));
     await tx.delete(schema.twoFactors).where(mine(schema.twoFactors));
     await tx.delete(schema.verifications).where(eq(schema.verifications.identifier, user.email));

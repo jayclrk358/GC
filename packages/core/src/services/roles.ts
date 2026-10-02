@@ -14,6 +14,7 @@ import { AppError, forbidden, notFound } from '../errors';
 import { mediaUrl } from '../storage';
 import { audit } from './audit';
 import { assertUnderPlanLimit } from './billing';
+import { queueDiscordMember } from './discord';
 
 export type RoleRow = typeof schema.roles.$inferSelect;
 
@@ -278,6 +279,7 @@ export async function setMemberRole(
     });
   });
   await bumpPermVersion(ctx.community.id);
+  queueDiscordMember(ctx.community.id, userId);
 }
 
 export function roleSummary(role: RoleRow) {

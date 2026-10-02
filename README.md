@@ -254,6 +254,63 @@ everyone else the page doesn't exist). It has:
   user", unless you also choose to remove your chat messages and forum replies. Owners hand over
   or delete their communities first.
 
+## API, webhooks and Discord
+
+- **Public API:** people make personal tokens in Settings → Developer; scripts and bots then call
+  `/api/v1` with `Authorization: Bearer mx_…`, acting as that person with exactly their access
+  (communities, channels, chat messages, forum threads, events, game servers). Tokens read only,
+  unless the person lets one post chat messages. Each token gets 120 requests a minute. The docs
+  are at **/developers** (linked in the footer).
+- **Webhooks:** community managers add them under Settings → Integrations. A Discord webhook URL
+  gets readable messages in that Discord channel (announcements, new events, server down/up and
+  so on, never pinging anyone); any other `https://` address gets signed JSON. Only content from
+  channels everyone in the community can see is sent. Failed deliveries are retried, and a
+  webhook that keeps failing switches itself off.
+- **Discord role sync:** members who connect Discord (Settings → Account) get the Discord roles
+  matching their roles in a community, and lose them when they lose the role or leave. It needs
+  a bot: in the [Discord Developer Portal](https://discord.com/developers/applications), on the
+  same application as `DISCORD_CLIENT_ID`, open **Bot**, reset the token and put it in
+  `DISCORD_BOT_TOKEN`. Community managers then add the bot to their Discord server from
+  Settings → Integrations and match roles.
+
+## Custom domains
+
+Communities on the Pro plan can show their pages on their own address (Settings → Custom
+domain): the owner enters it, adds a CNAME record pointing at the site and a TXT record that
+proves it's theirs, then checks. Once verified, Caddy fetches a certificate on the first visit
+(on-demand TLS; it asks Magnox first, so only verified domains get one). Visitors there see the
+community's pages; signing in, settings and the rest of the site send them to the main address.
+
+- Nothing to set up on a server made with `scripts/linux/server-env.sh`: ports 80 and 443 already
+  go to Caddy. If people should point their domains somewhere other than `APP_URL`'s host (say,
+  a load balancer's name), set `CUSTOM_DOMAIN_TARGET`.
+- `DNS_SERVERS` (comma-separated) picks the resolvers used for checking, if the server's own are
+  slow to see changes (for example `1.1.1.1,8.8.8.8`).
+
+## Languages
+
+The interface is in English, Spanish, French, German and Brazilian Portuguese. It follows the
+browser's language, and people can choose one in Settings → Accessibility & display. Anything not
+translated yet shows in English. The terms, privacy policy and developer docs are English only.
+
+Translations live in `apps/web/messages/<language>.json`. `pnpm lint` checks every language
+against English: no unknown keys, and the same `{placeholders}` and `<tags>` in each string. To
+add a language, add its code to `LOCALES` in `packages/shared/src/locales.ts` and a messages file.
+
+## Backups
+
+`scripts/linux/backup.sh` backs up the database, uploaded files (when they're stored on the
+server rather than in S3/R2) and `.env` into `backups/<date>`, keeping the newest 14.
+
+- `bash scripts/linux/backup.sh --install-cron` also backs up every night at 03:17.
+- Set `BACKUP_RCLONE_REMOTE` (e.g. `r2:magnox-backups`, after `rclone config`) to copy each backup
+  off the server, and `BACKUP_KEEP` or `BACKUP_DIR` to change how many are kept and where.
+- Restore with `bash scripts/linux/restore.sh backups/<date>`: it stops the site, replaces the
+  database (in one transaction, so a bad backup changes nothing) and the uploads, and starts it
+  again. On a new server, copy the backup's `env` to `.env` first.
+- Backups hold the site's secrets (`.env`), so keep them private. With uploads in S3 or R2, turn on
+  the bucket's own versioning or replication too.
+
 ## Magnox for Windows
 
 `apps/desktop` is a Windows app that shows your Magnox site in its own window. None of the site is

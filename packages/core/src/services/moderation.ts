@@ -18,7 +18,7 @@ import { rooms } from '../rooms';
 import { audit } from './audit';
 import { getChatChannel } from './chat';
 import { queueMediaCleanup } from './media-cleanup';
-import { removeMember } from './members';
+import { memberLeft, removeMember } from './members';
 import { notifyUser, queueFanout } from './notify';
 import { removeFromVoice } from './voice-rooms';
 
@@ -65,6 +65,7 @@ export async function kickMember(
   });
   realtime().to(rooms.user(userId)).emit('community:removed', { communityId: ctx.community.id });
   await removeFromVoice(ctx.community.id, userId);
+  memberLeft(ctx.community.id, userId, 'kicked');
   await notifyUser({
     userId,
     type: 'moderation',
@@ -103,9 +104,9 @@ export async function banMember(ctx: MemberContext, userId: string, raw: unknown
   if (!user) throw notFound('User');
   const seconds = BAN_DURATIONS[input.duration];
   const expiresAt = seconds ? new Date(Date.now() + seconds * 1000) : null;
-  const removed = { posts: [] as string[], threads: [] as string[] };
+  const removed = { posts: [] as string[], threads: [] as string[], member: false };
   await db.transaction(async (tx) => {
-    await removeMember(tx, ctx.community.id, userId);
+    removed.member = await removeMember(tx, ctx.community.id, userId);
     await tx
       .insert(schema.bans)
       .values({
@@ -160,6 +161,7 @@ export async function banMember(ctx: MemberContext, userId: string, raw: unknown
   });
   realtime().to(rooms.user(userId)).emit('community:removed', { communityId: ctx.community.id });
   await removeFromVoice(ctx.community.id, userId);
+  if (removed.member) memberLeft(ctx.community.id, userId, 'banned');
   if (removed.posts.length) await queueMediaCleanup({ kind: 'posts', ids: removed.posts });
   if (removed.threads.length) await queueMediaCleanup({ kind: 'threads', ids: removed.threads });
   await notifyUser({

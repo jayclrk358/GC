@@ -34,6 +34,7 @@ import { queueMediaCleanup } from './media-cleanup';
 import { getNotificationSettings, notifyUser, queueFanout } from './notify';
 import { mediaUrl } from '../storage';
 import { loadAuthors } from './chat';
+import { emitChannelEvent, siteUrl, webhookExcerpt, webhookUser } from './webhooks';
 
 export interface AuthorView {
   id: string | null;
@@ -602,6 +603,21 @@ export async function createThread(
   });
   await queueFanout({ kind: 'post', postId });
   realtime().to(rooms.channel(channel.id)).emit('thread:new', { channelId: channel.id, threadId });
+  const authorId = ctx.userId!;
+  emitChannelEvent(
+    ctx.community.id,
+    channel,
+    channel.type === 'announcement' ? 'announcement.created' : 'thread.created',
+    async () => ({
+      thread: {
+        id: threadId,
+        title: input.title,
+        excerpt: webhookExcerpt(text),
+        url: siteUrl(`/c/${ctx.community.slug}/t/${threadId}`),
+      },
+      author: await webhookUser(authorId),
+    }),
+  );
   return { id: threadId };
 }
 
@@ -694,6 +710,20 @@ export async function createReply(
   realtime()
     .to(rooms.channel(channel.id))
     .emit('thread:activity', { channelId: channel.id, threadId: thread.id });
+  const authorId = ctx.userId!;
+  emitChannelEvent(ctx.community.id, channel, 'post.created', async () => ({
+    thread: {
+      id: thread.id,
+      title: thread.title,
+      url: siteUrl(`/c/${ctx.community.slug}/t/${thread.id}`),
+    },
+    post: {
+      id: postId,
+      excerpt: webhookExcerpt(text),
+      url: siteUrl(`/c/${ctx.community.slug}/t/${thread.id}/p/${postId}`),
+    },
+    author: await webhookUser(authorId),
+  }));
   return { id: postId };
 }
 

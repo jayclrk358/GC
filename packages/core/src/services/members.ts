@@ -8,7 +8,9 @@ import { communityChanged } from '../emitter';
 import { cacheRedis } from '../redis';
 import { audit } from './audit';
 import { checkJoinAllowed } from './automod';
+import { queueDiscordMember } from './discord';
 import { removeFromVoice } from './voice-rooms';
+import { emitMemberEvent } from './webhooks';
 
 async function isBanned(tx: DbOrTx, communityId: string, userId: string): Promise<boolean> {
   const rows = await tx
@@ -73,10 +75,25 @@ export async function joinCommunity(ctx: MemberContext): Promise<void> {
   }
   await enforceRateLimit(`join:${ctx.userId}`, 30, 3600);
   await checkJoinAllowed(ctx.community);
-  await db.transaction(async (tx) => {
-    await addMember(tx, ctx.community.id, ctx.userId!);
-  });
+  const added = await db.transaction((tx) => addMember(tx, ctx.community.id, ctx.userId!));
   communityChanged(ctx.community.id, ctx.userId, 'members');
+  if (added) memberJoined(ctx.community.id, ctx.userId);
+}
+
+/** Someone became a member: tell webhooks, and give them their Discord roles. */
+export function memberJoined(communityId: string, userId: string): void {
+  emitMemberEvent(communityId, userId, 'member.joined');
+  queueDiscordMember(communityId, userId);
+}
+
+/** Someone stopped being a member. */
+export function memberLeft(
+  communityId: string,
+  userId: string,
+  reason: 'left' | 'kicked' | 'banned',
+): void {
+  emitMemberEvent(communityId, userId, 'member.left', reason);
+  queueDiscordMember(communityId, userId);
 }
 
 export async function leaveCommunity(ctx: MemberContext): Promise<void> {
@@ -84,8 +101,8 @@ export async function leaveCommunity(ctx: MemberContext): Promise<void> {
   if (ctx.isOwner) {
     throw forbidden('Owners can’t leave. Transfer ownership or delete the community first.');
   }
-  await db.transaction(async (tx) => {
-    await removeMember(tx, ctx.community.id, ctx.userId!);
+  const removed = await db.transaction(async (tx) => {
+    const gone = await removeMember(tx, ctx.community.id, ctx.userId!);
     await audit(tx, {
       communityId: ctx.community.id,
       actorId: ctx.userId,
@@ -93,8 +110,10 @@ export async function leaveCommunity(ctx: MemberContext): Promise<void> {
       targetType: 'user',
       targetId: ctx.userId!,
     });
+    return gone;
   });
   await removeFromVoice(ctx.community.id, ctx.userId!);
+  if (removed) memberLeft(ctx.community.id, ctx.userId!, 'left');
 }
 
 export interface MemberRow {
