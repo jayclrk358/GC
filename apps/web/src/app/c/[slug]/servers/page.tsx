@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { Server } from 'lucide-react';
-import { listCommunityServers, markEndpointsHot } from '@magnox/core';
+import { listCommunityServers } from '@magnox/core';
 import { loadCommunity } from '@/lib/community';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/misc';
@@ -17,7 +17,6 @@ export default async function CommunityServersPage({
   const data = await loadCommunity((await params).slug);
   const t = await getTranslations('servers');
   const servers = await listCommunityServers(data.community.id);
-  await markEndpointsHot(servers.map((s) => s.endpointId));
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-4">

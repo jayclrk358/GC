@@ -147,7 +147,7 @@ export async function createWikiPage(ctx: MemberContext, raw: unknown): Promise<
       summary: input.summary || 'Created page',
     });
   });
-  communityChanged(ctx.community.id, ctx.userId);
+  communityChanged(ctx.community.id, ctx.userId, 'wiki');
   return { slug };
 }
 
@@ -200,7 +200,7 @@ export async function updateWikiPage(
       .where(eq(schema.wikiPages.id, page.id));
   });
   await queueFanout({ kind: 'wiki_edit', pageId: page.id, revisionId });
-  communityChanged(ctx.community.id, ctx.userId);
+  communityChanged(ctx.community.id, ctx.userId, 'wiki');
   return { slug };
 }
 
@@ -298,7 +298,7 @@ export async function restoreRevision(
       })
       .where(eq(schema.wikiPages.id, pageId));
   });
-  communityChanged(ctx.community.id, ctx.userId);
+  communityChanged(ctx.community.id, ctx.userId, 'wiki');
 }
 
 export async function setWikiProtected(

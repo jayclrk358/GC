@@ -774,7 +774,9 @@ export async function editPost(
       await tx.update(schema.threads).set({ title }).where(eq(schema.threads.id, thread.id));
     }
   });
-  realtime().to(rooms.thread(thread.id)).emit('post:edited', { threadId: thread.id, postId });
+  realtime()
+    .to(rooms.thread(thread.id))
+    .emit('post:edited', { threadId: thread.id, postId, actorId: ctx.userId });
 }
 
 export async function deletePost(
@@ -831,7 +833,9 @@ export async function deletePost(
       });
     }
   });
-  realtime().to(rooms.thread(thread.id)).emit('post:deleted', { threadId: thread.id, postId });
+  realtime()
+    .to(rooms.thread(thread.id))
+    .emit('post:deleted', { threadId: thread.id, postId, actorId: ctx.userId });
   await queueMediaCleanup(
     post.isOp ? { kind: 'threads', ids: [thread.id] } : { kind: 'posts', ids: [postId] },
   );
@@ -884,7 +888,7 @@ export async function toggleReaction(
   else await db.insert(schema.postReactions).values({ postId, userId: ctx.userId!, emoji });
   realtime()
     .to(rooms.thread(post.threadId))
-    .emit('post:reactions', { threadId: post.threadId, postId });
+    .emit('post:reactions', { threadId: post.threadId, postId, actorId: ctx.userId });
   return { added: !existing };
 }
 

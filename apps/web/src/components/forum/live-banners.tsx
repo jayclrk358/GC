@@ -44,6 +44,30 @@ function Banner({
   );
 }
 
+/**
+ * A refresh at most every `gap` ms: small changes (reply counts, reactions) don't need to redraw
+ * the page each time in a busy forum. The last one is never dropped, just delayed.
+ */
+function useThrottledRefresh(gap: number) {
+  const refresh = useLiveRefresh();
+  const last = React.useRef(0);
+  const pending = React.useRef(false);
+  return React.useCallback(() => {
+    const wait = last.current + gap - Date.now();
+    if (wait <= 0) {
+      last.current = Date.now();
+      refresh();
+    } else if (!pending.current) {
+      pending.current = true;
+      refresh(wait);
+      window.setTimeout(() => {
+        pending.current = false;
+        last.current = Date.now();
+      }, wait);
+    }
+  }, [refresh, gap]);
+}
+
 /** Counts new items; in auto mode each one also triggers a (coalesced) refresh. */
 function useNewItems() {
   const router = useRouter();
@@ -75,13 +99,14 @@ function useNewItems() {
 export function ChannelLiveBanner({ channelId }: { channelId: string }) {
   const t = useTranslations('forum');
   const items = useNewItems();
+  const quiet = useThrottledRefresh(30_000);
   useRoom(`channel:${channelId}`, {
     'thread:new': (p: { channelId: string }) => {
       if (p.channelId === channelId) items.add();
     },
     // Replies change counts and the activity order; only worth a quiet refresh in auto mode.
     'thread:activity': (p: { channelId: string }) => {
-      if (p.channelId === channelId && items.auto) items.refresh();
+      if (p.channelId === channelId && items.auto) quiet();
     },
   });
   return (
@@ -104,14 +129,18 @@ export function ThreadLiveBanner({
 }) {
   const t = useTranslations('forum');
   const items = useNewItems();
+  const quiet = useThrottledRefresh(10_000);
+  // Changes made by this reader are already on their screen.
+  type Change = { threadId: string; actorId?: string | null };
+  const theirs = (p: Change) => p.threadId === threadId && p.actorId !== userId;
   useRoom(`thread:${threadId}`, {
     'post:new': (p: { threadId: string; authorId: string | null }) => {
       if (p.threadId === threadId && p.authorId !== userId) items.add();
     },
     // Edits, deletions and reactions refresh quietly; they don't move content around.
-    'post:edited': (p: { threadId: string }) => p.threadId === threadId && items.refresh(),
-    'post:deleted': (p: { threadId: string }) => p.threadId === threadId && items.refresh(),
-    'post:reactions': (p: { threadId: string }) => p.threadId === threadId && items.refresh(),
+    'post:edited': (p: Change) => theirs(p) && items.refresh(),
+    'post:deleted': (p: Change) => theirs(p) && items.refresh(),
+    'post:reactions': (p: Change) => theirs(p) && quiet(),
   });
   return (
     <Banner

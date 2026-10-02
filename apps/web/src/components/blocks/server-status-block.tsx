@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getServersByIds, listCommunityServers, markEndpointsHot } from '@magnox/core';
+import { getServersByIds, listCommunityServers } from '@magnox/core';
 import type { BlockConfig } from '@magnox/shared';
 import type { LoadedCommunity } from '@/lib/community';
 import { ServerCard } from '@/components/servers/server-status';
@@ -34,7 +34,6 @@ export async function ServerStatusBlock({
       </BlockSection>
     );
   }
-  await markEndpointsHot(servers.map((s) => s.endpointId));
   return (
     <BlockSection id={id} heading={config.heading}>
       <ul

@@ -528,6 +528,22 @@ async function queuePreviews(messageId: string) {
   );
 }
 
+/**
+ * A new message goes in full to people with the channel open, and as a small ping to everyone
+ * else who has it in their sidebar (enough for an unread dot and a mention badge).
+ */
+function publishNewMessage(channelId: string, view: MessageView) {
+  realtime().to(rooms.chat(channelId)).emit('message:new', { channelId, message: view });
+  realtime().to(rooms.channel(channelId)).except(rooms.chat(channelId)).emit('channel:activity', {
+    channelId,
+    id: view.id,
+    authorId: view.authorId,
+    mentionUserIds: view.mentionUserIds,
+    mentionRoleIds: view.mentionRoleIds,
+    mentionEveryone: view.mentionEveryone,
+  });
+}
+
 export async function sendMessage(
   ctx: MemberContext,
   channelId: string,
@@ -652,9 +668,7 @@ export async function sendMessage(
     markRead(ctx.userId, channel.id, id),
   ]);
   const [view] = await toViews(ctx.community.id, ctx.userId, [row]);
-  realtime()
-    .to(rooms.channel(channel.id))
-    .emit('message:new', { channelId: channel.id, message: view });
+  publishNewMessage(channel.id, view!);
   if (
     mentions.mentionUserIds.length ||
     mentions.mentionRoleIds.length ||
@@ -710,7 +724,7 @@ export async function postSystemMessage(
     .set({ lastMessageId: id, lastActivityAt: now })
     .where(eq(schema.channels.id, channelId));
   const [view] = await toViews(communityId, null, [row!]);
-  realtime().to(rooms.channel(channelId)).emit('message:new', { channelId, message: view });
+  publishNewMessage(channelId, view!);
   return view!;
 }
 
@@ -771,7 +785,7 @@ export async function editMessage(
   };
   await db.update(schema.messages).set(patch).where(eq(schema.messages.id, row.id));
   realtime()
-    .to(rooms.channel(channel.id))
+    .to(rooms.chat(channel.id))
     .emit('message:updated', {
       channelId: channel.id,
       id: row.id,
@@ -803,7 +817,7 @@ export async function deleteMessage(ctx: MemberContext, messageId: string): Prom
     }
   });
   realtime()
-    .to(rooms.channel(channel.id))
+    .to(rooms.chat(channel.id))
     .emit('message:deleted', { channelId: channel.id, id: row.id });
   if (row.attachments.length) {
     await queueMediaCleanup({
@@ -862,7 +876,7 @@ export async function toggleMessageReaction(
     .groupBy(schema.messageReactions.emoji)
     .orderBy(sql`min(${schema.messageReactions.createdAt})`);
   realtime()
-    .to(rooms.channel(channel.id))
+    .to(rooms.chat(channel.id))
     .emit('message:reactions', {
       channelId: channel.id,
       id: row.id,
@@ -907,7 +921,7 @@ export async function setMessagePinned(
     .set({ pinnedAt: pinned ? new Date() : null, pinnedBy: pinned ? ctx.userId : null })
     .where(eq(schema.messages.id, row.id));
   realtime()
-    .to(rooms.channel(channel.id))
+    .to(rooms.chat(channel.id))
     .emit('message:updated', { channelId: channel.id, id: row.id, patch: { pinned } });
 }
 
@@ -1243,6 +1257,6 @@ export async function setMessageEmbeds(messageId: string, embeds: MessageEmbed[]
     .returning({ channelId: schema.messages.channelId });
   if (row)
     realtime()
-      .to(rooms.channel(row.channelId))
+      .to(rooms.chat(row.channelId))
       .emit('message:updated', { channelId: row.channelId, id: messageId, patch: { embeds } });
 }

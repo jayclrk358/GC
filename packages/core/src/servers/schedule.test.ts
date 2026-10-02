@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { cleanServerText, nextPollDelay, POLL, shouldGoDormant } from './schedule';
 
 describe('poll scheduling', () => {
-  it('polls hot and important servers every minute', () => {
+  it('polls watched servers every minute and listed, verified ones every two', () => {
     expect(nextPollDelay({ ok: true, failCount: 0, hot: true, important: false })).toBe(POLL.hotMs);
-    expect(nextPollDelay({ ok: true, failCount: 0, hot: false, important: true })).toBe(POLL.hotMs);
+    expect(nextPollDelay({ ok: true, failCount: 0, hot: true, important: true })).toBe(POLL.hotMs);
+    expect(nextPollDelay({ ok: true, failCount: 0, hot: false, important: true })).toBe(
+      POLL.importantMs,
+    );
   });
 
   it('polls everything else every five minutes', () => {
@@ -14,7 +17,7 @@ describe('poll scheduling', () => {
   });
 
   it('backs off exponentially on failure and caps at an hour', () => {
-    const s = { ok: false, hot: false, important: true };
+    const s = { ok: false, hot: true, important: false };
     expect(nextPollDelay({ ...s, failCount: 1 })).toBe(60_000);
     expect(nextPollDelay({ ...s, failCount: 2 })).toBe(120_000);
     expect(nextPollDelay({ ...s, failCount: 3 })).toBe(240_000);

@@ -3,13 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Globe2, ShieldCheck, Users } from 'lucide-react';
-import {
-  endpointHistory,
-  getServerDetail,
-  isAppError,
-  markEndpointsHot,
-  type ServerDetail,
-} from '@magnox/core';
+import { endpointHistory, getServerDetail, isAppError, type ServerDetail } from '@magnox/core';
 import { formatDuration } from '@magnox/shared';
 import { getUser } from '@/lib/auth';
 import { turnstileSiteKey } from '@/lib/turnstile';
@@ -56,7 +50,6 @@ export default async function ServerPage({ params }: Params) {
   const t = await getTranslations('serverPage');
   const tc = await getTranslations('community');
   const server = await load(id, user?.id ?? null);
-  await markEndpointsHot([server.endpointId]);
   const history = await endpointHistory(server.endpointId, '24h');
   const locale = await getLocale();
   const wait = durationFrom(server.vote.nextVoteAt, locale);

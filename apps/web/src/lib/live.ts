@@ -23,7 +23,7 @@ export function useAutoUpdates(): boolean {
  * Re-render the page with fresh server data, keeping client state, focus and scroll position.
  * Bursts of events cause one refresh; while the tab is hidden it waits until it's visible again.
  */
-export function useLiveRefresh(delay = 1000): () => void {
+export function useLiveRefresh(delay = 1000): (extra?: number) => void {
   const router = useRouter();
   const timer = React.useRef<number | undefined>(undefined);
   const stale = React.useRef(false);
@@ -41,20 +41,23 @@ export function useLiveRefresh(delay = 1000): () => void {
     };
   }, [router]);
 
-  return React.useCallback(() => {
-    const fire = () => {
-      if (document.visibilityState === 'hidden') {
-        stale.current = true;
-        return;
-      }
-      // Just refreshed for another reason: that render may predate this change, so go again.
-      const wait = lastRefresh + GAP - Date.now();
-      if (wait > 0) timer.current = window.setTimeout(fire, wait);
-      else refreshOnce(router);
-    };
-    window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(fire, delay);
-  }, [router, delay]);
+  return React.useCallback(
+    (extra = 0) => {
+      const fire = () => {
+        if (document.visibilityState === 'hidden') {
+          stale.current = true;
+          return;
+        }
+        // Just refreshed for another reason: that render may predate this change, so go again.
+        const wait = lastRefresh + GAP - Date.now();
+        if (wait > 0) timer.current = window.setTimeout(fire, wait);
+        else refreshOnce(router);
+      };
+      window.clearTimeout(timer.current);
+      timer.current = window.setTimeout(fire, delay + extra);
+    },
+    [router, delay],
+  );
 }
 
 /**

@@ -12,6 +12,7 @@ import {
 } from '@magnox/shared';
 import { z } from 'zod';
 import {
+  channelPermissions,
   channelPermissionsMany,
   requirePerm,
   type ChannelRef,
@@ -103,11 +104,37 @@ export async function getChannelByName(ctx: MemberContext, name: string): Promis
   return channel;
 }
 
+const isUuid = (v: string) => z.string().uuid().safeParse(v).success;
+
+/** One channel the viewer can see (loads just it, not the whole list). */
 export async function getChannelById(ctx: MemberContext, id: string): Promise<ChannelView> {
-  const { channels } = await listVisibleChannels(ctx);
-  const channel = channels.find((c) => c.id === id);
-  if (!channel) throw notFound('Channel');
-  return channel;
+  if (!isUuid(id)) throw notFound('Channel');
+  const [r] = await db
+    .select()
+    .from(schema.channels)
+    .where(
+      and(
+        eq(schema.channels.id, id),
+        eq(schema.channels.communityId, ctx.community.id),
+        isNull(schema.channels.archivedAt),
+      ),
+    )
+    .limit(1);
+  if (!r || r.type === 'category' || r.type === 'separator') throw notFound('Channel');
+  const perms = await channelPermissions(ctx, r as ChannelRef);
+  if (!has(perms, Permission.VIEW_CHANNEL)) throw notFound('Channel');
+  return {
+    id: r.id,
+    parentId: r.parentId,
+    type: r.type,
+    name: r.name,
+    topic: r.topic,
+    position: r.position,
+    settings: r.settings,
+    slowmodeSeconds: r.slowmodeSeconds,
+    lastActivityAt: r.lastActivityAt,
+    perms: String(perms),
+  };
 }
 
 async function assertCategory(communityId: string, parentId: string | null) {

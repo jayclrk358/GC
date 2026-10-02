@@ -1,6 +1,6 @@
 import { schema, type DbOrTx } from '@magnox/db';
 import { newId } from '@magnox/shared';
-import { communityChanged } from '../emitter';
+import { communityChanged, type ChangeScope } from '../emitter';
 
 export interface AuditEntry {
   communityId: string;
@@ -23,17 +23,47 @@ export async function audit(tx: DbOrTx, entry: AuditEntry): Promise<void> {
     diff: entry.diff ?? null,
     reason: entry.reason ?? null,
   });
-  // Chat deletions already reach open channels as message events.
-  if (entry.action.startsWith('message.')) return;
-  communityChanged(
-    entry.communityId,
-    entry.actorId,
-    MEMBERSHIP_ACTIONS.has(entry.action) ? 'members' : 'content',
-  );
+  const scope = changeScope(entry.action);
+  if (scope) communityChanged(entry.communityId, entry.actorId, scope);
+  // Someone's own roles or timeout changed: just their pages need to catch up.
+  if (/^member\.(role\.|timeout)/.test(entry.action) && entry.targetId) {
+    communityChanged(entry.communityId, entry.actorId, 'layout', entry.targetId);
+  }
 }
 
-/** People leaving or being removed, which only the member list shows. */
-const MEMBERSHIP_ACTIONS = new Set(['member.leave', 'member.kick', 'member.ban', 'member.unban']);
+/**
+ * Which open pages an audited change affects, or null for changes nobody else sees (moderation
+ * tools, reports, webhooks, automod, chat deletions, which reach open channels as message
+ * events).
+ */
+export function changeScope(action: string): ChangeScope | null {
+  const [area, what] = action.split('.');
+  switch (area) {
+    case 'community':
+      return what === 'create' ? null : 'layout';
+    case 'channel':
+    case 'role':
+      return 'layout';
+    case 'member':
+      // Role and timeout changes only matter to that person (see above).
+      return what === 'role' || what === 'timeout' ? null : 'members';
+    case 'application':
+      return what === 'approve' ? 'members' : null;
+    case 'page':
+      return 'page';
+    case 'server':
+      return 'servers';
+    case 'event':
+      return 'events';
+    case 'wiki':
+      return 'wiki';
+    case 'thread':
+    case 'post':
+      return 'forum';
+    default:
+      return null;
+  }
+}
 
 /** Shallow diff of changed keys, for audit entries. */
 export function diffOf<T extends Record<string, unknown>>(

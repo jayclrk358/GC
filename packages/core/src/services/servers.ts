@@ -468,23 +468,6 @@ export async function requestRefresh(
   return { queued: true, retryInSeconds: 0 };
 }
 
-/** Viewers looking at a server keep it on the fast polling tier. */
-export async function markEndpointsHot(endpointIds: string[]): Promise<void> {
-  if (!endpointIds.length) return;
-  await db
-    .update(schema.serverEndpoints)
-    .set({ hotUntil: new Date(Date.now() + POLL.hotWindowMs), dormant: false })
-    .where(
-      and(
-        inArray(schema.serverEndpoints.id, endpointIds),
-        or(
-          isNull(schema.serverEndpoints.hotUntil),
-          sql`${schema.serverEndpoints.hotUntil} < now() + interval '5 minutes'`,
-        ),
-      ),
-    );
-}
-
 export async function countOnlineServers(
   communityId: string,
 ): Promise<{ total: number; online: number; players: number }> {

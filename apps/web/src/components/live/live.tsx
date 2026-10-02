@@ -19,12 +19,38 @@ export function AutoRefresh({
   return null;
 }
 
-/** Refreshes a community's pages when it changes: settings, members, pages, wiki. */
+type ChangeScope = 'layout' | 'members' | 'page' | 'servers' | 'events' | 'wiki' | 'forum';
+
+/** Whether a page at `path` (inside /c/<slug>) shows what a change affected. */
+function showsScope(scope: ChangeScope | undefined, path: string): boolean {
+  const landing = path === '' || path === '/';
+  switch (scope) {
+    case 'members':
+      return path.startsWith('/members');
+    case 'page':
+      return landing;
+    case 'servers':
+      return landing || path.startsWith('/servers');
+    case 'events':
+      return landing || path.startsWith('/events');
+    case 'wiki':
+      return path.startsWith('/wiki');
+    case 'forum':
+      return landing || path.startsWith('/forum') || path.startsWith('/t/');
+    default:
+      // The whole community changed (theme, name, channels, roles, plan).
+      return true;
+  }
+}
+
+/** Refreshes a community's pages when something they show changes. */
 export function CommunityLive({
   communityId,
+  slug,
   userId,
 }: {
   communityId: string;
+  slug: string;
   userId: string | null;
 }) {
   const auto = useAutoUpdates();
@@ -36,14 +62,14 @@ export function CommunityLive({
     'community:changed': (p: {
       communityId: string;
       actorId: string | null;
-      kind?: 'content' | 'members';
+      scope?: ChangeScope;
     }) => {
       // The person who made the change already sees it.
       if (p.communityId !== communityId || p.actorId === userId) return;
-      // People joining and leaving only change the member list; refreshing every open page of a
-      // busy community each time someone joins would be a lot of work for nothing.
-      if (p.kind === 'members' && !pathname.endsWith('/members')) return;
-      refresh();
+      const path = pathname.slice(`/c/${slug}`.length);
+      if (!showsScope(p.scope, path)) return;
+      // Spread out: in a busy community everyone refreshing in the same second adds up.
+      refresh(Math.random() * 3000);
     },
   });
   return null;

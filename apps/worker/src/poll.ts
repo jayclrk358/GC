@@ -48,7 +48,13 @@ export async function pollTick(): Promise<number> {
     due.map((r) => ({
       name: 'poll-endpoint',
       data: { endpointId: r.id },
-      opts: { jobId: `poll-${r.id}-${bucket}`, attempts: 1 },
+      opts: {
+        jobId: `poll-${r.id}-${bucket}`,
+        attempts: 1,
+        // Thousands an hour: nothing to look back at once done.
+        removeOnComplete: true,
+        removeOnFail: { count: 200 },
+      },
     })),
   );
   return due.length;
@@ -203,7 +209,8 @@ export async function pollEndpoint(endpointId: string): Promise<void> {
     : await query(protocol, endpoint.host, endpoint.port);
   const now = new Date();
   const hot = Boolean(endpoint.hotUntil && endpoint.hotUntil > now);
-  const important = listings.some((l) => l.listed || l.verifiedAt);
+  // Listed and verified: shown in the server browser, so a little fresher than the rest.
+  const important = listings.some((l) => l.listed && l.verifiedAt);
 
   if (outcome.error === 'rate_limited') {
     await db
@@ -278,10 +285,22 @@ export async function pollEndpoint(endpointId: string): Promise<void> {
     .where(eq(schema.serverEndpoints.id, endpointId))
     .returning();
   if (!row) return;
-  realtime()
-    .to(rooms.server(endpointId))
-    .emit('server:status', { endpointId, status: endpointStatus(row) });
-  log.debug({ endpointId, online: row.online, players: row.players }, 'status published');
+  // Only when something people see changed (not the ping or check time), so quiet servers send
+  // nothing.
+  const changed =
+    !endpoint.lastCheckedAt ||
+    endpoint.online !== row.online ||
+    endpoint.players !== row.players ||
+    endpoint.maxPlayers !== row.maxPlayers ||
+    endpoint.map !== row.map ||
+    endpoint.version !== row.version ||
+    endpoint.reportedName !== row.reportedName;
+  if (changed) {
+    realtime()
+      .to(rooms.server(endpointId))
+      .emit('server:status', { endpointId, status: endpointStatus(row) });
+    log.debug({ endpointId, online: row.online, players: row.players }, 'status published');
+  }
 
   await recordSample({
     endpointId,

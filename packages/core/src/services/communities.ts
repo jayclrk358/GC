@@ -23,7 +23,6 @@ import {
 } from '@magnox/shared';
 import { z } from 'zod';
 import { requirePerm, type MemberContext } from '../access';
-import { communityChanged } from '../emitter';
 import { AppError, conflict, forbidden } from '../errors';
 import { enforceRateLimit } from '../ratelimit';
 import { TEMPLATES } from '../templates';
@@ -374,7 +373,6 @@ export async function transferOwnership(ctx: MemberContext, raw: unknown): Promi
     url: `/c/${ctx.community.slug}/settings`,
     data: { title: `You're now the owner of ${ctx.community.name}`, community: ctx.community.name },
   });
-  communityChanged(ctx.community.id, ctx.userId, 'content');
 }
 
 /**
@@ -396,7 +394,6 @@ export async function setArchived(ctx: MemberContext, archived: boolean): Promis
     action: archived ? 'community.archive' : 'community.unarchive',
   });
   if (archived) await endCommunityVoiceCalls(ctx.community.id);
-  communityChanged(ctx.community.id, ctx.userId, 'content');
 }
 
 export interface ExploreFilters {

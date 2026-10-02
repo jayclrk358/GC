@@ -136,7 +136,23 @@ export function ChatView(props: Props) {
   }
 
   // ── Read state ──
+  // Acknowledgements are batched: the first soon after opening the channel, then at most one
+  // every ten seconds while new messages arrive, plus one when the tab is hidden or the channel
+  // closed. Your own messages are already marked read when sent.
   const ackTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const flushAck = React.useCallback(() => {
+    if (ackTimer.current) {
+      clearTimeout(ackTimer.current);
+      ackTimer.current = null;
+    }
+    const now = stateRef.current;
+    const latest = [...now.messages].reverse().find((m) => !m.pending && !m.failed);
+    if (!latest || (acked.current && latest.id <= acked.current)) return;
+    if (now.hasMoreAfter || !atBottom.current) return;
+    acked.current = latest.id;
+    setUnreadBanner(false);
+    void ackChannelAction(communityId, channel.id, latest.id);
+  }, [communityId, channel.id]);
   const maybeAck = React.useCallback(() => {
     if (!me || !perms.member) return;
     const s = stateRef.current;
@@ -144,32 +160,31 @@ export function ChatView(props: Props) {
     if (!last || s.hasMoreAfter || !atBottom.current || document.visibilityState !== 'visible')
       return;
     if (acked.current && last.id <= acked.current) return;
-    // One pending acknowledgement covers everything that arrives meanwhile: in a busy channel
-    // that's one request every couple of seconds per reader, not one per message.
+    if (last.authorId === me.id) {
+      acked.current = last.id;
+      return;
+    }
     if (ackTimer.current) return;
-    ackTimer.current = setTimeout(() => {
-      ackTimer.current = null;
-      const now = stateRef.current;
-      const latest = [...now.messages].reverse().find((m) => !m.pending && !m.failed);
-      if (!latest || (acked.current && latest.id <= acked.current)) return;
-      if (now.hasMoreAfter || !atBottom.current || document.visibilityState !== 'visible') return;
-      acked.current = latest.id;
-      setUnreadBanner(false);
-      void ackChannelAction(communityId, channel.id, latest.id);
-    }, 2000);
-  }, [me, perms.member, communityId, channel.id]);
+    ackTimer.current = setTimeout(flushAck, acked.current ? 10_000 : 1500);
+  }, [me, perms.member, flushAck]);
 
   React.useEffect(() => {
     maybeAck();
   }, [state.messages, maybeAck]);
   React.useEffect(() => {
-    const onVisible = () => maybeAck();
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') maybeAck();
+      else if (ackTimer.current) flushAck();
+    };
     document.addEventListener('visibilitychange', onVisible);
-    return () => document.removeEventListener('visibilitychange', onVisible);
-  }, [maybeAck]);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      if (ackTimer.current) flushAck();
+    };
+  }, [maybeAck, flushAck]);
 
   // ── Live events ──
-  useRoom(`channel:${channel.id}`, {
+  useRoom(`chat:${channel.id}`, {
     'message:new': (p: { channelId: string; message: MessageView }) => {
       if (p.channelId !== channel.id) return;
       const m = p.message;

@@ -15,7 +15,6 @@ import {
 } from '@magnox/shared';
 import { z } from 'zod';
 import { requireMember, requirePerm, type MemberContext } from '../access';
-import { communityChanged } from '../emitter';
 import {
   AppError,
   conflict,
@@ -301,7 +300,6 @@ export async function reviewApplication(
     });
     return { ...row, added };
   });
-  if (input.decision === 'approve') communityChanged(ctx.community.id, app.userId, 'members');
   if (app.added) memberJoined(ctx.community.id, app.userId);
   const approved = input.decision === 'approve';
   const title = approved

@@ -1,7 +1,10 @@
 /** Game server polling tiers and backoff. Pure functions so they can be unit tested. */
 
 export const POLL = {
+  /** Someone is watching it live. */
   hotMs: 60_000,
+  /** Verified and listed in the server browser. */
+  importantMs: 2 * 60_000,
   normalMs: 5 * 60_000,
   maxBackoffMs: 60 * 60_000,
   dormantAfterMs: 7 * 24 * 60 * 60_000,
@@ -17,12 +20,12 @@ export interface PollState {
   failCount: number;
   /** Someone is viewing it right now, or it was just added/refreshed. */
   hot: boolean;
-  /** Verified or publicly listed servers are polled more often. */
+  /** Verified and publicly listed servers are polled more often. */
   important: boolean;
 }
 
 export function baseInterval(s: Pick<PollState, 'hot' | 'important'>): number {
-  return s.hot || s.important ? POLL.hotMs : POLL.normalMs;
+  return s.hot ? POLL.hotMs : s.important ? POLL.importantMs : POLL.normalMs;
 }
 
 /** Delay until the next poll. `jitter` in [-1, 1] spreads load (±10%). */

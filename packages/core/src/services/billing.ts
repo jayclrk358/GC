@@ -220,7 +220,7 @@ export async function syncCommunityPlan(communityId: string): Promise<PlanId> {
     .returning({ id: schema.communities.id });
   if (changed.length) {
     log.info({ communityId, plan }, 'community plan changed');
-    communityChanged(communityId, null);
+    communityChanged(communityId, null, 'layout');
   }
   return plan;
 }

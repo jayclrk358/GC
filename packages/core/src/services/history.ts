@@ -8,6 +8,7 @@ import {
   type HistoryRange,
 } from '@magnox/shared';
 import { logger } from '../logger';
+import { cacheRedis } from '../redis';
 
 const log = logger('history');
 
@@ -124,55 +125,31 @@ export async function rollupHours(from: Date, to: Date): Promise<number> {
   return Number([...rows][0]?.n ?? 0);
 }
 
-/** Summarise hourly rollups into daily rows for the UTC days touching [from, to). */
-export async function rollupDays(from: Date, to: Date): Promise<number> {
-  const start = utcDay(from.getTime());
-  const rows = await db.execute<{ n: number }>(sql`
-    with agg as (
-      select endpoint_id,
-             (hour at time zone 'UTC')::date as day,
-             sum(samples)::int as samples,
-             sum(online_samples)::int as online_samples,
-             (sum(avg_players * online_samples) filter (where avg_players is not null)
-               / nullif(sum(online_samples) filter (where avg_players is not null), 0))::real
-               as avg_players,
-             max(peak_players)::int as peak_players
-      from server_rollups_hourly
-      where hour >= ${at(start)} and hour < ${at(to)}
-      group by 1, 2
-    ), up as (
-      insert into server_rollups_daily
-        (endpoint_id, day, samples, online_samples, avg_players, peak_players)
-      select * from agg
-      on conflict (endpoint_id, day) do update set
-        samples = excluded.samples,
-        online_samples = excluded.online_samples,
-        avg_players = excluded.avg_players,
-        peak_players = excluded.peak_players
-      returning 1
-    )
-    select count(*)::int as n from up`);
-  return Number([...rows][0]?.n ?? 0);
-}
-
 /**
- * Housekeeping for server history, safe to run as often as you like: keeps partitions ahead,
- * refreshes the rollups for the current and previous hour/day, and applies retention.
+ * Housekeeping for server history (hourly), safe to run as often as you like: keeps partitions
+ * ahead, refreshes the rollups for the previous and current hour, and once a day applies
+ * retention.
  */
 export async function maintainHistory(now = Date.now()): Promise<{
   hours: number;
-  days: number;
   dropped: number;
 }> {
   await ensureSamplePartitions(3, now);
   const hourStart = Math.floor(now / HOUR) * HOUR;
   const hours = await rollupHours(new Date(hourStart - HOUR), new Date(hourStart + HOUR));
-  const days = await rollupDays(new Date(now - DAY), new Date(hourStart + HOUR));
-  const dropped = await dropOldSamplePartitions(now);
-  await db.execute(
-    sql`delete from server_rollups_hourly where hour < ${at(new Date(now - HOURLY_RETENTION_DAYS * DAY))}`,
-  );
-  return { hours, days, dropped: dropped.length };
+  let dropped: string[] = [];
+  // Retention only needs one pass a day (the first run of each UTC day).
+  const day = utcDay(now).toISOString().slice(0, 10);
+  const first = await cacheRedis()
+    .set(`history-retention:${day}`, '1', 'EX', 2 * 24 * 3600, 'NX')
+    .catch(() => 'OK');
+  if (first === 'OK') {
+    dropped = await dropOldSamplePartitions(now);
+    await db.execute(
+      sql`delete from server_rollups_hourly where hour < ${at(new Date(now - HOURLY_RETENTION_DAYS * DAY))}`,
+    );
+  }
+  return { hours, dropped: dropped.length };
 }
 
 /** Rebuild rollups from all raw samples still kept (worker start-up, after downtime). */
@@ -181,7 +158,6 @@ export async function backfillHistory(now = Date.now()): Promise<void> {
   const from = new Date(utcDay(now - SAMPLE_RETENTION_DAYS * DAY).getTime());
   const to = new Date(Math.floor(now / HOUR) * HOUR + HOUR);
   await rollupHours(from, to);
-  await rollupDays(from, to);
 }
 
 // ── Reading history ────────────────────────────────────────────────────────

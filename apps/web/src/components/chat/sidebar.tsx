@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { ChevronDown, Hash, Plus, Volume2 } from 'lucide-react';
-import type { MessageView } from '@magnox/core';
 import { mentionsMe } from '@magnox/shared';
 import { useRooms, useUserEvents } from '@/lib/realtime';
 import { useStored } from '@/lib/use-stored';
@@ -13,6 +12,16 @@ import { cn } from '@/lib/utils';
 import { VoiceChannelPeople } from '@/components/voice/voice-people';
 import { useVoice } from '@/components/voice/voice-provider';
 import { UserPanel, type PanelUser } from './user-panel';
+
+/** A message somewhere else in the community: just enough for an unread dot. */
+interface ChannelActivity {
+  channelId: string;
+  id: string;
+  authorId: string | null;
+  mentionUserIds: string[];
+  mentionRoleIds: string[];
+  mentionEveryone: boolean;
+}
 
 interface SidebarChannel {
   id: string;
@@ -73,11 +82,12 @@ export function ChannelSidebar({
     setCollapsed([...next].join(','));
   };
 
-  // Unread dots are only for signed-in people; visitors don't need every channel's messages.
+  // Unread dots are only for signed-in people. Each channel sends just a small ping per message
+  // (the open channel's messages come through the chat view instead).
   useRooms(me ? text.map((c) => `channel:${c.id}`) : [], {
-    'message:new': (p: { channelId: string; message: MessageView }) => {
-      if (p.channelId === active || !me || p.message.authorId === me.id) return;
-      const pinged = mentionsMe(p.message, me.id, me.roleIds);
+    'channel:activity': (p: ChannelActivity) => {
+      if (p.channelId === active || !me || p.authorId === me.id) return;
+      const pinged = mentionsMe(p, me.id, me.roleIds);
       setUnreads((u) => ({
         ...u,
         [p.channelId]: {

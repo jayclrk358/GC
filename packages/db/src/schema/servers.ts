@@ -1,6 +1,5 @@
 import {
   boolean,
-  date,
   index,
   integer,
   pgTable,
@@ -106,7 +105,12 @@ export const serverSamples = pgTable(
     players: integer('players'),
     pingMs: integer('ping_ms'),
   },
-  (t) => [primaryKey({ columns: [t.endpointId, t.ts] })],
+  // BRIN on time: the rollups read a time range across all endpoints, which the primary key
+  // (endpoint first) can't serve.
+  (t) => [
+    primaryKey({ columns: [t.endpointId, t.ts] }),
+    index('server_samples_ts_brin').using('brin', t.ts),
+  ],
 );
 
 const rollupColumns = {
@@ -123,14 +127,10 @@ const rollupColumns = {
 export const serverRollupsHourly = pgTable(
   'server_rollups_hourly',
   { ...rollupColumns, hour: tz('hour').notNull() },
-  (t) => [primaryKey({ columns: [t.endpointId, t.hour] })],
-);
-
-/** Daily summaries, kept forever. */
-export const serverRollupsDaily = pgTable(
-  'server_rollups_daily',
-  { ...rollupColumns, day: date('day').notNull() },
-  (t) => [primaryKey({ columns: [t.endpointId, t.day] })],
+  (t) => [
+    primaryKey({ columns: [t.endpointId, t.hour] }),
+    index('server_rollups_hourly_hour_brin').using('brin', t.hour),
+  ],
 );
 
 export const serverVotes = pgTable(

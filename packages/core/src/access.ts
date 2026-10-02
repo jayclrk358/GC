@@ -10,6 +10,7 @@ import {
   type Overwrite,
 } from '@magnox/shared';
 import { forbidden, notFound, unauthorized } from './errors';
+import { noteServerViewer } from './servers/hot';
 
 export interface CommunityRef {
   id: string;
@@ -315,12 +316,10 @@ export async function canSubscribe(
 ): Promise<boolean> {
   switch (kind) {
     case 'server': {
-      const rows = await db
-        .select({ id: schema.serverEndpoints.id })
-        .from(schema.serverEndpoints)
-        .where(eq(schema.serverEndpoints.id, id))
-        .limit(1);
-      return rows.length > 0;
+      // Server status is public (and an unknown id just never gets an update), so there's
+      // nothing to look up. Live viewers keep the server on the fast polling tier.
+      noteServerViewer(id);
+      return true;
     }
     case 'community': {
       try {
@@ -330,7 +329,8 @@ export async function canSubscribe(
         return false;
       }
     }
-    case 'channel': {
+    case 'channel':
+    case 'chat': {
       const channel = await loadChannel(id);
       if (!channel) return false;
       try {

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { Server, X } from 'lucide-react';
-import { browserGames, markEndpointsHot, searchServers } from '@magnox/core';
+import { browserGames, searchServers } from '@magnox/core';
 import { EmptyState, PageHeader } from '@/components/ui/misc';
 import { ServerCard } from '@/components/servers/server-status';
 import { ServerFilters } from '@/components/servers/server-filters';
@@ -15,7 +15,6 @@ export default async function ServersPage({ searchParams }: { searchParams: Prom
   const sp = await searchParams;
   const t = await getTranslations('servers');
   const [result, games] = await Promise.all([searchServers(sp), browserGames()]);
-  await markEndpointsHot(result.items.map((s) => s.endpointId));
   const pages = Math.ceil(result.total / result.pageSize);
   const query = (patch: SP) => {
     const next = { ...sp, ...patch };

@@ -55,10 +55,15 @@ start(QUEUES.media, 2);
 await backfillHistory().catch((err) => log.error({ err }, 'history backfill failed'));
 
 // Recurring schedules. upsertJobScheduler is idempotent across restarts and replicas.
-await queue(QUEUES.poll).upsertJobScheduler('poll-tick', { every: 5_000 }, { name: 'poll-tick' });
+await queue(QUEUES.poll).upsertJobScheduler(
+  'poll-tick',
+  { every: 10_000 },
+  { name: 'poll-tick', opts: { removeOnComplete: true, removeOnFail: { count: 50 } } },
+);
+// Hourly: the rollups only feed the 30-day chart (6-hour buckets).
 await queue(QUEUES.maintenance).upsertJobScheduler(
   'history-maintenance',
-  { every: 10 * 60 * 1000 },
+  { every: 60 * 60 * 1000 },
   { name: 'history-maintenance' },
 );
 await queue(QUEUES.maintenance).upsertJobScheduler(

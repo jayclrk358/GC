@@ -6,6 +6,7 @@ import { auth } from '@magnox/auth';
 // Just the modules needed here: the package's main entry also loads image processing, S3,
 // Stripe and the rest, which this process never uses.
 import { communityForDomain } from '@magnox/core/domain-lookup';
+import { noteServerViewer } from '@magnox/core/servers/hot';
 import { env } from '@magnox/core/env';
 import { logger } from '@magnox/core/logger';
 import { cacheRedis } from '@magnox/core/redis';
@@ -78,7 +79,7 @@ io.use(async (socket, next) => {
 });
 
 const MAX_SUBSCRIPTIONS = 200;
-const ROOM_RE = /^(community|channel|thread|server):[0-9a-f-]{36}$/;
+const ROOM_RE = /^(community|channel|chat|thread|server):[0-9a-f-]{36}$/;
 
 io.on('connection', (socket: Socket) => {
   const data = socket.data as SocketData;
@@ -107,11 +108,11 @@ io.on('connection', (socket: Socket) => {
     data.subscriptions.delete(room);
   });
 
-  // Typing indicators are ephemeral: relayed to the channel room, never stored. Only people
-  // subscribed to (so allowed to view) the channel can send or receive them.
+  // Typing indicators are ephemeral: relayed to people with the channel open, never stored. Only
+  // people subscribed to (so allowed to view) the channel can send or receive them.
   socket.on('typing', (channelId: unknown) => {
     if (!data.userId || typeof channelId !== 'string') return;
-    const room = rooms.channel(channelId);
+    const room = rooms.chat(channelId);
     if (!data.subscriptions.has(room)) return;
     const now = Date.now();
     if (now - data.lastTyping < 2000) return;
@@ -123,6 +124,14 @@ io.on('connection', (socket: Socket) => {
 });
 
 const port = env().REALTIME_PORT;
+// Servers someone is still watching stay on the fast polling tier (subscribing marks them once;
+// this keeps long-open pages counted).
+setInterval(() => {
+  for (const room of io.of('/').adapter.rooms.keys()) {
+    if (room.startsWith('server:')) noteServerViewer(room.slice('server:'.length));
+  }
+}, 4 * 60_000).unref();
+
 httpServer.listen(port, () => log.info({ port }, 'realtime listening'));
 
 async function shutdown(signal: string) {

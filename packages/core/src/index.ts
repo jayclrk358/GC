@@ -13,6 +13,7 @@ export * from './access';
 export * from './templates';
 export * from './net/ssrf';
 export * from './servers/schedule';
+export * from './servers/hot';
 export * from './services/audit';
 export * from './services/communities';
 export * from './services/members';

@@ -57,7 +57,11 @@ export default async function CommunityLayout({
       className="relative isolate flex flex-1 flex-col bg-bg font-sans text-fg"
     >
       <CommunityThemeStyle theme={data.community.theme} />
-      <CommunityLive communityId={data.community.id} userId={data.user?.id ?? null} />
+      <CommunityLive
+        communityId={data.community.id}
+        slug={data.community.slug}
+        userId={data.user?.id ?? null}
+      />
       {bg && (
         <div
           aria-hidden

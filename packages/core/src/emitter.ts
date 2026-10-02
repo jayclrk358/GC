@@ -13,17 +13,26 @@ export function realtime(): Emitter {
 }
 
 /**
- * Tell open pages of a community that something changed (settings, members, wiki…) so they can
- * refresh. Pages wait a moment before refreshing, which covers the enclosing transaction
- * committing after this is sent. `kind` lets pages skip what they don't show: people joining
- * and leaving only matter to the member list.
+ * What a change affects, so open pages refresh only when they show it:
+ * - layout: the whole community (theme, name, navigation, channels, roles, plan), every page;
+ * - members: the member list; page: the landing page; servers: server lists and blocks;
+ *   events, wiki, forum: those sections.
+ */
+export type ChangeScope = 'layout' | 'members' | 'page' | 'servers' | 'events' | 'wiki' | 'forum';
+
+/**
+ * Tell open pages of a community that something changed so they can refresh. Pages wait a moment
+ * before refreshing (plus a little randomness, so a busy community's readers don't all refresh at
+ * once), which also covers the enclosing transaction committing after this is sent. With
+ * `onlyUser`, just that person's pages hear about it (e.g. their own roles changed).
  */
 export function communityChanged(
   communityId: string,
   actorId: string | null,
-  kind: 'content' | 'members' = 'content',
+  scope: ChangeScope,
+  onlyUser?: string,
 ): void {
   realtime()
-    .to(`community:${communityId}`)
-    .emit('community:changed', { communityId, actorId, kind });
+    .to(onlyUser ? `user:${onlyUser}` : `community:${communityId}`)
+    .emit('community:changed', { communityId, actorId, scope });
 }
