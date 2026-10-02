@@ -204,6 +204,13 @@
       "when": 1790944794631,
       "tag": "0028_notifications_unread_idx",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1790945563954,
+      "tag": "0029_events_next_occurrence",
+      "breakpoints": true
     }
   ]
 }

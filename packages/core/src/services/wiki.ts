@@ -2,14 +2,18 @@ import { diffText } from '../diff';
 import { and, asc, desc, eq, isNull, sql } from 'drizzle-orm';
 import { db, schema } from '@magnox/db';
 import {
+  docSizeProblem,
   docToText,
   emptyDoc,
   has,
+  isUuid,
   newId,
   Permission,
   RESERVED_WIKI_SLUGS,
+  type RichNode,
   sanitizeDoc,
   slugifyTitle,
+  WIKI_DOC_LIMITS,
   wikiPageInputSchema,
 } from '@magnox/shared';
 import { z } from 'zod';
@@ -83,6 +87,14 @@ export async function getWikiPage(
   return { ...row.page, editorName: row.editorName };
 }
 
+/** Sanitise a page body and refuse one too big to keep (each save also stores a revision). */
+function prepareWikiBody(raw: unknown): { body: RichNode; text: string } {
+  const body = sanitizeDoc(raw);
+  const tooBig = docSizeProblem(body, WIKI_DOC_LIMITS);
+  if (tooBig) throw new AppError('validation', tooBig, { fields: { body: tooBig } });
+  return { body, text: docToText(body, 200_000) };
+}
+
 async function uniqueSlug(communityId: string, title: string, exceptId?: string): Promise<string> {
   const base = slugifyTitle(title) || 'page';
   for (let i = 1; i < 100; i++) {
@@ -116,11 +128,11 @@ async function assertParent(ctx: MemberContext, parentId: string | null, selfId?
 
 export async function createWikiPage(ctx: MemberContext, raw: unknown): Promise<{ slug: string }> {
   if (!canEditWiki(ctx)) throw forbidden("You can't edit this wiki.");
-  const input = wikiPageInputSchema.parse(raw);
+  // Before validating, so saves that are turned away still count.
   await enforceRateLimit(`wiki:${ctx.userId}`, 30, 600);
+  const input = wikiPageInputSchema.parse(raw);
   await assertParent(ctx, input.parentId);
-  const body = sanitizeDoc(input.body);
-  const text = docToText(body, 200_000);
+  const { body, text } = prepareWikiBody(input.body);
   const slug = await uniqueSlug(ctx.community.id, input.title);
   const pageId = newId();
   const revisionId = newId();
@@ -159,6 +171,7 @@ export async function updateWikiPage(
   const page = await loadPage(ctx, pageId);
   if (!canEditWiki(ctx, page))
     throw forbidden(page.protected ? 'This page is protected.' : "You can't edit this wiki.");
+  await enforceRateLimit(`wiki:${ctx.userId}`, 30, 600);
   const input = wikiPageInputSchema.parse(raw);
   if (input.baseRevisionId && input.baseRevisionId !== page.currentRevisionId) {
     throw new AppError(
@@ -166,10 +179,8 @@ export async function updateWikiPage(
       'Someone else saved this page while you were editing. Copy your changes, reload, and apply them again.',
     );
   }
-  await enforceRateLimit(`wiki:${ctx.userId}`, 30, 600);
   await assertParent(ctx, input.parentId, page.id);
-  const body = sanitizeDoc(input.body);
-  const text = docToText(body, 200_000);
+  const { body, text } = prepareWikiBody(input.body);
   const slug =
     input.title !== page.title
       ? await uniqueSlug(ctx.community.id, input.title, page.id)
@@ -205,6 +216,8 @@ export async function updateWikiPage(
 }
 
 async function loadPage(ctx: MemberContext, pageId: string): Promise<WikiPageRow> {
+  // Ids come from URLs: one that isn't a UUID can't be a page (and Postgres would reject it).
+  if (!isUuid(pageId)) throw notFound('Page');
   const page = await db.query.wikiPages.findFirst({
     where: and(
       eq(schema.wikiPages.id, pageId),
@@ -240,6 +253,7 @@ export { diffText, type DiffPart } from '../diff';
 
 export async function compareRevision(ctx: MemberContext, pageId: string, revisionId: string) {
   await loadPage(ctx, pageId);
+  if (!isUuid(revisionId)) throw notFound('Revision');
   const rev = await db.query.wikiRevisions.findFirst({
     where: and(eq(schema.wikiRevisions.id, revisionId), eq(schema.wikiRevisions.pageId, pageId)),
   });
@@ -270,6 +284,7 @@ export async function restoreRevision(
 ): Promise<void> {
   const page = await loadPage(ctx, pageId);
   if (!canEditWiki(ctx, page)) throw forbidden();
+  if (!isUuid(revisionId)) throw notFound('Revision');
   const rev = await db.query.wikiRevisions.findFirst({
     where: and(eq(schema.wikiRevisions.id, revisionId), eq(schema.wikiRevisions.pageId, pageId)),
   });

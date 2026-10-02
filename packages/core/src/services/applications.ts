@@ -335,7 +335,17 @@ export async function getOnboarding(communityId: string): Promise<Onboarding> {
     where: eq(schema.communities.id, communityId),
     columns: { settings: true },
   });
-  return onboardingSchema.parse(row?.settings.onboarding ?? {});
+  const stored: unknown = row?.settings.onboarding ?? {};
+  const parsed = onboardingSchema.safeParse(stored);
+  if (parsed.success) return parsed.data;
+  // Something stored that no longer fits (an older shape, say) falls back to the defaults rather
+  // than breaking every page that asks. The switches are kept: the rules gate reads them directly.
+  log.warn({ communityId, err: parsed.error.message }, 'stored onboarding is invalid');
+  const flags = (stored ?? {}) as { enabled?: unknown; requireAccept?: unknown };
+  return onboardingSchema.parse({
+    enabled: flags.enabled === true,
+    requireAccept: flags.requireAccept === true,
+  });
 }
 
 export async function saveOnboarding(ctx: MemberContext, raw: unknown): Promise<void> {

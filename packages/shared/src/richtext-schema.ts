@@ -92,6 +92,49 @@ export function sanitizeDoc(input: unknown): RichNode {
   return visit(input, 0);
 }
 
+/**
+ * How many characters of text a document holds, counted in one pass (text, mention labels and
+ * image descriptions). Stops once past `stopAt`, so a huge document costs no more than that.
+ */
+export function docTextLength(node: RichNode, stopAt = Number.POSITIVE_INFINITY): number {
+  let total = 0;
+  const stack: RichNode[] = [node];
+  while (stack.length && total <= stopAt) {
+    const n = stack.pop()!;
+    if (n.type === 'text') total += n.text?.length ?? 0;
+    else if (n.type === 'mention') total += 1 + String(n.attrs?.label ?? '').length;
+    else if (n.type === 'emoji') total += 2 + String(n.attrs?.name ?? '').length;
+    else if (n.type === 'image') total += String(n.attrs?.alt ?? '').length;
+    if (n.content) for (const c of n.content) stack.push(c);
+  }
+  return total;
+}
+
+export interface DocLimits {
+  /** Most characters of text. */
+  maxChars: number;
+  /** Most bytes the document takes stored (UTF-8 JSON). */
+  maxBytes: number;
+}
+
+/** Forum posts (each edit keeps a revision too). */
+export const POST_DOC_LIMITS: DocLimits = { maxChars: 40_000, maxBytes: 100_000 };
+/** Wiki pages, which are longer by nature. */
+export const WIKI_DOC_LIMITS: DocLimits = { maxChars: 100_000, maxBytes: 200_000 };
+
+/**
+ * Why a (sanitised) document is too big to keep, or null when it fits. Text is counted first so
+ * an oversized document is turned away before it's serialised.
+ */
+export function docSizeProblem(doc: RichNode, limits: DocLimits): string | null {
+  if (docTextLength(doc, limits.maxChars) > limits.maxChars) {
+    return `That’s too long: keep it under ${limits.maxChars.toLocaleString('en')} characters.`;
+  }
+  const bytes = new TextEncoder().encode(JSON.stringify(doc)).byteLength;
+  if (bytes > limits.maxBytes) return 'That’s too long to save. Shorten it or split it up.';
+  return null;
+}
+
 export const richDocSchema = z.custom<RichNode>((v) => {
   try {
     sanitizeDoc(v);

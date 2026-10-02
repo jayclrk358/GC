@@ -48,6 +48,25 @@ describe('automod links', () => {
     expect(links).not.toContain('site.com');
   });
 
+  it('still finds names with many labels', () => {
+    expect(findLinks('go to a.b.c.d.e.f.g.h.i.j.free-nitro.gift now').join(' ')).toMatch(
+      /free-nitro\.gift$/,
+    );
+  });
+
+  it('takes linear time on text that looks like endless domain labels', () => {
+    for (const text of [
+      'x.'.repeat(25000),
+      '1.2.3.4.'.repeat(6000),
+      'ab.cd.ef.gh.ij.kl.mn.op.qr.st.uv.'.repeat(1500),
+      ('a-'.repeat(30) + 'a.').repeat(800),
+    ]) {
+      const started = performance.now();
+      findLinks(text);
+      expect(performance.now() - started).toBeLessThan(200);
+    }
+  });
+
   it('spots invite links', () => {
     expect(hasInviteLink('join discord.gg/abc123')).toBe(true);
     expect(hasInviteLink('https://discord.com/invite/xyz')).toBe(true);

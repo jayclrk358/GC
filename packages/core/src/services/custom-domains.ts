@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { promises as dns } from 'node:dns';
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull, lt, ne } from 'drizzle-orm';
 import { db, schema } from '@magnox/db';
 import { customDomainSchema, domainVerifyRecord, Permission, planPerks } from '@magnox/shared';
 import { requirePerm, type MemberContext } from '../access';
@@ -70,6 +70,12 @@ function isOwnDomain(domain: string): boolean {
   return own.some((h) => domain === h || domain.endsWith(`.${h}`));
 }
 
+/**
+ * How long another community's claim on a domain holds it without being verified. After that a
+ * new claim takes it over, so nobody can sit on someone else's domain by never verifying it.
+ */
+const UNVERIFIED_CLAIM_MS = 7 * 86_400_000;
+
 /** Set (or change) the community's domain. It needs verifying again before it works. */
 export async function setCustomDomain(ctx: MemberContext, raw: unknown): Promise<void> {
   requirePerm(ctx, Permission.MANAGE_COMMUNITY);
@@ -90,14 +96,42 @@ export async function setCustomDomain(ctx: MemberContext, raw: unknown): Promise
     verifiedAt: null,
     lastCheckedAt: null,
     lastError: null,
+    // When it was claimed, for how long an unverified claim holds the domain.
+    createdAt: new Date(),
   };
   try {
-    await db
-      .insert(schema.customDomains)
-      .values({ communityId: ctx.community.id, ...values })
-      .onConflictDoUpdate({ target: schema.customDomains.communityId, set: values });
+    await db.transaction(async (tx) => {
+      const released = await tx
+        .delete(schema.customDomains)
+        .where(
+          and(
+            eq(schema.customDomains.domain, domain),
+            ne(schema.customDomains.communityId, ctx.community.id),
+            isNull(schema.customDomains.verifiedAt),
+            lt(schema.customDomains.createdAt, new Date(Date.now() - UNVERIFIED_CLAIM_MS)),
+          ),
+        )
+        .returning({ communityId: schema.customDomains.communityId });
+      for (const r of released) {
+        await audit(tx, {
+          communityId: r.communityId,
+          actorId: null,
+          action: 'domain.remove',
+          diff: { domain },
+          reason: 'Never verified, and claimed by another community',
+        });
+      }
+      await tx
+        .insert(schema.customDomains)
+        .values({ communityId: ctx.community.id, ...values })
+        .onConflictDoUpdate({ target: schema.customDomains.communityId, set: values });
+    });
   } catch (e) {
-    if (isUniqueViolation(e)) throw conflict('Another community already uses that domain.');
+    if (isUniqueViolation(e)) {
+      throw conflict(
+        'Another community already uses that domain. (A claim that’s never verified lapses after a week.)',
+      );
+    }
     throw e;
   }
   await audit(db, {

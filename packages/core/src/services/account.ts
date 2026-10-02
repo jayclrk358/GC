@@ -243,7 +243,10 @@ const deleteSchema = z.object({
   removeContent: z.boolean().default(false),
 });
 
-/** Communities someone still owns (they have to hand them over or delete them before leaving). */
+/**
+ * Communities someone still owns (they have to hand them over or delete them before leaving).
+ * Suspended ones don't count: the owner can do neither with them, so they're left to staff.
+ */
 export async function ownedCommunities(userId: string) {
   return db
     .select({
@@ -252,7 +255,13 @@ export async function ownedCommunities(userId: string) {
       slug: schema.communities.slug,
     })
     .from(schema.communities)
-    .where(and(eq(schema.communities.ownerId, userId), isNull(schema.communities.deletedAt)));
+    .where(
+      and(
+        eq(schema.communities.ownerId, userId),
+        isNull(schema.communities.deletedAt),
+        isNull(schema.communities.suspendedAt),
+      ),
+    );
 }
 
 /**
@@ -292,7 +301,20 @@ export async function deleteAccount(userId: string | null, raw: unknown): Promis
         .update(schema.messages)
         .set({ deletedAt: new Date() })
         .where(and(eq(schema.messages.authorId, userId), isNull(schema.messages.deletedAt)));
-      // Replies only: a thread's first post holds up everyone else's replies.
+      // Replies only: a thread's first post holds up everyone else's replies. Their threads count
+      // them off first, as deleting one reply does.
+      await tx.execute(sql`
+        update ${schema.threads} t
+        set reply_count = greatest(t.reply_count - d.n, 0)
+        from (
+          select ${schema.posts.threadId} as thread_id, count(*)::int as n
+          from ${schema.posts}
+          where ${schema.posts.authorId} = ${userId}
+            and not ${schema.posts.isOp}
+            and ${schema.posts.deletedAt} is null
+          group by ${schema.posts.threadId}
+        ) d
+        where t.id = d.thread_id`);
       await tx
         .update(schema.posts)
         .set({ deletedAt: new Date() })

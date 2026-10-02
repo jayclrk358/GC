@@ -12,6 +12,8 @@ export const QUEUES = {
   previews: 'link-previews',
   /** Calls out to other systems on users' behalf, e.g. Votifier vote rewards. */
   integrations: 'integrations',
+  /** Community webhooks, kept apart so slow endpoints only hold up other webhooks. */
+  webhooks: 'webhooks',
   /** Removing uploaded files once the content that used them is deleted. */
   media: 'media',
 } as const;

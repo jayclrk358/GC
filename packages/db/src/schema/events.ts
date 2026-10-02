@@ -36,6 +36,11 @@ export const events = pgTable(
     recurrence: jsonb('recurrence').$type<Recurrence>(),
     /** When the last occurrence ends (null: repeats forever), to find what's still to come. */
     seriesEndsAt: tz('series_ends_at'),
+    /**
+     * When the reminder job next needs to look at this event: the next date it hasn't reached yet
+     * (null: work it out, as after a change). Saves going through every repeating event each run.
+     */
+    nextOccurrenceAt: tz('next_occurrence_at'),
     /** Most people going to one occurrence (0: no limit). */
     capacity: integer('capacity').notNull().default(0),
     cancelledAt: tz('cancelled_at'),
@@ -45,6 +50,7 @@ export const events = pgTable(
   (t) => [
     index('events_community_idx').on(t.communityId, t.startsAt),
     index('events_series_end_idx').on(t.seriesEndsAt),
+    index('events_next_occurrence_idx').on(t.nextOccurrenceAt),
   ],
 );
 

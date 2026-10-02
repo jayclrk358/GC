@@ -42,7 +42,13 @@ export default async function EventsPage({
   const clock = { timeZone, locale, timeFormat: prefs.timeFormat };
   const canManage = has(ctx.base, Permission.MANAGE_EVENTS);
   const today = dayKey(new Date(), timeZone);
-  const month = /^\d{4}-(0[1-9]|1[0-2])$/.test(sp.month ?? '') ? sp.month! : today.slice(0, 7);
+  // Within ten years either way: further out there's nothing to show, only dates to work out
+  // (and near the end of what JavaScript dates can hold, that fails).
+  const asked = /^\d{4}-(0[1-9]|1[0-2])$/.test(sp.month ?? '') ? sp.month! : null;
+  const month =
+    asked && Math.abs(Number(asked.slice(0, 4)) - Number(today.slice(0, 4))) <= 10
+      ? asked
+      : today.slice(0, 7);
   const base = `/c/${slug}/events`;
 
   let body: React.ReactNode;

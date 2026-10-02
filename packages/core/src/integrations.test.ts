@@ -2,7 +2,9 @@ import { createHmac } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { isDiscordWebhookUrl } from '@magnox/shared';
 import {
+  discordBatchMessage,
   discordMessage,
+  discordText,
   maskWebhookUrl,
   webhookSignature,
   type WebhookPayload,
@@ -66,7 +68,7 @@ describe('discordMessage', () => {
     expect(msg.allowed_mentions).toEqual({ parse: [] });
     const [embed] = msg.embeds as Record<string, unknown>[];
     expect(embed!.title).toBe('New message in #general');
-    expect(embed!.description).toBe('@everyone free stuff');
+    expect(embed!.description).toBe('\\@everyone free stuff');
     expect(embed!.author).toEqual({ name: 'Alice', url: 'https://m.test/u/alice' });
     expect(embed!.footer).toEqual({ text: 'Neon Arcade' });
   });
@@ -82,6 +84,44 @@ describe('discordMessage', () => {
       payload('member.left', { user: { name: 'Bob' }, reason: 'kicked' }),
     );
     expect((kicked.embeds as { title: string }[])[0]!.title).toBe('Bob was removed');
+  });
+
+  it('shows what members wrote as typed, not as Markdown, links or mentions', () => {
+    expect(discordText('**hi** _x_ ~~s~~ `c` ||spoiler|| > quote')).toBe(
+      '\\*\\*hi\\*\\* \\_x\\_ \\~\\~s\\~\\~ \\`c\\` \\|\\|spoiler\\|\\| \\> quote',
+    );
+    expect(discordText('[free nitro](https://evil.test) <@123> # big \\')).toBe(
+      '\\[free nitro\\]\\(https://evil.test\\) \\<\\@123\\> \\# big \\\\',
+    );
+    const msg = discordMessage(
+      payload('thread.created', {
+        channel: { name: 'ideas' },
+        thread: { title: '[click](https://evil.test)', excerpt: '*bold*', url: 'u' },
+        author: { name: '*Alice*' },
+      }),
+    );
+    const [embed] = msg.embeds as Record<string, unknown>[];
+    expect(embed!.title).toBe('\\[click\\]\\(https://evil.test\\)');
+    expect(embed!.description).toBe('\\*bold\\*');
+    // The author line isn't formatted by Discord, so it's left alone.
+    expect(embed!.author).toEqual({ name: '*Alice*', url: undefined });
+  });
+
+  it('sends a burst of chat messages as one', () => {
+    const one = (name: string, content: string) =>
+      payload('message.created', {
+        channel: { id: 'ch', name: 'general' },
+        message: { content, url: `https://m.test/m/${content}` },
+        author: { name },
+      });
+    const msg = discordBatchMessage([one('Alice', 'hi'), one('Bob', '*hey*')]);
+    const embeds = msg.embeds as Record<string, unknown>[];
+    expect(embeds).toHaveLength(1);
+    expect(embeds[0]!.title).toBe('2 new messages in #general');
+    expect(embeds[0]!.description).toBe('**Alice**: hi\n**Bob**: \\*hey\\*');
+    expect(embeds[0]!.url).toBe('https://m.test/m/*hey*');
+    expect(msg.allowed_mentions).toEqual({ parse: [] });
+    expect(discordBatchMessage([one('Alice', 'hi')])).toEqual(discordMessage(one('Alice', 'hi')));
   });
 
   it('keeps long text within Discord’s limits', () => {

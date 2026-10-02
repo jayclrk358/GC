@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Clock, MapPin, Repeat, Users } from 'lucide-react';
 import { env, getEventDetail, isAppError } from '@magnox/core';
+import { EVENT_HORIZON_MS } from '@magnox/shared';
 import { loadCommunity } from '@/lib/community';
 import { getPrefs } from '@/lib/prefs';
 import { getViewerTimeZone } from '@/lib/timezone';
@@ -19,12 +20,22 @@ import { occurrenceHref } from '@/components/events/event-list';
 
 type Params = Promise<{ slug: string; eventId: string }>;
 
+/**
+ * The date asked for, if it could be one at all: a real date no further ahead than events are
+ * looked at. (The event checks it's one of its own, within its series.) Anything else shows the
+ * next date, rather than failing on a date too far out to work with.
+ */
+function requestedDate(at?: string): Date | null {
+  const when = at ? new Date(at) : null;
+  if (!when || Number.isNaN(when.getTime())) return null;
+  return when.getTime() <= Date.now() + EVENT_HORIZON_MS ? when : null;
+}
+
 // Shared by the metadata and the page, so the event is loaded once per request.
 const load = cache(async (slug: string, eventId: string, at?: string) => {
   const data = await loadCommunity(slug);
   try {
-    const when = at ? new Date(at) : null;
-    return { data, detail: await getEventDetail(data.ctx, eventId, when) };
+    return { data, detail: await getEventDetail(data.ctx, eventId, requestedDate(at)) };
   } catch (e) {
     if (isAppError(e) && e.code === 'not_found') notFound();
     throw e;
