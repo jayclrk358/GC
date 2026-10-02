@@ -8,9 +8,24 @@
 	}
 }
 
+# Request bodies are capped here, before anything reads them: uploads at the largest video a
+# plan allows plus the form around it (the app checks each plan's limit), everything else well
+# above what any form or webhook sends.
+(body_limits) {
+	@upload path /api/uploads /api/uploads/*
+	request_body @upload {
+		max_size 160MB
+	}
+	@not_upload not path /api/uploads /api/uploads/*
+	request_body @not_upload {
+		max_size 15MB
+	}
+}
+
 # App and realtime share one origin so the session cookie reaches Socket.IO with no CORS setup.
 {$SITE_ADDRESS} {
 	encode zstd gzip
+	import body_limits
 
 	@socket path /socket.io/*
 	reverse_proxy @socket realtime:3001
@@ -55,6 +70,16 @@ https:// {
 		on_demand
 	}
 	encode zstd gzip
+	import body_limits
+
+	# Only the domain the certificate was issued for, which on-demand TLS already checked with
+	# the app: a request naming any other host is turned away here, not looked up by the app.
+	# (Like the global strict_sni_host option, but that would also refuse the main site when it's
+	# reached by IP address, where browsers send no server name.)
+	@misdirected not host {http.request.tls.server_name}
+	respond @misdirected "Misdirected request" 421 {
+		close
+	}
 
 	@socket path /socket.io/*
 	reverse_proxy @socket realtime:3001

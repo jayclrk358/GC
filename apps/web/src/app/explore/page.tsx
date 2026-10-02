@@ -7,6 +7,7 @@ import { CommunityCard } from '@/components/community/community-card';
 import { EmptyState, PageHeader } from '@/components/ui/misc';
 import { ExploreFilters } from '@/components/community/explore-filters';
 import { AutoRefresh } from '@/components/live/live';
+import { pageParam } from '@/lib/page-param';
 
 export const metadata = { title: 'Explore communities' };
 
@@ -23,7 +24,7 @@ type SP = {
 export default async function ExplorePage({ searchParams }: { searchParams: Promise<SP> }) {
   const sp = await searchParams;
   const t = await getTranslations('explore');
-  const page = Math.max(0, Number(sp.page ?? 0) || 0);
+  const page = pageParam(sp.page);
   const sort = (['popular', 'new', 'relevance'] as const).find((s) => s === sp.sort);
   // Featured (Pro) communities lead the first page when nothing is being searched or filtered.
   const browsing = page === 0 && !sp.q && !sp.game && !sp.tag && !sp.region && !sp.language;

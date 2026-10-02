@@ -38,6 +38,13 @@ describe('rich text sanitizer', () => {
     expect(isSafeHref('mailto:a@b.co')).toBe(true);
   });
 
+  it('refuses relative links that browsers send to another site', () => {
+    for (const href of ['/\\evil.com', '/\\/evil.com', '/c/x\\..\\..\\evil', '/\t/evil.com']) {
+      expect(isSafeHref(href)).toBe(false);
+    }
+    expect(isSafeHref('/c/test/wiki?q=a%5Cb')).toBe(true);
+  });
+
   it('only allows images that reference our uploads', () => {
     expect(() =>
       sanitizeDoc(doc([{ type: 'image', attrs: { src: 'https://evil/x.png' } }])),

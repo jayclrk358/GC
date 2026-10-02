@@ -1,9 +1,10 @@
-import { and, eq, inArray, sql, type SQL } from 'drizzle-orm';
+import { and, asc, eq, gt, inArray, isNotNull, lt, sql, type SQL } from 'drizzle-orm';
 import { db, schema } from '@magnox/db';
-import { MEDIA_KEY_RE as KEY_RE, variantKey } from '@magnox/shared';
+import { MEDIA_KEY_RE as KEY_RE, uuidAtTime, variantKey } from '@magnox/shared';
 import { enforceRateLimit } from '../ratelimit';
 import { enqueue, QUEUES } from '../queues';
 import { logger } from '../logger';
+import { cacheRedis } from '../redis';
 import { storage } from '../storage';
 
 const log = logger('media-cleanup');
@@ -293,6 +294,116 @@ async function stillInUse(
         and m[1] = any(${keys})`
           : sql``
       }
+    `);
+    for (const r of found) used.add(r.key);
+  }
+  return used;
+}
+
+/** How long an upload may sit unused before it's removed (a draft can take a while). */
+export const UNUSED_UPLOAD_MS = 24 * 3600 * 1000;
+/** The last upload the sweep looked at, so each run carries on from there. */
+const SWEEP_CURSOR = 'media:unused-sweep:cursor';
+
+/**
+ * Remove chat files and post images that were never used: uploaded over a day ago and in
+ * nothing the uploader wrote. Hourly worker job. Each upload is looked at once (the sweep
+ * resumes where it stopped); files that are used and later deleted go with their content, as
+ * before. Profile and community images aren't swept: they can be used from too many places to
+ * tell for sure, and they're small (the daily upload allowance bounds them). Returns files removed.
+ */
+export async function sweepUnusedUploads(maxBatches = 20): Promise<number> {
+  const before = new Date(Date.now() - UNUSED_UPLOAD_MS);
+  let cursor = await cacheRedis()
+    .get(SWEEP_CURSOR)
+    .catch(() => null);
+  let removed = 0;
+  for (let i = 0; i < maxBatches; i++) {
+    const u = schema.uploads;
+    const rows = await db
+      .select({
+        id: u.id,
+        key: u.key,
+        ownerId: u.ownerId,
+        communityId: u.communityId,
+        posterKey: u.posterKey,
+      })
+      .from(u)
+      .where(
+        and(
+          inArray(u.purpose, CONTENT_PURPOSES),
+          // Files whose uploader's account is gone are left to the account clean-up.
+          isNotNull(u.ownerId),
+          // Ids are time-ordered (UUIDv7), so this walks the primary key from the cursor on.
+          lt(u.id, uuidAtTime(before)),
+          lt(u.createdAt, before),
+          cursor ? gt(u.id, cursor) : undefined,
+        ),
+      )
+      .orderBy(asc(u.id))
+      .limit(BATCH);
+    if (!rows.length) break;
+    const used = await usedAnywhere(rows);
+    removed += await removeUploads(rows.filter((r) => !used.has(r.key)));
+    cursor = rows.at(-1)!.id;
+    await cacheRedis()
+      .set(SWEEP_CURSOR, cursor)
+      .catch((err: Error) => log.warn({ err: err.message }, 'sweep cursor not saved'));
+    if (rows.length < BATCH) break;
+  }
+  if (removed) log.info({ removed }, 'removed unused uploads');
+  return removed;
+}
+
+/**
+ * Which of these uploads appear anywhere their uploader put them, live or deleted (deleted
+ * content cleans up after itself, and may yet be restored): chat messages, forum posts and their
+ * edit history, wiki history, posts held for a moderator, and community pages.
+ */
+async function usedAnywhere(
+  rows: { key: string; ownerId: string | null; communityId: string | null }[],
+): Promise<Set<string>> {
+  const used = new Set<string>();
+  const byOwner = new Map<string, typeof rows>();
+  for (const r of rows) byOwner.set(r.ownerId!, [...(byOwner.get(r.ownerId!) ?? []), r]);
+  for (const [ownerId, group] of byOwner) {
+    const keys = textArray(group.map((r) => r.key));
+    const communities = [...new Set(group.flatMap((r) => (r.communityId ? [r.communityId] : [])))];
+    const found = await db.execute<{ key: string }>(sql`
+      select a->>'key' as key
+      from messages m
+      cross join lateral jsonb_array_elements(m.attachments) a
+      where m.author_id = ${ownerId} and jsonb_array_length(m.attachments) > 0
+        and a->>'key' = any(${keys})
+      union
+      select s.src
+      from posts p
+      cross join lateral (
+        select jsonb_path_query(p.body, ${IMAGE_SRC}::jsonpath) #>> '{}' as src
+        union
+        select jsonb_path_query(r.body, ${IMAGE_SRC}::jsonpath) #>> '{}'
+        from post_revisions r where r.post_id = p.id
+      ) s
+      where p.author_id = ${ownerId} and s.src = any(${keys})
+      union
+      select s.src
+      from wiki_revisions r
+      cross join lateral (select jsonb_path_query(r.body, ${IMAGE_SRC}::jsonpath) #>> '{}' as src) s
+      where r.author_id = ${ownerId} and s.src = any(${keys})
+      union
+      select m[1]
+      from held_posts h
+      cross join lateral regexp_matches(h.payload::text, ${KEY_PATTERN}, 'g') m
+      where h.author_id = ${ownerId} and h.status = 'pending' and m[1] = any(${keys})
+      union
+      select m[1]
+      from page_blocks b
+      cross join lateral regexp_matches(b.config::text, ${KEY_PATTERN}, 'g') m
+      where (
+          b.community_id in (select community_id from members where user_id = ${ownerId})
+          ${communities.length ? sql`or b.community_id = any(${uuidArray(communities)})` : sql``}
+        )
+        and m[1] = any(${keys})
     `);
     for (const r of found) used.add(r.key);
   }

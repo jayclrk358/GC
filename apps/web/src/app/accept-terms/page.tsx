@@ -3,13 +3,10 @@ import { getTranslations } from 'next-intl/server';
 import { getConsent } from '@magnox/core';
 import { CURRENT_TERMS_VERSION } from '@magnox/shared';
 import { requireUser } from '@/lib/auth';
+import { safeNext } from '@/lib/safe-redirect';
 import { AcceptTerms } from '@/components/legal/accept-terms';
 
 export const metadata = { title: 'Terms', robots: { index: false } };
-
-/** Only paths on this site, so the page can't send people elsewhere. */
-const safeNext = (next: string | undefined) =>
-  next && next.startsWith('/') && !next.startsWith('//') ? next : '/';
 
 export default async function AcceptTermsPage({
   searchParams,

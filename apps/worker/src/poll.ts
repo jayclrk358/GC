@@ -15,16 +15,23 @@ import {
   logger,
   networkKey,
   nextPollDelay,
+  pinnedGet,
   QUEUES,
   queue,
   rateLimit,
   realtime,
   resolveTarget,
+  type ResolvedTarget,
   rooms,
   shouldGoDormant,
   UnresolvableHostError,
 } from '@magnox/core';
-import { isLinkProtocol, SERVER_PROTOCOLS, type ServerProtocol } from '@magnox/shared';
+import {
+  isLinkProtocol,
+  isServerProtocol,
+  SERVER_PROTOCOLS,
+  type ServerProtocol,
+} from '@magnox/shared';
 
 const log = logger('poll');
 
@@ -86,6 +93,8 @@ async function query(protocol: ServerProtocol, host: string, port: number): Prom
   if (!perIp.ok || !perNet.ok) return { ok: false, error: 'rate_limited', ip: target.ip };
 
   try {
+    const viaHttp = HTTP_QUERIES[protocol];
+    if (viaHttp) return { ok: true, result: await viaHttp(target), ip: target.ip };
     const result = await GameDig.query({
       type: SERVER_PROTOCOLS[protocol].gamedig,
       host: target.ip,
@@ -103,6 +112,88 @@ async function query(protocol: ServerProtocol, host: string, port: number): Prom
     // Never surface raw errors: they would turn the poller into a port scanner.
     return { ok: false, error: 'timeout', ip: target.ip };
   }
+}
+
+// FiveM and TShock answer over HTTP. GameDig asks them with `got`, which follows redirects to any
+// host, so a server could send the worker to internal addresses (cloud metadata, other
+// containers) and have the answer shown on its listing. They're asked here instead: at the
+// vetted address only, with no redirects, and nothing but the status fields kept.
+
+const HTTP_QUERIES: Partial<
+  Record<ServerProtocol, (target: ResolvedTarget) => Promise<QueryResult>>
+> = { fivem: queryFiveM, terraria: queryTShock };
+
+/** A JSON document from the server's own HTTP port, and how long it took. */
+async function serverJson(
+  target: ResolvedTarget,
+  path: string,
+  maxBytes = 256 * 1024,
+): Promise<{ json: Record<string, unknown>; ms: number }> {
+  const start = performance.now();
+  const res = await pinnedGet(target, path, {
+    accept: 'application/json',
+    maxBytes,
+    timeoutMs: 3000,
+  });
+  if (res.status !== 200) throw new Error(`status ${res.status}`);
+  const json: unknown = JSON.parse(res.body.toString('utf8'));
+  if (!json || typeof json !== 'object' || Array.isArray(json)) throw new Error('not an object');
+  return { json: json as Record<string, unknown>, ms: performance.now() - start };
+}
+
+const text = (v: unknown) => (typeof v === 'string' ? v : typeof v === 'number' ? String(v) : '');
+const count = (v: unknown) =>
+  typeof v === 'number' ? v : typeof v === 'string' && /^\d{1,9}$/.test(v.trim()) ? Number(v) : NaN;
+
+function httpResult(r: {
+  name: string;
+  map?: string;
+  version?: string;
+  players: number;
+  maxPlayers: number;
+  ms: number;
+}): QueryResult {
+  return {
+    name: r.name.trim(),
+    map: r.map ?? '',
+    password: false,
+    numplayers: r.players,
+    maxplayers: r.maxPlayers,
+    players: [],
+    bots: [],
+    connect: '',
+    ping: r.ms,
+    version: r.version ?? '',
+    queryPort: 0,
+    raw: {},
+  } as unknown as QueryResult;
+}
+
+/** FiveM: name, map and player counts from /dynamic.json; its build from /info.json if offered. */
+async function queryFiveM(target: ResolvedTarget): Promise<QueryResult> {
+  const { json, ms } = await serverJson(target, '/dynamic.json');
+  // info.json lists every resource (and the icon), so it can be large; it's optional.
+  const info = await serverJson(target, '/info.json', 1_000_000).catch(() => null);
+  return httpResult({
+    name: text(json.hostname),
+    map: text(json.mapname),
+    version: text(info?.json.version ?? json.iv),
+    players: count(json.clients),
+    maxPlayers: count(json.sv_maxclients),
+    ms,
+  });
+}
+
+/** Terraria with TShock: its REST API's status endpoint (needs no token). */
+async function queryTShock(target: ResolvedTarget): Promise<QueryResult> {
+  const { json, ms } = await serverJson(target, '/v2/server/status?players=true');
+  if (String(json.status) !== '200') throw new Error('Invalid status');
+  return httpResult({
+    name: text(json.name),
+    players: count(json.playercount),
+    maxPlayers: count(json.maxplayers),
+    ms,
+  });
 }
 
 /** Roblox's public APIs, or the test stand-in. */
@@ -201,9 +292,9 @@ export async function pollEndpoint(endpointId: string): Promise<void> {
     return;
   }
 
-  const protocol = (
-    endpoint.protocol in SERVER_PROTOCOLS ? endpoint.protocol : 'source'
-  ) as ServerProtocol;
+  const protocol: ServerProtocol = isServerProtocol(endpoint.protocol)
+    ? endpoint.protocol
+    : 'source';
   const outcome = isLinkProtocol(protocol)
     ? await queryRoblox(endpoint.host)
     : await query(protocol, endpoint.host, endpoint.port);

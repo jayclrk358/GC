@@ -182,6 +182,35 @@ describe('parseOpenGraph', () => {
   it('decodes numeric entities', () => {
     expect(decodeEntities('&#39;hi&#x27; &lt;b&gt;')).toBe("'hi' <b>");
   });
+  it('reads only the <head>', () => {
+    const html =
+      '<head><meta property="og:title" content="Head"></head>' +
+      '<body><meta property="og:description" content="Body"></body>';
+    expect(parseOpenGraph(html, 'https://x.example')).toMatchObject({
+      title: 'Head',
+      description: '',
+    });
+  });
+  it('reads no further than 64 KB', () => {
+    const late = `${' '.repeat(70_000)}<meta property="og:title" content="Late">`;
+    expect(parseOpenGraph(late, 'https://x.example')).toBeNull();
+  });
+  it('skips tags too long to be real', () => {
+    const html = `<meta property="og:title" content="${'x'.repeat(3000)}"><title>Short</title>`;
+    expect(parseOpenGraph(html, 'https://x.example')?.title).toBe('Short');
+  });
+  it.each([
+    ['unclosed meta tags', '<meta '.repeat(100_000)],
+    ['unclosed titles', '<title>'.repeat(100_000)],
+    ['unclosed title attributes', '<title '.repeat(100_000)],
+    ['a title that never ends', `<title>${'<'.repeat(400_000)}`],
+    ['unclosed head', '</head'.repeat(100_000)],
+    ['long attribute runs', `<meta${' content="'.repeat(500)}>`.repeat(50)],
+  ])('stays fast on hostile pages: %s', (_name, html) => {
+    const start = performance.now();
+    parseOpenGraph(html, 'https://x.example');
+    expect(performance.now() - start).toBeLessThan(200);
+  });
 });
 
 describe('messageInputSchema', () => {

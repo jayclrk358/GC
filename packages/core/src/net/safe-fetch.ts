@@ -2,7 +2,7 @@ import http from 'node:http';
 import https from 'node:https';
 import type { LookupFunction } from 'node:net';
 import { env } from '../env';
-import { BlockedAddressError, isIpLiteral, resolveTarget } from './ssrf';
+import { BlockedAddressError, isIpLiteral, isPublicAddress, resolveTarget } from './ssrf';
 
 export interface SafeFetchResult {
   /** Final URL after redirects. */
@@ -26,6 +26,11 @@ export interface SafeFetchOptions {
   body?: string;
   headers?: Record<string, string>;
   userAgent?: string;
+  /**
+   * Called with each hop's vetted address (redirects included) before connecting to it, e.g.
+   * to rate limit by site and IP. Throw to stop the fetch.
+   */
+  onConnect?: (target: { host: string; ip: string }) => void | Promise<void>;
 }
 
 const USER_AGENT = 'MagnoxBot/1.0 (link previews; +https://github.com/magnox)';
@@ -43,13 +48,21 @@ async function requestOnce(url: URL, opts: SafeFetchOptions, allowPrivate: boole
   const port = url.port ? Number(url.port) : url.protocol === 'https:' ? 443 : 80;
   // Resolve and vet once, then pin the connection to that address (no DNS rebinding).
   const target = await resolveTarget(host, port, { allowPrivate });
-  const family = target.ip.includes(':') ? 6 : 4;
+  await opts.onConnect?.({ host, ip: target.ip });
+  return sendPinned(url, opts, target.ip);
+}
+
+/** One request to `url`, connecting to `ip` (already vetted) whatever the URL's host resolves to. */
+function sendPinned(url: URL, opts: SafeFetchOptions, ip: string) {
+  const host = url.hostname.replace(/^\[|\]$/g, '');
+  const port = url.port ? Number(url.port) : url.protocol === 'https:' ? 443 : 80;
+  const family = ip.includes(':') ? 6 : 4;
   const lookup: LookupFunction = (_hostname, options, callback) => {
     if ((options as { all?: boolean }).all) {
       (callback as unknown as (e: null, a: { address: string; family: number }[]) => void)(null, [
-        { address: target.ip, family },
+        { address: ip, family },
       ]);
-    } else callback(null, target.ip, family);
+    } else callback(null, ip, family);
   };
   const lib = url.protocol === 'https:' ? https : http;
   const timeoutMs = opts.timeoutMs ?? 6000;
@@ -154,6 +167,37 @@ export async function safeFetch(rawUrl: string, opts: SafeFetchOptions): Promise
     };
   }
   throw new Error('Too many redirects');
+}
+
+/**
+ * GET from an address resolveTarget already vetted, on any port (a game server's own HTTP status
+ * page): connects to that IP only, never follows a redirect (a 3xx comes back as it is), and
+ * refuses bodies over maxBytes.
+ */
+export async function pinnedGet(
+  target: { ip: string; port: number; host: string },
+  path: string,
+  opts: { accept: string; maxBytes: number; timeoutMs?: number },
+): Promise<{ status: number; contentType: string; body: Buffer }> {
+  if (!isPublicAddress(target.ip, env().SERVER_QUERY_ALLOW_PRIVATE)) {
+    throw new BlockedAddressError();
+  }
+  // Connect to the vetted IP itself; the name the owner entered only goes in the Host header.
+  const origin = `http://${target.ip.includes(':') ? `[${target.ip}]` : target.ip}:${target.port}`;
+  const url = new URL(path, origin);
+  if (url.origin !== new URL(origin).origin) throw new BlockedAddressError();
+  const name = /^[a-z0-9.-]+$/i.test(target.host) ? target.host : null;
+  const res = await sendPinned(
+    url,
+    {
+      ...opts,
+      strictSize: true,
+      userAgent: 'MagnoxBot/1.0 (server status)',
+      headers: name ? { host: target.port === 80 ? name : `${name}:${target.port}` } : {},
+    },
+    target.ip,
+  );
+  return { status: res.status, contentType: res.contentType, body: res.body };
 }
 
 /**

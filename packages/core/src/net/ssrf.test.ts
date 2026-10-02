@@ -27,6 +27,10 @@ describe('isPublicAddress', () => {
     '::ffff:127.0.0.1', // IPv4-mapped loopback
     '::ffff:10.0.0.1',
     '::ffff:169.254.169.254',
+    '::7f00:1', // IPv4-compatible 127.0.0.1
+    '::127.0.0.1',
+    '::a9fe:a9fe', // IPv4-compatible 169.254.169.254
+    '::808:808', // IPv4-compatible 8.8.8.8: still not a real IPv6 address
   ])('blocks %s', (ip) => {
     expect(isPublicAddress(ip)).toBe(false);
   });

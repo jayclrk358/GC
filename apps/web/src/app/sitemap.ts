@@ -1,8 +1,8 @@
 import type { MetadataRoute } from 'next';
 import { env, sitemapEntries } from '@magnox/core';
 
-// Made on each request (two indexed queries), never at build time: Docker image builds have no
-// database, and a prerendered copy would miss every community made since.
+// Made on request, never at build time: Docker image builds have no database, and a prerendered
+// copy would miss every community made since. The rows behind it are cached for an hour.
 export const dynamic = 'force-dynamic';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -27,7 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...servers.map((s) => ({
       url: `${base}/servers/${s.id}`,
       lastModified: s.updatedAt,
-      changeFrequency: 'hourly' as const,
+      changeFrequency: 'daily' as const,
     })),
   ];
 }

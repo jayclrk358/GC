@@ -4,6 +4,7 @@ import { Hash, Megaphone, PenSquare } from 'lucide-react';
 import { isMuted, listFlairs, listThreads } from '@magnox/core';
 import { has, Permission, THREAD_SORTS, type ThreadSort } from '@magnox/shared';
 import { loadCommunity, loadForumChannel } from '@/lib/community';
+import { pageParam } from '@/lib/page-param';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/misc';
 import { ThreadList } from '@/components/forum/thread-list';
@@ -33,7 +34,7 @@ export default async function ChannelPage({
   const sort = (THREAD_SORTS as readonly string[]).includes(sp.sort ?? '')
     ? (sp.sort as ThreadSort)
     : undefined;
-  const page = Math.max(0, Number(sp.page ?? 0) || 0);
+  const page = pageParam(sp.page);
   const [list, flairs, muted] = await Promise.all([
     listThreads(data.ctx, channel, { sort, flairId: sp.flair, page }),
     listFlairs(data.community.id, channel.id),

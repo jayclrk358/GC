@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { listMembers, listRoles, roleSummary } from '@magnox/core';
 import { planPerks, themeBackdrops } from '@magnox/shared';
 import { loadCommunity } from '@/lib/community';
+import { pageParam } from '@/lib/page-param';
 import { getPrefs } from '@/lib/prefs';
 import { MemberList } from '@/components/community/member-list';
 import { MemberSearch } from '@/components/community/member-search';
@@ -19,7 +20,7 @@ export default async function MembersPage({
   const data = await loadCommunity((await params).slug);
   const { q, page } = await searchParams;
   const t = await getTranslations('community');
-  const pageNum = Math.max(0, Number(page ?? 0) || 0);
+  const pageNum = pageParam(page);
   const [{ members, hasMore }, roles, prefs] = await Promise.all([
     listMembers(data.community.id, data.community.ownerId, { q, limit: 60, offset: pageNum * 60 }),
     listRoles(data.community.id),

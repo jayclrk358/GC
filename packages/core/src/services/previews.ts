@@ -1,10 +1,11 @@
 import { createHash } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { db, schema, type LinkPreviewData, type MessageEmbed } from '@magnox/db';
-import { extractLinks, parseOpenGraph } from '@magnox/shared';
+import { extractLinks, parseOpenGraph, PREVIEW_HEAD_BYTES } from '@magnox/shared';
 import { processImage } from '../images';
 import { logger } from '../logger';
 import { safeFetch } from '../net/safe-fetch';
+import { siteOf } from '../net/site';
 import { rateLimit } from '../ratelimit';
 import { storage } from '../storage';
 import { setMessageEmbeds } from './chat';
@@ -22,13 +23,31 @@ const hashUrl = (url: string) => createHash('sha256').update(url).digest('hex');
  */
 const previewImageKey = (imageUrl: string) => `u/${hashUrl(imageUrl).slice(0, 40)}.webp`;
 
+/** A site or server has been asked for enough for now: try again later (and cache nothing). */
+class Throttled extends Error {}
+
+/**
+ * Be polite to any one site and any one server, and don't let chat be used to hammer either.
+ * Checked before connecting to every address (redirects and images too), and keyed by the
+ * registrable domain and the IP, so made-up subdomains don't get round it.
+ */
+async function politeTo(target: { host: string; ip: string }): Promise<void> {
+  const [site, server] = await Promise.all([
+    rateLimit(`preview-site:${siteOf(target.host)}`, 60, 60),
+    rateLimit(`preview-ip:${target.ip}`, 60, 60),
+  ]);
+  if (!site.ok || !server.ok) throw new Throttled('Too many previews for this site');
+}
+
 async function fetchPreview(
   url: string,
   previous: LinkPreviewData | null,
 ): Promise<LinkPreviewData | null> {
   const page = await safeFetch(url, {
     accept: 'text/html,application/xhtml+xml;q=0.9',
-    maxBytes: 512 * 1024,
+    // Only the page's <head> (at most this much of it) is read for the preview.
+    maxBytes: PREVIEW_HEAD_BYTES,
+    onConnect: politeTo,
   });
   if (page.status >= 400 || !/text\/html|application\/xhtml/.test(page.contentType)) return null;
   const og = parseOpenGraph(page.body.toString('utf8'), page.url);
@@ -51,6 +70,7 @@ async function fetchPreview(
         accept: 'image/*',
         maxBytes: 5_000_000,
         strictSize: true,
+        onConnect: politeTo,
       });
       if (res.status < 400 && res.contentType.startsWith('image/')) {
         // Thumbnails are shown still, so an animated image keeps just its first frame.
@@ -60,14 +80,21 @@ async function fetchPreview(
         image = { imageKey: key, imageWidth: img.width, imageHeight: img.height };
       }
     } catch (err) {
+      if (err instanceof Throttled) throw err;
       log.debug({ err: (err as Error).message, url: og.image }, 'preview image skipped');
     }
   }
   return { title: og.title, description: og.description, siteName: og.siteName, ...image };
 }
 
-/** A cached or freshly fetched preview, or null when the page has nothing to show. */
-export async function getLinkPreview(url: string): Promise<LinkPreviewData | null> {
+/**
+ * A cached or freshly fetched preview, or null when the page has nothing to show (or it can't be
+ * fetched just now). `userId`: whose message it's for, who gets so many fresh fetches.
+ */
+export async function getLinkPreview(
+  url: string,
+  opts: { userId?: string | null } = {},
+): Promise<LinkPreviewData | null> {
   const urlHash = hashUrl(url);
   const cached = await db.query.linkPreviews.findFirst({
     where: eq(schema.linkPreviews.urlHash, urlHash),
@@ -76,18 +103,15 @@ export async function getLinkPreview(url: string): Promise<LinkPreviewData | nul
     const age = Date.now() - cached.fetchedAt.getTime();
     if (age < (cached.ok ? OK_TTL_MS : FAIL_TTL_MS)) return cached.ok ? cached.data : null;
   }
-  let host = '';
-  try {
-    host = new URL(url).hostname;
-  } catch {
-    return null;
-  }
-  // Be polite to any one site, and don't let chat be used to hammer it.
-  if (!(await rateLimit(`preview-host:${host}`, 30, 60)).ok) return null;
+  if (!URL.canParse(url)) return null;
+  // Cached previews are free; each person gets so many fresh fetches.
+  if (opts.userId && !(await rateLimit(`preview-user:${opts.userId}`, 30, 600)).ok) return null;
   let data: LinkPreviewData | null = null;
   try {
     data = await fetchPreview(url, cached?.ok ? cached.data : null);
   } catch (err) {
+    // Not remembered as a failure: it can be tried again once the site has had a rest.
+    if (err instanceof Throttled) return null;
     log.debug({ err: (err as Error).message, url }, 'preview fetch failed');
   }
   await db
@@ -107,7 +131,7 @@ export async function processLinkPreviews(messageId: string): Promise<number> {
   const links = extractLinks(msg.body);
   const embeds: MessageEmbed[] = [];
   for (const url of links) {
-    const p = await getLinkPreview(url);
+    const p = await getLinkPreview(url, { userId: msg.authorId });
     if (p) embeds.push({ url, ...p });
   }
   // The message may have been edited while we were fetching; only write if links still match.

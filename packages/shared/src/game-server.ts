@@ -39,6 +39,11 @@ export const SERVER_PROTOCOLS = {
 export type ServerProtocol = keyof typeof SERVER_PROTOCOLS;
 export const PROTOCOL_KEYS = Object.keys(SERVER_PROTOCOLS) as [ServerProtocol, ...ServerProtocol[]];
 
+/** One of SERVER_PROTOCOLS' own keys (`in` would also accept "toString" and the like). */
+export function isServerProtocol(p: string): p is ServerProtocol {
+  return Object.hasOwn(SERVER_PROTOCOLS, p);
+}
+
 export interface ServerStatus {
   online: boolean;
   players: number | null;

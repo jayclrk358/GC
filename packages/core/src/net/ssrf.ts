@@ -18,6 +18,7 @@ export class UnresolvableHostError extends Error {
 }
 
 const TEST_ALLOWED = new Set(['private', 'loopback', 'uniqueLocal']);
+const IPV4_COMPATIBLE = ipaddr.parseCIDR('::/96') as [ipaddr.IPv6, number];
 
 /** Strict literal check: dotted-quad IPv4 or IPv6 only (no "127.1" or hex shorthands). */
 export function isIpLiteral(value: string): boolean {
@@ -37,7 +38,11 @@ export function isPublicAddress(ip: string, allowPrivate = false): boolean {
     if (v6.isIPv4MappedAddress()) addr = v6.toIPv4Address();
   }
   const range = addr.range();
-  if (range === 'unicast') return true;
+  if (range === 'unicast') {
+    // IPv4-compatible addresses (`::a.b.c.d`, deprecated) can reach the IPv4 address on some
+    // systems, yet ipaddr calls them unicast: refuse the whole ::/96 block.
+    return addr.kind() === 'ipv4' || !(addr as ipaddr.IPv6).match(IPV4_COMPATIBLE);
+  }
   return allowPrivate && TEST_ALLOWED.has(range);
 }
 

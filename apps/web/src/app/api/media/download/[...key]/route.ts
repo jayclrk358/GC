@@ -1,5 +1,6 @@
-import { attachmentDisposition, storage, uploadDownloadName } from '@magnox/core';
+import { attachmentDisposition, rateLimit, storage, uploadDownloadName } from '@magnox/core';
 import { mediaUrl } from '@/lib/media';
+import { clientIp } from '@/lib/request';
 
 /**
  * Saves an upload under the name it was uploaded with, instead of opening it. Browsers ignore
@@ -10,6 +11,15 @@ import { mediaUrl } from '@/lib/media';
 export async function GET(_req: Request, { params }: { params: Promise<{ key: string[] }> }) {
   const key = (await params).key.join('/');
   if (!mediaUrl(key)) return new Response('Not found', { status: 404 });
+  // Anyone can ask, and each one costs a lookup and a signed link (or the file itself).
+  const ip = await clientIp();
+  const limit = ip ? await rateLimit(`media-download:${ip}`, 60, 60) : null;
+  if (limit && !limit.ok) {
+    return new Response('Too many downloads. Please wait a moment.', {
+      status: 429,
+      headers: { 'retry-after': String(limit.resetIn), 'cache-control': 'no-store' },
+    });
+  }
   const filename = await uploadDownloadName(key);
   const signed = await storage().downloadUrl(key, filename);
   if (signed) {

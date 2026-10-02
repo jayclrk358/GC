@@ -16,6 +16,7 @@ import { has, Permission } from '@magnox/shared';
 import { loadCommunity } from '@/lib/community';
 import { getPrefs } from '@/lib/prefs';
 import { formatDateTime, relativeTime } from '@/lib/format';
+import { pageParam } from '@/lib/page-param';
 import { Button } from '@/components/ui/button';
 import { Alert, Avatar, Badge } from '@/components/ui/misc';
 import { RichText } from '@/components/rich-text/rich-text';
@@ -74,8 +75,7 @@ export default async function ThreadPage({
 
   const pageSize = 30;
   const lastPage = Math.max(0, Math.ceil((thread.replyCount + 1) / pageSize) - 1);
-  const requested = Number((await searchParams).page ?? 0) || 0;
-  const page = Math.min(Math.max(0, requested), lastPage);
+  const page = Math.min(pageParam((await searchParams).page), lastPage);
   const [{ posts, total }, results, flairs, forums, prefs] = await Promise.all([
     listPosts(data.ctx, thread.id, { page, pageSize }),
     poll ? pollResults(data.ctx, poll.id) : null,

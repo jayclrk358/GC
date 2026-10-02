@@ -40,21 +40,33 @@ async function slugForDomain(host: string): Promise<string | null> {
   return slug;
 }
 
-/** A host that could be a community's domain (not this site, an IP, or an internal name). */
+/**
+ * A host that could be a community's domain: a well-formed domain name that isn't this site, an
+ * IP or an internal name. Anything else isn't looked up at all.
+ */
 function maybeCustomDomain(host: string): boolean {
-  const name = host.replace(/:\d+$/, '');
+  const name = host.replace(/:\d+$/, '').replace(/\.$/, '');
   return (
     Boolean(appHost) &&
     host !== appHost &&
-    name.includes('.') &&
+    name.length <= 253 &&
+    /^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(name) &&
     !/^[\d.]+$/.test(name) &&
-    !name.startsWith('[') &&
     !name.endsWith('.localhost')
+  );
+}
+
+/** A link prefetch: it needs no nonce or headers, and has no body to cap. */
+function isPrefetch(request: NextRequest): boolean {
+  return (
+    (request.method === 'GET' || request.method === 'HEAD') &&
+    (request.headers.has('next-router-prefetch') || request.headers.get('purpose') === 'prefetch')
   );
 }
 
 /** Per-request CSP nonce plus baseline security headers. */
 export async function proxy(request: NextRequest) {
+  if (isPrefetch(request)) return NextResponse.next();
   // A community's own domain shows its pages; everything else is on the main site.
   const host = (request.headers.get('host') ?? '').toLowerCase();
   let rewrite: string | null = null;
@@ -128,11 +140,9 @@ export const config = {
   matcher: [
     {
       // Uploads skip it: the proxy would otherwise buffer a copy of every file in memory.
+      // Prefetches aren't left out here (a matcher can't tell a GET from a POST, and anyone can
+      // send the headers): proxy() lets GET prefetches through itself.
       source: '/((?!_next/static|_next/image|favicon.ico|media/|api/health|api/uploads).*)',
-      missing: [
-        { type: 'header', key: 'next-router-prefetch' },
-        { type: 'header', key: 'purpose', value: 'prefetch' },
-      ],
     },
   ],
 };

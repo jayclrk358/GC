@@ -9,7 +9,12 @@ export const alt = 'A community on Magnox';
 export default async function Image({ params }: { params: Promise<{ slug: string }> }) {
   const card = await communityShareCard((await params).slug);
   if (!card) {
-    return shareImage({ title: 'Magnox', subtitle: 'Community hubs for games and game servers.' });
+    // Private and unknown communities get the site's own picture, which is drawn once, instead
+    // of a new one being drawn for every made-up address.
+    return new Response(null, {
+      status: 307,
+      headers: { location: '/opengraph-image', 'cache-control': 'public, max-age=600' },
+    });
   }
   return shareImage({
     title: card.name,
