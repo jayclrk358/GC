@@ -1,6 +1,8 @@
 import { RoomServiceClient } from 'livekit-server-sdk';
 import { and, eq } from 'drizzle-orm';
 import { db, schema } from '@magnox/db';
+import { has, Permission } from '@magnox/shared';
+import { channelPermissionsMany, getMemberContext, type ChannelRef } from '../access';
 import { env } from '../env';
 import { logger } from '../logger';
 import { cacheRedis } from '../redis';
@@ -70,4 +72,64 @@ export async function removeFromVoice(communityId: string, userId: string): Prom
   );
   const removed = results.filter((r) => r.status === 'fulfilled').length;
   if (removed) log.info({ communityId, userId, removed }, 'removed from voice');
+}
+
+/**
+ * Take people out of calls they may no longer be in (Connect lost: their roles, or a channel's or
+ * its category's permissions changed). With `userId`, just that person, in any of the community's
+ * voice channels; otherwise everyone in `channelIds` (every voice channel when not given). Never
+ * throws: it follows a change that has already been made.
+ */
+export async function dropVoiceWithoutAccess(
+  communityId: string,
+  opts: { userId?: string; channelIds?: string[] } = {},
+): Promise<void> {
+  if (!voiceEnabled()) return;
+  try {
+    const all: ChannelRef[] = await db
+      .select({
+        id: schema.channels.id,
+        communityId: schema.channels.communityId,
+        parentId: schema.channels.parentId,
+        type: schema.channels.type,
+      })
+      .from(schema.channels)
+      .where(and(eq(schema.channels.communityId, communityId), eq(schema.channels.type, 'voice')));
+    const channels = opts.channelIds ? all.filter((c) => opts.channelIds!.includes(c.id)) : all;
+    if (!channels.length) return;
+    // Who's in each call, asked of LiveKit itself. One person might be in any of them.
+    const inside = new Map<string, string[]>();
+    await Promise.all(
+      channels.map(async (c) => {
+        if (opts.userId) return void inside.set(c.id, [opts.userId]);
+        const there = await livekit()
+          .listParticipants(roomOf(c.id))
+          .catch(() => []);
+        inside.set(
+          c.id,
+          there.map((p) => p.identity),
+        );
+      }),
+    );
+    for (const userId of new Set([...inside.values()].flat())) {
+      let perms = new Map<string, bigint>();
+      try {
+        const ctx = await getMemberContext({ id: communityId }, userId);
+        if (ctx.isMember) perms = await channelPermissionsMany(ctx, channels);
+      } catch {
+        // Can't see the community any more (banned, or it's gone): out of every call.
+      }
+      const lost = channels.filter(
+        (c) =>
+          inside.get(c.id)?.includes(userId) && !has(perms.get(c.id) ?? 0n, Permission.CONNECT),
+      );
+      const results = await Promise.allSettled(
+        lost.map((c) => livekit().removeParticipant(roomOf(c.id), userId)),
+      );
+      const removed = results.filter((r) => r.status === 'fulfilled').length;
+      if (removed) log.info({ communityId, userId, removed }, 'removed from voice (no access)');
+    }
+  } catch (err) {
+    log.warn({ err: (err as Error).message, communityId }, 'voice access recheck failed');
+  }
 }

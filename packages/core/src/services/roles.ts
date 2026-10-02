@@ -3,6 +3,7 @@ import { db, schema } from '@magnox/db';
 import {
   ALL_PERMISSIONS,
   has,
+  isSelfAssignableSafe,
   newId,
   parsePermissions,
   Permission,
@@ -10,10 +11,12 @@ import {
 } from '@magnox/shared';
 import { z } from 'zod';
 import { requirePerm, type MemberContext } from '../access';
+import { accessChanged } from '../emitter';
 import { AppError, forbidden, notFound } from '../errors';
 import { mediaUrl } from '../storage';
 import { audit } from './audit';
 import { assertUnderPlanLimit } from './billing';
+import { dropVoiceWithoutAccess } from './voice-rooms';
 
 export type RoleRow = typeof schema.roles.$inferSelect;
 
@@ -54,6 +57,36 @@ function assertCanGrant(ctx: MemberContext, perms: bigint) {
   if ((perms & ~ctx.base) !== 0n) throw forbidden("You can't grant permissions you don't have.");
 }
 
+/**
+ * Whether a role is fit for members to give themselves: only everyday member permissions, in the
+ * role itself and in what its channel overwrites allow. Anything more and any member could take it.
+ */
+async function safeToSelfAssign(roleId: string | null, perms: bigint): Promise<boolean> {
+  let allowed = perms;
+  if (roleId) {
+    const overwrites = await db
+      .select({ allow: schema.permissionOverwrites.allow })
+      .from(schema.permissionOverwrites)
+      .where(
+        and(
+          eq(schema.permissionOverwrites.targetType, 'role'),
+          eq(schema.permissionOverwrites.targetId, roleId),
+        ),
+      );
+    for (const o of overwrites) allowed |= o.allow;
+  }
+  return isSelfAssignableSafe(allowed);
+}
+
+async function assertSafeToSelfAssign(roleId: string | null, perms: bigint): Promise<void> {
+  if (await safeToSelfAssign(roleId, perms)) return;
+  throw new AppError(
+    'validation',
+    'Members can only give themselves roles with everyday permissions: no moderation, management or Mention @everyone, here or in channel permissions.',
+    { fields: { selfAssignable: 'Remove those permissions first' } },
+  );
+}
+
 /** A role icon must be an image uploaded for this community as a role icon. */
 async function assertRoleIcon(ctx: MemberContext, key: string | null | undefined): Promise<void> {
   if (!key) return;
@@ -71,6 +104,7 @@ export async function createRole(ctx: MemberContext, raw: unknown): Promise<Role
   const input = roleInputSchema.parse(raw);
   const permissions = parsePermissions(input.permissions);
   assertCanGrant(ctx, permissions);
+  if (input.selfAssignable) await assertSafeToSelfAssign(null, permissions);
   await assertRoleIcon(ctx, input.iconKey);
   const existing = await listRoles(ctx.community.id);
   await assertUnderPlanLimit(ctx.community.id, 'roles', existing.length, 'roles');
@@ -121,6 +155,8 @@ export async function updateRole(ctx: MemberContext, roleId: string, raw: unknow
   const permissions = parsePermissions(input.permissions);
   // Only check newly added bits so an admin can still rename a role with bits they lack.
   assertCanGrant(ctx, permissions & ~role.permissions);
+  const selfAssignable = role.isDefault ? false : input.selfAssignable;
+  if (selfAssignable) await assertSafeToSelfAssign(role.id, permissions);
   await assertRoleIcon(ctx, input.iconKey);
   await db.transaction(async (tx) => {
     await tx
@@ -140,7 +176,7 @@ export async function updateRole(ctx: MemberContext, roleId: string, raw: unknow
         permissions,
         hoist: role.isDefault ? false : input.hoist,
         mentionable: input.mentionable,
-        selfAssignable: role.isDefault ? false : input.selfAssignable,
+        selfAssignable,
       })
       .where(eq(schema.roles.id, role.id));
     await audit(tx, {
@@ -159,6 +195,13 @@ export async function updateRole(ctx: MemberContext, roleId: string, raw: unknow
     });
   });
   await bumpPermVersion(ctx.community.id);
+  if (role.permissions !== permissions) await permissionsChanged(ctx.community.id);
+}
+
+/** Roles' permissions changed: people may have lost access to rooms and calls they're in. */
+async function permissionsChanged(communityId: string): Promise<void> {
+  accessChanged(communityId);
+  await dropVoiceWithoutAccess(communityId);
 }
 
 export async function deleteRole(ctx: MemberContext, roleId: string): Promise<void> {
@@ -186,6 +229,7 @@ export async function deleteRole(ctx: MemberContext, roleId: string): Promise<vo
     });
   });
   await bumpPermVersion(ctx.community.id);
+  await permissionsChanged(ctx.community.id);
 }
 
 /**
@@ -213,6 +257,7 @@ export async function reorderRoles(ctx: MemberContext, orderedIds: unknown): Pro
     await audit(tx, { communityId: ctx.community.id, actorId: ctx.userId, action: 'role.reorder' });
   });
   await bumpPermVersion(ctx.community.id);
+  accessChanged(ctx.community.id);
 }
 
 async function targetTopPosition(communityId: string, userId: string): Promise<number> {
@@ -226,6 +271,15 @@ async function targetTopPosition(communityId: string, userId: string): Promise<n
   return Math.max(0, ...rows.map((r) => r.position));
 }
 
+/** Someone's place in a community's role hierarchy, to check with `outranks`. */
+export async function memberRank(
+  community: { id: string; ownerId: string },
+  userId: string,
+): Promise<{ isOwner: boolean; topPosition: number }> {
+  if (userId === community.ownerId) return { isOwner: true, topPosition: Number.POSITIVE_INFINITY };
+  return { isOwner: false, topPosition: await targetTopPosition(community.id, userId) };
+}
+
 export async function setMemberRole(
   ctx: MemberContext,
   userId: string,
@@ -235,10 +289,18 @@ export async function setMemberRole(
   const role = await loadRole(ctx, roleId);
   if (role.isDefault) throw new AppError('bad_request', 'Everyone has the @everyone role.');
   const self = userId === ctx.userId;
-  const selfService = self && role.selfAssignable && ctx.isMember;
+  // Taking a self-assignable role, checked again here in case it was saved with more than
+  // everyday permissions before that was refused. Giving one up is always fine.
+  const selfService =
+    self &&
+    role.selfAssignable &&
+    ctx.isMember &&
+    (!assign || (await safeToSelfAssign(role.id, role.permissions)));
   if (!selfService) {
     requirePerm(ctx, Permission.MANAGE_ROLES);
     assertCanManageRole(ctx, role);
+    // Giving a role is granting what it carries: only what the actor has themselves.
+    if (assign) assertCanGrant(ctx, role.permissions);
     if (!ctx.isOwner && !self) {
       const top = await targetTopPosition(ctx.community.id, userId);
       if (userId === ctx.community.ownerId || top >= ctx.topPosition) {
@@ -278,6 +340,9 @@ export async function setMemberRole(
     });
   });
   await bumpPermVersion(ctx.community.id);
+  // Losing a role (or gaining one that channels deny) can take away what they could see or join.
+  accessChanged(ctx.community.id, userId);
+  await dropVoiceWithoutAccess(ctx.community.id, { userId });
 }
 
 export function roleSummary(role: RoleRow) {

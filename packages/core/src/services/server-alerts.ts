@@ -2,12 +2,13 @@ import { and, asc, eq, inArray, isNotNull, isNull, lt, sql } from 'drizzle-orm';
 import { db, schema } from '@magnox/db';
 import {
   formatDuration,
+  has,
   Permission,
   serverIntegrationsSchema,
   type ServerAlertKind,
   type ServerAlertMeta,
 } from '@magnox/shared';
-import { requirePerm, type MemberContext } from '../access';
+import { channelPermissionsMany, requirePerm, type MemberContext } from '../access';
 import { AppError, notFound } from '../errors';
 import { logger } from '../logger';
 import { BlockedAddressError, resolveTarget, UnresolvableHostError } from '../net/ssrf';
@@ -148,17 +149,28 @@ async function loadListing(ctx: MemberContext, id: string) {
   return row;
 }
 
-async function alertChannels(communityId: string) {
-  return db
-    .select({ id: schema.channels.id, name: schema.channels.name })
+/** Chat channels the actor can see and post in: the ones they may send alerts to. */
+async function alertChannels(ctx: MemberContext): Promise<{ id: string; name: string }[]> {
+  const rows = await db
+    .select({
+      id: schema.channels.id,
+      name: schema.channels.name,
+      communityId: schema.channels.communityId,
+      parentId: schema.channels.parentId,
+      type: schema.channels.type,
+    })
     .from(schema.channels)
     .where(
       and(
-        eq(schema.channels.communityId, communityId),
+        eq(schema.channels.communityId, ctx.community.id),
         inArray(schema.channels.type, ['text', 'announcement']),
       ),
     )
     .orderBy(asc(schema.channels.position), asc(schema.channels.name));
+  const perms = await channelPermissionsMany(ctx, rows);
+  return rows
+    .filter((r) => has(perms.get(r.id) ?? 0n, Permission.VIEW_CHANNEL | Permission.SEND_MESSAGES))
+    .map((r) => ({ id: r.id, name: r.name }));
 }
 
 export async function getServerIntegrations(
@@ -174,7 +186,7 @@ export async function getServerIntegrations(
     // Secrets never go back to the browser; the form only shows that one is saved.
     hasVotifierToken: Boolean(row.votifierToken),
     hasVotifierKey: Boolean(row.votifierPublicKey),
-    channels: await alertChannels(ctx.community.id),
+    channels: await alertChannels(ctx),
   };
 }
 
@@ -191,11 +203,13 @@ export async function updateServerIntegrations(
   const row = await loadListing(ctx, id);
   const input = serverIntegrationsSchema.parse(raw);
 
-  if (input.alertChannelId) {
-    const ok = (await alertChannels(ctx.community.id)).some((c) => c.id === input.alertChannelId);
+  // A new alert channel must be one they can see and post in. Leaving the saved one as it is
+  // (perhaps chosen by someone who can see more) is fine.
+  if (input.alertChannelId && input.alertChannelId !== row.alertChannelId) {
+    const ok = (await alertChannels(ctx)).some((c) => c.id === input.alertChannelId);
     if (!ok) {
-      throw new AppError('validation', 'Pick a chat channel in this community.', {
-        fields: { alertChannelId: 'Not a chat channel here' },
+      throw new AppError('validation', 'Pick a chat channel you can post in.', {
+        fields: { alertChannelId: 'Not a chat channel you can post in' },
       });
     }
   }

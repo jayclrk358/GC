@@ -1,9 +1,17 @@
-import { and, asc, desc, eq, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
 import { db, schema } from '@magnox/db';
-import { has, Permission, type AutomodRule } from '@magnox/shared';
+import { ALL_PERMISSIONS, has, Permission, type AutomodRule } from '@magnox/shared';
 import { z } from 'zod';
-import { getMemberContext, requirePerm, type MemberContext } from '../access';
-import { AppError, notFound } from '../errors';
+import {
+  channelPermissions,
+  channelPermissionsMany,
+  getMemberContext,
+  loadChannel,
+  requirePerm,
+  type ChannelRef,
+  type MemberContext,
+} from '../access';
+import { AppError, forbidden, notFound } from '../errors';
 import { logger } from '../logger';
 import { audit } from './audit';
 import { sendMessage } from './chat';
@@ -32,8 +40,32 @@ export interface HeldPostView {
   resultUrl: string | null;
 }
 
+/** What a moderator needs in a channel to see and act on what was held there. */
+const REVIEW = Permission.VIEW_CHANNEL | Permission.MANAGE_MESSAGES;
+
+/**
+ * The channels whose held posts this moderator may see: those they can see and manage messages
+ * in (overwrites applied), or null for all of them (administrators).
+ */
+async function reviewableChannelIds(ctx: MemberContext): Promise<string[] | null> {
+  if (ctx.base === ALL_PERMISSIONS) return null;
+  const channels: ChannelRef[] = await db
+    .select({
+      id: schema.channels.id,
+      communityId: schema.channels.communityId,
+      parentId: schema.channels.parentId,
+      type: schema.channels.type,
+    })
+    .from(schema.channels)
+    .where(eq(schema.channels.communityId, ctx.community.id));
+  const perms = await channelPermissionsMany(ctx, channels);
+  return channels.filter((c) => has(perms.get(c.id) ?? 0n, REVIEW)).map((c) => c.id);
+}
+
 export async function heldPostCount(ctx: MemberContext): Promise<number> {
   if (!has(ctx.base, Permission.MANAGE_MESSAGES)) return 0;
+  const channelIds = await reviewableChannelIds(ctx);
+  if (channelIds?.length === 0) return 0;
   const [row] = await db
     .select({ n: sql<number>`count(*)::int` })
     .from(schema.heldPosts)
@@ -41,6 +73,7 @@ export async function heldPostCount(ctx: MemberContext): Promise<number> {
       and(
         eq(schema.heldPosts.communityId, ctx.community.id),
         eq(schema.heldPosts.status, 'pending'),
+        channelIds ? inArray(schema.heldPosts.channelId, channelIds) : undefined,
       ),
     );
   return row?.n ?? 0;
@@ -66,6 +99,9 @@ export async function listHeldPosts(
 ): Promise<HeldPostView[]> {
   requirePerm(ctx, Permission.MANAGE_MESSAGES);
   const status = statusSchema.parse(rawStatus);
+  // Only what was held in channels they can see and moderate.
+  const channelIds = await reviewableChannelIds(ctx);
+  if (channelIds?.length === 0) return [];
   const reviewer = db
     .select({ id: schema.users.id, name: schema.users.name })
     .from(schema.users)
@@ -87,7 +123,11 @@ export async function listHeldPosts(
     .leftJoin(schema.threads, eq(schema.threads.id, schema.heldPosts.threadId))
     .leftJoin(reviewer, eq(reviewer.id, schema.heldPosts.reviewerId))
     .where(
-      and(eq(schema.heldPosts.communityId, ctx.community.id), eq(schema.heldPosts.status, status)),
+      and(
+        eq(schema.heldPosts.communityId, ctx.community.id),
+        eq(schema.heldPosts.status, status),
+        channelIds ? inArray(schema.heldPosts.channelId, channelIds) : undefined,
+      ),
     )
     .orderBy(
       status === 'pending' ? asc(schema.heldPosts.createdAt) : desc(schema.heldPosts.reviewedAt),
@@ -122,6 +162,17 @@ export async function reviewHeldPost(
   requirePerm(ctx, Permission.MANAGE_MESSAGES);
   const decision = decisionSchema.parse(rawDecision);
   if (!z.string().uuid().safeParse(id).success) throw notFound('Post');
+  // Only for posts held in channels they can see and manage messages in.
+  const [target] = await db
+    .select({ channelId: schema.heldPosts.channelId })
+    .from(schema.heldPosts)
+    .where(and(eq(schema.heldPosts.id, id), eq(schema.heldPosts.communityId, ctx.community.id)))
+    .limit(1);
+  const channel = target ? await loadChannel(target.channelId) : null;
+  if (!channel) throw notFound('Post');
+  const perms = await channelPermissions(ctx, channel);
+  if (!has(perms, Permission.VIEW_CHANNEL)) throw notFound('Post');
+  if (!has(perms, Permission.MANAGE_MESSAGES)) throw forbidden();
   // Claim it first, so two moderators can't both act on it.
   const [held] = await db
     .update(schema.heldPosts)

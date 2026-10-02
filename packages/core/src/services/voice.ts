@@ -4,18 +4,28 @@ import {
   WebhookReceiver,
   type ParticipantInfo,
 } from 'livekit-server-sdk';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { db, schema } from '@magnox/db';
-import { has, Permission, planLimits, planPerks } from '@magnox/shared';
-import { requireMember, type MemberContext } from '../access';
+import { has, outranks, Permission, planLimits, planPerks } from '@magnox/shared';
+import {
+  channelPermissions,
+  channelPermissionsMany,
+  getMemberContext,
+  loadChannel,
+  requireMember,
+  type ChannelRef,
+  type MemberContext,
+} from '../access';
 import { realtime } from '../emitter';
 import { env } from '../env';
-import { AppError, forbidden, notFound, unauthorized } from '../errors';
+import { AppError, forbidden, isAppError, notFound, unauthorized } from '../errors';
 import { logger } from '../logger';
 import { cacheRedis } from '../redis';
+import { rooms } from '../rooms';
 import { communityPlan } from './billing';
 import { getChannelById } from './channels';
 import { loadAuthors } from './chat';
+import { memberRank } from './roles';
 import { livekit, peopleKey, ROOM_PREFIX, roomOf, voiceEnabled } from './voice-rooms';
 
 export { voiceEnabled };
@@ -31,6 +41,21 @@ export interface VoicePerson {
 
 /** Who's in a channel is kept in Redis for a day at most, in case an event goes missing. */
 const PEOPLE_TTL = 24 * 3600;
+
+/**
+ * How long a ticket to join stays usable, in seconds. It's only needed to connect (LiveKit hands
+ * people in a call fresh tokens as it goes), and a long-lived one would let someone who was
+ * kicked, banned or timed out back in with a ticket they kept.
+ */
+const TOKEN_TTL = 120;
+
+/**
+ * A change in who's in a voice channel: someone joined or left, or the whole list (after checking
+ * with LiveKit, or when the call ended).
+ */
+export type VoiceStateEvent = { channelId: string } & (
+  { joined: VoicePerson } | { left: string } | { people: VoicePerson[] }
+);
 
 /** Where browsers connect: LIVEKIT_URL, or this site (Caddy passes /rtc on to LiveKit). */
 function publicUrl(): string {
@@ -97,7 +122,7 @@ export async function joinVoice(ctx: MemberContext, channelId: string): Promise<
     identity: ctx.userId,
     name: me?.nickname || me?.name || 'Member',
     metadata: JSON.stringify({ image: me?.image ?? null, username: me?.username ?? null }),
-    ttl: '6h',
+    ttl: TOKEN_TTL,
   });
   token.addGrant({
     room,
@@ -124,12 +149,30 @@ function personOf(p: { identity: string; name?: string; metadata?: string }): Vo
   return { id: p.identity, name: p.name || 'Member', image };
 }
 
-/** Who's in each of a community's voice channels (for the channel list). */
-export async function voicePeople(communityId: string): Promise<Record<string, VoicePerson[]>> {
-  const channels = await db
-    .select({ id: schema.channels.id })
+/**
+ * Who's in each of the community's voice channels the viewer can see (for the channel list). Every
+ * channel they can see has an entry, empty or not, so the page knows which ones to follow.
+ */
+export async function voicePeople(ctx: MemberContext): Promise<Record<string, VoicePerson[]>> {
+  if (!voiceEnabled()) return {};
+  const rows: ChannelRef[] = await db
+    .select({
+      id: schema.channels.id,
+      communityId: schema.channels.communityId,
+      parentId: schema.channels.parentId,
+      type: schema.channels.type,
+    })
     .from(schema.channels)
-    .where(and(eq(schema.channels.communityId, communityId), eq(schema.channels.type, 'voice')));
+    .where(
+      and(
+        eq(schema.channels.communityId, ctx.community.id),
+        eq(schema.channels.type, 'voice'),
+        isNull(schema.channels.archivedAt),
+      ),
+    );
+  if (!rows.length) return {};
+  const perms = await channelPermissionsMany(ctx, rows);
+  const channels = rows.filter((c) => has(perms.get(c.id) ?? 0n, Permission.VIEW_CHANNEL));
   if (!channels.length) return {};
   const pipe = cacheRedis().pipeline();
   for (const c of channels) pipe.hvals(peopleKey(c.id));
@@ -142,18 +185,29 @@ export async function voicePeople(communityId: string): Promise<Record<string, V
   );
 }
 
-/** Tell a community's open pages who's now in a voice channel. */
-async function publishPeople(channelId: string): Promise<void> {
-  const [channel] = await db
-    .select({ communityId: schema.channels.communityId })
-    .from(schema.channels)
-    .where(eq(schema.channels.id, channelId))
-    .limit(1);
-  if (!channel) return;
-  const people = (await cacheRedis().hvals(peopleKey(channelId))).map(
-    (v) => JSON.parse(v) as VoicePerson,
-  );
-  realtime().to(`community:${channel.communityId}`).emit('voice:state', { channelId, people });
+/**
+ * Tell the people following a voice channel who's come or gone. Its `channel:` room only admits
+ * those who can see the channel, so who's in a hidden one stays hidden.
+ */
+function publishVoice(event: VoiceStateEvent): void {
+  realtime().to(rooms.channel(event.channelId)).emit('voice:state', event);
+}
+
+/**
+ * Whether someone may be in a voice channel's call right now. Checked when LiveKit says they've
+ * joined: a ticket is only checked when it's made, so this catches one used after they were
+ * kicked, banned, timed out or lost the channel.
+ */
+async function mayBeInCall(channelId: string, userId: string): Promise<boolean> {
+  const channel = await loadChannel(channelId);
+  if (!channel || channel.type !== 'voice') return false;
+  try {
+    const ctx = await getMemberContext({ id: channel.communityId }, userId);
+    return ctx.isMember && has(await channelPermissions(ctx, channel), Permission.CONNECT);
+  } catch (err) {
+    if (isAppError(err)) return false; // Can't see the community any more.
+    throw err;
+  }
 }
 
 /**
@@ -173,15 +227,24 @@ export async function handleVoiceWebhook(body: string, auth: string | null): Pro
   const redis = cacheRedis();
   if (event.event === 'participant_joined' && event.participant) {
     const person = personOf(event.participant);
+    if (!(await mayBeInCall(channelId, person.id))) {
+      log.info({ channelId, userId: person.id }, 'removed from voice: no longer allowed in');
+      await livekit()
+        .removeParticipant(room, person.id)
+        .catch(() => {
+          // Already gone.
+        });
+      return;
+    }
     await redis.multi().hset(key, person.id, JSON.stringify(person)).expire(key, PEOPLE_TTL).exec();
+    publishVoice({ channelId, joined: person });
   } else if (event.event === 'participant_left' && event.participant) {
     await redis.hdel(key, event.participant.identity);
+    publishVoice({ channelId, left: event.participant.identity });
   } else if (event.event === 'room_finished') {
     await redis.del(key);
-  } else {
-    return;
+    publishVoice({ channelId, people: [] });
   }
-  await publishPeople(channelId);
 }
 
 /**
@@ -206,7 +269,7 @@ export async function syncVoicePeople(channelId: string): Promise<VoicePerson[]>
     const multi = cacheRedis().multi().del(key);
     for (const p of people) multi.hset(key, p.id, JSON.stringify(p));
     await multi.expire(key, PEOPLE_TTL).exec();
-    await publishPeople(channelId);
+    publishVoice({ channelId, people });
   }
   return people;
 }
@@ -221,6 +284,11 @@ export async function moderateVoice(
   if (!voiceEnabled()) throw new AppError('bad_request', "Voice isn't set up on this site yet.");
   const channel = await voiceChannel(ctx, channelId);
   if (!has(BigInt(channel.perms), Permission.MUTE_MEMBERS)) throw forbidden();
+  // Mute members can be given in one channel (a "DJ"), so the role hierarchy still applies.
+  if (userId === ctx.userId) throw new AppError('bad_request', "You can't do that to yourself.");
+  if (!outranks(ctx, await memberRank(ctx.community, userId))) {
+    throw forbidden('You can only moderate members below your highest role.');
+  }
   const room = roomOf(channel.id);
   try {
     if (action === 'disconnect') {

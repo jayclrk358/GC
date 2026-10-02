@@ -4,9 +4,9 @@ import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { Participant, RemoteTrack, Room, VideoTrack } from 'livekit-client';
-import type { VoicePerson } from '@magnox/core';
+import type { VoicePerson, VoiceStateEvent } from '@magnox/core';
 import { joinVoiceAction } from '@/app/actions/voice';
-import { useRoom } from '@/lib/realtime';
+import { useRooms } from '@/lib/realtime';
 
 /** Someone in the call you're in, as LiveKit reports them. */
 export interface VoiceMember extends VoicePerson {
@@ -59,6 +59,21 @@ function personOf(p: Participant): VoicePerson {
   return { id: p.identity, name: p.name || 'Member', image };
 }
 
+/** Apply a change in who's in a voice channel (someone joined or left, or the whole list). */
+function applyVoiceState(
+  people: Record<string, VoicePerson[]>,
+  e: VoiceStateEvent,
+): Record<string, VoicePerson[]> {
+  const list = people[e.channelId] ?? [];
+  const next =
+    'people' in e
+      ? e.people
+      : 'joined' in e
+        ? [...list.filter((p) => p.id !== e.joined.id), e.joined]
+        : list.filter((p) => p.id !== e.left);
+  return { ...people, [e.channelId]: next };
+}
+
 /**
  * Voice for one community: who's in which voice channel (kept live), and the call you're in.
  * The call lives here, above the pages, so it carries on while you move between channels.
@@ -70,11 +85,18 @@ export function VoiceProvider({
   children,
 }: {
   communityId: string;
+  /** Who's in each voice channel you can see (an entry for every one, even if empty). */
   initialPeople: Record<string, VoicePerson[]>;
   children: React.ReactNode;
 }) {
   const t = useTranslations('voice');
   const [people, setPeople] = React.useState(initialPeople);
+  // The page was refreshed (channels or permissions changed): start again from what it says.
+  const [lastInitial, setLastInitial] = React.useState(initialPeople);
+  if (initialPeople !== lastInitial) {
+    setLastInitial(initialPeople);
+    setPeople(initialPeople);
+  }
   const [channel, setChannel] = React.useState<{ id: string; name: string } | null>(null);
   const [status, setStatus] = React.useState<VoiceContextValue['status']>('idle');
   const [members, setMembers] = React.useState<VoiceMember[]>([]);
@@ -89,9 +111,15 @@ export function VoiceProvider({
   const mutedRef = React.useRef(false);
   const mutedBeforeDeafen = React.useRef(false);
 
-  useRoom(`community:${communityId}`, {
-    'voice:state': (p: { channelId: string; people: VoicePerson[] }) =>
-      setPeople((prev) => ({ ...prev, [p.channelId]: p.people })),
+  // Each voice channel's own room: only people who can see a channel hear who's in it.
+  const voiceRooms = Object.keys(initialPeople)
+    .sort()
+    .map((id) => `channel:${id}`);
+  useRooms(voiceRooms, {
+    'voice:state': (e: VoiceStateEvent) => {
+      if (!(e.channelId in initialPeople)) return;
+      setPeople((prev) => applyVoiceState(prev, e));
+    },
   });
 
   // The roster and screens come straight from the room whenever something changes in it.

@@ -44,7 +44,7 @@ export default async function CommunityLayout({
   }
   const [online, voice, t] = await Promise.all([
     onlineInCommunity(data.community.id),
-    voicePeople(data.community.id),
+    voicePeople(data.ctx),
     getTranslations('community'),
   ]);
   // The background picture is a paid perk; a community on Free keeps it set but not shown.
