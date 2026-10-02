@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { adminUser, isAppError } from '@magnox/core';
 import { getUser } from '@/lib/auth';
 import { formatDateTime } from '@/lib/format';
@@ -14,6 +14,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
   const { id } = await params;
   const me = await getUser();
   const t = await getTranslations('admin');
+  const locale = await getLocale();
   let u;
   try {
     u = await adminUser(me?.id ?? null, decodeURIComponent(id));
@@ -40,7 +41,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
           tone="danger"
           title={
             u.banExpires
-              ? t('bannedUntil', { date: formatDateTime(u.banExpires) })
+              ? t('bannedUntil', { date: formatDateTime(u.banExpires, 'auto', locale) })
               : t('bannedForever')
           }
         >
@@ -53,7 +54,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
           {u.email} {u.emailVerified ? '' : `(${t('unverified')})`}
         </dd>
         <dt className="text-muted">{t('col.joined')}</dt>
-        <dd suppressHydrationWarning>{formatDateTime(u.createdAt)}</dd>
+        <dd suppressHydrationWarning>{formatDateTime(u.createdAt, 'auto', locale)}</dd>
         <dt className="text-muted">{t('memberOf')}</dt>
         <dd>{t('communitiesCount', { count: u.memberships })}</dd>
         <dt className="text-muted">{t('owns')}</dt>

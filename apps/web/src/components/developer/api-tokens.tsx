@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { KeyRound, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,7 @@ export interface TokenItem {
 /** Personal API tokens: make one (shown once), see when each was used, delete them. */
 export function ApiTokens({ tokens }: { tokens: TokenItem[] }) {
   const t = useTranslations('developer');
+  const locale = useLocale();
   const router = useRouter();
   const [name, setName] = React.useState('');
   const [write, setWrite] = React.useState(false);
@@ -125,7 +126,7 @@ export function ApiTokens({ tokens }: { tokens: TokenItem[] }) {
                   <p className="text-sm text-muted" suppressHydrationWarning>
                     <code className="font-mono">{item.prefix}…</code> ·{' '}
                     {item.lastUsedAt
-                      ? t('lastUsed', { when: formatDateTime(item.lastUsedAt) })
+                      ? t('lastUsed', { when: formatDateTime(item.lastUsedAt, 'auto', locale) })
                       : t('neverUsed')}
                   </p>
                 </div>

@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Check, X } from 'lucide-react';
 import type { HeldPostView } from '@magnox/core';
@@ -15,6 +15,7 @@ import { formatDateTime, relativeTime } from '@/lib/format';
 /** Posts automod held back: let them through or turn them away. */
 export function HeldQueue({ communityId, items }: { communityId: string; items: HeldPostView[] }) {
   const t = useTranslations('modQueue');
+  const locale = useLocale();
   const router = useRouter();
   const [busy, setBusy] = React.useState<string | null>(null);
 
@@ -60,8 +61,11 @@ export function HeldQueue({ communityId, items }: { communityId: string; items: 
                   </h3>
                   <p className="text-sm text-muted" suppressHydrationWarning>
                     {t(`kinds.${item.kind}`)} · {where} ·{' '}
-                    <time dateTime={item.createdAt} title={formatDateTime(item.createdAt)}>
-                      {relativeTime(item.createdAt)}
+                    <time
+                      dateTime={item.createdAt}
+                      title={formatDateTime(item.createdAt, 'auto', locale)}
+                    >
+                      {relativeTime(item.createdAt, undefined, locale)}
                     </time>
                   </p>
                 </div>
@@ -100,7 +104,7 @@ export function HeldQueue({ communityId, items }: { communityId: string; items: 
                   <span suppressHydrationWarning>
                     {t(item.status === 'approved' ? 'approvedBy' : 'rejectedBy', {
                       name: item.reviewerName ?? t('someone'),
-                      when: item.reviewedAt ? formatDateTime(item.reviewedAt) : '',
+                      when: item.reviewedAt ? formatDateTime(item.reviewedAt, 'auto', locale) : '',
                     })}
                   </span>
                   {item.resultUrl && (

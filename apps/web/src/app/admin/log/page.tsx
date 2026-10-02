@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { adminLog } from '@magnox/core';
 import { getUser } from '@/lib/auth';
 import { formatDateTime } from '@/lib/format';
@@ -9,7 +9,11 @@ export const metadata = { title: 'Log' };
 
 export default async function AdminLogPage() {
   const user = await getUser();
-  const [t, rows] = await Promise.all([getTranslations('admin'), adminLog(user?.id ?? null)]);
+  const [t, locale, rows] = await Promise.all([
+    getTranslations('admin'),
+    getLocale(),
+    adminLog(user?.id ?? null),
+  ]);
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title={t('logTitle')} description={t('logDescription')} />
@@ -31,7 +35,7 @@ export default async function AdminLogPage() {
                 <span className="text-muted">“{r.details.reason}”</span>
               )}
               <span className="ms-auto text-muted" suppressHydrationWarning>
-                {formatDateTime(r.createdAt)}
+                {formatDateTime(r.createdAt, 'auto', locale)}
               </span>
             </li>
           ))}

@@ -1139,7 +1139,13 @@
       "servers": "Mostrar números dos servidores"
     },
     "saving": "Salvando…",
-    "allSaved": "Todas as alterações foram salvas"
+    "allSaved": "Todas as alterações foram salvas",
+    "statsLabels": {
+      "members": "Membros",
+      "online": "Online agora",
+      "serversOnline": "Servidores online",
+      "players": "Jogando agora"
+    }
   },
   "editor": {
     "placeholder": "Escreva alguma coisa…",

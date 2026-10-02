@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { ExternalLink, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,7 @@ export interface DiscordLinkData {
 /** Link the community's Discord server and match roles, so members get Discord roles too. */
 export function DiscordLink({ communityId, data }: { communityId: string; data: DiscordLinkData }) {
   const t = useTranslations('discord');
+  const locale = useLocale();
   const router = useRouter();
   const [guildId, setGuildId] = React.useState(data.guildId ?? '');
   const [map, setMap] = React.useState<Record<string, string>>(data.roleMap);
@@ -116,7 +117,7 @@ export function DiscordLink({ communityId, data }: { communityId: string; data: 
       {data.lastSyncResult && (
         <Alert tone="info" title={t('lastSync')}>
           <span suppressHydrationWarning>
-            {data.lastSyncAt ? `${formatDateTime(data.lastSyncAt)}: ` : ''}
+            {data.lastSyncAt ? `${formatDateTime(data.lastSyncAt, 'auto', locale)}: ` : ''}
             {data.lastSyncResult}
           </span>
         </Alert>

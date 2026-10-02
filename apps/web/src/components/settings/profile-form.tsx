@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { LocateFixed, Plus, Trash2 } from 'lucide-react';
 import {
@@ -98,9 +98,9 @@ function ChipChecks({
   );
 }
 
-function zoneLabel(tz: string, now: Date): string {
+function zoneLabel(tz: string, now: Date, locale: string): string {
   const offset =
-    new Intl.DateTimeFormat('en', { timeZone: tz, timeZoneName: 'shortOffset' })
+    new Intl.DateTimeFormat(locale, { timeZone: tz, timeZoneName: 'shortOffset' })
       .formatToParts(now)
       .find((p) => p.type === 'timeZoneName')?.value ?? '';
   const [, ...rest] = tz.split('/');
@@ -112,6 +112,7 @@ function zoneLabel(tz: string, now: Date): string {
  * can name a zone differently (Asia/Saigon vs Asia/Ho_Chi_Minh), so the saved one is always listed.
  */
 function useTimeZones(saved: string) {
+  const locale = useLocale();
   return React.useMemo(() => {
     const zones =
       typeof Intl.supportedValuesOf === 'function' ? Intl.supportedValuesOf('timeZone') : ['UTC'];
@@ -122,11 +123,11 @@ function useTimeZones(saved: string) {
       const [region, ...rest] = tz.split('/');
       const key = rest.length ? region! : 'Other';
       const list = groups.get(key) ?? [];
-      list.push({ value: tz, label: zoneLabel(tz, now) });
+      list.push({ value: tz, label: zoneLabel(tz, now, locale) });
       groups.set(key, list);
     }
     return [...groups.entries()];
-  }, [saved]);
+  }, [saved, locale]);
 }
 
 export function ProfileForm({

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { Search } from 'lucide-react';
 import { searchForum } from '@magnox/core';
 import { loadCommunity } from '@/lib/community';
@@ -39,6 +39,7 @@ export default async function ForumSearchPage({
   const { q = '' } = await searchParams;
   const t = await getTranslations('forum');
   const tBack = await getTranslations('common');
+  const locale = await getLocale();
   const results = await searchForum(data.ctx, q);
   const base = `/c/${data.community.slug}`;
   return (
@@ -73,7 +74,7 @@ export default async function ForumSearchPage({
               </Link>
               <p className="mt-1 text-sm text-muted">
                 #{r.channelName} · {t('replies', { count: r.replyCount })} ·{' '}
-                {relativeTime(r.lastActivityAt)}
+                {relativeTime(r.lastActivityAt, undefined, locale)}
               </p>
               {r.snippet && (
                 <p className="mt-2 text-sm">

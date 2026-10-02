@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Search, X } from 'lucide-react';
 import type { ChatAuthor, MessageSearchHit, MessageView } from '@magnox/core';
 import { Button } from '@/components/ui/button';
@@ -97,6 +97,7 @@ function MessageCard({
   onOpen: () => void;
 }) {
   const t = useTranslations('chat');
+  const locale = useLocale();
   const { prefs } = useChat();
   const name =
     m.kind !== 'user' ? 'Magnox' : m.author?.nickname || m.author?.name || t('deletedUser');
@@ -113,12 +114,12 @@ function MessageCard({
         />
         {channelName && <span className="text-xs text-muted">#{channelName}</span>}
         <time dateTime={m.createdAt} className="text-xs text-muted">
-          {formatDay(m.createdAt, { today: t('today'), yesterday: t('yesterday') })}{' '}
-          {formatTime(m.createdAt, prefs.timeFormat)}
+          {formatDay(m.createdAt, { today: t('today'), yesterday: t('yesterday') }, locale)}{' '}
+          {formatTime(m.createdAt, prefs.timeFormat, locale)}
         </time>
       </p>
       {m.kind !== 'user' ? (
-        <p className="mt-1">{systemText(m, t)}</p>
+        <p className="mt-1">{systemText(m, t, locale)}</p>
       ) : snippet ? (
         <p className="mt-1 line-clamp-4">
           {snippet

@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { Ban } from 'lucide-react';
 import { listBans } from '@magnox/core';
 import { loadCommunityForSettings } from '@/lib/community';
@@ -13,6 +13,7 @@ export default async function BansPage({ params }: { params: Promise<{ slug: str
   const { community, perms, ctx } = await loadCommunityForSettings((await params).slug);
   if (!perms.ban) notFound();
   const t = await getTranslations('moderation');
+  const locale = await getLocale();
   const bans = await listBans(ctx);
   return (
     <div className="flex flex-col gap-6">
@@ -32,11 +33,11 @@ export default async function BansPage({ params }: { params: Promise<{ slug: str
                 <p className="text-sm text-muted">
                   {t('bannedBy', {
                     name: b.moderator ?? t('someone'),
-                    date: formatDateTime(b.createdAt),
+                    date: formatDateTime(b.createdAt, 'auto', locale),
                   })}
                   {' · '}
                   {b.expiresAt
-                    ? t('expires', { date: formatDateTime(b.expiresAt) })
+                    ? t('expires', { date: formatDateTime(b.expiresAt, 'auto', locale) })
                     : t('permanent')}
                 </p>
                 {b.reason && <p className="text-sm">{b.reason}</p>}

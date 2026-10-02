@@ -1139,7 +1139,13 @@
       "servers": "Serverzahlen anzeigen"
     },
     "saving": "Wird gespeichert…",
-    "allSaved": "Alle Änderungen gespeichert"
+    "allSaved": "Alle Änderungen gespeichert",
+    "statsLabels": {
+      "members": "Mitglieder",
+      "online": "Gerade online",
+      "serversOnline": "Server online",
+      "players": "Spieler im Spiel"
+    }
   },
   "editor": {
     "placeholder": "Schreib etwas…",
@@ -2218,7 +2224,7 @@
     "privateTitle": "Nur du kannst diese Seite sehen",
     "privateBody": "Dieser Server ist nicht gelistet oder noch nicht verifiziert. Deshalb ist er im Serverbrowser ausgeblendet und kann keine Votes bekommen.",
     "dormant": "Dieser Server hat über eine Woche nicht geantwortet, daher wurden die Statusabfragen pausiert. Er wird jetzt wieder geprüft.",
-    "downSince": "Antwortet seit {duration} nicht auf Statusabfragen.",
+    "downSince": "Antwortet nicht auf Statusabfragen (Dauer: {duration}).",
     "sidebar": "Status und Votes",
     "history": "Verlauf",
     "rangeLabel": "Zeitraum",

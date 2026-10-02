@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import {
   Accessibility,
   ArrowRight,
@@ -73,6 +73,7 @@ const SWATCHES = ['#5b21b6', '#0a7c73', '#b91c3c', '#2563eb', '#a16207', '#15803
 
 export default async function HomePage() {
   const t = await getTranslations('home');
+  const locale = await getLocale();
   const [user, stats, live, trending] = await Promise.all([
     getUser(),
     platformStats(),
@@ -132,7 +133,7 @@ export default async function HomePage() {
                 <div key={f.label} className="flex flex-col-reverse">
                   <dt className="text-sm text-muted">{f.label}</dt>
                   <dd className="font-heading text-3xl font-bold tabular-nums">
-                    <CountUp value={f.value} formatted={formatCount(f.value)} />
+                    <CountUp value={f.value} formatted={formatCount(f.value, locale)} />
                   </dd>
                 </div>
               ))}

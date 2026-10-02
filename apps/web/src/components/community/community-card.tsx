@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { Users } from 'lucide-react';
 import type { CommunityCard as Card } from '@magnox/core';
 import { imgSources } from '@/lib/media';
@@ -11,6 +11,7 @@ import { PlanBadge } from '@/components/billing/plan-badge';
 export async function CommunityCard({ c }: { c: Card }) {
   const t = await getTranslations('community');
   const tp = await getTranslations('plans');
+  const locale = await getLocale();
   const theme = c.theme;
   const icon = imgSources(theme.iconKey, 'sm');
   const banner = imgSources(theme.bannerKey, 'md');
@@ -72,7 +73,10 @@ export async function CommunityCard({ c }: { c: Card }) {
           {c.gameName && <Badge tone="primary">{c.gameName}</Badge>}
           <span className="flex items-center gap-1 text-muted">
             <Users className="size-4" aria-hidden />
-            {t('memberCount', { count: c.memberCount, formatted: formatCount(c.memberCount) })}
+            {t('memberCount', {
+              count: c.memberCount,
+              formatted: formatCount(c.memberCount, locale),
+            })}
           </span>
         </div>
       </div>

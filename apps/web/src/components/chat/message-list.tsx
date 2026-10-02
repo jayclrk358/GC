@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { ArrowDown, Hash } from 'lucide-react';
 import { startsNewGroup } from '@magnox/shared';
 import { Button } from '@/components/ui/button';
@@ -39,6 +39,7 @@ const PAGE_STEP = 10;
 
 export function MessageList(props: Props) {
   const t = useTranslations('chat');
+  const locale = useLocale();
   const { channel, prefs, me, perms, actions } = useChat();
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const atBottomRef = React.useRef(true);
@@ -185,7 +186,7 @@ export function MessageList(props: Props) {
     const newDay =
       !prev || new Date(prev.createdAt).toDateString() !== new Date(m.createdAt).toDateString();
     if (newDay) {
-      const label = formatDay(m.createdAt, dayLabels);
+      const label = formatDay(m.createdAt, dayLabels, locale);
       rows.push(
         <div
           key={`day-${m.id}`}

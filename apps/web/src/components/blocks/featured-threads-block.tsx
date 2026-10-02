@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { MessageSquare } from 'lucide-react';
 import { recentThreads } from '@magnox/core';
 import type { BlockConfig } from '@magnox/shared';
@@ -18,6 +18,7 @@ export async function FeaturedThreadsBlock({
   data: LoadedCommunity;
 }) {
   const t = await getTranslations('forum');
+  const locale = await getLocale();
   const threads = await recentThreads(data.ctx, {
     channelId: config.channelId,
     count: config.count,
@@ -42,7 +43,7 @@ export async function FeaturedThreadsBlock({
                 <p className="text-sm text-muted">
                   #{th.channelName}
                   {th.authorName && <> · {th.authorName}</>} ·{' '}
-                  {t('lastActivity', { when: relativeTime(th.lastActivityAt) })}
+                  {t('lastActivity', { when: relativeTime(th.lastActivityAt, undefined, locale) })}
                 </p>
               </div>
               <span className="text-sm text-muted tabular-nums">

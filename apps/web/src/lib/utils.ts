@@ -12,6 +12,6 @@ export function initials(name: string): string {
   return (first + second).toUpperCase();
 }
 
-export function formatCount(n: number): string {
-  return new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(n);
+export function formatCount(n: number, locale = 'en'): string {
+  return new Intl.NumberFormat(locale, { notation: 'compact', maximumFractionDigits: 1 }).format(n);
 }

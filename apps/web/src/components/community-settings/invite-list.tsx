@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/misc';
@@ -22,6 +22,7 @@ export function InviteList({
   }[];
 }) {
   const t = useTranslations('invites');
+  const locale = useLocale();
   const router = useRouter();
   if (!invites.length) return <EmptyState title={t('none')} />;
   return (
@@ -56,7 +57,7 @@ export function InviteList({
                 {i.maxUses ? ` / ${i.maxUses}` : ''}
               </td>
               <td className="px-4 py-2">
-                {i.expiresAt ? new Date(i.expiresAt).toLocaleString() : t('noExpiry')}
+                {i.expiresAt ? new Date(i.expiresAt).toLocaleString(locale) : t('noExpiry')}
               </td>
               <td className="px-4 py-2">{i.creatorName ?? '—'}</td>
               <td className="px-4 py-2 text-end">

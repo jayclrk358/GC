@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { getInvitePreview, getMemberContext } from '@magnox/core';
 import { getUser } from '@/lib/auth';
 import { imgSources } from '@/lib/media';
@@ -14,6 +14,7 @@ export const metadata = { title: 'Invitation' };
 export default async function InvitePage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
   const t = await getTranslations('invites');
+  const locale = await getLocale();
   const [invite, user] = await Promise.all([getInvitePreview(code), getUser()]);
 
   if (!invite || !invite.valid) {
@@ -63,7 +64,7 @@ export default async function InvitePage({ params }: { params: Promise<{ code: s
           <p className="text-sm text-muted">
             {t('memberCount', {
               count: invite.memberCount,
-              formatted: formatCount(invite.memberCount),
+              formatted: formatCount(invite.memberCount, locale),
             })}
           </p>
         </div>

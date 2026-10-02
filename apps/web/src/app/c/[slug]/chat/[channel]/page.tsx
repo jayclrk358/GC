@@ -1,4 +1,4 @@
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import {
   isMuted,
   listBlockedUsers,
@@ -34,6 +34,7 @@ export default async function ChatChannelPage({
   const data = await loadCommunity(slug);
   const channel = await loadChatChannel(slug, name);
   const t = await getTranslations('chat');
+  const locale = await getLocale();
   const perms = BigInt(channel.perms);
   const user = data.user;
   const member = data.ctx.isMember;
@@ -110,7 +111,9 @@ export default async function ChatChannelPage({
   ) : data.ctx.needsRules ? (
     <SignInToChat href={`/c/${slug}/welcome`} label={t('rulesFirstLink')} text={t('rulesFirst')} />
   ) : data.ctx.timedOut && data.ctx.timeoutUntil ? (
-    <ChatNotice>{t('timedOut', { date: formatDateTime(data.ctx.timeoutUntil) })}</ChatNotice>
+    <ChatNotice>
+      {t('timedOut', { date: formatDateTime(data.ctx.timeoutUntil, 'auto', locale) })}
+    </ChatNotice>
   ) : (
     <ChatNotice>{t('cannotSend')}</ChatNotice>
   );

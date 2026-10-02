@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { canEditWiki, compareRevision, isAppError } from '@magnox/core';
 import { formatDateTime } from '@/lib/format';
 import { RichText } from '@/components/rich-text/rich-text';
@@ -17,6 +17,7 @@ export default async function WikiRevisionPage({ params }: { params: Params }) {
   const { data, page } = await loadWikiPage(slug, pageSlug);
   const t = await getTranslations('wiki');
   const tBack = await getTranslations('common');
+  const locale = await getLocale();
   let cmp: Awaited<ReturnType<typeof compareRevision>>;
   try {
     cmp = await compareRevision(data.ctx, page.id, revisionId);
@@ -26,7 +27,7 @@ export default async function WikiRevisionPage({ params }: { params: Params }) {
   }
   const { revision, previous, parts, titleChanged } = cmp;
   const pageHref = `/c/${slug}/wiki/${page.slug}`;
-  const when = formatDateTime(revision.createdAt);
+  const when = formatDateTime(revision.createdAt, 'auto', locale);
   const added = parts.filter((p) => p.kind === 'added').reduce((n, p) => n + p.text.length, 0);
   const removed = parts.filter((p) => p.kind === 'removed').reduce((n, p) => n + p.text.length, 0);
   const current = revision.id === page.currentRevisionId;

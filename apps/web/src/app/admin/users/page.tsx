@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { adminUsers } from '@magnox/core';
 import { getUser } from '@/lib/auth';
 import { formatDateTime } from '@/lib/format';
@@ -15,7 +15,11 @@ export default async function AdminUsersPage({
 }) {
   const { q = '' } = await searchParams;
   const user = await getUser();
-  const [t, rows] = await Promise.all([getTranslations('admin'), adminUsers(user?.id ?? null, q)]);
+  const [t, locale, rows] = await Promise.all([
+    getTranslations('admin'),
+    getLocale(),
+    adminUsers(user?.id ?? null, q),
+  ]);
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title={t('usersTitle')} />
@@ -56,7 +60,7 @@ export default async function AdminUsersPage({
                   )}
                 </td>
                 <td className="p-3 whitespace-nowrap" suppressHydrationWarning>
-                  {formatDateTime(u.createdAt)}
+                  {formatDateTime(u.createdAt, 'auto', locale)}
                 </td>
               </tr>
             ))}

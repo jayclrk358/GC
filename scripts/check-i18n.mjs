@@ -32,12 +32,52 @@ function lookup(path) {
 
 const problems = [];
 let checked = 0;
+/** Split "a, f(b, c), [d]" at its top-level commas. */
+function topLevelItems(text) {
+  const items = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if ('([{'.includes(ch)) depth++;
+    else if (')]}'.includes(ch)) depth--;
+    else if (ch === ',' && depth === 0) {
+      items.push(text.slice(start, i).trim());
+      start = i + 1;
+    }
+  }
+  items.push(text.slice(start).trim());
+  return items;
+}
+
+/** Translator variables and their namespaces in a file. */
+function translators(src) {
+  const out = [];
+  const single =
+    /const\s+(\w+)\s*=\s*(?:await\s+)?(?:useTranslations|getTranslations)\(\s*'([\w.]+)'\s*\)/g;
+  for (const m of src.matchAll(single)) out.push([m[1], m[2]]);
+  // const [t, other] = await Promise.all([getTranslations('ns'), …])
+  const all = /const\s*\[([^\]]+)\]\s*=\s*await\s+Promise\.all\(\s*\[/g;
+  for (const m of src.matchAll(all)) {
+    const names = m[1].split(',').map((n) => n.trim());
+    let depth = 1;
+    let i = m.index + m[0].length;
+    const begin = i;
+    for (; i < src.length && depth > 0; i++) {
+      if ('([{'.includes(src[i])) depth++;
+      else if (')]}'.includes(src[i])) depth--;
+    }
+    topLevelItems(src.slice(begin, i - 1)).forEach((item, k) => {
+      const ns = item.match(/^getTranslations\(\s*'([\w.]+)'\s*\)$/)?.[1];
+      if (ns && /^\w+$/.test(names[k] ?? '')) out.push([names[k], ns]);
+    });
+  }
+  return out;
+}
+
 for (const file of walk(join(root, 'src'))) {
   const src = readFileSync(file, 'utf8');
-  const decl =
-    /const\s+(\w+)\s*=\s*(?:await\s+)?(?:useTranslations|getTranslations)\(\s*'([\w.]+)'\s*\)/g;
-  for (const m of src.matchAll(decl)) {
-    const [, v, ns] = m;
+  for (const [v, ns] of translators(src)) {
     if (lookup(ns) === undefined) problems.push(`${file}: namespace "${ns}" missing`);
     const call = new RegExp(`\\b${v}(?:\\.rich|\\.has)?\\(\\s*(['\`])([^'\`]+)\\1`, 'g');
     for (const c of src.matchAll(call)) {

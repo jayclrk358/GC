@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { CheckCircle2, Flag, History, MoreHorizontal, Pencil, Reply, Trash2 } from 'lucide-react';
 import type { RichNode } from '@magnox/shared';
@@ -54,6 +54,7 @@ export function PostActions({
   can: { reply: boolean; edit: boolean; delete: boolean; report: boolean; solve: boolean };
 }) {
   const t = useTranslations('forum');
+  const locale = useLocale();
   const router = useRouter();
   const { setReplyTo, composerRef } = useThread();
   const [editing, setEditing] = React.useState(false);
@@ -233,7 +234,7 @@ export function PostActions({
               {history.map((h) => (
                 <li key={h.id} className="rounded-ui border border-border p-3">
                   <p className="mb-2 text-sm text-muted">
-                    {t('versionFrom', { date: formatDateTime(h.createdAt) })}
+                    {t('versionFrom', { date: formatDateTime(h.createdAt, 'auto', locale) })}
                   </p>
                   <RichText doc={h.body} />
                 </li>

@@ -1,3 +1,4 @@
+import { getLocale, getTranslations } from 'next-intl/server';
 import { countOnlineServers, onlineInCommunity } from '@magnox/core';
 import type { BlockConfig } from '@magnox/shared';
 import type { LoadedCommunity } from '@/lib/community';
@@ -13,7 +14,9 @@ export async function StatsBlock({
   config: BlockConfig<'stats'>;
   data: LoadedCommunity;
 }) {
-  const [online, servers] = await Promise.all([
+  const [t, locale, online, servers] = await Promise.all([
+    getTranslations('blocks.statsLabels'),
+    getLocale(),
     config.showOnline ? onlineInCommunity(data.community.id) : Promise.resolve(0),
     config.showServers
       ? countOnlineServers(data.community.id)
@@ -21,11 +24,11 @@ export async function StatsBlock({
   ]);
   const items: { label: string; value: string }[] = [];
   if (config.showMembers)
-    items.push({ label: 'Members', value: formatCount(data.community.memberCount) });
-  if (config.showOnline) items.push({ label: 'Online now', value: formatCount(online) });
+    items.push({ label: t('members'), value: formatCount(data.community.memberCount, locale) });
+  if (config.showOnline) items.push({ label: t('online'), value: formatCount(online, locale) });
   if (config.showServers && servers.total) {
-    items.push({ label: 'Servers online', value: `${servers.online} / ${servers.total}` });
-    items.push({ label: 'Players in game', value: formatCount(servers.players) });
+    items.push({ label: t('serversOnline'), value: `${servers.online} / ${servers.total}` });
+    items.push({ label: t('players'), value: formatCount(servers.players, locale) });
   }
   if (!items.length) return null;
   return (

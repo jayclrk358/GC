@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { BarChart3, CheckCircle2, Lock, MessageSquare, Pin } from 'lucide-react';
 import type { ThreadListItem } from '@magnox/core';
 import { relativeTime } from '@/lib/format';
@@ -25,6 +25,7 @@ export async function ThreadList({
   signedIn: boolean;
 }) {
   const t = await getTranslations('forum');
+  const locale = await getLocale();
   return (
     <ol
       className="divide-y divide-border rounded-ui-lg border border-border bg-surface"
@@ -91,9 +92,11 @@ export async function ThreadList({
                 </span>
               )}
               <span aria-hidden>·</span>
-              <span>{t('started', { when: relativeTime(th.createdAt) })}</span>
+              <span>{t('started', { when: relativeTime(th.createdAt, undefined, locale) })}</span>
               <span aria-hidden>·</span>
-              <span>{t('lastActivity', { when: relativeTime(th.lastActivityAt) })}</span>
+              <span>
+                {t('lastActivity', { when: relativeTime(th.lastActivityAt, undefined, locale) })}
+              </span>
             </p>
           </div>
           <p className="flex shrink-0 items-center gap-1 text-sm text-muted tabular-nums">

@@ -2,7 +2,7 @@ import { cache } from 'react';
 import * as React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import {
   CalendarDays,
   Clock,
@@ -73,6 +73,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
   const banner = imgSourcesFromUrl(profile.bannerUrl, 'md', '100vw');
   const t = await getTranslations('profile');
   const tc = await getTranslations('community');
+  const locale = await getLocale();
   const blocked =
     viewer && viewer.id !== profile.id ? await hasBlocked(viewer.id, profile.id) : false;
   const stats = [
@@ -260,7 +261,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
               )}
               <li className="flex items-center gap-2">
                 <CalendarDays className="size-4 shrink-0" aria-hidden />
-                {t('joined', { date: formatDate(profile.createdAt) })}
+                {t('joined', { date: formatDate(profile.createdAt, locale) })}
               </li>
             </ul>
 

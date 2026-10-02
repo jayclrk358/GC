@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Send, Trash2, Webhook } from 'lucide-react';
 import { WEBHOOK_EVENTS, type WebhookEvent } from '@magnox/shared';
@@ -51,6 +51,7 @@ export function WebhookManager({
   webhooks: WebhookItem[];
 }) {
   const t = useTranslations('webhooks');
+  const locale = useLocale();
   const router = useRouter();
   const [name, setName] = React.useState('');
   const [url, setUrl] = React.useState('');
@@ -224,7 +225,9 @@ export function WebhookManager({
                   {item.lastError
                     ? t('lastError', { error: item.lastError, failures: item.failures })
                     : item.lastDeliveredAt
-                      ? t('lastDelivered', { when: formatDateTime(item.lastDeliveredAt) })
+                      ? t('lastDelivered', {
+                          when: formatDateTime(item.lastDeliveredAt, 'auto', locale),
+                        })
                       : t('notYet')}
                 </p>
                 <div className="flex flex-wrap gap-2">

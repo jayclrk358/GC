@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { Flag } from 'lucide-react';
 import { listReports } from '@magnox/core';
 import { has, Permission } from '@magnox/shared';
@@ -28,6 +28,7 @@ export default async function ReportsPage({
     ? (sp.status as (typeof STATUSES)[number])
     : 'open';
   const t = await getTranslations('reports');
+  const locale = await getLocale();
   const reports = await listReports(ctx, status);
   const canDelete =
     has(ctx.base, Permission.MANAGE_MESSAGES) || has(ctx.base, Permission.MANAGE_THREADS);
@@ -77,9 +78,9 @@ export default async function ReportsPage({
                     <span className="text-sm text-muted">
                       <time
                         dateTime={r.createdAt.toISOString()}
-                        title={formatDateTime(r.createdAt)}
+                        title={formatDateTime(r.createdAt, 'auto', locale)}
                       >
-                        {relativeTime(r.createdAt)}
+                        {relativeTime(r.createdAt, undefined, locale)}
                       </time>
                     </span>
                   </header>
@@ -99,7 +100,7 @@ export default async function ReportsPage({
                         <dt className="text-muted">{t('handledBy')}</dt>
                         <dd>
                           {r.resolver ?? t('unknown')}
-                          {r.resolvedAt && <> · {formatDateTime(r.resolvedAt)}</>}
+                          {r.resolvedAt && <> · {formatDateTime(r.resolvedAt, 'auto', locale)}</>}
                           {r.resolution && <span className="block text-muted">{r.resolution}</span>}
                         </dd>
                       </>

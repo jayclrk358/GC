@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,7 @@ export function GiftPlanForm({
 }) {
   const t = useTranslations('admin.gift');
   const tp = useTranslations('admin.plans');
+  const locale = useLocale();
   const router = useRouter();
   const [plan, setPlan] = React.useState(gift?.plan ?? 'pro');
   const [months, setMonths] = React.useState('0');
@@ -37,7 +38,10 @@ export function GiftPlanForm({
           <Gift className="size-4 text-primary" aria-hidden />
           <span suppressHydrationWarning>
             {gift.expiresAt
-              ? t('currentUntil', { plan: tp(gift.plan), date: formatDateTime(gift.expiresAt) })
+              ? t('currentUntil', {
+                  plan: tp(gift.plan),
+                  date: formatDateTime(gift.expiresAt, 'auto', locale),
+                })
               : t('currentForever', { plan: tp(gift.plan) })}
           </span>
           <Button

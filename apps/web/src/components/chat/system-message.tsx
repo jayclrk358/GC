@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { ServerCrash, ServerCog } from 'lucide-react';
 import { formatDuration, type ServerAlertMeta } from '@magnox/shared';
 import { cn } from '@/lib/utils';
@@ -13,13 +13,17 @@ import type { ChatMessage } from './types';
 type T = ReturnType<typeof useTranslations<'chat'>>;
 
 /** The notice in the reader's language, from its structured details. */
-export function systemText(m: Pick<ChatMessage, 'kind' | 'meta' | 'content'>, t: T): string {
+export function systemText(
+  m: Pick<ChatMessage, 'kind' | 'meta' | 'content'>,
+  t: T,
+  locale = 'en',
+): string {
   const meta = (m.meta ?? {}) as Partial<ServerAlertMeta>;
   const name = meta.serverName ?? '';
   if (m.kind === 'server_down') return t('serverDown', { name });
   if (m.kind === 'server_up') {
     return meta.downtimeMs
-      ? t('serverUpAfter', { name, duration: formatDuration(meta.downtimeMs) })
+      ? t('serverUpAfter', { name, duration: formatDuration(meta.downtimeMs, locale) })
       : t('serverUp', { name });
   }
   return m.content;
@@ -38,6 +42,7 @@ export const SystemMessage = React.memo(function SystemMessage({
   onFocus: (id: string) => void;
 }) {
   const t = useTranslations('chat');
+  const locale = useLocale();
   const { prefs } = useChat();
   const down = m.kind === 'server_down';
   const serverId = (m.meta as Partial<ServerAlertMeta> | null)?.serverId;
@@ -62,13 +67,13 @@ export const SystemMessage = React.memo(function SystemMessage({
       </span>
       <p id={headerId} className="min-w-0 flex-1 text-[0.9375rem] text-muted">
         <span className="sr-only">{t('systemNotice')}: </span>
-        <span className="font-medium text-fg">{systemText(m, t)}</span>{' '}
+        <span className="font-medium text-fg">{systemText(m, t, locale)}</span>{' '}
         <time
           dateTime={m.createdAt}
-          title={fullDateTime(m.createdAt, prefs.timeFormat)}
+          title={fullDateTime(m.createdAt, prefs.timeFormat, locale)}
           className="ms-1 text-xs"
         >
-          {formatTime(m.createdAt, prefs.timeFormat)}
+          {formatTime(m.createdAt, prefs.timeFormat, locale)}
         </time>
         {serverId && (
           <>

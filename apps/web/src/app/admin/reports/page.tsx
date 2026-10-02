@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { platformReports } from '@magnox/core';
 import { getUser } from '@/lib/auth';
 import { formatDateTime } from '@/lib/format';
@@ -9,9 +9,10 @@ export const metadata = { title: 'Reports' };
 
 export default async function AdminReportsPage() {
   const user = await getUser();
-  const [t, tr, rows] = await Promise.all([
+  const [t, tr, locale, rows] = await Promise.all([
     getTranslations('admin'),
     getTranslations('reports'),
+    getLocale(),
     platformReports(user?.id ?? null),
   ]);
   return (
@@ -33,7 +34,7 @@ export default async function AdminReportsPage() {
                   </h2>
                   <Badge>{tr(`targets.${r.targetType}`)}</Badge>
                   <span className="text-muted" suppressHydrationWarning>
-                    {formatDateTime(r.createdAt)}
+                    {formatDateTime(r.createdAt, 'auto', locale)}
                   </span>
                 </header>
                 <p>

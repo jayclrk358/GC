@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import {
   AtSign,
   Flag,
@@ -54,11 +54,12 @@ export const MessageItem = React.memo(function MessageItem({
   onFocus: (id: string) => void;
 }) {
   const t = useTranslations('chat');
+  const locale = useLocale();
   const { me, perms, prefs, blocked, editingId, actions, communityId } = useChat();
   const own = Boolean(me && m.authorId === me.id);
   const pinged = !own && mentionsMe(m, me?.id ?? null, me?.roleIds ?? []);
   const name = authorName(m);
-  const time = formatTime(m.createdAt, prefs.timeFormat);
+  const time = formatTime(m.createdAt, prefs.timeFormat, locale);
   const editing = editingId === m.id;
   const isBlocked = Boolean(m.authorId && blocked.has(m.authorId));
   const live = !m.pending && !m.failed;
@@ -167,15 +168,20 @@ export const MessageItem = React.memo(function MessageItem({
             )}
             <time
               dateTime={m.createdAt}
-              title={fullDateTime(m.createdAt, prefs.timeFormat)}
+              title={fullDateTime(m.createdAt, prefs.timeFormat, locale)}
               className="text-xs text-muted"
             >
               {grouped
                 ? time
-                : formatStamp(m.createdAt, prefs.timeFormat, {
-                    today: (time) => t('todayAt', { time }),
-                    yesterday: (time) => t('yesterdayAt', { time }),
-                  })}
+                : formatStamp(
+                    m.createdAt,
+                    prefs.timeFormat,
+                    {
+                      today: (time) => t('todayAt', { time }),
+                      yesterday: (time) => t('yesterdayAt', { time }),
+                    },
+                    locale,
+                  )}
             </time>
             {pinged && (
               <span className="inline-flex items-center gap-0.5 text-xs font-semibold">
@@ -203,7 +209,7 @@ export const MessageItem = React.memo(function MessageItem({
               {m.editedAt && (
                 <span
                   className="text-xs text-muted"
-                  title={fullDateTime(m.editedAt, prefs.timeFormat)}
+                  title={fullDateTime(m.editedAt, prefs.timeFormat, locale)}
                 >
                   {' '}
                   {t('edited')}

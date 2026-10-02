@@ -1,7 +1,7 @@
 import { cache } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { Globe2, ShieldCheck, Users } from 'lucide-react';
 import {
   endpointHistory,
@@ -36,8 +36,8 @@ const load = cache(async (id: string, userId: string | null): Promise<ServerDeta
 });
 
 /** "5 h 10 min" from now until `iso` (or since it, for past times). */
-function durationFrom(iso: string | null): string | null {
-  return iso ? formatDuration(Math.abs(new Date(iso).getTime() - Date.now())) : null;
+function durationFrom(iso: string | null, locale: string): string | null {
+  return iso ? formatDuration(Math.abs(new Date(iso).getTime() - Date.now()), locale) : null;
 }
 
 export async function generateMetadata({ params }: Params) {
@@ -58,8 +58,9 @@ export default async function ServerPage({ params }: Params) {
   const server = await load(id, user?.id ?? null);
   await markEndpointsHot([server.endpointId]);
   const history = await endpointHistory(server.endpointId, '24h');
-  const wait = durationFrom(server.vote.nextVoteAt);
-  const downFor = durationFrom(server.downSince);
+  const locale = await getLocale();
+  const wait = durationFrom(server.vote.nextVoteAt, locale);
+  const downFor = durationFrom(server.downSince, locale);
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8">

@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { BellOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -113,6 +113,7 @@ export interface MuteRow {
 
 export function MuteList({ mutes }: { mutes: MuteRow[] }) {
   const t = useTranslations('notifications');
+  const locale = useLocale();
   const router = useRouter();
   return (
     <section
@@ -147,7 +148,7 @@ export function MuteList({ mutes }: { mutes: MuteRow[] }) {
                     {m.community && ` · ${m.community}`}
                     {' · '}
                     {m.until
-                      ? t('mutedUntil', { date: formatDateTime(m.until) })
+                      ? t('mutedUntil', { date: formatDateTime(m.until, 'auto', locale) })
                       : t('mutedForever')}
                   </span>
                 </span>

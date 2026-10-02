@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { Globe2, Play, Settings, Users } from 'lucide-react';
 import { playLink, planPerks } from '@magnox/shared';
 import type { LoadedCommunity } from '@/lib/community';
@@ -28,6 +28,7 @@ const TAB_PATHS: Record<string, string> = {
 export async function CommunityHeader({ data, online }: { data: LoadedCommunity; online: number }) {
   const t = await getTranslations('community');
   const tp = await getTranslations('plans');
+  const locale = await getLocale();
   const { community, game, nav, ctx, perms, user } = data;
   const theme = community.theme;
   const banner = imgSources(theme.bannerKey, 'md', '(min-width: 1600px) 1600px, 100vw');
@@ -132,7 +133,7 @@ export async function CommunityHeader({ data, online }: { data: LoadedCommunity;
                   <Users className="size-4" aria-hidden />
                   {t('memberCount', {
                     count: community.memberCount,
-                    formatted: formatCount(community.memberCount),
+                    formatted: formatCount(community.memberCount, locale),
                   })}
                 </li>
               )}

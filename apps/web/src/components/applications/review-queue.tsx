@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Check, X } from 'lucide-react';
 import type { ApplicationView } from '@magnox/core';
@@ -26,6 +26,7 @@ export function ReviewQueue({
   applications: ApplicationView[];
 }) {
   const t = useTranslations('applications');
+  const locale = useLocale();
   const router = useRouter();
   const [deciding, setDeciding] = React.useState<{
     app: ApplicationView;
@@ -76,8 +77,8 @@ export function ReviewQueue({
                   </h3>
                   {/* Times read differently on the server and in the browser a moment later. */}
                   <p className="text-sm text-muted" suppressHydrationWarning>
-                    {t('appliedWhen', { when: relativeTime(a.createdAt) })} ·{' '}
-                    {t('accountAge', { when: relativeTime(a.applicant.since) })}
+                    {t('appliedWhen', { when: relativeTime(a.createdAt, undefined, locale) })} ·{' '}
+                    {t('accountAge', { when: relativeTime(a.applicant.since, undefined, locale) })}
                   </p>
                 </div>
                 {a.status === 'pending' ? (
@@ -100,7 +101,7 @@ export function ReviewQueue({
                   <p className="text-sm text-muted" suppressHydrationWarning>
                     {t(a.status === 'approved' ? 'acceptedBy' : 'rejectedBy', {
                       name: a.reviewerName ?? t('someone'),
-                      when: a.reviewedAt ? formatDateTime(a.reviewedAt) : '',
+                      when: a.reviewedAt ? formatDateTime(a.reviewedAt, 'auto', locale) : '',
                     })}
                   </p>
                 )}

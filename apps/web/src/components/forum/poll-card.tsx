@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { PollResults } from '@magnox/core';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ export function PollCard({
   canVote: boolean;
 }) {
   const t = useTranslations('forum');
+  const locale = useLocale();
   const [poll, setPoll] = React.useState(initial);
   const voted = poll.options.some((o) => o.mine);
   const [choosing, setChoosing] = React.useState(!voted && canVote && !poll.closed);
@@ -50,7 +51,7 @@ export function PollCard({
         {poll.closed
           ? ` · ${t('pollClosed')}`
           : poll.closesAt
-            ? ` · ${t('pollClosesAt', { date: new Date(poll.closesAt).toLocaleString() })}`
+            ? ` · ${t('pollClosesAt', { date: new Date(poll.closesAt).toLocaleString(locale) })}`
             : ''}
       </p>
       {choosing ? (

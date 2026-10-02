@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { adminCommunities } from '@magnox/core';
 import { getUser } from '@/lib/auth';
 import { formatDateTime } from '@/lib/format';
@@ -15,8 +15,9 @@ export default async function AdminCommunitiesPage({
 }) {
   const { q = '' } = await searchParams;
   const user = await getUser();
-  const [t, rows] = await Promise.all([
+  const [t, locale, rows] = await Promise.all([
     getTranslations('admin'),
+    getLocale(),
     adminCommunities(user?.id ?? null, q),
   ]);
   return (
@@ -65,7 +66,7 @@ export default async function AdminCommunitiesPage({
                 </td>
                 <td className="p-3 text-end tabular-nums">{c.memberCount}</td>
                 <td className="p-3 whitespace-nowrap" suppressHydrationWarning>
-                  {formatDateTime(c.createdAt)}
+                  {formatDateTime(c.createdAt, 'auto', locale)}
                 </td>
               </tr>
             ))}

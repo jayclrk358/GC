@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { CircleAlert, CircleCheck, CircleX, Minus } from 'lucide-react';
 import { HISTORY_RANGES, type HistoryPoint, type HistoryRange } from '@magnox/shared';
 import type { ServerHistory } from '@magnox/core';
@@ -69,17 +69,17 @@ function useWidth<T extends HTMLElement>() {
   return [ref, width] as const;
 }
 
-function formatters(range: HistoryRange) {
+function formatters(range: HistoryRange, locale: string) {
   return {
     tick: new Intl.DateTimeFormat(
-      undefined,
+      locale,
       range === '24h'
         ? { hour: 'numeric', minute: '2-digit' }
         : range === '7d'
           ? { weekday: 'short', day: 'numeric' }
           : { day: 'numeric', month: 'short' },
     ),
-    point: new Intl.DateTimeFormat(undefined, {
+    point: new Intl.DateTimeFormat(locale, {
       weekday: 'short',
       day: 'numeric',
       month: 'short',
@@ -89,9 +89,16 @@ function formatters(range: HistoryRange) {
   };
 }
 
-const num = new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 });
-const pct = (u: number) =>
-  `${new Intl.NumberFormat(undefined, { maximumFractionDigits: u < 0.999 && u > 0.99 ? 2 : 1 }).format(u * 100)}%`;
+/** Player counts and uptime percentages, in the page's language. */
+function useNumbers() {
+  const locale = useLocale();
+  return React.useMemo(() => {
+    const num = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
+    const fine = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
+    const pct = (u: number) => `${(u < 0.999 && u > 0.99 ? fine : num).format(u * 100)}%`;
+    return { num, pct };
+  }, [locale]);
+}
 
 export function ServerHistoryCharts({
   serverId,
@@ -101,6 +108,7 @@ export function ServerHistoryCharts({
   initial: ServerHistory;
 }) {
   const t = useTranslations('serverPage');
+  const { num, pct } = useNumbers();
   const [history, setHistory] = React.useState(initial);
   const [range, setRange] = React.useState<HistoryRange>(initial.range);
   const [failedRange, setFailedRange] = React.useState<HistoryRange | null>(null);
@@ -184,6 +192,8 @@ export function ServerHistoryCharts({
 
 function Charts({ history }: { history: ServerHistory }) {
   const t = useTranslations('serverPage');
+  const locale = useLocale();
+  const { num, pct } = useNumbers();
   const [ref, width] = useWidth<HTMLDivElement>();
   const [active, setActive] = React.useState<number | null>(null);
   const [keyboard, setKeyboard] = React.useState(false);
@@ -191,7 +201,7 @@ function Charts({ history }: { history: ServerHistory }) {
   const n = points.length;
   const from = new Date(history.from).getTime();
   const to = new Date(history.to).getTime();
-  const fmt = React.useMemo(() => formatters(history.range), [history.range]);
+  const fmt = React.useMemo(() => formatters(history.range, locale), [history.range, locale]);
 
   const plotW = Math.max(0, width - PAD.left - PAD.right);
   const bw = n ? plotW / n : 0;
@@ -245,7 +255,7 @@ function Charts({ history }: { history: ServerHistory }) {
   };
 
   const activePoint = active !== null ? points[active] : null;
-  const readout = activePoint ? describe(activePoint, fmt.point, t) : '';
+  const readout = activePoint ? describe(activePoint, fmt.point, t, { num, pct }) : '';
   const rangeName = t(`rangeLong.${history.range}`);
 
   return (
@@ -504,6 +514,7 @@ function describe(
   p: HistoryPoint,
   fmt: Intl.DateTimeFormat,
   t: ReturnType<typeof useTranslations<'serverPage'>>,
+  { num, pct }: ReturnType<typeof useNumbers>,
 ): string {
   const when = fmt.format(new Date(p.t));
   if (p.uptime === null) return `${when}: ${t('noData')}`;
@@ -526,6 +537,7 @@ function Tooltip({
   width: number;
 }) {
   const t = useTranslations('serverPage');
+  const { num, pct } = useNumbers();
   const flip = left > width - 180;
   return (
     <div

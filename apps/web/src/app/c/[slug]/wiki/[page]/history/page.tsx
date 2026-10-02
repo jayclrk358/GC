@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { canEditWiki, wikiHistory } from '@magnox/core';
 import { formatDateTime, relativeTime } from '@/lib/format';
 import { Badge } from '@/components/ui/misc';
@@ -19,6 +19,7 @@ export default async function WikiHistoryPage({ params }: { params: Params }) {
   const { data, page } = await loadWikiPage(slug, pageSlug);
   const t = await getTranslations('wiki');
   const tBack = await getTranslations('common');
+  const locale = await getLocale();
   const revisions = await wikiHistory(data.ctx, page.id);
   const canEdit = canEditWiki(data.ctx, page);
   const pageHref = `/c/${slug}/wiki/${page.slug}`;
@@ -59,7 +60,7 @@ export default async function WikiHistoryPage({ params }: { params: Params }) {
           <tbody className="divide-y divide-border">
             {revisions.map((r) => {
               const current = r.id === page.currentRevisionId;
-              const when = formatDateTime(r.createdAt);
+              const when = formatDateTime(r.createdAt, 'auto', locale);
               return (
                 <tr key={r.id}>
                   <td className="p-3 whitespace-nowrap">
@@ -69,7 +70,9 @@ export default async function WikiHistoryPage({ params }: { params: Params }) {
                     >
                       <time dateTime={r.createdAt.toISOString()}>{when}</time>
                     </Link>
-                    <span className="block text-xs text-muted">{relativeTime(r.createdAt)}</span>
+                    <span className="block text-xs text-muted">
+                      {relativeTime(r.createdAt, undefined, locale)}
+                    </span>
                   </td>
                   <td className="p-3">
                     {r.authorUsername ? (

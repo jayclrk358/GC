@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { AtSign, Hash, Megaphone, Pin, Search, Users } from 'lucide-react';
 import type { MessagePage, MessageView } from '@magnox/core';
@@ -77,6 +77,7 @@ const NO_EMOJI: CustomEmoji[] = [];
 
 export function ChatView(props: Props) {
   const t = useTranslations('chat');
+  const locale = useLocale();
   const router = useRouter();
   const { prefs, save: savePrefs } = usePrefs();
   const { communityId, channel, me, perms } = props;
@@ -193,7 +194,7 @@ export function ChatView(props: Props) {
         authorName: authorName(m),
         text:
           m.kind !== 'user'
-            ? systemText(m, t)
+            ? systemText(m, t, locale)
             : docToText(m.body).slice(0, 280) || (m.attachments.length ? t('imageOnly') : ''),
         mentionsMe: mentionsMe(m, me?.id ?? null, me?.roleIds ?? []),
         own,
@@ -654,7 +655,7 @@ export function ChatView(props: Props) {
                 <div className="flex flex-wrap items-center justify-between gap-2 bg-primary px-4 py-1.5 text-sm text-on-primary">
                   <span>
                     {t('unreadSince', {
-                      time: formatTime(firstUnread.createdAt, prefs.timeFormat),
+                      time: formatTime(firstUnread.createdAt, prefs.timeFormat, locale),
                     })}
                   </span>
                   <span className="flex gap-3">

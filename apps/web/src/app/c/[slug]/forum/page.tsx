@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { Hash, Megaphone, MessagesSquare, Settings } from 'lucide-react';
 import { forumChannelStats, listVisibleChannels } from '@magnox/core';
 import { loadCommunity } from '@/lib/community';
@@ -13,6 +13,7 @@ export const metadata = { title: 'Forum' };
 export default async function ForumIndex({ params }: { params: Promise<{ slug: string }> }) {
   const data = await loadCommunity((await params).slug);
   const t = await getTranslations('forum');
+  const locale = await getLocale();
   const { tree, channels } = await listVisibleChannels(data.ctx, {
     types: ['forum', 'announcement'],
   });
@@ -74,7 +75,7 @@ export default async function ForumIndex({ params }: { params: Promise<{ slug: s
                             {s.latest.title}
                           </Link>
                           <span className="text-muted">
-                            {relativeTime(s.latest.lastActivityAt)}
+                            {relativeTime(s.latest.lastActivityAt, undefined, locale)}
                           </span>
                         </>
                       ) : (

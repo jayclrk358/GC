@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { Clock, MapPin, Repeat, Users } from 'lucide-react';
 import type { EventOccurrenceView } from '@magnox/core';
 import { Badge } from '@/components/ui/misc';
@@ -13,7 +13,7 @@ export function occurrenceHref(slug: string, o: { eventId: string; start: string
 export async function EventList({
   occurrences,
   slug,
-  clock,
+  clock: options,
   headingLevel = 3,
 }: {
   occurrences: EventOccurrenceView[];
@@ -21,7 +21,9 @@ export async function EventList({
   clock: ClockOptions;
   headingLevel?: 2 | 3;
 }) {
-  const t = await getTranslations('events');
+  const [t, locale] = await Promise.all([getTranslations('events'), getLocale()]);
+  // The page's language unless the caller chose one.
+  const clock = { ...options, locale: options.locale ?? locale };
   const groups: { key: string; items: EventOccurrenceView[] }[] = [];
   for (const o of occurrences) {
     const key = dayKey(o.start, clock.timeZone);
@@ -40,11 +42,11 @@ export async function EventList({
           </H>
           <ul className="flex flex-col gap-3">
             {g.items.map((o) => {
-              const day = new Intl.DateTimeFormat(clock.locale ?? 'en', {
+              const day = new Intl.DateTimeFormat(clock.locale, {
                 timeZone: clock.timeZone,
                 day: 'numeric',
               }).format(new Date(o.start));
-              const month = new Intl.DateTimeFormat(clock.locale ?? 'en', {
+              const month = new Intl.DateTimeFormat(clock.locale, {
                 timeZone: clock.timeZone,
                 month: 'short',
               }).format(new Date(o.start));

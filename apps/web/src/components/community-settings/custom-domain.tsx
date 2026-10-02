@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { CheckCircle2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -55,6 +55,7 @@ export function CustomDomain({
   data: CustomDomainData;
 }) {
   const t = useTranslations('customDomain');
+  const locale = useLocale();
   const router = useRouter();
   const [domain, setDomain] = React.useState(data.domain ?? '');
   const [saving, setSaving] = React.useState(false);
@@ -161,7 +162,7 @@ export function CustomDomain({
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm text-muted" suppressHydrationWarning>
               {data.lastCheckedAt
-                ? t('lastChecked', { when: formatDateTime(data.lastCheckedAt) })
+                ? t('lastChecked', { when: formatDateTime(data.lastCheckedAt, 'auto', locale) })
                 : t('neverChecked')}
             </p>
             <Button

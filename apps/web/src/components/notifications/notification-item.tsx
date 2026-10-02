@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import {
   AtSign,
   BookOpen,
@@ -59,6 +59,7 @@ export function NotificationItem({
   compact?: boolean;
 }) {
   const t = useTranslations('notifications');
+  const locale = useLocale();
   const Icon = ICONS[n.type] ?? Info;
   const unread = !n.readAt;
   const type = KNOWN.has(n.type) ? n.type : 'system';
@@ -96,7 +97,7 @@ export function NotificationItem({
           {n.data.community && <>{n.data.community} · </>}
           {/* Reads differently on the server and a moment later in the browser. */}
           <time dateTime={new Date(n.createdAt).toISOString()} suppressHydrationWarning>
-            {relativeTime(n.createdAt)}
+            {relativeTime(n.createdAt, undefined, locale)}
           </time>
         </span>
       </span>

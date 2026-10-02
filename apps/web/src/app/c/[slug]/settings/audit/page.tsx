@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { desc, eq } from 'drizzle-orm';
 import { db, schema } from '@magnox/db';
 import { loadCommunityForSettings } from '@/lib/community';
@@ -14,6 +14,7 @@ export default async function AuditPage({ params }: { params: Promise<{ slug: st
   if (!perms.viewAudit) notFound();
   const t = await getTranslations('csettings');
   const prefs = await getPrefs();
+  const locale = await getLocale();
   const rows = await db
     .select({
       id: schema.auditLog.id,
@@ -59,7 +60,7 @@ export default async function AuditPage({ params }: { params: Promise<{ slug: st
               {rows.map((r) => (
                 <tr key={r.id} className="border-b border-border align-top last:border-0">
                   <td className="px-4 py-2 whitespace-nowrap">
-                    {formatDateTime(r.createdAt, prefs.timeFormat)}
+                    {formatDateTime(r.createdAt, prefs.timeFormat, locale)}
                   </td>
                   <td className="px-4 py-2">{r.actorName ?? t('audit.system')}</td>
                   <td className="px-4 py-2 font-mono text-xs">{r.action}</td>

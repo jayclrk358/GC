@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { adminCommunity, isAppError } from '@magnox/core';
 import { getUser } from '@/lib/auth';
 import { formatDateTime } from '@/lib/format';
@@ -15,6 +15,7 @@ export default async function AdminCommunityPage({ params }: { params: Promise<{
   const { id } = await params;
   const user = await getUser();
   const t = await getTranslations('admin');
+  const locale = await getLocale();
   let c;
   try {
     c = await adminCommunity(user?.id ?? null, id);
@@ -35,7 +36,10 @@ export default async function AdminCommunityPage({ params }: { params: Promise<{
         }
       />
       {c.suspendedAt && (
-        <Alert tone="danger" title={t('suspendedSince', { when: formatDateTime(c.suspendedAt) })}>
+        <Alert
+          tone="danger"
+          title={t('suspendedSince', { when: formatDateTime(c.suspendedAt, 'auto', locale) })}
+        >
           {c.suspendReason}
         </Alert>
       )}
@@ -65,7 +69,7 @@ export default async function AdminCommunityPage({ params }: { params: Promise<{
         <dt className="text-muted">{t('openReports')}</dt>
         <dd>{c.openReports}</dd>
         <dt className="text-muted">{t('col.created')}</dt>
-        <dd suppressHydrationWarning>{formatDateTime(c.createdAt)}</dd>
+        <dd suppressHydrationWarning>{formatDateTime(c.createdAt, 'auto', locale)}</dd>
       </dl>
       <GiftPlanForm
         communityId={c.id}

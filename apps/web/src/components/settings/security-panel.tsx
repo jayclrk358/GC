@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import QRCode from 'qrcode';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -54,6 +54,7 @@ export function SecurityPanel({
   currentSessionToken: string;
 }) {
   const t = useTranslations('security');
+  const locale = useLocale();
   const router = useRouter();
   const [setup, setSetup] = React.useState<{
     uri: string;
@@ -220,7 +221,7 @@ export function SecurityPanel({
                     {current && <Badge tone="primary">{t('thisDevice')}</Badge>}
                   </p>
                   <p className="text-sm text-muted">
-                    {t('lastActive', { date: new Date(s.createdAt).toLocaleString() })}
+                    {t('lastActive', { date: new Date(s.createdAt).toLocaleString(locale) })}
                     {s.ipAddress ? ` · ${s.ipAddress}` : ''}
                   </p>
                 </div>

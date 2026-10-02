@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { EventOccurrenceView } from '@magnox/core';
 import { daysInMonth, weekdayOf } from '@magnox/shared';
@@ -39,7 +39,7 @@ export async function MonthCalendar({
   month,
   occurrences,
   slug,
-  clock,
+  clock: options,
   today,
   hrefFor,
 }: {
@@ -52,22 +52,24 @@ export async function MonthCalendar({
   today: string;
   hrefFor: (month: string) => string;
 }) {
-  const t = await getTranslations('events');
+  const [t, locale] = await Promise.all([getTranslations('events'), getLocale()]);
+  // The page's language unless the caller chose one.
+  const clock = { ...options, locale: options.locale ?? locale };
   const byDay = new Map<string, EventOccurrenceView[]>();
   for (const o of occurrences) {
     const k = dayKey(o.start, clock.timeZone);
     byDay.set(k, [...(byDay.get(k) ?? []), o]);
   }
   const [y, m] = month.split('-').map(Number) as [number, number];
-  const title = new Intl.DateTimeFormat(clock.locale ?? 'en', {
+  const title = new Intl.DateTimeFormat(clock.locale, {
     month: 'long',
     year: 'numeric',
     timeZone: 'UTC',
   }).format(new Date(Date.UTC(y, m - 1, 1)));
   // Monday to Sunday, in the viewer's language (5 Jan 2026 was a Monday).
   const weekdays = Array.from({ length: 7 }, (_, i) => new Date(Date.UTC(2026, 0, 5 + i)));
-  const long = new Intl.DateTimeFormat(clock.locale ?? 'en', { weekday: 'long', timeZone: 'UTC' });
-  const short = new Intl.DateTimeFormat(clock.locale ?? 'en', {
+  const long = new Intl.DateTimeFormat(clock.locale, { weekday: 'long', timeZone: 'UTC' });
+  const short = new Intl.DateTimeFormat(clock.locale, {
     weekday: 'short',
     timeZone: 'UTC',
   });

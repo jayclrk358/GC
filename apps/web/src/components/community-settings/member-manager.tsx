@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Crown, Tags } from 'lucide-react';
 import type { RoleSummary } from '@magnox/core';
@@ -46,6 +46,7 @@ export function MemberManager({
   can: { roles: boolean; kick: boolean; ban: boolean; timeout: boolean };
 }) {
   const t = useTranslations('roles');
+  const locale = useLocale();
   const router = useRouter();
   const [editing, setEditing] = React.useState<Member | null>(null);
   const [pendingRole, setPendingRole] = React.useState<string | null>(null);
@@ -103,7 +104,7 @@ export function MemberManager({
               {m.username && <p className="text-sm text-muted">@{m.username}</p>}
               {m.timeoutUntil && new Date(m.timeoutUntil) > new Date() && (
                 <p className="text-sm font-medium text-warning">
-                  {t('timedOutUntil', { date: formatDateTime(m.timeoutUntil) })}
+                  {t('timedOutUntil', { date: formatDateTime(m.timeoutUntil, 'auto', locale) })}
                 </p>
               )}
             </div>

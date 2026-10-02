@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { AutomodAction, AutomodConfig } from '@magnox/shared';
 import { Button } from '@/components/ui/button';
@@ -40,6 +40,7 @@ export function AutomodEditor({
   joinsPausedUntil: string | null;
 }) {
   const t = useTranslations('automod');
+  const locale = useLocale();
   const router = useRouter();
   const [v, setV] = React.useState(initial);
   const [words, setWords] = React.useState(initial.words.list.join('\n'));
@@ -302,7 +303,7 @@ export function AutomodEditor({
           {paused && (
             <Alert
               tone="warning"
-              title={t('joins.paused', { until: formatDateTime(joinsPausedUntil) })}
+              title={t('joins.paused', { until: formatDateTime(joinsPausedUntil, 'auto', locale) })}
             >
               <Button
                 type="button"

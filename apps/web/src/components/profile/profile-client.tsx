@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Check, Copy } from 'lucide-react';
 import { usePrefs } from '@/components/shell/prefs-provider';
 
@@ -17,10 +17,11 @@ const serverNow = () => null;
 /** The person's current local time, kept up to date. */
 export function LocalTime({ timeZone }: { timeZone: string }) {
   const t = useTranslations('profile');
+  const locale = useLocale();
   const { prefs } = usePrefs();
   const minute = React.useSyncExternalStore(subscribe, minuteNow, serverNow);
   if (minute === null) return null;
-  const fmt = new Intl.DateTimeFormat('en', {
+  const fmt = new Intl.DateTimeFormat(locale, {
     timeZone,
     hour: 'numeric',
     minute: '2-digit',

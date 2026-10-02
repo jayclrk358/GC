@@ -1,7 +1,7 @@
 import { cache } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { CheckCircle2, CornerDownRight, Lock, Pin } from 'lucide-react';
 import {
   getThread,
@@ -64,6 +64,7 @@ export default async function ThreadPage({
   const { data, thread, channel, flair, poll, myVote, following } = await load(slug, threadId);
   const t = await getTranslations('forum');
   const tBack = await getTranslations('common');
+  const locale = await getLocale();
   const perms = BigInt(channel.perms);
   const userId = data.user?.id ?? null;
   const isMod = has(perms, Permission.MANAGE_THREADS);
@@ -259,14 +260,16 @@ export default async function ThreadPage({
                       <p className="text-xs text-muted">
                         <time
                           dateTime={p.createdAt.toISOString()}
-                          title={formatDateTime(p.createdAt)}
+                          title={formatDateTime(p.createdAt, 'auto', locale)}
                         >
-                          {relativeTime(p.createdAt)}
+                          {relativeTime(p.createdAt, undefined, locale)}
                         </time>
                         {p.editedAt && (
                           <>
                             {' · '}
-                            <span title={formatDateTime(p.editedAt)}>{t('edited')}</span>
+                            <span title={formatDateTime(p.editedAt, 'auto', locale)}>
+                              {t('edited')}
+                            </span>
                           </>
                         )}
                       </p>
@@ -380,7 +383,7 @@ export default async function ThreadPage({
           </Alert>
         ) : data.ctx.timedOut && data.ctx.timeoutUntil ? (
           <Alert tone="warning" title={t('timedOutTitle')}>
-            {t('timedOutBody', { date: formatDateTime(data.ctx.timeoutUntil) })}
+            {t('timedOutBody', { date: formatDateTime(data.ctx.timeoutUntil, 'auto', locale) })}
           </Alert>
         ) : !userId ? (
           <Alert tone="info">
