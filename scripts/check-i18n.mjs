@@ -65,8 +65,55 @@ function flatten(node, prefix = '', out = new Map()) {
   }
   return out;
 }
-const placeholders = (s) =>
-  new Set([...String(s).matchAll(/\{\s*([A-Za-z_][\w]*)\s*(?=[,}])/g)].map((m) => m[1]));
+/**
+ * The arguments an ICU message uses: {name}, and the variable of {n, plural, …} or
+ * {x, select, …} (inside whose branches the words aren't arguments, but nested {args} are).
+ */
+function placeholders(message) {
+  const s = String(message);
+  const out = new Set();
+  let i = 0;
+  // Reads text until the closing brace of the current level (or the end).
+  function text() {
+    while (i < s.length && s[i] !== '}') {
+      if (s[i] === '{') argument();
+      else i++;
+    }
+  }
+  function argument() {
+    i++; // {
+    const start = i;
+    while (i < s.length && s[i] !== ',' && s[i] !== '}') i++;
+    const name = s.slice(start, i).trim();
+    if (/^[A-Za-z_]\w*$/.test(name)) out.add(name);
+    if (s[i] === ',') {
+      i++;
+      const typeStart = i;
+      while (i < s.length && s[i] !== ',' && s[i] !== '}') i++;
+      const type = s.slice(typeStart, i).trim();
+      if (s[i] === ',' && /^(plural|select|selectordinal)$/.test(type)) {
+        i++;
+        // Branches: key {text} key {text} …
+        while (i < s.length && s[i] !== '}') {
+          if (s[i] === '{') {
+            i++;
+            text();
+            i++; // }
+          } else i++;
+        }
+      } else {
+        // {n, number, …} and the like: skip the style.
+        while (i < s.length && s[i] !== '}') i++;
+      }
+    }
+    i++; // }
+  }
+  while (i < s.length) {
+    if (s[i] === '{') argument();
+    else i++;
+  }
+  return out;
+}
 const tags = (s) => [...String(s).matchAll(/<\/?([a-z][\w-]*)>/gi)].map((m) => m[0]).sort();
 const english = flatten(messages);
 const locales = readdirSync(join(root, 'messages')).filter(
@@ -97,13 +144,9 @@ for (const file of locales) {
     }
     const want = placeholders(en);
     const got = placeholders(value);
-    // Plural and select branches hold words, so only check English's arguments are all there.
-    const branched = /\{\s*\w+\s*,\s*(plural|select|selectordinal)\s*,/.test(en);
     for (const p of want) if (!got.has(p)) problems.push(`messages/${file}: ${key} lost {${p}}`);
-    if (!branched) {
-      for (const p of got)
-        if (!want.has(p)) problems.push(`messages/${file}: ${key} has unknown {${p}}`);
-    }
+    for (const p of got)
+      if (!want.has(p)) problems.push(`messages/${file}: ${key} has unknown {${p}}`);
     if (tags(en).join() !== tags(value).join()) {
       problems.push(`messages/${file}: ${key} has different tags than English`);
     }

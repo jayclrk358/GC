@@ -23,7 +23,18 @@ const nextConfig: NextConfig = {
   // (WCAG 2.4.2). Our generateMetadata reuses the request-cached community load, so it's cheap.
   htmlLimitedBots: /.*/,
   transpilePackages: ['@magnox/shared', '@magnox/core', '@magnox/db', '@magnox/auth'],
-  serverExternalPackages: ['sharp', 'postgres', 'ioredis', 'bullmq', 'pino', 'nodemailer'],
+  serverExternalPackages: [
+    'sharp',
+    'postgres',
+    'ioredis',
+    'bullmq',
+    'pino',
+    'nodemailer',
+    // Error reporting and tracing load only when configured (packages/core/src/telemetry.ts).
+    '@sentry/node',
+    '@opentelemetry/sdk-trace-node',
+    '@opentelemetry/exporter-trace-otlp-http',
+  ],
   experimental: {
     serverActions: { bodySizeLimit: '12mb' },
     // Server actions pass through the proxy (CSP), which otherwise cuts bodies off at 10 MB.

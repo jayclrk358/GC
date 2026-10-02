@@ -1,15 +1,19 @@
 'use client';
 
+import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
+import { reportClientError } from '@/lib/report-error';
 
 export default function ErrorPage({
+  error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
   const t = useTranslations('errors');
+  React.useEffect(() => reportClientError(error), [error]);
   return (
     <div
       role="alert"

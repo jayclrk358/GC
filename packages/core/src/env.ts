@@ -35,6 +35,16 @@ const schema = z.object({
   CUSTOM_DOMAIN_TARGET: z.string().default(''),
   /** DNS resolvers for checking custom domains, comma-separated (default: the system's). */
   DNS_SERVERS: z.string().default(''),
+  /** Error reporting (Sentry). Empty: off. */
+  SENTRY_DSN: z.string().default(''),
+  SENTRY_ENVIRONMENT: z.string().default(''),
+  /** Share of requests traced for Sentry performance monitoring (0 to 1). */
+  SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0),
+  /** Traces to an OpenTelemetry collector (OTLP over HTTP). Empty: off. */
+  OTEL_EXPORTER_OTLP_ENDPOINT: z.string().default(''),
+  OTEL_SERVICE_NAME: z.string().default(''),
+  /** Share of traces kept (0 to 1). */
+  OTEL_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(1),
   GOOGLE_CLIENT_ID: z.string().default(''),
   GOOGLE_CLIENT_SECRET: z.string().default(''),
   TWITCH_CLIENT_ID: z.string().default(''),

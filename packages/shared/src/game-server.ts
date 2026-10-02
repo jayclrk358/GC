@@ -100,15 +100,31 @@ export const SERVER_ALERT_KINDS = ['server_down', 'server_up'] as const;
 export type ServerAlertKind = (typeof SERVER_ALERT_KINDS)[number];
 
 /** "2 h 5 min", "45 min", "1 day 3 h": short, human durations for alerts and cooldowns. */
-export function formatDuration(ms: number): string {
+export function formatDuration(ms: number, locale = 'en'): string {
   const minutes = Math.max(1, Math.round(ms / 60_000));
-  if (minutes < 60) return `${minutes} min`;
   const hours = Math.floor(minutes / 60);
-  const rest = minutes % 60;
-  if (hours < 24) return rest ? `${hours} h ${rest} min` : `${hours} h`;
   const days = Math.floor(hours / 24);
+  if (locale === 'en') {
+    if (minutes < 60) return `${minutes} min`;
+    const rest = minutes % 60;
+    if (hours < 24) return rest ? `${hours} h ${rest} min` : `${hours} h`;
+    const h = hours % 24;
+    return `${days} ${days === 1 ? 'day' : 'days'}${h ? ` ${h} h` : ''}`;
+  }
+  // Other languages: their own unit names ("3 días 2 h", "5 Min.").
+  const unit = (n: number, u: 'minute' | 'hour' | 'day', long = false) =>
+    new Intl.NumberFormat(locale, {
+      style: 'unit',
+      unit: u,
+      unitDisplay: long ? 'long' : 'short',
+    }).format(n);
+  if (minutes < 60) return unit(minutes, 'minute');
+  if (hours < 24) {
+    const rest = minutes % 60;
+    return rest ? `${unit(hours, 'hour')} ${unit(rest, 'minute')}` : unit(hours, 'hour');
+  }
   const h = hours % 24;
-  return `${days} ${days === 1 ? 'day' : 'days'}${h ? ` ${h} h` : ''}`;
+  return h ? `${unit(days, 'day', true)} ${unit(h, 'hour')}` : unit(days, 'day', true);
 }
 
 export interface HistoryPoint {

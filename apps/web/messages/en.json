@@ -66,8 +66,8 @@
     "navigate": "Go to",
     "actions": "Actions",
     "communities": "Communities",
-    "toggleScheme": "Switch to {scheme} mode",
-    "toggleContrast": "Turn high contrast {state}",
+    "toggleScheme": "{scheme, select, light {Switch to light mode} dark {Switch to dark mode} other {Switch to {scheme} mode}}",
+    "toggleContrast": "{state, select, on {Turn high contrast on} off {Turn high contrast off} other {Turn high contrast {state}}}",
     "shortcuts": "Show keyboard shortcuts"
   },
   "shortcuts": {

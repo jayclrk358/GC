@@ -1,10 +1,23 @@
 import { createServer } from 'node:http';
 import { Worker, type Job } from 'bullmq';
-import { backfillHistory, closeRedis, env, logger, QUEUES, queue, queueRedis } from '@magnox/core';
+import {
+  backfillHistory,
+  closeRedis,
+  env,
+  flushTelemetry,
+  initTelemetry,
+  logger,
+  QUEUES,
+  queue,
+  queueRedis,
+  reportError,
+  withSpan,
+} from '@magnox/core';
 import { sql } from '@magnox/db';
 import { handlers } from './handlers';
 
 const log = logger('worker');
+await initTelemetry('worker');
 
 const workers: Worker[] = [];
 
@@ -14,13 +27,19 @@ function start(name: string, concurrency: number) {
     async (job: Job) => {
       const handler = handlers[job.name];
       if (!handler) throw new Error(`No handler for job ${job.name}`);
-      return handler(job);
+      return withSpan(`job ${job.name}`, { 'job.queue': name, 'job.id': job.id ?? '' }, () =>
+        handler(job),
+      );
     },
     { connection: queueRedis(), concurrency },
   );
-  w.on('failed', (job, err) =>
-    log.warn({ job: job?.name, id: job?.id, err: err.message }, 'job failed'),
-  );
+  w.on('failed', (job, err) => {
+    log.warn({ job: job?.name, id: job?.id, err: err.message }, 'job failed');
+    // Only once it has run out of tries: retries are expected (a webhook endpoint that's down).
+    if (job && job.attemptsMade >= (job.opts.attempts ?? 1)) {
+      reportError(err, { job: job.name, queue: name, attempts: job.attemptsMade });
+    }
+  });
   w.on('error', (err) => log.error({ err }, 'worker error'));
   workers.push(w);
 }
@@ -80,6 +99,7 @@ async function shutdown(signal: string) {
   await Promise.allSettled(workers.map((w) => w.close()));
   await closeRedis();
   await sql.end({ timeout: 5 });
+  await flushTelemetry();
   process.exit(0);
 }
 process.on('SIGTERM', () => void shutdown('SIGTERM'));

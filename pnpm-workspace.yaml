@@ -3,3 +3,11 @@ packages:
   # The Windows app is built on its own with npm (Electron is too big to install everywhere).
   - '!apps/desktop'
   - 'packages/*'
+
+# drizzle-orm has @opentelemetry/api as an optional peer, so a package that also installs it
+# (core, for tracing) would get a second copy of drizzle-orm whose types don't match the rest.
+# Giving drizzle-orm the dependency itself keeps a single copy everywhere.
+packageExtensions:
+  drizzle-orm:
+    dependencies:
+      '@opentelemetry/api': '^1.9.1'

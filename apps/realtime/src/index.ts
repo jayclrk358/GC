@@ -10,10 +10,12 @@ import { env } from '@magnox/core/env';
 import { logger } from '@magnox/core/logger';
 import { cacheRedis } from '@magnox/core/redis';
 import { rooms } from '@magnox/core/rooms';
+import { flushTelemetry, initTelemetry } from '@magnox/core/telemetry';
 import { authorizeRoom } from './authorize';
 import { registerPresence } from './presence';
 
 const log = logger('realtime');
+await initTelemetry('realtime');
 const appOrigin = new URL(env().APP_URL).origin;
 
 const httpServer = createServer((req, res) => {
@@ -129,6 +131,7 @@ async function shutdown(signal: string) {
   io.emit('server:restarting');
   io.close();
   await Promise.allSettled([pub.quit(), sub.quit()]);
+  await flushTelemetry();
   process.exit(0);
 }
 process.on('SIGTERM', () => void shutdown('SIGTERM'));

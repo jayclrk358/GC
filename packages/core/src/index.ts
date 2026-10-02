@@ -1,5 +1,6 @@
 export * from './env';
 export * from './logger';
+export * from './telemetry';
 export * from './redis';
 export * from './errors';
 export * from './ratelimit';
