@@ -1,4 +1,5 @@
 import { betterAuth, type BetterAuthPlugin } from 'better-auth';
+import { APIError, createAuthMiddleware } from 'better-auth/api';
 import { captcha } from 'better-auth/plugins';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin } from 'better-auth/plugins/admin';
@@ -11,6 +12,7 @@ import { logger } from '@magnox/core/logger';
 import { renderEmail, sendMail } from '@magnox/core/mail';
 import { cacheRedis } from '@magnox/core/redis';
 import { DEFAULT_PREFS } from '@magnox/shared';
+import { clampName, userInputProblem } from './user-input';
 
 export const USERNAME_RE = /^[a-zA-Z0-9_.]{3,24}$/;
 
@@ -20,6 +22,9 @@ export const TURNSTILE_ENDPOINTS = [
   '/sign-in/email',
   '/sign-in/username',
   '/request-password-reset',
+  // Both send email, to addresses nobody has confirmed yet.
+  '/change-email',
+  '/send-verification-email',
 ];
 
 function socialProviders() {
@@ -86,6 +91,8 @@ function createAuth<P extends BetterAuthPlugin[]>(extraPlugins: P) {
         '/sign-in/username': { window: 60, max: 10 },
         '/sign-up/email': { window: 3600, max: 10 },
         '/request-password-reset': { window: 3600, max: 5 },
+        '/change-email': { window: 3600, max: 5 },
+        '/send-verification-email': { window: 3600, max: 5 },
         '/two-factor/verify-totp': { window: 60, max: 10 },
       },
     },
@@ -107,10 +114,12 @@ function createAuth<P extends BetterAuthPlugin[]>(extraPlugins: P) {
     emailVerification: {
       sendOnSignUp: true,
       autoSignInAfterVerification: true,
+      // No name: this goes to an address nobody has confirmed yet, and the name is whatever the
+      // account holder typed.
       sendVerificationEmail: async ({ user, url }) => {
         const { text, html } = renderEmail({
           heading: 'Confirm your email',
-          body: `Welcome to Magnox, ${user.name}! Confirm your email address to finish setting up your account.`,
+          body: 'Welcome to Magnox! Confirm your email address to finish setting up your account.',
           action: { label: 'Confirm email', url },
         });
         await sendMail({ to: user.email, subject: 'Confirm your Magnox email', text, html });
@@ -118,15 +127,53 @@ function createAuth<P extends BetterAuthPlugin[]>(extraPlugins: P) {
     },
     socialProviders: socialProviders(),
     account: {
-      accountLinking: { enabled: true, trustedProviders: ['discord', 'google', 'twitch'] },
+      // Signing in with a provider links to an existing account with the same email, so the
+      // provider must vouch for the address. Discord and Twitch accounts can carry an address
+      // their owner never confirmed (they say whether it's confirmed), so they link only when it
+      // is: otherwise anyone could register there with someone else's address and sign in as
+      // them, admins included. Google, which confirms the addresses its accounts use, is trusted
+      // outright. The account being linked into must have confirmed its address too (Better
+      // Auth's default, stated here so it stays on).
+      accountLinking: {
+        enabled: true,
+        trustedProviders: ['google'],
+        requireLocalEmailVerified: true,
+      },
     },
     user: {
       deleteUser: { enabled: false },
-      changeEmail: { enabled: true },
+      changeEmail: {
+        enabled: true,
+        // A confirmed address approves the change first, so only its owner can have Magnox
+        // email the new one (accounts without one still get a link at the new address).
+        sendChangeEmailConfirmation: async ({ user, newEmail, url }) => {
+          const { text, html } = renderEmail({
+            heading: 'Approve your new email address',
+            body: `Someone asked to change the email address of your Magnox account to ${newEmail}. If that was you, approve the change and we'll send a link to the new address. If it wasn't, ignore this email and change your password.`,
+            action: { label: 'Approve the change', url },
+          });
+          await sendMail({
+            to: user.email,
+            subject: 'Approve your Magnox email change',
+            text,
+            html,
+          });
+        },
+      },
+    },
+    hooks: {
+      before: createAuthMiddleware(async (ctx) => {
+        const problem = userInputProblem(ctx.path, ctx.body);
+        if (problem) throw new APIError('BAD_REQUEST', { message: problem });
+      }),
     },
     databaseHooks: {
       user: {
         create: {
+          // Names from sign-in providers aren't checked like typed ones.
+          before: async (user) => ({
+            data: { ...user, name: typeof user.name === 'string' ? clampName(user.name) : '' },
+          }),
           after: async (user) => {
             await db.insert(schema.userProfiles).values({ userId: user.id }).onConflictDoNothing();
             await db

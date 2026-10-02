@@ -19,6 +19,10 @@ export function getSocket(): Socket {
     socket.on('connect', () => {
       for (const room of refCounts.keys()) socket!.emit('subscribe', room);
     });
+    // Access to a room was taken away (removed from the community, say): don't re-join it.
+    socket.on('room:revoked', (p: { room?: unknown } | null) => {
+      if (typeof p?.room === 'string') refCounts.delete(p.room);
+    });
   }
   return socket;
 }

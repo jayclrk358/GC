@@ -3,6 +3,7 @@ import { db, schema } from '@magnox/db';
 import {
   BAN_DURATIONS,
   has,
+  isUuid,
   newId,
   outranks,
   Permission,
@@ -10,9 +11,15 @@ import {
   TIMEOUT_DURATIONS,
 } from '@magnox/shared';
 import { z } from 'zod';
-import { requireMember, requirePerm, type MemberContext } from '../access';
+import {
+  channelPermissions,
+  loadChannel,
+  requireMember,
+  requirePerm,
+  type MemberContext,
+} from '../access';
 import { AppError, conflict, forbidden, notFound } from '../errors';
-import { realtime } from '../emitter';
+import { accessChanged, realtime } from '../emitter';
 import { enforceRateLimit } from '../ratelimit';
 import { rooms } from '../rooms';
 import { audit } from './audit';
@@ -64,6 +71,7 @@ export async function kickMember(
     });
   });
   realtime().to(rooms.user(userId)).emit('community:removed', { communityId: ctx.community.id });
+  accessChanged(ctx.community.id, userId);
   await removeFromVoice(ctx.community.id, userId);
   memberLeft(ctx.community.id, userId, 'kicked');
   await notifyUser({
@@ -160,6 +168,7 @@ export async function banMember(ctx: MemberContext, userId: string, raw: unknown
     });
   });
   realtime().to(rooms.user(userId)).emit('community:removed', { communityId: ctx.community.id });
+  accessChanged(ctx.community.id, userId);
   await removeFromVoice(ctx.community.id, userId);
   if (removed.member) memberLeft(ctx.community.id, userId, 'banned');
   if (removed.posts.length) await queueMediaCleanup({ kind: 'posts', ids: removed.posts });
@@ -278,7 +287,25 @@ export async function timeoutMember(
 
 // ── Reports ────────────────────────────────────────────────────────────────
 
+/** A live thread in this community, if the viewer can see the forum channel it's in. */
+async function visibleThread(ctx: MemberContext, threadId: string) {
+  const thread = await db.query.threads.findFirst({
+    where: and(
+      eq(schema.threads.id, threadId),
+      eq(schema.threads.communityId, ctx.community.id),
+      isNull(schema.threads.deletedAt),
+    ),
+  });
+  if (!thread) return null;
+  const channel = await loadChannel(thread.channelId);
+  if (!channel || channel.communityId !== ctx.community.id) return null;
+  return has(await channelPermissions(ctx, channel), Permission.VIEW_CHANNEL) ? thread : null;
+}
+
 async function resolveReportTarget(ctx: MemberContext, targetType: string, targetId: string) {
+  // Everything but people has a uuid (and Postgres rejects a malformed one outright).
+  if (targetType !== 'user' && !isUuid(targetId)) throw notFound();
+  // Reporters must be able to see what they report (for posts and threads, the forum channel).
   switch (targetType) {
     case 'post': {
       const post = await db.query.posts.findFirst({
@@ -288,17 +315,11 @@ async function resolveReportTarget(ctx: MemberContext, targetType: string, targe
           isNull(schema.posts.deletedAt),
         ),
       });
-      if (!post) throw notFound('Post');
+      if (!post || !(await visibleThread(ctx, post.threadId))) throw notFound('Post');
       return { userId: post.authorId, excerpt: post.bodyText.slice(0, 500) };
     }
     case 'thread': {
-      const thread = await db.query.threads.findFirst({
-        where: and(
-          eq(schema.threads.id, targetId),
-          eq(schema.threads.communityId, ctx.community.id),
-          isNull(schema.threads.deletedAt),
-        ),
-      });
+      const thread = await visibleThread(ctx, targetId);
       if (!thread) throw notFound('Thread');
       return { userId: thread.authorId, excerpt: thread.title };
     }
@@ -321,7 +342,6 @@ async function resolveReportTarget(ctx: MemberContext, targetType: string, targe
         ),
       });
       if (!msg) throw notFound('Message');
-      // Reporters must be able to see what they report.
       await getChatChannel(ctx, msg.channelId);
       return { userId: msg.authorId, excerpt: msg.content.slice(0, 500) };
     }

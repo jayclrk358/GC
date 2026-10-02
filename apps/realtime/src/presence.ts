@@ -1,5 +1,8 @@
 import type { Server, Socket } from 'socket.io';
+import { logger } from '@magnox/core/logger';
 import { cacheRedis } from '@magnox/core/redis';
+
+const log = logger('presence');
 
 const PRESENCE_TTL = 90;
 /** How many people one page can watch at once. */
@@ -39,8 +42,14 @@ export function registerPresence(io: Server, socket: Socket) {
       watching.add(id);
       void socket.join(roomOf(id));
     }
-    const values = valid.length ? await redis.mget(...valid.map(keyOf)) : [];
-    reply(Object.fromEntries(valid.map((id, i) => [id, toStatus(values[i])])));
+    try {
+      const values = valid.length ? await redis.mget(...valid.map(keyOf)) : [];
+      reply(Object.fromEntries(valid.map((id, i) => [id, toStatus(values[i])])));
+    } catch (err) {
+      // Statuses still arrive as they change; the dots just start out blank.
+      log.warn({ err }, 'presence lookup failed');
+      reply({});
+    }
   });
 
   socket.on('presence:unwatch', (ids: unknown) => {
@@ -73,13 +82,21 @@ export function registerPresence(io: Server, socket: Socket) {
     }
   }
 
-  void publish();
+  /** Publish in the background: a Redis blip is logged, and the next change or tick fixes it. */
+  function republish() {
+    publish().catch((err) => log.warn({ err, userId }, 'presence update failed'));
+  }
+
+  republish();
   // Keep the key alive; if it lapsed (say Redis restarted), work it out again.
   const interval = setInterval(
     () => {
-      void redis.expire(key, PRESENCE_TTL).then((kept) => {
-        if (!kept) void publish();
-      });
+      redis
+        .expire(key, PRESENCE_TTL)
+        .then((kept) => {
+          if (!kept) republish();
+        })
+        .catch((err) => log.warn({ err, userId }, 'presence refresh failed'));
     },
     (PRESENCE_TTL / 3) * 1000,
   );
@@ -88,11 +105,11 @@ export function registerPresence(io: Server, socket: Socket) {
     if (state !== 'active' && state !== 'idle') return;
     if (socket.data.presence === state) return;
     socket.data.presence = state;
-    void publish();
+    republish();
   });
 
   socket.on('disconnect', () => {
     clearInterval(interval);
-    void publish();
+    republish();
   });
 }

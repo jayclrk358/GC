@@ -17,6 +17,14 @@ import { sql } from '@magnox/db';
 import { handlers } from './handlers';
 
 const log = logger('worker');
+// A stray rejected promise (a Redis or database blip outside any job) is logged and the worker
+// carries on; Node would otherwise exit. An exception nothing caught leaves the process in an
+// unknown state, so log it and exit for the container to restart.
+process.on('unhandledRejection', (reason) => log.error({ err: reason }, 'unhandled rejection'));
+process.on('uncaughtException', (err) => {
+  log.fatal({ err }, 'uncaught exception');
+  void flushTelemetry().finally(() => process.exit(1));
+});
 await initTelemetry('worker');
 
 const workers: Worker[] = [];
