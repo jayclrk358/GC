@@ -2,17 +2,20 @@ import { and, desc, eq, gt, inArray, isNull, lt, or, sql } from 'drizzle-orm';
 import { db, schema, type NotificationType } from '@magnox/db';
 import {
   applyTimeout,
+  canPingRole,
   collectMentions,
   computeBasePermissions,
   computeChannelPermissions,
   has,
+  isUuid,
   newId,
   Permission,
   type Overwrite,
   type RichNode,
 } from '@magnox/shared';
 import { z } from 'zod';
-import { channelPermissions, getMemberContext } from '../access';
+import { channelPermissions, getMemberContext, loadChannel } from '../access';
+import { notFound } from '../errors';
 import { renderEmail, sendMail } from '../mail';
 import { env } from '../env';
 import { logger } from '../logger';
@@ -24,6 +27,47 @@ import { rooms } from '../rooms';
 import { queuePush } from './push';
 
 const log = logger('notify');
+
+/** Most notifications one post or chat message sends, however many it mentions. */
+export const MAX_NOTIFY_PER_POST = 5000;
+/** Most notifications one person's posts and messages send in an hour, all told. */
+export const MAX_NOTIFY_PER_SENDER_HOUR = 20_000;
+/** Most notification emails one person gets in an hour. */
+const MAX_EMAILS_PER_HOUR = 20;
+
+/**
+ * Who to notify, in the order to keep them when there are too many: those mentioned by name or
+ * replied to first, then the rest (role and @everyone mentions, followers) as they came.
+ */
+export function capRecipients(
+  recipients: readonly string[],
+  direct: ReadonlySet<string>,
+  max: number,
+): string[] {
+  return [
+    ...recipients.filter((id) => direct.has(id)),
+    ...recipients.filter((id) => !direct.has(id)),
+  ].slice(0, Math.max(0, max));
+}
+
+/** How many of `wanted` fit under `cap` once `usedBefore` have gone already. */
+export function allowanceLeft(usedBefore: number, wanted: number, cap: number): number {
+  return Math.max(0, Math.min(wanted, cap - usedBefore));
+}
+
+/**
+ * Count `wanted` notifications against what the sender may send this hour, and say how many of
+ * them may go. Keeps one person (or a stolen account) from pinging thousands over and over.
+ */
+async function senderAllowance(senderId: string, wanted: number): Promise<number> {
+  if (wanted <= 0 || env().DISABLE_RATE_LIMITS) return wanted;
+  const key = `notify-sent:${senderId}:${Math.floor(Date.now() / 3_600_000)}`;
+  const res = await cacheRedis().multi().incrby(key, wanted).expire(key, 3600).exec();
+  const total = Number(res?.[0]?.[1] ?? wanted);
+  const allowed = allowanceLeft(total - wanted, wanted, MAX_NOTIFY_PER_SENDER_HOUR);
+  if (allowed < wanted) log.info({ senderId, wanted, allowed }, 'sender notification cap reached');
+  return allowed;
+}
 
 export type FanoutJob =
   | { kind: 'post'; postId: string }
@@ -215,6 +259,60 @@ function excerpt(text: string, max = 160): string {
   return t.length > max ? `${t.slice(0, max - 1)}…` : t;
 }
 
+/**
+ * Which of the mentioned roles ping their members: mentionable ones, and only small ones unless
+ * the author may mention @everyone (who can ping any role). Ids that aren't role ids at all
+ * (anything goes in a post's mention nodes) are dropped rather than failing the whole fan-out.
+ */
+async function pingableRoles(
+  communityId: string,
+  mentioned: readonly string[],
+  canMentionEveryone: boolean,
+): Promise<string[]> {
+  const ids = [...new Set(mentioned)].filter(isUuid).slice(0, 10);
+  if (!ids.length) return [];
+  const [roles, sizes] = await Promise.all([
+    db
+      .select({
+        id: schema.roles.id,
+        mentionable: schema.roles.mentionable,
+        isDefault: schema.roles.isDefault,
+      })
+      .from(schema.roles)
+      .where(and(eq(schema.roles.communityId, communityId), inArray(schema.roles.id, ids))),
+    db
+      .select({ roleId: schema.memberRoles.roleId, n: sql<number>`count(*)::int` })
+      .from(schema.memberRoles)
+      .where(
+        and(
+          eq(schema.memberRoles.communityId, communityId),
+          inArray(schema.memberRoles.roleId, ids),
+        ),
+      )
+      .groupBy(schema.memberRoles.roleId),
+  ]);
+  const size = new Map(sizes.map((s) => [s.roleId, s.n]));
+  return roles
+    .filter((r) => canPingRole({ ...r, members: size.get(r.id) ?? 0 }, canMentionEveryone))
+    .map((r) => r.id);
+}
+
+/** Members holding any of these roles (as many as one post may notify). */
+async function roleMembers(communityId: string, roleIds: string[]): Promise<string[]> {
+  if (!roleIds.length) return [];
+  const rows = await db
+    .selectDistinct({ userId: schema.memberRoles.userId })
+    .from(schema.memberRoles)
+    .where(
+      and(
+        eq(schema.memberRoles.communityId, communityId),
+        inArray(schema.memberRoles.roleId, roleIds),
+      ),
+    )
+    .limit(MAX_NOTIFY_PER_POST);
+  return rows.map((r) => r.userId);
+}
+
 /** Resolve mentions in a post into user ids, honouring the author's permissions. */
 export async function resolveMentions(
   communityId: string,
@@ -226,10 +324,7 @@ export async function resolveMentions(
     0,
     50,
   );
-  const roleIds = [...new Set(mentions.filter((m) => m.kind === 'role').map((m) => m.id))].slice(
-    0,
-    10,
-  );
+  const roleIds = mentions.filter((m) => m.kind === 'role').map((m) => m.id);
   const everyone = canMentionEveryone && mentions.some((m) => m.kind === 'everyone');
 
   const users = userIds.length
@@ -246,27 +341,10 @@ export async function resolveMentions(
       ).map((r) => r.userId)
     : [];
 
-  let roleUsers: string[] = [];
-  if (roleIds.length) {
-    const roles = await db
-      .select({ id: schema.roles.id, mentionable: schema.roles.mentionable })
-      .from(schema.roles)
-      .where(and(eq(schema.roles.communityId, communityId), inArray(schema.roles.id, roleIds)));
-    const allowed = roles.filter((r) => r.mentionable || canMentionEveryone).map((r) => r.id);
-    if (allowed.length) {
-      roleUsers = (
-        await db
-          .selectDistinct({ userId: schema.memberRoles.userId })
-          .from(schema.memberRoles)
-          .where(
-            and(
-              eq(schema.memberRoles.communityId, communityId),
-              inArray(schema.memberRoles.roleId, allowed),
-            ),
-          )
-      ).map((r) => r.userId);
-    }
-  }
+  const roleUsers = await roleMembers(
+    communityId,
+    await pingableRoles(communityId, roleIds, canMentionEveryone),
+  );
   return { users, roleUsers, everyone };
 }
 
@@ -298,7 +376,10 @@ export async function maybeEmail(
   const limited = await rateLimit(`email:${userId}:${key}`, 1, 15 * 60);
   if (!limited.ok) return;
   const user = await db.query.users.findFirst({ where: eq(schema.users.id, userId) });
-  if (!user?.email || user.banned) return;
+  // Only to addresses confirmed as theirs: anyone can sign up with someone else's.
+  if (!user?.email || !user.emailVerified || user.banned) return;
+  // However much is going on, only so many emails an hour.
+  if (!(await rateLimit(`email:${userId}`, MAX_EMAILS_PER_HOUR, 3600)).ok) return;
   const link = `${env().APP_URL}${url}`;
   const { text, html } = renderEmail({
     heading: subject,
@@ -339,7 +420,8 @@ async function fanoutPost(postId: string): Promise<void> {
     const all = await db
       .select({ userId: schema.members.userId })
       .from(schema.members)
-      .where(eq(schema.members.communityId, community.id));
+      .where(eq(schema.members.communityId, community.id))
+      .limit(MAX_NOTIFY_PER_POST);
     for (const m of all) set(m.userId, 'mention');
   }
   if (!post.isOp) {
@@ -353,11 +435,12 @@ async function fanoutPost(postId: string): Promise<void> {
     const followers = await db
       .select({ userId: schema.threadFollows.userId })
       .from(schema.threadFollows)
-      .where(eq(schema.threadFollows.threadId, thread.id));
+      .where(eq(schema.threadFollows.threadId, thread.id))
+      .limit(MAX_NOTIFY_PER_POST);
     for (const f of followers) set(f.userId, 'thread_reply');
   }
   type.delete(post.authorId);
-  let recipients = [...type.keys()];
+  let recipients = capRecipients([...type.keys()], direct, MAX_NOTIFY_PER_POST);
   if (!recipients.length) return;
 
   const [blocked, muted, canView] = await Promise.all([
@@ -372,6 +455,8 @@ async function fanoutPost(postId: string): Promise<void> {
   recipients = recipients.filter(
     (id) => canView.has(id) && !blocked.has(id) && (direct.has(id) || !muted.has(id)),
   );
+  recipients = recipients.slice(0, await senderAllowance(post.authorId, recipients.length));
+  if (!recipients.length) return;
 
   const url = `/c/${community.slug}/t/${thread.id}${post.isOp ? '' : `/p/${post.id}`}`;
   const data = { title: thread.title, excerpt: excerpt(post.bodyText), community: community.name };
@@ -533,27 +618,24 @@ async function fanoutMessage(messageId: string): Promise<void> {
     direct.add(id);
   }
   if (msg.mentionRoleIds.length) {
-    const rows = await db
-      .selectDistinct({ userId: schema.memberRoles.userId })
-      .from(schema.memberRoles)
-      .where(
-        and(
-          eq(schema.memberRoles.communityId, community.id),
-          inArray(schema.memberRoles.roleId, msg.mentionRoleIds),
-        ),
-      );
-    for (const r of rows) if (!type.has(r.userId)) type.set(r.userId, 'mention');
+    // Any member may mention a mentionable role in chat; pinging a big one takes Mention
+    // @everyone, checked here as the message goes out.
+    const canEveryone = await canMentionEveryoneIn(community.id, channel, msg.authorId);
+    const roleIds = await pingableRoles(community.id, msg.mentionRoleIds, canEveryone);
+    for (const id of await roleMembers(community.id, roleIds)) {
+      if (!type.has(id)) type.set(id, 'mention');
+    }
   }
   if (msg.mentionEveryone) {
     const all = await db
       .select({ userId: schema.members.userId })
       .from(schema.members)
       .where(eq(schema.members.communityId, community.id))
-      .limit(5000);
+      .limit(MAX_NOTIFY_PER_POST);
     for (const m of all) if (!type.has(m.userId)) type.set(m.userId, 'mention');
   }
   type.delete(msg.authorId);
-  let recipients = [...type.keys()];
+  let recipients = capRecipients([...type.keys()], direct, MAX_NOTIFY_PER_POST);
   if (!recipients.length) return;
   const [blocked, muted, canView] = await Promise.all([
     blockedBy(recipients, msg.authorId),
@@ -566,6 +648,8 @@ async function fanoutMessage(messageId: string): Promise<void> {
   recipients = recipients.filter(
     (id) => canView.has(id) && !blocked.has(id) && (direct.has(id) || !muted.has(id)),
   );
+  recipients = recipients.slice(0, await senderAllowance(msg.authorId, recipients.length));
+  if (!recipients.length) return;
   const url = `/c/${community.slug}/m/${msg.id}`;
   const data = {
     title: `#${channel.name}`,
@@ -707,6 +791,35 @@ const muteSchema = z.object({
     .default(0),
 });
 
+/**
+ * Only mute what you can see: the list of mutes shows each one's name, so muting any id would
+ * otherwise reveal the titles of private communities, hidden channels and their threads.
+ */
+async function assertCanSeeMuteTarget(
+  userId: string,
+  targetType: 'community' | 'channel' | 'thread',
+  targetId: string,
+): Promise<void> {
+  if (targetType === 'community') {
+    await getMemberContext({ id: targetId }, userId); // Not found if they can't see it.
+    return;
+  }
+  let channelId = targetId;
+  if (targetType === 'thread') {
+    const thread = await db.query.threads.findFirst({
+      where: eq(schema.threads.id, targetId),
+      columns: { channelId: true, deletedAt: true },
+    });
+    if (!thread || thread.deletedAt) throw notFound('Thread');
+    channelId = thread.channelId;
+  }
+  const what = targetType === 'thread' ? 'Thread' : 'Channel';
+  const channel = await loadChannel(channelId);
+  if (!channel) throw notFound(what);
+  const ctx = await getMemberContext({ id: channel.communityId }, userId);
+  if (!has(await channelPermissions(ctx, channel), Permission.VIEW_CHANNEL)) throw notFound(what);
+}
+
 export async function setMute(userId: string, raw: unknown, muted: boolean): Promise<void> {
   const input = muteSchema.parse(raw);
   if (!muted) {
@@ -721,6 +834,7 @@ export async function setMute(userId: string, raw: unknown, muted: boolean): Pro
       );
     return;
   }
+  await assertCanSeeMuteTarget(userId, input.targetType, input.targetId);
   const until = input.seconds ? new Date(Date.now() + input.seconds * 1000) : null;
   await db
     .insert(schema.mutes)

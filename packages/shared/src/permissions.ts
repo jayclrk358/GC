@@ -152,6 +152,19 @@ export const PERMISSION_META: Record<PermissionName, { group: PermissionGroup; c
     ADMINISTRATOR: { group: 'administration', channel: false },
   };
 
+/**
+ * What a role members can give themselves may carry: everyday member permissions only. A
+ * moderation or management bit (or Mention @everyone) there would let any member take it.
+ */
+export const SELF_ASSIGNABLE_ALLOWED: bigint = (Object.keys(Permission) as PermissionName[])
+  .filter((k) => PERMISSION_META[k].group === 'general' && k !== 'MENTION_EVERYONE')
+  .reduce((acc, k) => acc | Permission[k], 0n);
+
+/** Whether a role with these permissions (or channel allows) may be self-assignable. */
+export function isSelfAssignableSafe(perms: bigint): boolean {
+  return (perms & ~SELF_ASSIGNABLE_ALLOWED) === 0n;
+}
+
 export function has(perms: bigint, flag: bigint): boolean {
   return (perms & flag) === flag;
 }
@@ -271,4 +284,41 @@ export function outranks(
   if (target.isOwner) return false;
   if (actor.isOwner) return true;
   return actor.topPosition > target.topPosition;
+}
+
+export interface OverwriteBits {
+  allow: bigint;
+  deny: bigint;
+}
+
+/** The bits an overwrite edit changes: newly allowed, newly denied, or reset either way. */
+export function changedOverwriteBits(before: OverwriteBits | null, after: OverwriteBits): bigint {
+  const b = before ?? { allow: 0n, deny: 0n };
+  return (b.allow ^ after.allow) | (b.deny ^ after.deny);
+}
+
+/**
+ * Whether someone may make this overwrite edit: only bits they hold themselves in that channel
+ * (`actorChannelPerms`, overwrites applied) can change. Bits left as they were don't count, so a
+ * moderator can still adjust an overwrite that also carries bits only an admin has.
+ */
+export function canEditOverwrite(
+  actorChannelPerms: bigint,
+  before: OverwriteBits | null,
+  after: OverwriteBits,
+): boolean {
+  return (changedOverwriteBits(before, after) & ~actorChannelPerms) === 0n;
+}
+
+/** Roles with more members than this need Mention @everyone to ping, mentionable or not. */
+export const LARGE_ROLE_MENTION = 100;
+
+/** Whether a mention of a role pings its members, given what the author may do in the channel. */
+export function canPingRole(
+  role: { mentionable: boolean; isDefault?: boolean; members: number },
+  canMentionEveryone: boolean,
+): boolean {
+  if (role.isDefault) return false;
+  if (canMentionEveryone) return true;
+  return role.mentionable && role.members <= LARGE_ROLE_MENTION;
 }

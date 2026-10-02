@@ -2,14 +2,21 @@ import { describe, expect, it } from 'vitest';
 import {
   ALL_PERMISSIONS,
   applyTimeout,
+  canEditOverwrite,
+  canPingRole,
+  changedOverwriteBits,
   computeBasePermissions,
   computeChannelPermissions,
   DEFAULT_EVERYONE,
+  DEFAULT_MODERATOR,
   fromNames,
   has,
+  isSelfAssignableSafe,
+  LARGE_ROLE_MENTION,
   outranks,
   parsePermissions,
   Permission as P,
+  SELF_ASSIGNABLE_ALLOWED,
   TIMEOUT_ALLOWED,
   toNames,
   type Overwrite,
@@ -215,5 +222,88 @@ describe('helpers', () => {
     expect(outranks({ isOwner: false, topPosition: 99 }, { isOwner: true, topPosition: 0 })).toBe(
       false,
     );
+  });
+});
+
+describe('self-assignable roles', () => {
+  it('allow everyday member permissions', () => {
+    expect(isSelfAssignableSafe(0n)).toBe(true);
+    expect(isSelfAssignableSafe(DEFAULT_EVERYONE)).toBe(true);
+    expect(isSelfAssignableSafe(P.VIEW_CHANNEL | P.CONNECT | P.SPEAK | P.EDIT_WIKI)).toBe(true);
+  });
+  it('refuse anything that moderates, manages or pings everyone', () => {
+    expect(isSelfAssignableSafe(P.ADMINISTRATOR)).toBe(false);
+    expect(isSelfAssignableSafe(DEFAULT_EVERYONE | P.MANAGE_ROLES)).toBe(false);
+    expect(isSelfAssignableSafe(P.MANAGE_MESSAGES)).toBe(false);
+    expect(isSelfAssignableSafe(P.MUTE_MEMBERS)).toBe(false);
+    expect(isSelfAssignableSafe(P.MENTION_EVERYONE)).toBe(false);
+    expect(isSelfAssignableSafe(DEFAULT_MODERATOR)).toBe(false);
+    expect(isSelfAssignableSafe(ALL_PERMISSIONS)).toBe(false);
+  });
+  it('is the general group, less Mention @everyone', () => {
+    expect(toNames(SELF_ASSIGNABLE_ALLOWED)).not.toContain('MENTION_EVERYONE');
+    expect(has(SELF_ASSIGNABLE_ALLOWED, DEFAULT_EVERYONE)).toBe(true);
+    expect(has(SELF_ASSIGNABLE_ALLOWED, P.KICK_MEMBERS)).toBe(false);
+    expect(has(SELF_ASSIGNABLE_ALLOWED, P.MANAGE_CHANNELS)).toBe(false);
+  });
+});
+
+describe('overwrite edits', () => {
+  it('count only the bits that change', () => {
+    expect(changedOverwriteBits(null, { allow: P.VIEW_CHANNEL, deny: 0n })).toBe(P.VIEW_CHANNEL);
+    expect(
+      changedOverwriteBits(
+        { allow: P.MANAGE_MESSAGES, deny: P.SEND_MESSAGES },
+        { allow: P.MANAGE_MESSAGES | P.ADD_REACTIONS, deny: P.SEND_MESSAGES },
+      ),
+    ).toBe(P.ADD_REACTIONS);
+    // Clearing a deny is a change too.
+    expect(
+      changedOverwriteBits({ allow: 0n, deny: P.SEND_MESSAGES }, { allow: 0n, deny: 0n }),
+    ).toBe(P.SEND_MESSAGES);
+  });
+
+  it("are judged in the channel: someone denied a channel can't let themselves in", () => {
+    // A moderator, kept out of #owners by a member overwrite.
+    const base = DEFAULT_MODERATOR | P.MANAGE_CHANNELS | P.MANAGE_ROLES;
+    const inOwners = chan(base, [[member(USER, 0n, P.VIEW_CHANNEL)]], [MOD]);
+    expect(inOwners).toBe(0n);
+    const allowSelf = { allow: P.VIEW_CHANNEL, deny: 0n };
+    // Checked against community-wide permissions, this went through.
+    expect(allowSelf.allow & ~base).toBe(0n);
+    expect(canEditOverwrite(inOwners, { allow: 0n, deny: P.VIEW_CHANNEL }, allowSelf)).toBe(false);
+  });
+
+  it('let moderators change bits they hold in the channel, leaving the rest alone', () => {
+    const mine = chan(DEFAULT_MODERATOR, []);
+    const before = { allow: P.MENTION_EVERYONE, deny: 0n }; // Set by an admin.
+    expect(
+      canEditOverwrite(mine, before, { allow: P.MENTION_EVERYONE, deny: P.SEND_MESSAGES }),
+    ).toBe(true);
+    expect(canEditOverwrite(mine, before, { allow: 0n, deny: 0n })).toBe(false);
+    expect(canEditOverwrite(mine, null, { allow: P.MENTION_EVERYONE, deny: 0n })).toBe(false);
+    // What the channel takes away from them can't be handed out either.
+    const denied = chan(DEFAULT_MODERATOR, [[role(MOD, 0n, P.MANAGE_MESSAGES)]], [MOD]);
+    expect(canEditOverwrite(denied, null, { allow: P.MANAGE_MESSAGES, deny: 0n })).toBe(false);
+    expect(canEditOverwrite(ALL_PERMISSIONS, null, { allow: P.MANAGE_MESSAGES, deny: 0n })).toBe(
+      true,
+    );
+  });
+});
+
+describe('canPingRole', () => {
+  const small = { mentionable: true, members: LARGE_ROLE_MENTION };
+  const big = { mentionable: true, members: LARGE_ROLE_MENTION + 1 };
+  it('pings small mentionable roles for anyone', () => {
+    expect(canPingRole(small, false)).toBe(true);
+    expect(canPingRole({ ...small, mentionable: false }, false)).toBe(false);
+  });
+  it('needs Mention @everyone for big roles', () => {
+    expect(canPingRole(big, false)).toBe(false);
+    expect(canPingRole(big, true)).toBe(true);
+    expect(canPingRole({ ...big, mentionable: false }, true)).toBe(true);
+  });
+  it('never pings @everyone as a role', () => {
+    expect(canPingRole({ ...small, isDefault: true }, true)).toBe(false);
   });
 });
