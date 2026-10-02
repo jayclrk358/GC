@@ -1,8 +1,9 @@
 import type { MetadataRoute } from 'next';
 import { env, sitemapEntries } from '@magnox/core';
 
-// Rebuilt at most hourly: it lists every public community and listed server.
-export const revalidate = 3600;
+// Made on each request (two indexed queries), never at build time: Docker image builds have no
+// database, and a prerendered copy would miss every community made since.
+export const dynamic = 'force-dynamic';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = env().APP_URL.replace(/\/$/, '');
