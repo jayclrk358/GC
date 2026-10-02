@@ -1,4 +1,4 @@
-import { and, asc, eq, gte, inArray, sql } from 'drizzle-orm';
+import { and, asc, eq, gte, inArray, ne, sql } from 'drizzle-orm';
 import { db, schema } from '@magnox/db';
 import {
   ALL_PERMISSIONS,
@@ -10,7 +10,7 @@ import {
   roleInputSchema,
 } from '@magnox/shared';
 import { z } from 'zod';
-import { requirePerm, type MemberContext } from '../access';
+import { channelPermissionsMany, requirePerm, type MemberContext } from '../access';
 import { accessChanged } from '../emitter';
 import { AppError, forbidden, notFound } from '../errors';
 import { mediaUrl } from '../storage';
@@ -55,6 +55,36 @@ function assertCanManageRole(ctx: MemberContext, role: RoleRow) {
 function assertCanGrant(ctx: MemberContext, perms: bigint) {
   if (ctx.isOwner || ctx.base === ALL_PERMISSIONS) return;
   if ((perms & ~ctx.base) !== 0n) throw forbidden("You can't grant permissions you don't have.");
+}
+
+/**
+ * Giving a role also gives what its channel permissions allow (say, Manage messages in one
+ * channel): non-owners need each of those in that channel themselves.
+ */
+async function assertCanGrantChannelAllows(ctx: MemberContext, roleId: string): Promise<void> {
+  if (ctx.isOwner || ctx.base === ALL_PERMISSIONS) return;
+  const ow = schema.permissionOverwrites;
+  const ch = schema.channels;
+  const rows = await db
+    .select({
+      allow: ow.allow,
+      id: ch.id,
+      name: ch.name,
+      communityId: ch.communityId,
+      parentId: ch.parentId,
+      type: ch.type,
+    })
+    .from(ow)
+    .innerJoin(ch, eq(ch.id, ow.channelId))
+    .where(and(eq(ow.targetType, 'role'), eq(ow.targetId, roleId), ne(ow.allow, 0n)));
+  if (!rows.length) return;
+  const mine = await channelPermissionsMany(ctx, rows);
+  const over = rows.find((r) => (r.allow & ~(mine.get(r.id) ?? 0n)) !== 0n);
+  if (over) {
+    throw forbidden(
+      `This role allows more in #${over.name} than you can do there, so you can't give it.`,
+    );
+  }
 }
 
 /**
@@ -299,8 +329,12 @@ export async function setMemberRole(
   if (!selfService) {
     requirePerm(ctx, Permission.MANAGE_ROLES);
     assertCanManageRole(ctx, role);
-    // Giving a role is granting what it carries: only what the actor has themselves.
-    if (assign) assertCanGrant(ctx, role.permissions);
+    // Giving a role is granting what it carries: only what the actor has themselves, here and
+    // in each channel.
+    if (assign) {
+      assertCanGrant(ctx, role.permissions);
+      await assertCanGrantChannelAllows(ctx, role.id);
+    }
     if (!ctx.isOwner && !self) {
       const top = await targetTopPosition(ctx.community.id, userId);
       if (userId === ctx.community.ownerId || top >= ctx.topPosition) {

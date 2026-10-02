@@ -1204,6 +1204,9 @@
     "mentionableDesc": "Sonst können das nur Mitglieder, die @everyone erwähnen dürfen.",
     "selfAssignable": "Selbst zuweisbar",
     "selfAssignableDesc": "Mitglieder können sich diese Rolle selbst geben (z. B. Spiel- oder Regionsrollen).",
+    "selfAssignableBlocked": "Nur für Rollen mit alltäglichen Berechtigungen: Schalte zuerst Moderations- und Verwaltungsberechtigungen (und @everyone erwähnen) aus.",
+    "selfAssignableUnsafe": "Mitglieder können sich diese Rolle nicht selbst geben, solange sie Folgendes hat: {perms}. Schalte das aus oder deaktiviere „Selbst zuweisbar“.",
+    "notForSelfAssignable": "Nicht für selbst zuweisbare Rollen.",
     "groups": {
       "general": "Allgemein",
       "moderation": "Moderation",

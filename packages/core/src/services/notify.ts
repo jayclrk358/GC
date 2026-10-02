@@ -14,7 +14,13 @@ import {
   type RichNode,
 } from '@magnox/shared';
 import { z } from 'zod';
-import { channelPermissions, getMemberContext, loadChannel } from '../access';
+import {
+  channelPermissions,
+  channelPermissionsMany,
+  getMemberContext,
+  loadChannel,
+  type ChannelRef,
+} from '../access';
 import { notFound } from '../errors';
 import { renderEmail, sendMail } from '../mail';
 import { env } from '../env';
@@ -878,12 +884,17 @@ export interface MuteView {
   until: Date | null;
 }
 
-/** Active mutes with something human-readable to show for each. */
+/**
+ * Active mutes with something human-readable to show for each. Mutes on things the person can no
+ * longer see (left a private community, lost a channel) aren't listed: their names aren't theirs
+ * to read any more. The mutes still apply, and show again if access comes back.
+ */
 export async function listMutes(userId: string): Promise<MuteView[]> {
   const rows = (await db.query.mutes.findMany({ where: eq(schema.mutes.userId, userId) })).filter(
     (m) => !m.until || m.until > new Date(),
   );
   const ids = (type: string) => rows.filter((r) => r.targetType === type).map((r) => r.targetId);
+  const ch = schema.channels;
   const [communities, channels, threads] = await Promise.all([
     ids('community').length
       ? db
@@ -898,39 +909,79 @@ export async function listMutes(userId: string): Promise<MuteView[]> {
     ids('channel').length
       ? db
           .select({
-            id: schema.channels.id,
-            name: schema.channels.name,
+            id: ch.id,
+            name: ch.name,
+            communityId: ch.communityId,
+            parentId: ch.parentId,
+            type: ch.type,
             community: schema.communities.name,
             slug: schema.communities.slug,
           })
-          .from(schema.channels)
-          .innerJoin(schema.communities, eq(schema.communities.id, schema.channels.communityId))
-          .where(inArray(schema.channels.id, ids('channel')))
+          .from(ch)
+          .innerJoin(schema.communities, eq(schema.communities.id, ch.communityId))
+          .where(inArray(ch.id, ids('channel')))
       : [],
     ids('thread').length
       ? db
           .select({
             id: schema.threads.id,
             name: schema.threads.title,
+            deletedAt: schema.threads.deletedAt,
+            channelId: ch.id,
+            communityId: ch.communityId,
+            parentId: ch.parentId,
+            type: ch.type,
             community: schema.communities.name,
             slug: schema.communities.slug,
           })
           .from(schema.threads)
+          .innerJoin(ch, eq(ch.id, schema.threads.channelId))
           .innerJoin(schema.communities, eq(schema.communities.id, schema.threads.communityId))
           .where(inArray(schema.threads.id, ids('thread')))
       : [],
   ]);
+
+  // What they can still see, community by community.
+  const communityIds = new Set([
+    ...communities.map((c) => c.id),
+    ...channels.map((c) => c.communityId),
+    ...threads.map((t) => t.communityId),
+  ]);
+  const visibleChannels = new Set<string>();
+  const visibleCommunities = new Set<string>();
+  await Promise.all(
+    [...communityIds].map(async (communityId) => {
+      const ctx = await getMemberContext({ id: communityId }, userId).catch(() => null);
+      if (!ctx) return;
+      visibleCommunities.add(communityId);
+      const refs = new Map<string, ChannelRef>();
+      for (const c of channels) if (c.communityId === communityId) refs.set(c.id, c);
+      for (const t of threads) {
+        if (t.communityId !== communityId) continue;
+        refs.set(t.channelId, { ...t, id: t.channelId });
+      }
+      const perms = await channelPermissionsMany(ctx, [...refs.values()]);
+      for (const [id, p] of perms) if (has(p, Permission.VIEW_CHANNEL)) visibleChannels.add(id);
+    }),
+  );
+
   const byId = new Map<string, { label: string; community: string | null; href: string }>();
-  for (const c of communities)
+  for (const c of communities) {
+    if (!visibleCommunities.has(c.id)) continue;
     byId.set(c.id, { label: c.name, community: null, href: `/c/${c.slug}` });
-  for (const c of channels)
+  }
+  for (const c of channels) {
+    if (!visibleChannels.has(c.id)) continue;
     byId.set(c.id, {
       label: `#${c.name}`,
       community: c.community,
       href: `/c/${c.slug}/forum/${c.name}`,
     });
-  for (const t of threads)
+  }
+  for (const t of threads) {
+    if (t.deletedAt || !visibleChannels.has(t.channelId)) continue;
     byId.set(t.id, { label: t.name, community: t.community, href: `/c/${t.slug}/t/${t.id}` });
+  }
   return rows
     .filter((r) => byId.has(r.targetId))
     .map((r) => {

@@ -1204,6 +1204,9 @@
     "mentionableDesc": "Si no, solo pueden mencionarlo los miembros que pueden mencionar a @everyone.",
     "selfAssignable": "Autoasignable",
     "selfAssignableDesc": "Los miembros pueden asignarse este rol (por ejemplo, roles de juego o de región).",
+    "selfAssignableBlocked": "Solo para roles con permisos cotidianos: primero desactiva los permisos de moderación y administración (y Mencionar a @everyone).",
+    "selfAssignableUnsafe": "Los miembros no pueden asignarse este rol mientras tenga: {perms}. Desactívalos o desactiva «Autoasignable».",
+    "notForSelfAssignable": "No disponible en roles autoasignables.",
     "groups": {
       "general": "General",
       "moderation": "Moderación",

@@ -309,8 +309,8 @@ const SWEEP_CURSOR = 'media:unused-sweep:cursor';
  * Remove chat files and post images that were never used: uploaded over a day ago and in
  * nothing the uploader wrote. Hourly worker job. Each upload is looked at once (the sweep
  * resumes where it stopped); files that are used and later deleted go with their content, as
- * before. Profile and community images aren't swept: they can be used from too many places to
- * tell for sure, and they're small (the daily upload allowance bounds them). Returns files removed.
+ * before. Profile and community images have their own sweep (sweepUnusedImages). Returns files
+ * removed.
  */
 export async function sweepUnusedUploads(maxBatches = 20): Promise<number> {
   const before = new Date(Date.now() - UNUSED_UPLOAD_MS);
@@ -353,6 +353,114 @@ export async function sweepUnusedUploads(maxBatches = 20): Promise<number> {
   }
   if (removed) log.info({ removed }, 'removed unused uploads');
   return removed;
+}
+
+/** Profile and community pictures: set once, then replaced (or abandoned before saving). */
+const IMAGE_PURPOSES = [
+  'avatar',
+  'banner',
+  'icon',
+  'background',
+  'channel-background',
+  'gallery',
+  'emoji',
+  'role-icon',
+];
+/** Long enough that nobody is still in the middle of choosing it. */
+export const UNUSED_IMAGE_MS = 7 * 24 * 3600 * 1000;
+const IMAGE_CURSOR = 'media:image-sweep:cursor';
+/** When the last full pass over the images finished: a new one starts a day later. */
+const IMAGE_PASS_DONE = 'media:image-sweep:done';
+const DAY_MS = 24 * 3600 * 1000;
+
+/**
+ * Remove profile and community pictures nothing shows any more: replaced avatars, banners,
+ * icons and backgrounds, gallery pictures taken off a page, role icons and emoji images that
+ * were never saved. Unlike content files these are looked at again on every pass (one a day),
+ * since one in use today may be replaced tomorrow. Only images over a week old are touched.
+ * Hourly worker job; returns files removed.
+ */
+export async function sweepUnusedImages({
+  maxBatches = 10,
+  olderThanMs = UNUSED_IMAGE_MS,
+}: { maxBatches?: number; olderThanMs?: number } = {}): Promise<number> {
+  const redis = cacheRedis();
+  let cursor = await redis.get(IMAGE_CURSOR).catch(() => null);
+  if (!cursor) {
+    const done = Number(await redis.get(IMAGE_PASS_DONE).catch(() => null));
+    if (done && Date.now() - done < DAY_MS) return 0;
+  }
+  const before = new Date(Date.now() - olderThanMs);
+  let removed = 0;
+  for (let i = 0; i < maxBatches; i++) {
+    const u = schema.uploads;
+    const rows = await db
+      .select({ id: u.id, key: u.key, posterKey: u.posterKey })
+      .from(u)
+      .where(
+        and(
+          inArray(u.purpose, IMAGE_PURPOSES),
+          lt(u.id, uuidAtTime(before)),
+          lt(u.createdAt, before),
+          cursor ? gt(u.id, cursor) : undefined,
+        ),
+      )
+      .orderBy(asc(u.id))
+      .limit(BATCH);
+    if (rows.length) {
+      const used = await imagesInUse(rows.map((r) => r.key));
+      removed += await removeUploads(rows.filter((r) => !used.has(r.key)));
+      cursor = rows.at(-1)!.id;
+    }
+    if (rows.length < BATCH) {
+      // Through to the end: this pass is over, and the next starts from the beginning tomorrow.
+      cursor = null;
+      await redis
+        .multi()
+        .del(IMAGE_CURSOR)
+        .set(IMAGE_PASS_DONE, String(Date.now()))
+        .exec()
+        .catch((err: Error) => log.warn({ err: err.message }, 'image sweep state not saved'));
+      break;
+    }
+    await redis
+      .set(IMAGE_CURSOR, cursor!)
+      .catch((err: Error) => log.warn({ err: err.message }, 'image sweep cursor not saved'));
+  }
+  if (removed) log.info({ removed }, 'removed unused images');
+  return removed;
+}
+
+/**
+ * Which of these images something still shows. Anywhere a picture can be chosen, looked up across
+ * every community (a page or theme may use another community's upload): profiles and account
+ * pictures, per-community avatars, role icons, emoji, community themes and settings, channel
+ * backgrounds, page blocks, and video stills.
+ */
+async function imagesInUse(keyList: string[]): Promise<Set<string>> {
+  const keys = textArray(keyList);
+  const found = await db.execute<{ key: string }>(sql`
+    select avatar_key as key from user_profiles where avatar_key = any(${keys})
+    union select banner_key from user_profiles where banner_key = any(${keys})
+    union select avatar_key from members where avatar_key = any(${keys})
+    union select icon_key from roles where icon_key = any(${keys})
+    union select image_key from custom_emoji where image_key = any(${keys})
+    union select poster_key from uploads where poster_key = any(${keys})
+    union select substring(image from ${KEY_PATTERN}) from users
+      where substring(image from ${KEY_PATTERN}) = any(${keys})
+    union select m[1] from communities c
+      cross join lateral regexp_matches(
+        concat(c.theme::text, c.nav::text, c.settings::text), ${KEY_PATTERN}, 'g'
+      ) m
+      where m[1] = any(${keys})
+    union select m[1] from channels ch
+      cross join lateral regexp_matches(ch.settings::text, ${KEY_PATTERN}, 'g') m
+      where m[1] = any(${keys})
+    union select m[1] from page_blocks b
+      cross join lateral regexp_matches(b.config::text, ${KEY_PATTERN}, 'g') m
+      where m[1] = any(${keys})
+  `);
+  return new Set(found.map((r) => r.key));
 }
 
 /**
@@ -421,12 +529,9 @@ async function removeUploads(rows: { key: string; posterKey: string | null }[]):
   for (const batch of chunks(files, 16)) {
     await Promise.all(batch.map((key) => storage().delete(key)));
   }
-  await db.delete(schema.uploads).where(
-    inArray(
-      schema.uploads.key,
-      rows.map((r) => r.key),
-    ),
-  );
+  // A video's still has an upload of its own: it goes too.
+  const keys = rows.flatMap((r) => (r.posterKey ? [r.key, r.posterKey] : [r.key]));
+  await db.delete(schema.uploads).where(inArray(schema.uploads.key, keys));
   log.info({ removed: rows.length }, 'removed media');
   return rows.length;
 }

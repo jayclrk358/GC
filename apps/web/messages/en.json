@@ -1204,6 +1204,9 @@
     "mentionableDesc": "Otherwise only members who can mention @everyone can.",
     "selfAssignable": "Self-assignable",
     "selfAssignableDesc": "Members can give themselves this role (e.g. game or region roles).",
+    "selfAssignableBlocked": "Only for roles with everyday permissions: turn off moderation and management permissions (and Mention @everyone) first.",
+    "selfAssignableUnsafe": "Members can't take this role themselves while it has: {perms}. Turn those off, or turn off \"Self-assignable\".",
+    "notForSelfAssignable": "Not on self-assignable roles.",
     "groups": {
       "general": "General",
       "moderation": "Moderation",

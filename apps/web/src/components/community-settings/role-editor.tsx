@@ -8,6 +8,7 @@ import { ArrowDown, ArrowUp, Lock, Plus, Trash2 } from 'lucide-react';
 import {
   animationFits,
   isPaletteEffect,
+  isSelfAssignableSafe,
   DEFAULT_NAME_STYLE,
   has,
   NAME_ANIMATIONS,
@@ -16,6 +17,7 @@ import {
   Permission,
   readableOn,
   PERMISSION_META,
+  SELF_ASSIGNABLE_ALLOWED,
   type NameBackdrops,
   type NameStyle,
   type NameStyleView,
@@ -162,6 +164,15 @@ export function RoleEditor({
   }
 
   const editable = draft ? canManage(draft) : false;
+  // Members can only give themselves roles with everyday permissions (the server refuses the
+  // rest), so the form keeps the two apart and says why.
+  const draftPerms = draft ? BigInt(draft.permissions) : 0n;
+  const selfSafe = isSelfAssignableSafe(draftPerms);
+  const notEveryday = (name: PermissionName) =>
+    (Permission[name] & ~SELF_ASSIGNABLE_ALLOWED) !== 0n;
+  const tooMuchForSelf = (Object.keys(PERMISSION_META) as PermissionName[]).filter(
+    (n) => notEveryday(n) && has(draftPerms, Permission[n]),
+  );
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
@@ -312,12 +323,24 @@ export function RoleEditor({
                 />
                 <SwitchField
                   label={t('selfAssignable')}
-                  description={t('selfAssignableDesc')}
+                  description={
+                    !draft.selfAssignable && !selfSafe
+                      ? t('selfAssignableBlocked')
+                      : t('selfAssignableDesc')
+                  }
                   checked={draft.selfAssignable}
                   onCheckedChange={(v) => setDraft({ ...draft, selfAssignable: v })}
-                  disabled={!editable}
+                  // Turning it off is always fine; on only once the permissions are everyday ones.
+                  disabled={!editable || (!draft.selfAssignable && !selfSafe)}
                 />
               </div>
+            )}
+            {!draft.isDefault && draft.selfAssignable && !selfSafe && (
+              <Alert tone="warning">
+                {t('selfAssignableUnsafe', {
+                  perms: tooMuchForSelf.map((n) => t(`perms.${n}.name`)).join(', '),
+                })}
+              </Alert>
             )}
             {has(BigInt(draft.permissions), Permission.ADMINISTRATOR) && (
               <Alert tone="info">{t('adminNotice')}</Alert>
@@ -332,6 +355,8 @@ export function RoleEditor({
                   .map((name) => {
                     const checked = has(BigInt(draft.permissions), Permission[name]);
                     const grantable = actor.isOwner || has(actorPerms, Permission[name]);
+                    const selfBlocked =
+                      !draft.isDefault && draft.selfAssignable && notEveryday(name);
                     const id = `perm-${name}`;
                     return (
                       <div
@@ -344,12 +369,13 @@ export function RoleEditor({
                           </label>
                           <p id={`${id}-d`} className="text-sm text-muted">
                             {t(`perms.${name}.description`)}
+                            {selfBlocked && !checked && <> {t('notForSelfAssignable')}</>}
                           </p>
                         </div>
                         <Switch
                           id={id}
                           checked={checked}
-                          disabled={!editable || (!checked && !grantable)}
+                          disabled={!editable || (!checked && (!grantable || selfBlocked))}
                           onCheckedChange={(v) => togglePerm(name, v)}
                           aria-describedby={`${id}-d`}
                         />

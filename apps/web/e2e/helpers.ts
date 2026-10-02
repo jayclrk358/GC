@@ -94,6 +94,8 @@ export interface CommunityOpts {
   template?: 'Game server' | 'Clan or guild' | 'Fan hub' | 'Creator community';
   preset?: string;
   inviteOnly?: boolean;
+  /** Only members can see it. */
+  private?: boolean;
   /** People apply and the team decides. */
   apply?: boolean;
 }
@@ -109,6 +111,7 @@ export async function createCommunity(page: Page, opts: CommunityOpts = {}) {
   await page.getByRole('button', { name: 'Continue' }).click();
   if (opts.preset) await page.getByRole('radio', { name: opts.preset }).click();
   await page.getByRole('button', { name: 'Continue' }).click();
+  if (opts.private) await page.getByRole('radio', { name: /^Private/ }).click();
   if (opts.inviteOnly) await page.getByRole('radio', { name: /Invite only/ }).click();
   if (opts.apply) await page.getByRole('radio', { name: /Apply to join/ }).click();
   await page.getByRole('button', { name: 'Create community' }).click();

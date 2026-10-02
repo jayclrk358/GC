@@ -1204,6 +1204,9 @@
     "mentionableDesc": "Sinon, seuls les membres qui peuvent mentionner @everyone le peuvent.",
     "selfAssignable": "Attribuable soi-même",
     "selfAssignableDesc": "Les membres peuvent se donner ce rôle eux-mêmes (par ex. rôles de jeu ou de région).",
+    "selfAssignableBlocked": "Seulement pour les rôles aux permissions courantes : désactivez d'abord les permissions de modération et de gestion (et Mentionner @everyone).",
+    "selfAssignableUnsafe": "Les membres ne peuvent pas prendre ce rôle eux-mêmes tant qu'il a : {perms}. Désactivez-les, ou désactivez « Attribuable soi-même ».",
+    "notForSelfAssignable": "Indisponible pour les rôles attribuables soi-même.",
     "groups": {
       "general": "Général",
       "moderation": "Modération",

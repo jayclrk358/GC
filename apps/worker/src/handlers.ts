@@ -14,6 +14,7 @@ import {
   sendDigests,
   sendEventReminders,
   sendPushes,
+  sweepUnusedImages,
   sweepUnusedUploads,
   type PushItem,
   type FanoutJob,
@@ -73,6 +74,8 @@ export const handlers: Record<string, Handler> = {
     const digests = await sendDigests();
     // Chat files and post images uploaded over a day ago and never used.
     const unusedUploads = await sweepUnusedUploads();
-    return { removed, giftsEnded, digests, unusedUploads };
+    // Profile and community pictures replaced or never saved, over a week ago.
+    const unusedImages = await sweepUnusedImages();
+    return { removed, giftsEnded, digests, unusedUploads, unusedImages };
   },
 };

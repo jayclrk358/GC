@@ -1204,6 +1204,9 @@
     "mentionableDesc": "Caso contrário, só os membros que podem mencionar @everyone conseguem.",
     "selfAssignable": "Autoatribuível",
     "selfAssignableDesc": "Os membros podem pegar este cargo para si (por exemplo, cargos de jogo ou de região).",
+    "selfAssignableBlocked": "Só para cargos com permissões do dia a dia: desative antes as permissões de moderação e gerenciamento (e Mencionar @everyone).",
+    "selfAssignableUnsafe": "Os membros não podem pegar este cargo enquanto ele tiver: {perms}. Desative essas permissões ou desative \"Autoatribuível\".",
+    "notForSelfAssignable": "Indisponível em cargos autoatribuíveis.",
     "groups": {
       "general": "Geral",
       "moderation": "Moderação",

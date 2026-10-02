@@ -15,7 +15,18 @@ test('applications: write the questions, apply, get accepted and go through the 
   await page.getByRole('button', { name: 'Create role' }).click();
   await page.getByRole('button', { name: 'New role', exact: true }).click();
   await page.getByLabel('Role name').fill('Healer');
-  await page.getByRole('switch', { name: 'Self-assignable' }).click();
+  const selfAssignable = page.getByRole('switch', { name: 'Self-assignable' });
+  const kick = page.getByRole('switch', { name: 'Kick members' });
+  await selfAssignable.click();
+  // Roles members take themselves keep to everyday permissions, and the form says so both ways.
+  await expect(kick).toBeDisabled();
+  await expect(page.getByText('Not on self-assignable roles.').first()).toBeVisible();
+  await selfAssignable.click();
+  await kick.click();
+  await expect(selfAssignable).toBeDisabled();
+  await expect(page.getByText(/^Only for roles with everyday permissions/)).toBeVisible();
+  await kick.click();
+  await selfAssignable.click();
   await page.getByRole('button', { name: 'Save role' }).click();
   await expect(page.getByText('Role saved')).toBeVisible();
 
