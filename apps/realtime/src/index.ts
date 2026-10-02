@@ -45,8 +45,12 @@ const sub = cacheRedis().duplicate();
 const io = new Server(httpServer, {
   serveClient: false,
   cors: { origin: appOrigin, credentials: true },
-  pingInterval: 20_000,
+  // Heartbeats only need to beat proxies' idle timeouts (Caddy has none for websockets), so
+  // Socket.IO's own default is plenty. Messages aren't compressed: they're small, and a zlib
+  // context per connection would cost more memory than it saves bandwidth.
+  pingInterval: 25_000,
   pingTimeout: 20_000,
+  perMessageDeflate: false,
   // The largest real message is presence:watch with 200 ids, about 7 KB.
   maxHttpBufferSize: 16 * 1024,
 });

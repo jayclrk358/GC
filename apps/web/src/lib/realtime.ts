@@ -52,7 +52,7 @@ export function getSocket(): Socket {
       if (paused) resume();
     });
     // Access to a room was taken away (removed from the community, say): don't re-join it.
-    socket.on('room:revoked', (p: { room?: unknown } | null) => {
+    s.on('room:revoked', (p: { room?: unknown } | null) => {
       if (typeof p?.room === 'string') refCounts.delete(p.room);
     });
   }
