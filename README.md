@@ -297,6 +297,20 @@ Translations live in `apps/web/messages/<language>.json`. `pnpm lint` checks eve
 against English: no unknown keys, and the same `{placeholders}` and `<tags>` in each string. To
 add a language, add its code to `LOCALES` in `packages/shared/src/locales.ts` and a messages file.
 
+## Error reporting and tracing
+
+Both are off until configured, and their code isn't loaded until then.
+
+- **Sentry:** set `SENTRY_DSN` to get errors from the web app, the realtime server, the worker
+  (jobs that fail for good) and people's browsers (pages that break). Anything logged as an error
+  is reported too. No user details, cookies, headers or request bodies are sent. Set
+  `SENTRY_TRACES_SAMPLE_RATE` (0–1) for performance monitoring as well.
+- **OpenTelemetry:** set `OTEL_EXPORTER_OTLP_ENDPOINT` (an OTLP/HTTP collector, e.g. Grafana
+  Alloy, the OpenTelemetry Collector, Honeycomb or Jaeger) to export traces: Next.js's own spans
+  for pages, route handlers and server actions, and a span for each worker job. Services are
+  named `magnox-web`, `magnox-realtime` and `magnox-worker`; `OTEL_TRACES_SAMPLE_RATE` keeps a
+  share of them.
+
 ## Backups
 
 `scripts/linux/backup.sh` backs up the database, uploaded files (when they're stored on the
@@ -409,4 +423,9 @@ Found a barrier? Please open an issue. Accessibility bugs are treated as high pr
       automod (blocked words, link and invite filters, spam and flood limits, new-member checks,
       raid protection) with a mod queue; custom emoji in posts and reactions; an analytics
       dashboard; handing over ownership; archiving
-- [ ] **Phase 6 — Admin console, data export, SEO, PWA, public API, Discord integration**
+- [x] **Phase 6 — Platform and polish:** an admin console (gift plans, suspend communities, ban
+      people, a log); downloading your data and deleting your account; terms, privacy and an
+      age gate; sitemaps, share images, an installable app, push notifications and email
+      round-ups; a public API with personal tokens, webhooks (signed JSON or Discord) and
+      Discord role sync; custom domains with on-demand certificates; Spanish, French, German and
+      Brazilian Portuguese; Sentry and OpenTelemetry; backup and restore scripts
