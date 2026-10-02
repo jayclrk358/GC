@@ -49,6 +49,8 @@ export * from './services/mod-queue';
 export * from './services/emoji';
 export * from './services/analytics';
 export * from './services/admin';
+export * from './services/staff';
+export * from './services/feedback';
 export * from './services/account';
 export * from './services/seo';
 export * from './services/push';

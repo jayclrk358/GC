@@ -1,23 +1,25 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { adminUser, isAppError } from '@magnox/core';
-import { getUser } from '@/lib/auth';
+import { adminUser, isAppError, staffCan } from '@magnox/core';
+import { staffFor } from '@/lib/staff';
 import { formatDateTime } from '@/lib/format';
 import { BackLink } from '@/components/ui/back-link';
-import { Alert, PageHeader } from '@/components/ui/misc';
+import { Alert, Badge, PageHeader } from '@/components/ui/misc';
 import { UserActions } from '@/components/admin/user-actions';
+import { DeleteUser } from '@/components/admin/delete-user';
+import { UserEdit } from '@/components/admin/user-edit';
 
 export const metadata = { title: 'Person' };
 
 export default async function AdminUserPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const me = await getUser();
+  const viewer = await staffFor('users');
   const t = await getTranslations('admin');
   const locale = await getLocale();
   let u;
   try {
-    u = await adminUser(me?.id ?? null, decodeURIComponent(id));
+    u = await adminUser(viewer.id, decodeURIComponent(id));
   } catch (e) {
     if (isAppError(e) && e.code === 'not_found') notFound();
     throw e;
@@ -75,10 +77,26 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
         <dt className="text-muted">{t('reported')}</dt>
         <dd>{t('timesCount', { count: u.timesReported })}</dd>
       </dl>
-      {u.platformAdmin ? (
-        <p className="text-sm text-muted">{t('isAdmin')}</p>
+      {u.staffRole && (
+        <p className="text-sm">
+          <Badge tone="primary">{t(`roles.${u.staffRole}`)}</Badge>
+        </p>
+      )}
+      {u.manageable ? (
+        <>
+          <UserEdit
+            userId={u.id}
+            name={u.name}
+            username={u.username}
+            emailVerified={u.emailVerified}
+          />
+          <UserActions userId={u.id} banned={u.banned} />
+          {staffCan(viewer.role, 'suspend') && (
+            <DeleteUser userId={u.id} handle={u.username ?? u.email} />
+          )}
+        </>
       ) : (
-        <UserActions userId={u.id} banned={u.banned} />
+        <p className="text-sm text-muted">{t('cannotManage')}</p>
       )}
     </div>
   );

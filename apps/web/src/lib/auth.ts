@@ -4,7 +4,7 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { nextCookies } from 'better-auth/next-js';
 import { createAuth } from '@magnox/auth';
-import { sessionsRevoked } from '@magnox/core';
+import { markSessionsStale, sessionsRevoked } from '@magnox/core';
 
 const g = globalThis as unknown as { __mxAuth?: ReturnType<typeof make> };
 const make = () => createAuth([nextCookies()]);
@@ -44,4 +44,15 @@ export async function requireUser(returnTo?: string): Promise<SessionUser> {
     redirect(`/sign-in?next=${encodeURIComponent(next)}`);
   }
   return user;
+}
+
+/**
+ * Someone's account was changed for them (staff renamed them, say): update the copy of it their
+ * sessions carry, so they see the change without signing in again.
+ */
+export async function refreshSessions(userId: string): Promise<void> {
+  const { internalAdapter } = await auth.$context;
+  const user = await internalAdapter.findUserById(userId);
+  if (user) await internalAdapter.refreshUserSessions(user);
+  await markSessionsStale(userId);
 }

@@ -1,16 +1,16 @@
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { platformOverview } from '@magnox/core';
-import { getUser } from '@/lib/auth';
+import { staffFor } from '@/lib/staff';
 import { PageHeader } from '@/components/ui/misc';
 
 export const metadata = { title: 'Overview' };
 
 export default async function AdminOverviewPage() {
-  const user = await getUser();
+  const staff = await staffFor('console');
   const [t, format, o] = await Promise.all([
     getTranslations('admin'),
     getFormatter(),
-    platformOverview(user?.id ?? null),
+    platformOverview(staff.id),
   ]);
   const stats = [
     { label: t('stats.users'), value: o.users, detail: t('stats.newUsers', { count: o.newUsers }) },

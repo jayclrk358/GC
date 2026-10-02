@@ -2,7 +2,7 @@ import { and, desc, eq, isNull, sql } from 'drizzle-orm';
 import { db, schema } from '@magnox/db';
 import { CURRENT_TERMS_VERSION } from '@magnox/shared';
 import { z } from 'zod';
-import { AppError, unauthorized } from '../errors';
+import { AppError, notFound, unauthorized } from '../errors';
 import { logger } from '../logger';
 import { enforceRateLimit } from '../ratelimit';
 import { mediaUrl } from '../storage';
@@ -288,6 +288,17 @@ export async function deleteAccount(userId: string | null, raw: unknown): Promis
       `Hand over or delete the communities you own first: ${owned.map((c) => c.name).join(', ')}.`,
     );
   }
+  await eraseAccount(userId, input.removeContent);
+}
+
+/**
+ * The deletion itself, once it's been confirmed (by the person, or by Magnox staff) and they own
+ * no communities. Sessions must also be ended by the caller.
+ */
+export async function eraseAccount(userId: string, removeContent: boolean): Promise<void> {
+  const user = await db.query.users.findFirst({ where: eq(schema.users.id, userId) });
+  if (!user) throw notFound('Person');
+  const input = { removeContent };
 
   const memberships = await db
     .select({ communityId: schema.members.communityId })

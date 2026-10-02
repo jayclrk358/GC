@@ -171,6 +171,26 @@ export async function memberContextFor(
   };
 }
 
+/**
+ * Magnox staff stepping into a community to deal with something (removing a post, say): every
+ * permission, above every role. Community services then do what they always do on a removal.
+ */
+export async function staffContext(communityId: string, staffId: string): Promise<MemberContext> {
+  const community = await loadCommunity({ id: communityId });
+  if (!community) throw notFound('Community');
+  const ctx = await memberContextFor(community, staffId);
+  return {
+    ...ctx,
+    isMember: true,
+    banned: false,
+    timedOut: false,
+    timeoutUntil: null,
+    needsRules: false,
+    topPosition: Number.POSITIVE_INFINITY,
+    base: ALL_PERMISSIONS,
+  };
+}
+
 /** Load a community and the viewer's permissions in it. Throws not_found if they can't see it. */
 export async function getMemberContext(
   ref: { id?: string; slug?: string },

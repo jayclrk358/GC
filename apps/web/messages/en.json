@@ -57,7 +57,9 @@
     "terms": "Terms",
     "privacyPolicy": "Privacy",
     "footerNav": "Footer",
-    "developers": "Developers"
+    "developers": "Developers",
+    "sendFeedback": "Send feedback",
+    "feedback": "Feedback"
   },
   "palette": {
     "placeholder": "Search communities, pages and actions…",
@@ -2931,7 +2933,10 @@
       "communities": "Communities",
       "users": "People",
       "reports": "Reports",
-      "log": "Log"
+      "log": "Log",
+      "feedback": "Feedback",
+      "content": "Posts and messages",
+      "staff": "Staff"
     },
     "overviewTitle": "Overview",
     "overviewDescription": "The whole of Magnox at a glance.",
@@ -2969,7 +2974,6 @@
     "suspended": "Suspended",
     "archived": "Archived",
     "banned": "Banned",
-    "adminBadge": "Admin",
     "unverified": "email not verified",
     "backToCommunities": "Back to communities",
     "backToUsers": "Back to people",
@@ -2986,7 +2990,6 @@
     "sessionsCount": "{count, plural, one {# device} other {# devices}}",
     "reported": "Reported",
     "timesCount": "{count, plural, one {# time} other {# times}}",
-    "isAdmin": "They’re a Magnox admin, so they can’t be banned from here.",
     "bannedUntil": "Banned until {date}",
     "bannedForever": "Banned for good",
     "reportsTitle": "Reports",
@@ -3043,7 +3046,134 @@
       "sessionsDescription": "For an account that might have been taken over.",
       "revoke": "Sign out everywhere",
       "revoked": "Signed out everywhere"
-    }
+    },
+    "newCount": "new",
+    "roles": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "moderator": "Moderator"
+    },
+    "cannotManage": "They’re on the team at your level or above, so only someone above them can change their account.",
+    "feedback": {
+      "title": "Feedback",
+      "description": "Bugs, ideas and questions people have sent. Replies reach them by notification; team notes stay here.",
+      "open": "Open",
+      "all": "All",
+      "byStatus": "Show feedback by status",
+      "byKind": "Show feedback by kind",
+      "allKinds": "All kinds",
+      "search": "Search feedback",
+      "none": "Nothing here.",
+      "deletedUser": "Deleted user",
+      "back": "Back to feedback",
+      "from": "From",
+      "sent": "Sent",
+      "page": "Page",
+      "browser": "Browser",
+      "statusTitle": "Status",
+      "statusDescription": "They’re told when it changes.",
+      "status": "Status",
+      "statusSaved": "Marked {status}.",
+      "replyTitle": "Reply",
+      "replyDescription": "Answer them (they get a notification), or leave a note for the team.",
+      "replyLabel": "Your reply",
+      "noteLabel": "Team note",
+      "internal": "Team note only",
+      "internalDescription": "Only staff see it; they aren’t told.",
+      "sendReply": "Send reply",
+      "saveNote": "Save note",
+      "replySent": "Reply sent.",
+      "noteSaved": "Note saved."
+    },
+    "content": {
+      "title": "Posts and messages",
+      "description": "Find anything written on Magnox, newest first, and remove what breaks the rules. Removals show in the community’s audit log too.",
+      "q": "Words",
+      "kind": "Kind",
+      "kinds": {
+        "all": "Everything",
+        "message": "Chat message",
+        "post": "Forum post"
+      },
+      "author": "Written by",
+      "community": "Community address",
+      "find": "Find",
+      "none": "Nothing matches.",
+      "deletedUser": "Deleted user",
+      "thread": "Thread",
+      "reply": "Reply",
+      "in": "in {community} · #{channel}",
+      "noText": "(no text, only files)",
+      "open": "Open",
+      "removeLabel": "Remove what {name} wrote",
+      "remove": "Remove",
+      "removeTitle": "Remove this?",
+      "removeThreadTitle": "Remove this thread?",
+      "removeDescription": "It disappears for everyone straight away.",
+      "removeThreadDescription": "This opens a thread: the whole thread goes, replies and all.",
+      "removed": "Removed.",
+      "reason": "Why (for the record)",
+      "cancel": "Cancel"
+    },
+    "staff": {
+      "title": "Staff",
+      "description": "The people who help you run Magnox, and what they can do.",
+      "can": {
+        "owner": {
+          "name": "Owner",
+          "text": "Everything, including adding and removing admins. Set in the server settings (PLATFORM_ADMIN_EMAILS)."
+        },
+        "admin": {
+          "name": "Admin",
+          "text": "Everything else: people, posts, feedback, reports, communities, plans, the log, and adding moderators."
+        },
+        "moderator": {
+          "name": "Moderator",
+          "text": "People (edit, ban), posts and messages, reports and feedback."
+        }
+      },
+      "addTitle": "Add someone",
+      "addDescription": "They get a notification and find the console in their account menu.",
+      "who": "Email or username",
+      "whoHint": "Their account must exist already.",
+      "role": "Role",
+      "add": "Add to staff",
+      "added": "Added to staff.",
+      "teamTitle": "The team",
+      "you": "(you)",
+      "makeModerator": "Make moderator",
+      "makeAdmin": "Make admin",
+      "changed": "{name}’s role changed.",
+      "removeLabel": "Remove {name} from staff",
+      "remove": "Remove",
+      "removed": "{name} is no longer staff."
+    },
+    "edit": {
+      "title": "Change their account",
+      "description": "Fix an offensive name or a profile that breaks the rules. They aren’t told.",
+      "name": "Display name",
+      "username": "Username",
+      "clearProfileText": "Clear their profile text",
+      "clearProfileTextDesc": "Bio, status, pronouns, location and links.",
+      "removeAvatar": "Remove their profile picture",
+      "removeBanner": "Remove their profile banner",
+      "verifyEmail": "Mark their email as confirmed",
+      "verifyEmailDesc": "Only if you know the address is theirs.",
+      "save": "Save changes",
+      "saved": "Saved."
+    },
+    "deleteUser": {
+      "title": "Delete their account",
+      "description": "Their personal data goes; what they wrote stays as “Deleted user” unless you remove it too. This can’t be undone.",
+      "reason": "Why (for the record)",
+      "removeContent": "Also remove what they wrote",
+      "removeContentDesc": "Their chat messages and forum replies.",
+      "confirm": "Type {handle} to confirm",
+      "delete": "Delete account",
+      "done": "Account deleted."
+    },
+    "viewFeedback": "View feedback",
+    "viewAuthor": "View who wrote it"
   },
   "legal": {
     "newTitle": "Before you start",
@@ -3246,5 +3376,75 @@
     "choicePack": "Sound pack ({pack})",
     "play": "Play: {name}",
     "reset": "Reset sounds"
+  },
+  "feedback": {
+    "title": "Feedback",
+    "intro": "Found a bug, have an idea or a request, or a question? Tell the Magnox team. You can follow what happens to it here.",
+    "signInFirst": "Sign in to send feedback, so we can reply and let you know what happens.",
+    "signIn": "Sign in",
+    "sendTitle": "Send feedback",
+    "mineTitle": "What you’ve sent",
+    "mineDescription": "You get a notification when the team replies or it moves along.",
+    "mineEmpty": "Nothing yet.",
+    "replies": "{count, plural, one {# reply} other {# replies}} from the team",
+    "kindLabel": "What is it?",
+    "kinds": {
+      "bug": {
+        "name": "Something’s broken",
+        "short": "Bug",
+        "description": "An error, or something that doesn’t work as it should.",
+        "titlePlaceholder": "e.g. Images don’t load in chat",
+        "bodyHint": "What did you do, what did you expect, and what happened instead?"
+      },
+      "idea": {
+        "name": "Idea or request",
+        "short": "Idea",
+        "description": "A feature you’d like, or a way to make something better.",
+        "titlePlaceholder": "e.g. Let me pin more than one message",
+        "bodyHint": "What would you like, and what would it help you do?"
+      },
+      "question": {
+        "name": "Question",
+        "short": "Question",
+        "description": "Not sure how something works?",
+        "titlePlaceholder": "e.g. How do I move a channel?",
+        "bodyHint": "Ask away."
+      },
+      "other": {
+        "name": "Something else",
+        "short": "Other",
+        "description": "Praise, a complaint, anything.",
+        "titlePlaceholder": "A few words about it",
+        "bodyHint": "Tell us more."
+      }
+    },
+    "titleLabel": "Title",
+    "bodyLabel": "Details",
+    "includePage": "Include the page I was on:",
+    "privacyNote": "The team sees your name, email and browser with it.",
+    "send": "Send feedback",
+    "sent": "Thanks! Your feedback has been sent.",
+    "status": {
+      "new": "New",
+      "planned": "Planned",
+      "in_progress": "In progress",
+      "done": "Done",
+      "declined": "Not planned"
+    },
+    "statusHelp": {
+      "new": "Waiting for the team to look at it.",
+      "planned": "The team plans to do this.",
+      "in_progress": "The team is working on it.",
+      "done": "Done or fixed.",
+      "declined": "Not something the team plans to do."
+    },
+    "internalNote": "Team note (only staff see this)",
+    "addReply": "Add something",
+    "sendReply": "Send",
+    "backToFeedback": "Back to feedback",
+    "conversation": "Conversation",
+    "you": "You",
+    "team": "Magnox team",
+    "sentFrom": "Sent from"
   }
 }

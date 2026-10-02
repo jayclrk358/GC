@@ -1,9 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Accessibility, LogOut, Search, Settings, ShieldCheck, User } from 'lucide-react';
+import {
+  Accessibility,
+  LogOut,
+  MessageSquareHeart,
+  Search,
+  Settings,
+  ShieldCheck,
+  User,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, Kbd } from '@/components/ui/misc';
 import {
@@ -50,6 +58,7 @@ export function UserMenu({
   admin?: boolean;
 }) {
   const t = useTranslations('shell');
+  const pathname = usePathname();
   const router = useRouter();
   return (
     <DropdownMenu>
@@ -89,6 +98,11 @@ export function UserMenu({
         <DropdownMenuItem asChild>
           <Link href="/settings/accessibility">
             <Accessibility aria-hidden /> {t('accessibility')}
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href={`/feedback?from=${encodeURIComponent(pathname)}`}>
+            <MessageSquareHeart aria-hidden /> {t('sendFeedback')}
           </Link>
         </DropdownMenuItem>
         {admin && (

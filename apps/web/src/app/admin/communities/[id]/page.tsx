@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { adminCommunity, isAppError } from '@magnox/core';
-import { getUser } from '@/lib/auth';
+import { adminCommunity, isAppError, staffCan } from '@magnox/core';
+import { staffFor } from '@/lib/staff';
 import { formatDateTime } from '@/lib/format';
 import { BackLink } from '@/components/ui/back-link';
 import { Alert, PageHeader } from '@/components/ui/misc';
@@ -13,12 +13,12 @@ export const metadata = { title: 'Community' };
 
 export default async function AdminCommunityPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const user = await getUser();
+  const staff = await staffFor('communities');
   const t = await getTranslations('admin');
   const locale = await getLocale();
   let c;
   try {
-    c = await adminCommunity(user?.id ?? null, id);
+    c = await adminCommunity(staff.id, id);
   } catch (e) {
     if (isAppError(e) && e.code === 'not_found') notFound();
     throw e;
@@ -71,19 +71,23 @@ export default async function AdminCommunityPage({ params }: { params: Promise<{
         <dt className="text-muted">{t('col.created')}</dt>
         <dd suppressHydrationWarning>{formatDateTime(c.createdAt, 'auto', locale)}</dd>
       </dl>
-      <GiftPlanForm
-        communityId={c.id}
-        gift={
-          c.gift
-            ? {
-                plan: c.gift.plan,
-                expiresAt: c.gift.expiresAt?.toISOString() ?? null,
-                note: c.gift.note,
-              }
-            : null
-        }
-      />
-      <SuspendCommunityForm communityId={c.id} suspended={Boolean(c.suspendedAt)} />
+      {staffCan(staff.role, 'plans') && (
+        <GiftPlanForm
+          communityId={c.id}
+          gift={
+            c.gift
+              ? {
+                  plan: c.gift.plan,
+                  expiresAt: c.gift.expiresAt?.toISOString() ?? null,
+                  note: c.gift.note,
+                }
+              : null
+          }
+        />
+      )}
+      {staffCan(staff.role, 'suspend') && (
+        <SuspendCommunityForm communityId={c.id} suspended={Boolean(c.suspendedAt)} />
+      )}
     </div>
   );
 }

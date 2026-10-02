@@ -2,8 +2,14 @@
 
 import { revalidatePath } from 'next/cache';
 import {
+  adminDeleteUser,
+  adminRemoveContent,
+  adminReplyFeedback,
+  adminSetFeedbackStatus,
+  adminUpdateUser,
   banUser,
   disconnectUser,
+  setStaffRole,
   giftPlan,
   removePlanGift,
   revokeSessions,
@@ -11,7 +17,7 @@ import {
   unbanUser,
   unsuspendCommunity,
 } from '@magnox/core';
-import { endSessions, getUser } from '@/lib/auth';
+import { endSessions, getUser, refreshSessions } from '@/lib/auth';
 import { runAction } from '@/lib/action';
 
 // Platform admin actions. Each service checks the caller is a Magnox admin.
@@ -69,6 +75,51 @@ export async function revokeSessionsAction(userId: string) {
     await endSessions(userId);
     // Again now that no copy of their sessions is left (a socket may have reconnected meanwhile).
     disconnectUser(userId);
+    revalidatePath('/admin', 'layout');
+  });
+}
+
+export async function setStaffRoleAction(input: unknown) {
+  return runAction(async () => {
+    await setStaffRole(await me(), input);
+    revalidatePath('/admin', 'layout');
+  });
+}
+
+export async function updateUserAction(userId: string, input: unknown) {
+  return runAction(async () => {
+    await adminUpdateUser(await me(), userId, input);
+    await refreshSessions(userId);
+    revalidatePath('/admin', 'layout');
+  });
+}
+
+export async function deleteUserAction(userId: string, input: unknown) {
+  return runAction(async () => {
+    await adminDeleteUser(await me(), userId, input);
+    await endSessions(userId);
+    disconnectUser(userId);
+    revalidatePath('/admin', 'layout');
+  });
+}
+
+export async function removeContentAction(input: unknown) {
+  return runAction(async () => {
+    await adminRemoveContent(await me(), input);
+    revalidatePath('/admin/content');
+  });
+}
+
+export async function replyFeedbackAction(feedbackId: string, input: unknown) {
+  return runAction(async () => {
+    await adminReplyFeedback(await me(), feedbackId, input);
+    revalidatePath('/admin', 'layout');
+  });
+}
+
+export async function setFeedbackStatusAction(feedbackId: string, input: unknown) {
+  return runAction(async () => {
+    await adminSetFeedbackStatus(await me(), feedbackId, input);
     revalidatePath('/admin', 'layout');
   });
 }

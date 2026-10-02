@@ -16,24 +16,73 @@ import { endCommunityVoiceCalls } from './voice-rooms';
 
 const log = logger('admin');
 
+/**
+ * Magnox staff. The owner runs the site (listed in PLATFORM_ADMIN_EMAILS with that email
+ * confirmed, so nobody can claim it by signing up first); admins can do everything but manage
+ * other admins; moderators look after people, posts, reports and feedback.
+ */
+export type StaffRole = 'owner' | 'admin' | 'moderator';
+export const STAFF_ROLES: readonly StaffRole[] = ['owner', 'admin', 'moderator'];
+
+/** What a part of the console needs. */
+export type StaffAbility =
+  | 'console'
+  | 'users'
+  | 'content'
+  | 'reports'
+  | 'feedback'
+  | 'communities'
+  | 'suspend'
+  | 'plans'
+  | 'log'
+  | 'staff';
+
+const MODERATOR: StaffAbility[] = [
+  'console',
+  'users',
+  'content',
+  'reports',
+  'feedback',
+  'communities',
+];
+const ABILITIES: Record<StaffRole, ReadonlySet<StaffAbility>> = {
+  owner: new Set([...MODERATOR, 'suspend', 'plans', 'log', 'staff']),
+  admin: new Set([...MODERATOR, 'suspend', 'plans', 'log', 'staff']),
+  moderator: new Set(MODERATOR),
+};
+
+/** Owner 3, admin 2, moderator 1, everyone else 0: staff act only on people ranked below them. */
+export function staffRank(role: StaffRole | null): number {
+  return role ? 3 - STAFF_ROLES.indexOf(role) : 0;
+}
+
+export function staffCan(role: StaffRole | null, ability: StaffAbility): boolean {
+  return Boolean(role && ABILITIES[role].has(ability));
+}
+
 export interface PlatformAdmin {
   id: string;
   name: string;
+  role: StaffRole;
 }
 
-/**
- * Whether an account runs the platform: given the admin role (see `admin:grant`), or listed in
- * PLATFORM_ADMIN_EMAILS with that email confirmed (so nobody can claim it by signing up first).
- */
-export function isPlatformAdminUser(user: {
+/** Someone's staff role, if any. A ban takes it away. */
+export function staffRoleOf(user: {
   role?: string | null;
   email: string;
   emailVerified?: boolean | null;
   banned?: boolean | null;
-}): boolean {
-  if (user.banned) return false;
-  if (user.role === 'admin') return true;
-  return Boolean(user.emailVerified) && platformAdminEmails().has(user.email.toLowerCase());
+}): StaffRole | null {
+  if (user.banned) return null;
+  if (user.emailVerified && platformAdminEmails().has(user.email.toLowerCase())) return 'owner';
+  if (user.role === 'admin') return 'admin';
+  if (user.role === 'moderator') return 'moderator';
+  return null;
+}
+
+/** Whether an account is Magnox staff of any kind (and so sees the console). */
+export function isPlatformAdminUser(user: Parameters<typeof staffRoleOf>[0]): boolean {
+  return staffRoleOf(user) !== null;
 }
 
 export async function platformAdminFor(userId: string | null): Promise<PlatformAdmin | null> {
@@ -42,19 +91,36 @@ export async function platformAdminFor(userId: string | null): Promise<PlatformA
     where: eq(schema.users.id, userId),
     columns: { id: true, name: true, email: true, emailVerified: true, role: true, banned: true },
   });
-  return user && isPlatformAdminUser(user) ? { id: user.id, name: user.name } : null;
+  const role = user ? staffRoleOf(user) : null;
+  return user && role ? { id: user.id, name: user.name, role } : null;
 }
 
-async function requireAdmin(userId: string | null): Promise<PlatformAdmin> {
+/** The staff member doing this, if their role allows it. */
+export async function requireStaff(
+  userId: string | null,
+  ability: StaffAbility = 'console',
+): Promise<PlatformAdmin> {
   const admin = await platformAdminFor(userId);
-  if (!admin) throw forbidden('Only Magnox admins can do that.');
+  if (!admin) throw forbidden('Only Magnox staff can do that.');
+  if (!staffCan(admin.role, ability)) throw forbidden('Your staff role doesn’t include that.');
   return admin;
 }
 
-async function record(
+const requireAdmin = requireStaff;
+
+/** Staff can only act on people ranked below them (and never on themselves). */
+export async function assertOutranks(admin: PlatformAdmin, targetId: string): Promise<void> {
+  if (targetId === admin.id) throw new AppError('bad_request', 'You can’t do that to yourself.');
+  const target = await platformAdminFor(targetId);
+  if (target && staffRank(target.role) >= staffRank(admin.role)) {
+    throw forbidden('They’re staff too: only someone above them can do that.');
+  }
+}
+
+export async function recordStaffAction(
   admin: PlatformAdmin,
   action: string,
-  target: { type: 'community' | 'user'; id: string },
+  target: { type: 'community' | 'user' | 'message' | 'post' | 'thread' | 'feedback'; id: string },
   details: Record<string, unknown> = {},
 ) {
   await db.insert(schema.adminActions).values({
@@ -67,6 +133,8 @@ async function record(
   });
   log.info({ adminId: admin.id, action, target }, 'admin action');
 }
+
+const record = recordStaffAction;
 
 // ── Overview ────────────────────────────────────────────────────────────────
 
@@ -110,7 +178,7 @@ export async function platformOverview(userId: string | null) {
 const pattern = (q: string) => `%${q.replace(/[%_\\]/g, '\\$&')}%`;
 
 export async function adminCommunities(userId: string | null, rawQ: unknown) {
-  await requireAdmin(userId);
+  await requireAdmin(userId, 'communities');
   const q = z.string().trim().max(100).catch('').parse(rawQ);
   const c = schema.communities;
   return db
@@ -143,7 +211,7 @@ export async function adminCommunities(userId: string | null, rawQ: unknown) {
 }
 
 export async function adminCommunity(userId: string | null, id: string) {
-  await requireAdmin(userId);
+  await requireAdmin(userId, 'communities');
   if (!z.string().uuid().safeParse(id).success) throw notFound('Community');
   const c = schema.communities;
   const [row] = await db
@@ -198,7 +266,7 @@ const giftSchema = z.object({
  * subscription (the better plan wins) and doesn't touch Stripe.
  */
 export async function giftPlan(userId: string | null, communityId: string, raw: unknown) {
-  const admin = await requireAdmin(userId);
+  const admin = await requireAdmin(userId, 'plans');
   const input = giftSchema.parse(raw);
   const community = await db.query.communities.findFirst({
     where: and(eq(schema.communities.id, communityId), isNull(schema.communities.deletedAt)),
@@ -246,7 +314,7 @@ export async function giftPlan(userId: string | null, communityId: string, raw: 
 }
 
 export async function removePlanGift(userId: string | null, communityId: string) {
-  const admin = await requireAdmin(userId);
+  const admin = await requireAdmin(userId, 'plans');
   const removed = await db
     .delete(schema.planGifts)
     .where(eq(schema.planGifts.communityId, communityId))
@@ -272,7 +340,7 @@ const suspendSchema = z.object({
 
 /** Take a community offline for breaking the rules (reversible; nothing is deleted). */
 export async function suspendCommunity(userId: string | null, communityId: string, raw: unknown) {
-  const admin = await requireAdmin(userId);
+  const admin = await requireAdmin(userId, 'suspend');
   const { reason } = suspendSchema.parse(raw);
   const [row] = await db
     .update(schema.communities)
@@ -299,7 +367,7 @@ export async function suspendCommunity(userId: string | null, communityId: strin
 }
 
 export async function unsuspendCommunity(userId: string | null, communityId: string) {
-  const admin = await requireAdmin(userId);
+  const admin = await requireAdmin(userId, 'suspend');
   const [row] = await db
     .update(schema.communities)
     .set({
@@ -334,8 +402,16 @@ export async function isSuspended(slug: string): Promise<boolean> {
  * opened, and the realtime server checks again (with this mark) when they reconnect.
  */
 export async function markSessionsRevoked(userId: string): Promise<void> {
-  await cacheRedis().set(sessionsRevokedKey(userId), '1', 'EX', 15 * 60);
+  await markSessionsStale(userId);
   disconnectUser(userId);
+}
+
+/**
+ * Note that someone's account changed without them doing it (staff renamed them, say): while the
+ * mark lasts, signed-in pages read their session fresh rather than from the cookie's copy.
+ */
+export async function markSessionsStale(userId: string): Promise<void> {
+  await cacheRedis().set(sessionsRevokedKey(userId), '1', 'EX', 15 * 60);
 }
 
 /** Close someone's live connections: they reconnect signed in only if their session still is. */
@@ -344,7 +420,7 @@ export function disconnectUser(userId: string): void {
 }
 
 export async function adminUsers(userId: string | null, rawQ: unknown) {
-  await requireAdmin(userId);
+  await requireAdmin(userId, 'users');
   const q = z.string().trim().max(100).catch('').parse(rawQ);
   const u = schema.users;
   return db
@@ -370,7 +446,7 @@ export async function adminUsers(userId: string | null, rawQ: unknown) {
 }
 
 export async function adminUser(userId: string | null, id: string) {
-  await requireAdmin(userId);
+  const viewer = await requireAdmin(userId, 'users');
   const user = await db.query.users.findFirst({ where: eq(schema.users.id, id) });
   if (!user) throw notFound('Person');
   const [owned, memberships, sessions, reported] = await Promise.all([
@@ -398,7 +474,9 @@ export async function adminUser(userId: string | null, id: string) {
     banReason: user.banReason,
     banExpires: user.banExpires,
     createdAt: user.createdAt,
-    platformAdmin: Boolean(await platformAdminFor(user.id)),
+    staffRole: staffRoleOf(user),
+    /** Whether the viewer may act on them (ban, edit...): only people ranked below. */
+    manageable: user.id !== viewer.id && staffRank(staffRoleOf(user)) < staffRank(viewer.role),
     owned,
     memberships: memberships[0]?.n ?? 0,
     sessions: sessions[0]?.n ?? 0,
@@ -414,12 +492,9 @@ const banSchema = z.object({
 
 /** Ban someone from Magnox: they're signed out everywhere and can't sign back in. */
 export async function banUser(userId: string | null, targetId: string, raw: unknown) {
-  const admin = await requireAdmin(userId);
-  if (targetId === admin.id) throw new AppError('bad_request', 'You can’t ban yourself.');
+  const admin = await requireAdmin(userId, 'users');
+  await assertOutranks(admin, targetId);
   const input = banSchema.parse(raw);
-  if (await platformAdminFor(targetId)) {
-    throw new AppError('bad_request', 'Take away their admin access first.');
-  }
   const banExpires = input.days ? new Date(Date.now() + input.days * 86_400_000) : null;
   const [row] = await db
     .update(schema.users)
@@ -441,7 +516,8 @@ export async function banUser(userId: string | null, targetId: string, raw: unkn
 }
 
 export async function unbanUser(userId: string | null, targetId: string) {
-  const admin = await requireAdmin(userId);
+  const admin = await requireAdmin(userId, 'users');
+  await assertOutranks(admin, targetId);
   const [row] = await db
     .update(schema.users)
     .set({ banned: false, banReason: null, banExpires: null })
@@ -453,7 +529,8 @@ export async function unbanUser(userId: string | null, targetId: string) {
 
 /** Sign someone out everywhere (e.g. a hijacked account). */
 export async function revokeSessions(userId: string | null, targetId: string) {
-  const admin = await requireAdmin(userId);
+  const admin = await requireAdmin(userId, 'users');
+  await assertOutranks(admin, targetId);
   await db.delete(schema.sessions).where(eq(schema.sessions.userId, targetId));
   await markSessionsRevoked(targetId);
   await record(admin, 'user.sessions.revoke', { type: 'user', id: targetId });
@@ -463,7 +540,7 @@ export async function revokeSessions(userId: string | null, targetId: string) {
 
 /** Open reports across every community, newest first, for trust and safety to keep an eye on. */
 export async function platformReports(userId: string | null) {
-  await requireAdmin(userId);
+  await requireAdmin(userId, 'reports');
   const r = schema.reports;
   return db
     .select({
@@ -488,7 +565,7 @@ export async function platformReports(userId: string | null) {
 }
 
 export async function adminLog(userId: string | null) {
-  await requireAdmin(userId);
+  await requireAdmin(userId, 'log');
   const a = schema.adminActions;
   return db
     .select({

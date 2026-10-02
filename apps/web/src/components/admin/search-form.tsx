@@ -7,13 +7,19 @@ export function AdminSearch({
   label,
   button,
   defaultValue,
+  keep = {},
 }: {
   label: string;
   button: string;
   defaultValue: string;
+  /** Other filters to carry along with the search. */
+  keep?: Record<string, string>;
 }) {
   return (
     <form role="search" className="flex gap-2">
+      {Object.entries(keep).map(([name, value]) => (
+        <input key={name} type="hidden" name={name} value={value} />
+      ))}
       <Input
         type="search"
         name="q"

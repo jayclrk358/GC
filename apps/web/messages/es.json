@@ -57,7 +57,9 @@
     "terms": "Términos",
     "privacyPolicy": "Privacidad",
     "footerNav": "Pie de página",
-    "developers": "Desarrolladores"
+    "developers": "Desarrolladores",
+    "sendFeedback": "Enviar comentarios",
+    "feedback": "Comentarios"
   },
   "palette": {
     "placeholder": "Busca comunidades, páginas y acciones…",
@@ -2931,7 +2933,10 @@
       "communities": "Comunidades",
       "users": "Personas",
       "reports": "Reportes",
-      "log": "Registro"
+      "log": "Registro",
+      "feedback": "Comentarios",
+      "content": "Publicaciones y mensajes",
+      "staff": "Equipo"
     },
     "overviewTitle": "Resumen",
     "overviewDescription": "Todo Magnox de un vistazo.",
@@ -2969,7 +2974,6 @@
     "suspended": "Suspendida",
     "archived": "Archivada",
     "banned": "Baneado",
-    "adminBadge": "Admin",
     "unverified": "correo no verificado",
     "backToCommunities": "Volver a las comunidades",
     "backToUsers": "Volver a las personas",
@@ -2986,7 +2990,6 @@
     "sessionsCount": "{count, plural, one {# dispositivo} other {# dispositivos}}",
     "reported": "Reportado",
     "timesCount": "{count, plural, one {# vez} other {# veces}}",
-    "isAdmin": "Es administrador de Magnox, así que no se le puede banear desde aquí.",
     "bannedUntil": "Baneado hasta el {date}",
     "bannedForever": "Baneado para siempre",
     "reportsTitle": "Reportes",
@@ -3043,7 +3046,134 @@
       "sessionsDescription": "Para una cuenta que podría haber sido robada.",
       "revoke": "Cerrar sesión en todas partes",
       "revoked": "Sesión cerrada en todas partes"
-    }
+    },
+    "newCount": "nuevos",
+    "roles": {
+      "owner": "Propietario",
+      "admin": "Admin",
+      "moderator": "Moderador"
+    },
+    "cannotManage": "Forma parte del equipo a tu nivel o por encima, así que solo alguien por encima puede cambiar su cuenta.",
+    "feedback": {
+      "title": "Comentarios",
+      "description": "Errores, ideas y preguntas que ha enviado la gente. Las respuestas les llegan por notificación; las notas del equipo se quedan aquí.",
+      "open": "Abiertos",
+      "all": "Todos",
+      "byStatus": "Ver comentarios por estado",
+      "byKind": "Ver comentarios por tipo",
+      "allKinds": "Todos los tipos",
+      "search": "Buscar comentarios",
+      "none": "No hay nada aquí.",
+      "deletedUser": "Usuario eliminado",
+      "back": "Volver a comentarios",
+      "from": "De",
+      "sent": "Enviado",
+      "page": "Página",
+      "browser": "Navegador",
+      "statusTitle": "Estado",
+      "statusDescription": "Se le avisa cuando cambia.",
+      "status": "Estado",
+      "statusSaved": "Marcado como {status}.",
+      "replyTitle": "Responder",
+      "replyDescription": "Respóndele (recibe una notificación) o deja una nota para el equipo.",
+      "replyLabel": "Tu respuesta",
+      "noteLabel": "Nota del equipo",
+      "internal": "Solo nota del equipo",
+      "internalDescription": "Solo la ve el equipo; no se le avisa.",
+      "sendReply": "Enviar respuesta",
+      "saveNote": "Guardar nota",
+      "replySent": "Respuesta enviada.",
+      "noteSaved": "Nota guardada."
+    },
+    "content": {
+      "title": "Publicaciones y mensajes",
+      "description": "Encuentra cualquier cosa escrita en Magnox, de lo más nuevo a lo más antiguo, y elimina lo que incumpla las normas. Las eliminaciones también aparecen en el registro de la comunidad.",
+      "q": "Palabras",
+      "kind": "Tipo",
+      "kinds": {
+        "all": "Todo",
+        "message": "Mensaje de chat",
+        "post": "Publicación del foro"
+      },
+      "author": "Escrito por",
+      "community": "Dirección de la comunidad",
+      "find": "Buscar",
+      "none": "No hay coincidencias.",
+      "deletedUser": "Usuario eliminado",
+      "thread": "Hilo",
+      "reply": "Respuesta",
+      "in": "en {community} · #{channel}",
+      "noText": "(sin texto, solo archivos)",
+      "open": "Abrir",
+      "removeLabel": "Eliminar lo que escribió {name}",
+      "remove": "Eliminar",
+      "removeTitle": "¿Eliminar esto?",
+      "removeThreadTitle": "¿Eliminar este hilo?",
+      "removeDescription": "Desaparece para todos al momento.",
+      "removeThreadDescription": "Esto abre un hilo: se elimina el hilo entero, con sus respuestas.",
+      "removed": "Eliminado.",
+      "reason": "Motivo (para el registro)",
+      "cancel": "Cancelar"
+    },
+    "staff": {
+      "title": "Equipo",
+      "description": "Las personas que te ayudan a llevar Magnox y lo que pueden hacer.",
+      "can": {
+        "owner": {
+          "name": "Propietario",
+          "text": "Todo, incluido añadir y quitar admins. Se configura en el servidor (PLATFORM_ADMIN_EMAILS)."
+        },
+        "admin": {
+          "name": "Admin",
+          "text": "Todo lo demás: personas, publicaciones, comentarios, denuncias, comunidades, planes, el registro y añadir moderadores."
+        },
+        "moderator": {
+          "name": "Moderador",
+          "text": "Personas (editar, banear), publicaciones y mensajes, denuncias y comentarios."
+        }
+      },
+      "addTitle": "Añadir a alguien",
+      "addDescription": "Recibe una notificación y encuentra la consola en el menú de su cuenta.",
+      "who": "Email o nombre de usuario",
+      "whoHint": "Su cuenta ya debe existir.",
+      "role": "Rol",
+      "add": "Añadir al equipo",
+      "added": "Añadido al equipo.",
+      "teamTitle": "El equipo",
+      "you": "(tú)",
+      "makeModerator": "Hacer moderador",
+      "makeAdmin": "Hacer admin",
+      "changed": "Ha cambiado el rol de {name}.",
+      "removeLabel": "Quitar a {name} del equipo",
+      "remove": "Quitar",
+      "removed": "{name} ya no forma parte del equipo."
+    },
+    "edit": {
+      "title": "Cambiar su cuenta",
+      "description": "Corrige un nombre ofensivo o un perfil que incumpla las normas. No se le avisa.",
+      "name": "Nombre visible",
+      "username": "Nombre de usuario",
+      "clearProfileText": "Borrar el texto de su perfil",
+      "clearProfileTextDesc": "Biografía, estado, pronombres, ubicación y enlaces.",
+      "removeAvatar": "Quitar su foto de perfil",
+      "removeBanner": "Quitar su banner de perfil",
+      "verifyEmail": "Marcar su email como confirmado",
+      "verifyEmailDesc": "Solo si sabes que la dirección es suya.",
+      "save": "Guardar cambios",
+      "saved": "Guardado."
+    },
+    "deleteUser": {
+      "title": "Eliminar su cuenta",
+      "description": "Se borran sus datos personales; lo que escribió queda como «Usuario eliminado» salvo que también lo elimines. No se puede deshacer.",
+      "reason": "Motivo (para el registro)",
+      "removeContent": "Eliminar también lo que escribió",
+      "removeContentDesc": "Sus mensajes de chat y respuestas del foro.",
+      "confirm": "Escribe {handle} para confirmar",
+      "delete": "Eliminar cuenta",
+      "done": "Cuenta eliminada."
+    },
+    "viewFeedback": "Ver comentario",
+    "viewAuthor": "Ver quién lo escribió"
   },
   "legal": {
     "newTitle": "Antes de empezar",
@@ -3246,5 +3376,75 @@
     "choicePack": "Paquete de sonidos ({pack})",
     "play": "Reproducir: {name}",
     "reset": "Restablecer sonidos"
+  },
+  "feedback": {
+    "title": "Comentarios",
+    "intro": "¿Has encontrado un error, tienes una idea o una petición, o una pregunta? Cuéntaselo al equipo de Magnox. Aquí puedes seguir lo que pasa con ello.",
+    "signInFirst": "Inicia sesión para enviar comentarios, así podemos responderte y avisarte de lo que pasa.",
+    "signIn": "Iniciar sesión",
+    "sendTitle": "Enviar comentarios",
+    "mineTitle": "Lo que has enviado",
+    "mineDescription": "Recibes una notificación cuando el equipo responde o avanza.",
+    "mineEmpty": "Nada todavía.",
+    "replies": "{count, plural, one {# respuesta} other {# respuestas}} del equipo",
+    "kindLabel": "¿Qué es?",
+    "kinds": {
+      "bug": {
+        "name": "Algo no funciona",
+        "short": "Error",
+        "description": "Un error o algo que no funciona como debería.",
+        "titlePlaceholder": "p. ej., Las imágenes no cargan en el chat",
+        "bodyHint": "¿Qué hiciste, qué esperabas y qué pasó en cambio?"
+      },
+      "idea": {
+        "name": "Idea o petición",
+        "short": "Idea",
+        "description": "Una función que te gustaría o una forma de mejorar algo.",
+        "titlePlaceholder": "p. ej., Poder fijar más de un mensaje",
+        "bodyHint": "¿Qué te gustaría y para qué te ayudaría?"
+      },
+      "question": {
+        "name": "Pregunta",
+        "short": "Pregunta",
+        "description": "¿No sabes cómo funciona algo?",
+        "titlePlaceholder": "p. ej., ¿Cómo muevo un canal?",
+        "bodyHint": "Pregunta lo que quieras."
+      },
+      "other": {
+        "name": "Otra cosa",
+        "short": "Otro",
+        "description": "Elogios, quejas, lo que sea.",
+        "titlePlaceholder": "Unas palabras sobre ello",
+        "bodyHint": "Cuéntanos más."
+      }
+    },
+    "titleLabel": "Título",
+    "bodyLabel": "Detalles",
+    "includePage": "Incluir la página en la que estaba:",
+    "privacyNote": "El equipo ve tu nombre, tu email y tu navegador junto con ello.",
+    "send": "Enviar comentarios",
+    "sent": "¡Gracias! Tus comentarios se han enviado.",
+    "status": {
+      "new": "Nuevo",
+      "planned": "Previsto",
+      "in_progress": "En curso",
+      "done": "Hecho",
+      "declined": "No previsto"
+    },
+    "statusHelp": {
+      "new": "Esperando a que el equipo lo revise.",
+      "planned": "El equipo tiene previsto hacerlo.",
+      "in_progress": "El equipo está en ello.",
+      "done": "Hecho o arreglado.",
+      "declined": "No es algo que el equipo tenga previsto hacer."
+    },
+    "internalNote": "Nota del equipo (solo la ve el equipo)",
+    "addReply": "Añadir algo",
+    "sendReply": "Enviar",
+    "backToFeedback": "Volver a comentarios",
+    "conversation": "Conversación",
+    "you": "Tú",
+    "team": "Equipo de Magnox",
+    "sentFrom": "Enviado desde"
   }
 }

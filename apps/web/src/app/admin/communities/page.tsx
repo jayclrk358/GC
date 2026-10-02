@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { adminCommunities } from '@magnox/core';
-import { getUser } from '@/lib/auth';
+import { staffFor } from '@/lib/staff';
 import { formatDateTime } from '@/lib/format';
 import { Badge, PageHeader } from '@/components/ui/misc';
 import { AdminSearch } from '@/components/admin/search-form';
@@ -14,11 +14,11 @@ export default async function AdminCommunitiesPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q = '' } = await searchParams;
-  const user = await getUser();
+  const staff = await staffFor('communities');
   const [t, locale, rows] = await Promise.all([
     getTranslations('admin'),
     getLocale(),
-    adminCommunities(user?.id ?? null, q),
+    adminCommunities(staff.id, q),
   ]);
   return (
     <div className="flex flex-col gap-6">

@@ -52,6 +52,11 @@ export async function SiteFooter() {
               </Link>
             </li>
             <li>
+              <Link href="/feedback" className="transition-colors hover:text-fg">
+                {t('feedback')}
+              </Link>
+            </li>
+            <li>
               <CookieSettingsButton className="transition-colors hover:text-fg" />
             </li>
           </ul>

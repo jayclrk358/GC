@@ -199,24 +199,42 @@ Without the keys, voice channels say that voice isn't set up yet.
 
 ## Admin console
 
-Magnox staff look after the whole site at **/admin** (it's in the account menu for admins; for
-everyone else the page doesn't exist). It has:
+Magnox staff look after the whole site at **/admin** (it's in the account menu for staff; for
+everyone else the page doesn't exist). There are three staff roles:
 
-- **Communities:** search, and for each one:
+| Role      | Who                                         | Can                                                                       |
+| --------- | ------------------------------------------- | ------------------------------------------------------------------------- |
+| Owner     | Confirmed emails in `PLATFORM_ADMIN_EMAILS` | Everything, including adding and removing admins                          |
+| Admin     | Given by the owner (or `admin:grant`)       | Everything else, including adding and removing moderators                 |
+| Moderator | Given by the owner or an admin              | People, posts and messages, reports, feedback, and looking up communities |
+
+Nobody can change the account of someone at their own level or above. The console has:
+
+- **Feedback:** bugs, ideas and questions people send from **Send feedback** in the account menu
+  (or the footer). Filter by status and kind, search, reply (they get a notification), leave notes
+  only staff see, and move each one along (new, planned, in progress, done, not planned). People
+  follow what happens to theirs at /feedback.
+- **People:** search by name, username or email; change their display name or username, clear
+  their profile text, picture or banner, or mark their email as confirmed; sign someone out
+  everywhere, or ban them from Magnox (for a set time or for good), which also signs them out.
+  Admins can also delete an account, optionally with everything it wrote.
+- **Posts and messages:** find anything written on Magnox by words, author or community, and
+  remove what breaks the rules (with a reason). Removals show in the community's audit log too.
+- **Reports:** open reports from every community, to step in where a community doesn't.
+- **Communities:** search, and for each one (admins and the owner):
   - **Give a plan:** Plus or Pro for free, for 1–24 months or for good. It doesn't touch Stripe
     and sits alongside any subscription (the better plan wins). Gifts that run out end on their
     own within the hour. Community managers see it on their Plan & billing page.
   - **Suspend:** take it offline for breaking the rules, with a reason the owner is told. Its pages
     say it's suspended and it leaves Explore. Nothing is deleted, and the suspension can be lifted.
-- **People:** search by name, username or email; sign someone out everywhere, or ban them from
-  Magnox (for a set time or for good), which also signs them out.
-- **Reports:** open reports from every community, to step in where a community doesn't.
-- **Log:** everything admins have done.
+- **Staff:** add people as moderators (or admins, for the owner), change roles, and remove them.
+- **Log:** everything staff have done.
 
-**Making yourself an admin:** after signing up, run
+**Making yourself an admin:** put your email in `PLATFORM_ADMIN_EMAILS` to be the owner (once
+you've confirmed it), or after signing up run
 `pnpm --filter @magnox/db admin:grant you@example.com` (on the server with Docker:
 `docker compose run --rm migrate pnpm --filter @magnox/db admin:grant you@example.com`). Add
-`--revoke` to take it away. Emails in `PLATFORM_ADMIN_EMAILS` also count, once they're confirmed.
+`--revoke` to take it away. Then add the rest of your team from the Staff page.
 
 ## Notifications, search and installing
 

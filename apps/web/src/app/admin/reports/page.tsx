@@ -1,19 +1,19 @@
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { platformReports } from '@magnox/core';
-import { getUser } from '@/lib/auth';
+import { staffFor } from '@/lib/staff';
 import { formatDateTime } from '@/lib/format';
 import { Badge, PageHeader } from '@/components/ui/misc';
 
 export const metadata = { title: 'Reports' };
 
 export default async function AdminReportsPage() {
-  const user = await getUser();
+  const staff = await staffFor('reports');
   const [t, tr, locale, rows] = await Promise.all([
     getTranslations('admin'),
     getTranslations('reports'),
     getLocale(),
-    platformReports(user?.id ?? null),
+    platformReports(staff.id),
   ]);
   return (
     <div className="flex flex-col gap-6">

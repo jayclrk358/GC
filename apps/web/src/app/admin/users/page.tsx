@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { adminUsers } from '@magnox/core';
-import { getUser } from '@/lib/auth';
+import { staffFor } from '@/lib/staff';
 import { formatDateTime } from '@/lib/format';
 import { Badge, PageHeader } from '@/components/ui/misc';
 import { AdminSearch } from '@/components/admin/search-form';
@@ -14,11 +14,11 @@ export default async function AdminUsersPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q = '' } = await searchParams;
-  const user = await getUser();
+  const staff = await staffFor('users');
   const [t, locale, rows] = await Promise.all([
     getTranslations('admin'),
     getLocale(),
-    adminUsers(user?.id ?? null, q),
+    adminUsers(staff.id, q),
   ]);
   return (
     <div className="flex flex-col gap-6">
@@ -51,7 +51,9 @@ export default async function AdminUsersPage({
                     <span className="block text-xs font-normal text-muted">@{u.username}</span>
                   )}
                   {u.banned && <Badge className="mt-1">{t('banned')}</Badge>}
-                  {u.role === 'admin' && <Badge className="mt-1">{t('adminBadge')}</Badge>}
+                  {(u.role === 'admin' || u.role === 'moderator') && (
+                    <Badge className="mt-1">{t(`roles.${u.role}`)}</Badge>
+                  )}
                 </th>
                 <td className="p-3">
                   {u.email}
