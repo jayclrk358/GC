@@ -1,14 +1,30 @@
 import { Emitter } from '@socket.io/redis-emitter';
+import { logger } from './logger';
 import { cacheRedis } from './redis';
 
 let emitter: Emitter | undefined;
+
+/**
+ * What the emitter publishes through. It only ever calls `publish`, and never waits on the
+ * result: during a Redis blip that would be an unhandled rejection, which ends the process. Live
+ * updates are best effort, so a failed one is logged and dropped.
+ */
+const publisher = {
+  publish: (channel: string, message: string | Buffer) =>
+    cacheRedis()
+      .publish(channel, message)
+      .catch((err: Error) => {
+        logger('emitter').warn({ err: err.message, channel }, 'realtime publish failed');
+        return 0;
+      }),
+};
 
 /**
  * Publish events to connected sockets from any process (web, worker). The realtime server's
  * Redis adapter relays them to the right rooms.
  */
 export function realtime(): Emitter {
-  emitter ??= new Emitter(cacheRedis());
+  emitter ??= new Emitter(publisher);
   return emitter;
 }
 

@@ -1,4 +1,4 @@
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { db, schema } from '@magnox/db';
 import {
   ALL_PERMISSIONS,
@@ -6,11 +6,11 @@ import {
   computeBasePermissions,
   computeChannelPermissions,
   has,
+  isUuid,
   Permission,
   type Overwrite,
 } from '@magnox/shared';
 import { forbidden, notFound, unauthorized } from './errors';
-import { noteServerViewer } from './servers/hot';
 
 export interface CommunityRef {
   id: string;
@@ -57,6 +57,8 @@ export function canView(
 }
 
 async function loadCommunity(where: { id?: string; slug?: string }): Promise<CommunityRef | null> {
+  // Postgres rejects a malformed uuid outright (an error, not "no such row").
+  if (where.id !== undefined && !isUuid(where.id)) return null;
   const cond = where.id
     ? eq(schema.communities.id, where.id)
     : eq(schema.communities.slug, (where.slug ?? '').toLowerCase());
@@ -220,21 +222,39 @@ async function overwritesFor(channelIds: string[]): Promise<Map<string, Overwrit
   return map;
 }
 
-/** Channel-level permissions for the viewer, including category and channel overwrites. */
-export async function channelPermissions(ctx: MemberContext, channel: ChannelRef): Promise<bigint> {
+/** The channels and categories whose overwrites apply to these channels. */
+function overwriteLayers(channels: ChannelRef[]): string[] {
+  const ids = new Set<string>();
+  for (const c of channels) {
+    ids.add(c.id);
+    if (c.parentId) ids.add(c.parentId);
+  }
+  return [...ids];
+}
+
+/** Channel permissions from overwrites already loaded (category first, then the channel). */
+function permissionsWith(
+  ctx: MemberContext,
+  channel: ChannelRef,
+  ow: Map<string, Overwrite[]>,
+): bigint {
   if (ctx.base === ALL_PERMISSIONS) return ALL_PERMISSIONS;
-  const ids = channel.parentId ? [channel.parentId, channel.id] : [channel.id];
-  const ow = await overwritesFor(ids);
-  const layers = ids.map((id) => ow.get(id) ?? []);
+  const layerIds = channel.parentId ? [channel.parentId, channel.id] : [channel.id];
   const perms = computeChannelPermissions({
     base: ctx.base,
     everyoneRoleId: ctx.everyoneRoleId,
     memberRoleIds: ctx.roleIds,
     userId: ctx.userId ?? '',
-    layers,
+    layers: layerIds.map((id) => ow.get(id) ?? []),
     timedOut: ctx.timedOut || ctx.needsRules || ctx.community.archived,
   });
   return ctx.isMember ? perms : perms & GUEST_MASK;
+}
+
+/** Channel-level permissions for the viewer, including category and channel overwrites. */
+export async function channelPermissions(ctx: MemberContext, channel: ChannelRef): Promise<bigint> {
+  if (ctx.base === ALL_PERMISSIONS) return ALL_PERMISSIONS;
+  return permissionsWith(ctx, channel, await overwritesFor(overwriteLayers([channel])));
 }
 
 /** Permissions for many channels at once (for sidebars). */
@@ -247,35 +267,22 @@ export async function channelPermissionsMany(
     for (const c of channels) out.set(c.id, ALL_PERMISSIONS);
     return out;
   }
-  const ids = new Set<string>();
-  for (const c of channels) {
-    ids.add(c.id);
-    if (c.parentId) ids.add(c.parentId);
-  }
-  const ow = await overwritesFor([...ids]);
-  for (const c of channels) {
-    const layerIds = c.parentId ? [c.parentId, c.id] : [c.id];
-    const perms = computeChannelPermissions({
-      base: ctx.base,
-      everyoneRoleId: ctx.everyoneRoleId,
-      memberRoleIds: ctx.roleIds,
-      userId: ctx.userId ?? '',
-      layers: layerIds.map((id) => ow.get(id) ?? []),
-      timedOut: ctx.timedOut || ctx.needsRules || ctx.community.archived,
-    });
-    out.set(c.id, ctx.isMember ? perms : perms & GUEST_MASK);
-  }
+  const ow = await overwritesFor(overwriteLayers(channels));
+  for (const c of channels) out.set(c.id, permissionsWith(ctx, c, ow));
   return out;
 }
 
+const channelRefColumns = {
+  id: schema.channels.id,
+  communityId: schema.channels.communityId,
+  parentId: schema.channels.parentId,
+  type: schema.channels.type,
+};
+
 export async function loadChannel(id: string): Promise<ChannelRef | null> {
+  if (!isUuid(id)) return null;
   const rows = await db
-    .select({
-      id: schema.channels.id,
-      communityId: schema.channels.communityId,
-      parentId: schema.channels.parentId,
-      type: schema.channels.type,
-    })
+    .select(channelRefColumns)
     .from(schema.channels)
     .where(eq(schema.channels.id, id))
     .limit(1);
@@ -308,40 +315,41 @@ function memberContextForRooms(communityId: string, userId: string | null) {
   return ctx;
 }
 
-/** Room authorization for the realtime server. */
-export async function canSubscribe(
-  userId: string | null,
+/**
+ * Forget cached member contexts in a community (only one person's, with `userId`) once access
+ * there has changed, so the next subscribe is checked against the change.
+ */
+export function forgetRoomAccess(communityId: string, userId: string | null): void {
+  if (userId !== null) {
+    subscribeCtx.delete(`${communityId}|${userId}`);
+    return;
+  }
+  for (const key of subscribeCtx.keys()) {
+    if (key.startsWith(`${communityId}|`)) subscribeCtx.delete(key);
+  }
+}
+
+/** A room someone may join, and the community it belongs to (none for game server status). */
+export interface RoomGrant {
+  communityId: string | null;
+}
+
+/** Where a community's room lives, and the channel that decides who sees it (none: everyone). */
+async function roomTarget(
   kind: string,
   id: string,
-): Promise<boolean> {
+): Promise<{ communityId: string; channel: ChannelRef | null } | null> {
   switch (kind) {
-    case 'server': {
-      // Server status is public (and an unknown id just never gets an update), so there's
-      // nothing to look up. Live viewers keep the server on the fast polling tier.
-      noteServerViewer(id);
-      return true;
-    }
-    case 'community': {
-      try {
-        await memberContextForRooms(id, userId);
-        return true;
-      } catch {
-        return false;
-      }
-    }
+    case 'community':
+      return isUuid(id) ? { communityId: id, channel: null } : null;
     case 'channel':
     case 'chat': {
       const channel = await loadChannel(id);
-      if (!channel) return false;
-      try {
-        const ctx = await memberContextForRooms(channel.communityId, userId);
-        return has(await channelPermissions(ctx, channel), Permission.VIEW_CHANNEL);
-      } catch {
-        return false;
-      }
+      return channel && { communityId: channel.communityId, channel };
     }
     case 'thread': {
-      const thread = await db
+      if (!isUuid(id)) return null;
+      const [t] = await db
         .select({
           communityId: schema.threads.communityId,
           channelId: schema.threads.channelId,
@@ -350,20 +358,111 @@ export async function canSubscribe(
         .from(schema.threads)
         .where(eq(schema.threads.id, id))
         .limit(1);
-      const t = thread[0];
-      if (!t || t.deletedAt) return false;
+      if (!t || t.deletedAt) return null;
       const channel = await loadChannel(t.channelId);
-      if (!channel) return false;
-      try {
-        const ctx = await memberContextForRooms(t.communityId, userId);
-        return has(await channelPermissions(ctx, channel), Permission.VIEW_CHANNEL);
-      } catch {
-        return false;
-      }
+      return channel && { communityId: t.communityId, channel };
     }
     default:
-      return false;
+      return null;
   }
+}
+
+/**
+ * Room authorization for the realtime server: what the room belongs to, or null if the user may
+ * not join it.
+ */
+export async function canSubscribe(
+  userId: string | null,
+  kind: string,
+  id: string,
+): Promise<RoomGrant | null> {
+  // Server status is public (and an unknown id just never gets an update), so there's nothing
+  // to look up.
+  if (kind === 'server') return isUuid(id) ? { communityId: null } : null;
+  const target = await roomTarget(kind, id);
+  if (!target) return null;
+  try {
+    const ctx = await memberContextForRooms(target.communityId, userId);
+    if (target.channel) {
+      const perms = await channelPermissions(ctx, target.channel);
+      if (!has(perms, Permission.VIEW_CHANNEL)) return null;
+    }
+    return { communityId: target.communityId };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * After access in a community may have shrunk (kicked, banned, roles or overwrites changed, made
+ * private, suspended): of the rooms each socket joined there, the ones it must leave. Worked out
+ * afresh rather than from the subscribe cache, loading the community's channels once for all.
+ */
+export async function revokedRooms(
+  communityId: string,
+  sockets: { userId: string | null; rooms: string[] }[],
+): Promise<string[][]> {
+  const community = await loadCommunity({ id: communityId });
+  // Deleted or suspended: nobody keeps anything there.
+  if (!community || community.deletedAt) return sockets.map((s) => s.rooms);
+
+  const joined = sockets.flatMap((s) => s.rooms.map((room) => room.split(':') as [string, string]));
+  const idsOf = (kinds: string[]) => [
+    ...new Set(joined.filter(([k, id]) => kinds.includes(k) && isUuid(id)).map(([, id]) => id)),
+  ];
+  const threadIds = idsOf(['thread']);
+  const threads = threadIds.length
+    ? await db
+        .select({ id: schema.threads.id, channelId: schema.threads.channelId })
+        .from(schema.threads)
+        .where(
+          and(
+            inArray(schema.threads.id, threadIds),
+            eq(schema.threads.communityId, communityId),
+            isNull(schema.threads.deletedAt),
+          ),
+        )
+    : [];
+  const threadChannel = new Map(threads.map((t) => [t.id, t.channelId]));
+  const channelIds = [...new Set([...idsOf(['channel', 'chat']), ...threadChannel.values()])];
+  const channels = channelIds.length
+    ? await db
+        .select(channelRefColumns)
+        .from(schema.channels)
+        .where(
+          and(
+            inArray(schema.channels.id, channelIds),
+            eq(schema.channels.communityId, communityId),
+          ),
+        )
+    : [];
+  const byId = new Map(channels.map((c) => [c.id, c]));
+  const ow = await overwritesFor(overwriteLayers(channels));
+
+  // One context per person, however many of their sockets are here.
+  const contexts = new Map<string, Promise<MemberContext>>();
+  return Promise.all(
+    sockets.map(async ({ userId, rooms }) => {
+      let pending = contexts.get(userId ?? '');
+      if (!pending) {
+        pending = memberContextFor(community, userId);
+        contexts.set(userId ?? '', pending);
+      }
+      const ctx = await pending;
+      if (!canView(community, ctx.isMember) || ctx.banned) return rooms;
+      const sees = (channelId: string | undefined) => {
+        const channel = channelId ? byId.get(channelId) : undefined;
+        return Boolean(channel && has(permissionsWith(ctx, channel, ow), Permission.VIEW_CHANNEL));
+      };
+      return rooms.filter((room) => {
+        const [kind, id] = room.split(':') as [string, string];
+        if (kind === 'community') return id !== communityId;
+        if (kind === 'channel' || kind === 'chat') return !sees(id);
+        if (kind === 'thread') return !sees(threadChannel.get(id));
+        return true;
+      });
+    }),
+  );
 }
 
 /**

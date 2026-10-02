@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import {
   banUser,
+  disconnectUser,
   giftPlan,
   removePlanGift,
   revokeSessions,
@@ -49,6 +50,8 @@ export async function banUserAction(userId: string, input: unknown) {
   return runAction(async () => {
     await banUser(await me(), userId, input);
     await endSessions(userId);
+    // Again now that no copy of their sessions is left (a socket may have reconnected meanwhile).
+    disconnectUser(userId);
     revalidatePath('/admin', 'layout');
   });
 }
@@ -64,6 +67,8 @@ export async function revokeSessionsAction(userId: string) {
   return runAction(async () => {
     await revokeSessions(await me(), userId);
     await endSessions(userId);
+    // Again now that no copy of their sessions is left (a socket may have reconnected meanwhile).
+    disconnectUser(userId);
     revalidatePath('/admin', 'layout');
   });
 }

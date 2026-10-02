@@ -127,11 +127,12 @@ export function PresenceDot({
 }
 
 const IDLE_AFTER_MS = 3 * 60_000;
-const HIDDEN_IDLE_MS = 30_000;
+// Not sooner: switching tabs for a moment shouldn't flip the dot (and tell everyone watching).
+const HIDDEN_IDLE_MS = 5 * 60_000;
 
 /**
  * Tells the realtime server whether this tab is in use: idle after a few minutes without input,
- * or shortly after the tab is hidden; active again on the next input.
+ * or a few minutes after the tab is hidden; active again on the next input.
  */
 export function ActivityTracker() {
   React.useEffect(() => {

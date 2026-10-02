@@ -8,7 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Alert, Badge } from '@/components/ui/misc';
+import { Turnstile, type TurnstileHandle } from '@/components/ui/turnstile';
 import { authClient } from '@/lib/auth-client';
+import { captchaOptions, isCaptchaError } from '@/components/auth/captcha';
 import { FormError } from '@/components/auth/form-error';
 import { SettingsSection } from './section';
 
@@ -17,17 +19,43 @@ const LABELS: Record<string, string> = { discord: 'Discord', google: 'Google', t
 export function AccountForms({
   user,
   providers,
+  turnstileSiteKey = null,
 }: {
   user: { name: string; email: string; emailVerified: boolean };
   providers: string[];
+  turnstileSiteKey?: string | null;
 }) {
   const t = useTranslations('account');
+  const ta = useTranslations('auth');
   const router = useRouter();
   const [linked, setLinked] = React.useState<string[]>([]);
   const [nameError, setNameError] = React.useState<string | null>(null);
   const [emailError, setEmailError] = React.useState<string | null>(null);
   const [pwError, setPwError] = React.useState<string | null>(null);
   const [pending, setPending] = React.useState<string | null>(null);
+  // Changing the address and resending the link send email, so they need the security check.
+  const [captcha, setCaptcha] = React.useState<string | null>(null);
+  const turnstile = React.useRef<TurnstileHandle>(null);
+
+  /** Send an email-sending request with the check's token; false (and why) when it fails. */
+  async function withCaptcha(
+    send: (fetchOptions: ReturnType<typeof captchaOptions>) => Promise<{
+      error: { code?: string; message?: string } | null;
+    }>,
+  ): Promise<boolean> {
+    if (turnstileSiteKey && !captcha) {
+      setEmailError(ta('captchaRequired'));
+      return false;
+    }
+    const r = await send(captchaOptions(captcha));
+    // Each token works once.
+    turnstile.current?.reset();
+    if (!r.error) return true;
+    setEmailError(
+      isCaptchaError(r.error) ? ta('captchaFailed') : (r.error.message ?? 'Could not send email'),
+    );
+    return false;
+  }
 
   React.useEffect(() => {
     authClient.listAccounts().then((r) => {
@@ -57,10 +85,11 @@ export function AccountForms({
     e.preventDefault();
     const newEmail = String(new FormData(e.currentTarget).get('email') ?? '').trim();
     setPending('email');
-    const r = await authClient.changeEmail({ newEmail, callbackURL: '/settings/account' });
+    const ok = await withCaptcha((fetchOptions) =>
+      authClient.changeEmail({ newEmail, callbackURL: '/settings/account', fetchOptions }),
+    );
     setPending(null);
-    if (r.error) setEmailError(r.error.message ?? 'Could not change email');
-    else {
+    if (ok) {
       setEmailError(null);
       toast.success(t('emailChangeSent'));
       router.refresh();
@@ -119,11 +148,14 @@ export function AccountForms({
             <Button
               variant="link"
               onClick={async () => {
-                await authClient.sendVerificationEmail({
-                  email: user.email,
-                  callbackURL: '/settings/account',
-                });
-                toast.success(t('verificationSent'));
+                const ok = await withCaptcha((fetchOptions) =>
+                  authClient.sendVerificationEmail({
+                    email: user.email,
+                    callbackURL: '/settings/account',
+                    fetchOptions,
+                  }),
+                );
+                if (ok) toast.success(t('verificationSent'));
               }}
             >
               {t('resendVerification')}
@@ -146,6 +178,14 @@ export function AccountForms({
             {t('changeEmail')}
           </Button>
         </form>
+        {turnstileSiteKey && (
+          <Turnstile
+            ref={turnstile}
+            siteKey={turnstileSiteKey}
+            action="change-email"
+            onToken={setCaptcha}
+          />
+        )}
       </SettingsSection>
 
       <SettingsSection id="password" title={t('password')}>

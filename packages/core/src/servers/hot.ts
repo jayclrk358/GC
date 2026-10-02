@@ -7,11 +7,14 @@ import { POLL } from './schedule';
 
 /**
  * Mark endpoints as being watched. One that wasn't watched gets its next poll brought forward,
- * so a viewer sees fresh status within seconds rather than at the next slow-tier poll.
+ * so a viewer sees fresh status within seconds rather than at the next slow-tier poll. Only
+ * endpoints someone still lists: anyone can ask to watch any id, and an abandoned endpoint must
+ * stay dormant.
  */
 export async function markEndpointsHot(endpointIds: string[]): Promise<void> {
   if (!endpointIds.length) return;
   const e = schema.serverEndpoints;
+  const g = schema.gameServers;
   await db
     .update(e)
     .set({
@@ -25,6 +28,7 @@ export async function markEndpointsHot(endpointIds: string[]): Promise<void> {
         inArray(e.id, endpointIds),
         // Already hot for a while yet: nothing to write.
         or(isNull(e.hotUntil), sql`${e.hotUntil} < now() + interval '5 minutes'`),
+        sql`exists (select 1 from ${g} where ${g.endpointId} = ${e.id} and ${g.deletedAt} is null)`,
       ),
     );
 }

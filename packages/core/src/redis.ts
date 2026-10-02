@@ -22,6 +22,22 @@ export function cacheRedis(): Redis {
   return g.__mxCacheRedis;
 }
 
+/** Set while someone's sessions have just been ended (see `markSessionsRevoked`). */
+export const sessionsRevokedKey = (userId: string) => `auth:revoked:${userId}`;
+
+/**
+ * Whether someone's sessions were ended recently, so a cached copy of one (in the session cookie)
+ * mustn't be trusted. Here rather than with the admin services so the realtime server can check
+ * it without loading them.
+ */
+export async function sessionsRevoked(userId: string): Promise<boolean> {
+  return (
+    (await cacheRedis()
+      .exists(sessionsRevokedKey(userId))
+      .catch(() => 0)) === 1
+  );
+}
+
 export async function closeRedis(): Promise<void> {
   await Promise.allSettled([g.__mxQueueRedis?.quit(), g.__mxCacheRedis?.quit()]);
   g.__mxQueueRedis = undefined;

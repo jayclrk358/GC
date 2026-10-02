@@ -3,9 +3,11 @@ import { db, schema } from '@magnox/db';
 import { newId, uuidAtTime, type PaidPlanId } from '@magnox/shared';
 import { z } from 'zod';
 import { platformAdminEmails } from '../env';
+import { accessChanged, realtime } from '../emitter';
 import { AppError, forbidden, notFound } from '../errors';
 import { logger } from '../logger';
-import { cacheRedis } from '../redis';
+import { cacheRedis, sessionsRevokedKey } from '../redis';
+import { rooms } from '../rooms';
 import { syncCommunityPlan } from './billing';
 import { notifyUser } from './notify';
 import { endCommunityVoiceCalls } from './voice-rooms';
@@ -282,6 +284,8 @@ export async function suspendCommunity(userId: string | null, communityId: strin
     .where(and(eq(schema.communities.id, communityId), isNull(schema.communities.deletedAt)))
     .returning({ ownerId: schema.communities.ownerId, name: schema.communities.name });
   if (!row) throw notFound('Community');
+  // Open pages there stop receiving live updates.
+  accessChanged(communityId);
   await endCommunityVoiceCalls(communityId);
   await record(admin, 'community.suspend', { type: 'community', id: communityId }, { reason });
   await notifyUser({
@@ -323,22 +327,20 @@ export async function isSuspended(slug: string): Promise<boolean> {
 
 // ── People ──────────────────────────────────────────────────────────────────
 
-const revokedKey = (userId: string) => `auth:revoked:${userId}`;
-
 /**
  * Note that someone's sessions were ended. Signed-in pages trust a cached copy of the session for
- * a few minutes; while this mark lasts they check with the session store instead.
+ * a few minutes; while this mark lasts they check with the session store instead (see
+ * `sessionsRevoked`). Their live connections are closed too: those were signed in when they
+ * opened, and the realtime server checks again (with this mark) when they reconnect.
  */
 export async function markSessionsRevoked(userId: string): Promise<void> {
-  await cacheRedis().set(revokedKey(userId), '1', 'EX', 15 * 60);
+  await cacheRedis().set(sessionsRevokedKey(userId), '1', 'EX', 15 * 60);
+  disconnectUser(userId);
 }
 
-export async function sessionsRevoked(userId: string): Promise<boolean> {
-  return (
-    (await cacheRedis()
-      .exists(revokedKey(userId))
-      .catch(() => 0)) === 1
-  );
+/** Close someone's live connections: they reconnect signed in only if their session still is. */
+export function disconnectUser(userId: string): void {
+  realtime().in(rooms.user(userId)).disconnectSockets(true);
 }
 
 export async function adminUsers(userId: string | null, rawQ: unknown) {
