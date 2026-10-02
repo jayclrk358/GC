@@ -132,6 +132,7 @@
     "account": "Konto",
     "security": "Sicherheit",
     "accessibility": "Barrierefreiheit & Anzeige",
+    "sounds": "Sounds",
     "savedToast": "Einstellungen gespeichert",
     "notifications": "Benachrichtigungen",
     "privacy": "Privatsphäre & Sicherheit",
@@ -3165,5 +3166,78 @@
     "currentNecessary": "Du hast nur notwendige Cookies erlaubt.",
     "saved": "Cookie-Auswahl gespeichert.",
     "settings": "Cookie-Einstellungen"
+  },
+  "sounds": {
+    "title": "Sounds",
+    "intro": "Kurze Soundeffekte für Erwähnungen, Benachrichtigungen und Sprachanrufe. Sie entstehen direkt in deinem Browser und bleiben leise. Schalte sie aus oder wähle die, die dir gefallen.",
+    "general": "Soundeffekte",
+    "enabled": "Soundeffekte abspielen",
+    "enabledDesc": "Aus für Stille überall auf Magnox.",
+    "volume": "Lautstärke",
+    "pack": "Soundpaket",
+    "packDesc": "Der Stil aller Sounds. Weiter unten kannst du einzelnen Ereignissen einen Sound aus einem anderen Paket geben.",
+    "packs": {
+      "magnox": {
+        "name": "Magnox",
+        "description": "Hell und klar, mit leichtem Schimmer."
+      },
+      "soft": {
+        "name": "Sanft",
+        "description": "Tief, rund und leise."
+      },
+      "arcade": {
+        "name": "Arcade",
+        "description": "Schnelle Chiptune-Piepser."
+      },
+      "crystal": {
+        "name": "Kristall",
+        "description": "Gläserne Glocken, die nachklingen."
+      }
+    },
+    "listen": "{pack} anhören",
+    "when": "Wann sie spielen",
+    "whenDesc": "Wähle für jedes einen Sound oder schalte ihn aus.",
+    "events": {
+      "mention": {
+        "name": "Erwähnungen und Antworten",
+        "description": "Jemand erwähnt dich oder antwortet dir."
+      },
+      "notification": {
+        "name": "Andere Benachrichtigungen",
+        "description": "Antworten in Threads, denen du folgst, Event-Erinnerungen und Ähnliches."
+      },
+      "message": {
+        "name": "Neue Nachrichten",
+        "description": "Nachrichten im offenen Chat, während du in einem anderen Tab oder einer anderen App bist."
+      },
+      "send": {
+        "name": "Nachricht senden",
+        "description": "Wenn deine Nachricht gesendet wurde."
+      },
+      "voiceSelf": {
+        "name": "Sprachkanal betreten und verlassen",
+        "description": "Wenn du einem Sprachkanal beitrittst oder ihn verlässt."
+      },
+      "voiceOthers": {
+        "name": "Andere kommen und gehen",
+        "description": "Andere, die deinen Sprachkanal betreten oder verlassen."
+      },
+      "mute": {
+        "name": "Stummschalten und Mikro an",
+        "description": "Dein Mikrofon geht aus oder an."
+      },
+      "deafen": {
+        "name": "Ton aus und Ton an",
+        "description": "Den Ton des Anrufs für dich aus- oder einschalten."
+      },
+      "celebrate": {
+        "name": "Feiern",
+        "description": "Eine Community erstellen oder ihr beitreten."
+      }
+    },
+    "choiceOff": "Aus",
+    "choicePack": "Soundpaket ({pack})",
+    "play": "Abspielen: {name}",
+    "reset": "Sounds zurücksetzen"
   }
 }

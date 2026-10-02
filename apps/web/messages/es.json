@@ -132,6 +132,7 @@
     "account": "Cuenta",
     "security": "Seguridad",
     "accessibility": "Accesibilidad y pantalla",
+    "sounds": "Sonidos",
     "savedToast": "Ajustes guardados",
     "notifications": "Notificaciones",
     "privacy": "Privacidad y seguridad",
@@ -3165,5 +3166,78 @@
     "currentNecessary": "Solo has permitido las cookies necesarias.",
     "saved": "Preferencia de cookies guardada.",
     "settings": "Ajustes de cookies"
+  },
+  "sounds": {
+    "title": "Sonidos",
+    "intro": "Efectos de sonido cortos para menciones, notificaciones y llamadas de voz. Se crean en tu navegador y suenan bajito. Desactívalos o elige los que te gusten.",
+    "general": "Efectos de sonido",
+    "enabled": "Reproducir efectos de sonido",
+    "enabledDesc": "Desactívalo para tener silencio en todo Magnox.",
+    "volume": "Volumen",
+    "pack": "Paquete de sonidos",
+    "packDesc": "El estilo de todos los sonidos. Abajo puedes dar a eventos sueltos un sonido de otro paquete.",
+    "packs": {
+      "magnox": {
+        "name": "Magnox",
+        "description": "Claro y brillante, con un leve destello."
+      },
+      "soft": {
+        "name": "Suave",
+        "description": "Grave, redondo y discreto."
+      },
+      "arcade": {
+        "name": "Arcade",
+        "description": "Pitidos rápidos de 8 bits."
+      },
+      "crystal": {
+        "name": "Cristal",
+        "description": "Campanas cristalinas que resuenan."
+      }
+    },
+    "listen": "Escuchar {pack}",
+    "when": "Cuándo suenan",
+    "whenDesc": "Elige un sonido para cada uno o desactívalo.",
+    "events": {
+      "mention": {
+        "name": "Menciones y respuestas",
+        "description": "Alguien te menciona o te responde."
+      },
+      "notification": {
+        "name": "Otras notificaciones",
+        "description": "Respuestas en hilos que sigues, recordatorios de eventos y similares."
+      },
+      "message": {
+        "name": "Mensajes nuevos",
+        "description": "Mensajes del chat que tienes abierto mientras estás en otra pestaña o aplicación."
+      },
+      "send": {
+        "name": "Enviar un mensaje",
+        "description": "Cuando tu mensaje se ha enviado."
+      },
+      "voiceSelf": {
+        "name": "Entrar y salir de voz",
+        "description": "Cuando te conectas a un canal de voz o sales de él."
+      },
+      "voiceOthers": {
+        "name": "Gente que entra y sale",
+        "description": "Otras personas que llegan o se van de tu canal de voz."
+      },
+      "mute": {
+        "name": "Silenciar y activar micrófono",
+        "description": "Tu micrófono se apaga o se enciende."
+      },
+      "deafen": {
+        "name": "Ensordecer y volver a oír",
+        "description": "Apagar o encender el sonido de la llamada para ti."
+      },
+      "celebrate": {
+        "name": "Celebraciones",
+        "description": "Crear una comunidad o unirte a una."
+      }
+    },
+    "choiceOff": "Desactivado",
+    "choicePack": "Paquete de sonidos ({pack})",
+    "play": "Reproducir: {name}",
+    "reset": "Restablecer sonidos"
   }
 }

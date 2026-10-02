@@ -31,6 +31,7 @@ import { ReportDialog } from '@/components/moderation/report-dialog';
 import { EmojiProvider } from '@/components/emoji/emoji-context';
 import { MuteMenu } from '@/components/notifications/mute-menu';
 import { useReconnect, useRoom } from '@/lib/realtime';
+import { playSound } from '@/lib/sounds';
 import { useStored } from '@/lib/use-stored';
 import { cn } from '@/lib/utils';
 import {
@@ -205,6 +206,14 @@ export function ChatView(props: Props) {
       if (own || known) return;
       if (!atBottom.current || stateRef.current.hasMoreAfter) setUnseen((n) => n + 1);
       if (m.authorId && blocked.has(m.authorId)) return;
+      // Only while you're looking elsewhere: in front of you, the message speaks for itself.
+      // (Mentions of you get the mention sound with their notification instead.)
+      if (
+        (document.visibilityState !== 'visible' || !document.hasFocus()) &&
+        !mentionsMe(m, me?.id ?? null, me?.roleIds ?? [])
+      ) {
+        playSound('message', `m:${m.id}`);
+      }
       announcer.current?.push({
         authorName: authorName(m),
         text:
@@ -383,6 +392,7 @@ export function ChatView(props: Props) {
     const r = await sendMessageAction(communityId, channel.id, { ...input, nonce });
     if (r.ok) {
       retryInputs.current.delete(nonce);
+      playSound('send');
       dispatch({ type: 'sent', nonce, message: r.data });
       return { ok: true };
     }

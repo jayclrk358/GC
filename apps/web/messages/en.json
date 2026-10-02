@@ -132,6 +132,7 @@
     "account": "Account",
     "security": "Security",
     "accessibility": "Accessibility & display",
+    "sounds": "Sounds",
     "savedToast": "Settings saved",
     "notifications": "Notifications",
     "privacy": "Privacy & safety",
@@ -3165,5 +3166,78 @@
     "currentNecessary": "You've allowed necessary cookies only.",
     "saved": "Cookie choice saved.",
     "settings": "Cookie settings"
+  },
+  "sounds": {
+    "title": "Sounds",
+    "intro": "Short sound effects for mentions, notifications and voice calls. They're made right in your browser and kept quiet. Turn them off, or pick the ones you like.",
+    "general": "Sound effects",
+    "enabled": "Play sound effects",
+    "enabledDesc": "Turn this off for silence everywhere on Magnox.",
+    "volume": "Volume",
+    "pack": "Sound pack",
+    "packDesc": "The style of every sound. Below, you can give single events a sound from another pack.",
+    "packs": {
+      "magnox": {
+        "name": "Magnox",
+        "description": "Bright and clear, with a little shimmer."
+      },
+      "soft": {
+        "name": "Soft",
+        "description": "Low, round and quiet."
+      },
+      "arcade": {
+        "name": "Arcade",
+        "description": "Quick chiptune bleeps."
+      },
+      "crystal": {
+        "name": "Crystal",
+        "description": "Glassy bells that ring out."
+      }
+    },
+    "listen": "Listen to {pack}",
+    "when": "When to play them",
+    "whenDesc": "Choose a sound for each, or turn it off.",
+    "events": {
+      "mention": {
+        "name": "Mentions and replies",
+        "description": "Someone mentions you or replies to you."
+      },
+      "notification": {
+        "name": "Other notifications",
+        "description": "Replies in threads you follow, event reminders and the like."
+      },
+      "message": {
+        "name": "New messages",
+        "description": "Messages in the chat you have open, while you're in another tab or app."
+      },
+      "send": {
+        "name": "Sending a message",
+        "description": "When your message has been sent."
+      },
+      "voiceSelf": {
+        "name": "Joining and leaving voice",
+        "description": "When you connect to or leave a voice channel."
+      },
+      "voiceOthers": {
+        "name": "People joining and leaving",
+        "description": "Others coming and going in your voice channel."
+      },
+      "mute": {
+        "name": "Mute and unmute",
+        "description": "Your microphone going off or on."
+      },
+      "deafen": {
+        "name": "Deafen and undeafen",
+        "description": "Turning the call's sound off or on for yourself."
+      },
+      "celebrate": {
+        "name": "Celebrations",
+        "description": "Creating or joining a community."
+      }
+    },
+    "choiceOff": "Off",
+    "choicePack": "Sound pack ({pack})",
+    "play": "Play: {name}",
+    "reset": "Reset sounds"
   }
 }

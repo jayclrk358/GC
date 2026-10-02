@@ -5,6 +5,52 @@ import type { Prefs } from './prefs';
 
 export const FONT_SCALES = [87, 100, 112, 125, 150, 175, 200] as const;
 
+/** Sets of sound effects, all made in the browser (no audio files). */
+export const SOUND_PACKS = ['magnox', 'soft', 'arcade', 'crystal'] as const;
+export type SoundPack = (typeof SOUND_PACKS)[number];
+
+/** What sounds can be set for. Some play one of two cues (joining or leaving, say). */
+export const SOUND_EVENTS = [
+  'mention',
+  'notification',
+  'message',
+  'send',
+  'voiceSelf',
+  'voiceOthers',
+  'mute',
+  'deafen',
+  'celebrate',
+] as const;
+export type SoundEvent = (typeof SOUND_EVENTS)[number];
+
+/** Events that make a sound unless turned off. The rest (every message, sending) are opt-in. */
+export const SOUND_EVENTS_ON: ReadonlySet<SoundEvent> = new Set<SoundEvent>([
+  'mention',
+  'notification',
+  'voiceSelf',
+  'voiceOthers',
+  'mute',
+  'deafen',
+  'celebrate',
+]);
+
+/** A change from an event's default: off, on (the pack's sound), or another pack's sound. */
+export type SoundChoice = 'off' | 'on' | SoundPack;
+export const SOUND_CHOICES = ['off', 'on', ...SOUND_PACKS] as const;
+
+/** Which pack's sound an event plays, or null for none. */
+export function soundForEvent(
+  prefs: Pick<Prefs, 'sounds' | 'soundPack' | 'soundVolume' | 'soundEvents'>,
+  event: SoundEvent,
+): SoundPack | null {
+  if (!prefs.sounds || prefs.soundVolume <= 0) return null;
+  const choice = prefs.soundEvents[event];
+  if (choice === 'off') return null;
+  if (choice === 'on') return prefs.soundPack;
+  if (choice) return choice;
+  return SOUND_EVENTS_ON.has(event) ? prefs.soundPack : null;
+}
+
 export const DEFAULT_PREFS: Prefs = {
   v: 1,
   colorScheme: 'system',
@@ -31,6 +77,10 @@ export const DEFAULT_PREFS: Prefs = {
   singleKeyShortcuts: true,
   requireAltTextReminder: true,
   keymap: {},
+  sounds: true,
+  soundPack: 'magnox',
+  soundVolume: 60,
+  soundEvents: {},
 };
 
 export const PREFS_COOKIE = 'mx_prefs';

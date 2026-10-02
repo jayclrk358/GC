@@ -9,6 +9,7 @@ import {
   prefsToHtmlAttributes,
 } from '@magnox/shared/prefs-values';
 import { savePrefs } from '@/app/actions/prefs';
+import { configureSounds, unlockSoundsOnInteraction } from '@/lib/sounds';
 
 interface PrefsContextValue {
   prefs: Prefs;
@@ -51,6 +52,10 @@ export function PrefsProvider({
     setLastInitial(initial);
     setPrefs(initial);
   }
+
+  // Sound effects play from outside React (sockets, voice): keep them told what's wanted.
+  React.useEffect(() => configureSounds(prefs), [prefs]);
+  React.useEffect(() => unlockSoundsOnInteraction(), []);
 
   const preview = React.useCallback((p: Prefs) => applyPrefsToDocument(p), []);
   const save = React.useCallback(async (p: Prefs) => {

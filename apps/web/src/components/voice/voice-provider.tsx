@@ -7,6 +7,7 @@ import type { Participant, RemoteTrack, Room, VideoTrack } from 'livekit-client'
 import type { VoicePerson, VoiceStateEvent } from '@magnox/core';
 import { joinVoiceAction } from '@/app/actions/voice';
 import { useRooms } from '@/lib/realtime';
+import { playSound } from '@/lib/sounds';
 
 /** Someone in the call you're in, as LiveKit reports them. */
 export interface VoiceMember extends VoicePerson {
@@ -161,6 +162,7 @@ export function VoiceProvider({
   const leave = React.useCallback(() => {
     const r = room.current;
     reset();
+    if (r) playSound('disconnect');
     void r?.disconnect();
   }, [reset]);
 
@@ -195,6 +197,13 @@ export function VoiceProvider({
         for (const el of track.detach()) el.remove();
         refresh();
       });
+      // Others coming and going, as in any voice app (not while you've deafened yourself).
+      r.on(RoomEvent.ParticipantConnected, () => {
+        if (!deafRef.current) playSound('join');
+      });
+      r.on(RoomEvent.ParticipantDisconnected, () => {
+        if (!deafRef.current) playSound('leave');
+      });
       for (const e of [
         RoomEvent.ParticipantConnected,
         RoomEvent.ParticipantDisconnected,
@@ -211,6 +220,7 @@ export function VoiceProvider({
       r.on(RoomEvent.Disconnected, (reason?: number) => {
         if (room.current !== r) return;
         reset();
+        playSound('disconnect');
         if (reason === DisconnectReason.PARTICIPANT_REMOVED) toast.info(t('removedYou'));
         else if (reason === DisconnectReason.ROOM_DELETED) toast.info(t('callEnded'));
       });
@@ -225,6 +235,7 @@ export function VoiceProvider({
           });
         }
         setStatus('connected');
+        playSound('connect');
         refresh();
       } catch {
         toast.error(t('connectFailed'));
@@ -240,13 +251,17 @@ export function VoiceProvider({
       // Not in a call: remember it for the next one.
       mutedRef.current = !mutedRef.current;
       setMuted(mutedRef.current);
+      playSound(mutedRef.current ? 'mute' : 'unmute');
       return;
     }
     if (!rights.canSpeak) return;
     const on = !r.localParticipant.isMicrophoneEnabled;
     void r.localParticipant
       .setMicrophoneEnabled(on)
-      .then(refresh)
+      .then(() => {
+        playSound(on ? 'unmute' : 'mute');
+        refresh();
+      })
       .catch(() => toast.error(t('noMicrophone')));
   }, [refresh, rights.canSpeak, t]);
 
@@ -255,6 +270,7 @@ export function VoiceProvider({
     const next = !deafRef.current;
     deafRef.current = next;
     setDeafened(next);
+    playSound(next ? 'deafen' : 'undeafen');
     if (!r) return; // Not in a call: the next one starts deafened (and so muted).
     for (const el of audio.current?.querySelectorAll('audio') ?? []) el.muted = next;
     // Like other voice apps, deafening also mutes you, and undeafening restores how you were.

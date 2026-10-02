@@ -8,6 +8,7 @@ export default async function SettingsLayout({ children }: { children: React.Rea
   const links = [
     { href: '/settings/profile', label: t('profile') },
     { href: '/settings/accessibility', label: t('accessibility') },
+    { href: '/settings/sounds', label: t('sounds') },
     { href: '/settings/notifications', label: t('notifications') },
     { href: '/settings/privacy', label: t('privacy') },
     { href: '/settings/account', label: t('account') },

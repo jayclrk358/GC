@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { joinAction, leaveAction } from '@/app/actions/communities';
+import { playSound } from '@/lib/sounds';
 
 export function JoinButton({
   communityId,
@@ -116,6 +117,7 @@ export function JoinButton({
         const r = await joinAction(communityId);
         setPending(false);
         if (r.ok) {
+          playSound('celebrate');
           toast.success(t('welcome'));
           // Communities with welcome steps (rules, roles to pick) start there.
           if (r.data.welcome) router.push(`/c/${slug}/welcome`);

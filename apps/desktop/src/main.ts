@@ -75,6 +75,10 @@ function createWindow(): BrowserWindow {
       spellcheck: true,
       // Keep voice calls and live updates running while the window is minimised.
       backgroundThrottling: false,
+      // An app can make sound without a click first (browsers make websites wait), so a
+      // mention is heard even if the window was opened and left in the background. The site's
+      // own settings still decide what plays (sounds, and whether videos start on their own).
+      autoplayPolicy: 'no-user-gesture-required',
     },
   });
   // Shown straight away (in the site's background colour) rather than once the site has drawn,

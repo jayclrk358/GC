@@ -18,6 +18,7 @@ import { Input, Select } from '@/components/ui/input';
 import { RadioCards } from '@/components/ui/radio-cards';
 import { FormError } from '@/components/auth/form-error';
 import { createCommunityAction } from '@/app/actions/communities';
+import { playSound } from '@/lib/sounds';
 import { cn } from '@/lib/utils';
 
 const STEPS = ['basics', 'template', 'look', 'access'] as const;
@@ -132,6 +133,7 @@ export function CreateWizard({ games }: { games: { id: string; name: string }[] 
       .slice(0, 8);
     const r = await createCommunityAction({ ...v, gameId: v.gameId || null, tags });
     if (r.ok) {
+      playSound('celebrate');
       router.push(`/c/${r.data.slug}?created=1`);
       return;
     }

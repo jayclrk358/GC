@@ -1,6 +1,13 @@
 import { z } from 'zod';
 import { LOCALES } from './locales';
-import { DEFAULT_PREFS, FONT_SCALES, fromBase64Url } from './prefs-values';
+import {
+  DEFAULT_PREFS,
+  FONT_SCALES,
+  fromBase64Url,
+  SOUND_CHOICES,
+  SOUND_EVENTS,
+  SOUND_PACKS,
+} from './prefs-values';
 
 export const prefsSchema = z.object({
   v: z.literal(1).default(1),
@@ -39,6 +46,12 @@ export const prefsSchema = z.object({
     .record(z.string().regex(/^[a-z-]{1,32}$/), z.string().max(24))
     .refine((m) => Object.keys(m).length <= 40)
     .default({}),
+  /** Sound effects for notifications, voice and a few actions. */
+  sounds: z.boolean().default(true),
+  soundPack: z.enum(SOUND_PACKS).default('magnox'),
+  soundVolume: z.number().int().min(0).max(100).default(60),
+  /** Events changed from their defaults (see soundForEvent). */
+  soundEvents: z.partialRecord(z.enum(SOUND_EVENTS), z.enum(SOUND_CHOICES)).default({}),
 });
 
 export type Prefs = z.infer<typeof prefsSchema>;

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/misc';
 import { useUserEvents } from '@/lib/realtime';
 import { markReadAction } from '@/app/actions/notifications';
+import { playSound } from '@/lib/sounds';
 import { NotificationItem, type NotificationData } from './notification-item';
 
 export function NotificationBell({ initialUnread }: { initialUnread: number }) {
@@ -28,7 +29,11 @@ export function NotificationBell({ initialUnread }: { initialUnread: number }) {
   }, []);
 
   useUserEvents({
-    'notification:new': (p: { type: string; data: { title?: string } }) => {
+    'notification:new': (p: { id: string; type: string; data: { title?: string } }) => {
+      playSound(
+        p.type === 'mention' || p.type === 'reply' ? 'mention' : 'notification',
+        `n:${p.id}`,
+      );
       setUnread((n) => Math.min(999, n + 1));
       setItems(null);
       const text = t('newNotification', { title: p.data.title ?? '' });

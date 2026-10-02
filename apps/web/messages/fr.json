@@ -132,6 +132,7 @@
     "account": "Compte",
     "security": "Sécurité",
     "accessibility": "Accessibilité et affichage",
+    "sounds": "Sons",
     "savedToast": "Paramètres enregistrés",
     "notifications": "Notifications",
     "privacy": "Confidentialité et sécurité",
@@ -3165,5 +3166,78 @@
     "currentNecessary": "Vous n'avez accepté que les cookies nécessaires.",
     "saved": "Choix des cookies enregistré.",
     "settings": "Réglages des cookies"
+  },
+  "sounds": {
+    "title": "Sons",
+    "intro": "De courts effets sonores pour les mentions, les notifications et les appels vocaux. Ils sont créés dans votre navigateur et restent discrets. Coupez-les ou choisissez ceux qui vous plaisent.",
+    "general": "Effets sonores",
+    "enabled": "Jouer les effets sonores",
+    "enabledDesc": "Désactivez pour un silence complet sur Magnox.",
+    "volume": "Volume",
+    "pack": "Pack de sons",
+    "packDesc": "Le style de tous les sons. Plus bas, vous pouvez donner à certains événements le son d’un autre pack.",
+    "packs": {
+      "magnox": {
+        "name": "Magnox",
+        "description": "Clair et brillant, avec un léger scintillement."
+      },
+      "soft": {
+        "name": "Doux",
+        "description": "Grave, rond et discret."
+      },
+      "arcade": {
+        "name": "Arcade",
+        "description": "Des bips rapides façon 8 bits."
+      },
+      "crystal": {
+        "name": "Cristal",
+        "description": "Des cloches cristallines qui résonnent."
+      }
+    },
+    "listen": "Écouter {pack}",
+    "when": "Quand les jouer",
+    "whenDesc": "Choisissez un son pour chacun, ou coupez-le.",
+    "events": {
+      "mention": {
+        "name": "Mentions et réponses",
+        "description": "Quelqu’un vous mentionne ou vous répond."
+      },
+      "notification": {
+        "name": "Autres notifications",
+        "description": "Réponses dans les fils que vous suivez, rappels d’événements et autres."
+      },
+      "message": {
+        "name": "Nouveaux messages",
+        "description": "Les messages du chat ouvert, quand vous êtes dans un autre onglet ou une autre application."
+      },
+      "send": {
+        "name": "Envoi d’un message",
+        "description": "Quand votre message est envoyé."
+      },
+      "voiceSelf": {
+        "name": "Rejoindre et quitter le vocal",
+        "description": "Quand vous rejoignez ou quittez un salon vocal."
+      },
+      "voiceOthers": {
+        "name": "Arrivées et départs",
+        "description": "D’autres personnes qui arrivent ou partent de votre salon vocal."
+      },
+      "mute": {
+        "name": "Couper et réactiver le micro",
+        "description": "Votre micro qui se coupe ou se rallume."
+      },
+      "deafen": {
+        "name": "Mettre en sourdine et réécouter",
+        "description": "Couper ou remettre le son de l’appel pour vous."
+      },
+      "celebrate": {
+        "name": "Célébrations",
+        "description": "Créer ou rejoindre une communauté."
+      }
+    },
+    "choiceOff": "Désactivé",
+    "choicePack": "Pack de sons ({pack})",
+    "play": "Écouter : {name}",
+    "reset": "Réinitialiser les sons"
   }
 }
