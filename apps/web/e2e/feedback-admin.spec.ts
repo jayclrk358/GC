@@ -1,15 +1,12 @@
-import { execFileSync } from 'node:child_process';
-import path from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
-import { choose, createCommunity, expectAccessible, signUp, uniqueUser } from './helpers';
-
-/** Make an account a Magnox admin the way a site owner would (the admin:grant script). */
-function grantAdmin(email: string) {
-  execFileSync('pnpm', ['--silent', '--filter', '@magnox/db', 'admin:grant', email], {
-    cwd: path.resolve(process.cwd(), '../..'),
-    stdio: 'pipe',
-  });
-}
+import {
+  choose,
+  createCommunity,
+  expectAccessible,
+  grantAdmin,
+  signUp,
+  uniqueUser,
+} from './helpers';
 
 const adminNav = (page: Page) => page.getByRole('navigation', { name: 'Admin' });
 
@@ -169,6 +166,12 @@ test('admin menu: give staff access, change an account and remove a message', as
   await expect(adminNav(poster).getByRole('link', { name: 'Log' })).toBeHidden();
   expect((await poster.goto('/admin/log'))?.status()).toBe(404);
   expect((await poster.goto('/admin/staff'))?.status()).toBe(404);
+  // Their profile says so, as does the admin's.
+  await poster.goto(`/u/${posterUser.username}`);
+  await expect(poster.getByText('Magnox Moderator')).toBeVisible();
+  await expectAccessible(poster, 'moderator profile');
+  await poster.goto(`/u/${adminUser.username}`);
+  await expect(poster.getByText('Magnox Admin')).toBeVisible();
   // A moderator can't change an admin's account.
   await poster.goto('/admin/users');
   await poster.getByRole('searchbox', { name: /Find someone/ }).fill(adminUser.email);
@@ -181,6 +184,9 @@ test('admin menu: give staff access, change an account and remove a message', as
   await page.getByRole('button', { name: `Remove ${newName} from staff` }).click();
   await expect(page.getByText(`${newName} is no longer staff.`)).toBeVisible();
   expect((await poster.goto('/admin'))?.status()).toBe(404);
+  await poster.goto(`/u/${posterUser.username}`);
+  await expect(poster.getByRole('heading', { level: 1, name: newName })).toBeVisible();
+  await expect(poster.getByText('Magnox Moderator')).toBeHidden();
 
   // On the record.
   await adminNav(page).getByRole('link', { name: 'Log' }).click();

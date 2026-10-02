@@ -1,15 +1,12 @@
-import { execFileSync } from 'node:child_process';
-import path from 'node:path';
 import { expect, test } from '@playwright/test';
-import { createCommunity, expectAccessible, PASSWORD, signUp, uniqueUser } from './helpers';
-
-/** Make an account a Magnox admin the way a site owner would (the admin:grant script). */
-function grantAdmin(email: string) {
-  execFileSync('pnpm', ['--silent', '--filter', '@magnox/db', 'admin:grant', email], {
-    cwd: path.resolve(process.cwd(), '../..'),
-    stdio: 'pipe',
-  });
-}
+import {
+  createCommunity,
+  expectAccessible,
+  grantAdmin,
+  PASSWORD,
+  signUp,
+  uniqueUser,
+} from './helpers';
 
 test('admin console: give a plan, suspend a community and ban someone', async ({
   page,

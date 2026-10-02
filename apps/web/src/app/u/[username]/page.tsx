@@ -21,6 +21,7 @@ import { ACCOUNT_KINDS, type Platform } from '@magnox/shared';
 import { getUser } from '@/lib/auth';
 import { BlockButton } from '@/components/moderation/block-button';
 import { CopyHandle, LocalTime } from '@/components/profile/profile-client';
+import { StaffBadge } from '@/components/profile/staff-badge';
 import { formatDate } from '@/lib/format';
 import { Avatar, Badge } from '@/components/ui/misc';
 import { HistoryBack } from '@/components/ui/history-back';
@@ -118,7 +119,12 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
             />
           </div>
           <div className="flex min-w-0 flex-col gap-1 pb-2">
-            <h1 className="text-3xl font-extrabold">{profile.name}</h1>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <h1 className="text-3xl font-extrabold">{profile.name}</h1>
+              {profile.staffRole && (
+                <StaffBadge role={profile.staffRole} className="py-1 text-sm" />
+              )}
+            </div>
             <p className="text-muted">
               @{profile.username}
               {profile.pronouns && <span> · {profile.pronouns}</span>}

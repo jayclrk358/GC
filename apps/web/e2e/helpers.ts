@@ -1,3 +1,5 @@
+import { execFileSync } from 'node:child_process';
+import path from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, type Browser, type Locator, type Page } from '@playwright/test';
 
@@ -185,4 +187,12 @@ export async function upgradeCommunity(page: Page, slug: string, plan: 'Plus' | 
   await page.getByRole('button', { name: /^Pay / }).click();
   await page.waitForURL(new RegExp(`/c/${slug}/settings/billing`));
   await expect(page.getByText(`Thanks! ${plan} is now on.`)).toBeVisible();
+}
+
+/** Make an account a Magnox admin the way a site owner would (the admin:grant script). */
+export function grantAdmin(email: string) {
+  execFileSync('pnpm', ['--silent', '--filter', '@magnox/db', 'admin:grant', email], {
+    cwd: path.resolve(process.cwd(), '../..'),
+    stdio: 'pipe',
+  });
 }

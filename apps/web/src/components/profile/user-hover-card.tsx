@@ -10,6 +10,7 @@ import { RoleBadge } from '@/components/community/role-badge';
 import { StyledName } from '@/components/community/role-decor';
 import { usePrefs } from '@/components/shell/prefs-provider';
 import { Avatar, Badge } from '@/components/ui/misc';
+import { StaffBadge } from '@/components/profile/staff-badge';
 import { imgSourcesFromUrl } from '@/lib/media';
 
 // One request per person (and community) per page; a failed one is retried next time.
@@ -164,8 +165,9 @@ function CardBody({ card }: { card: ProfileCard }) {
             {card.status}
           </p>
         )}
-        {(card.nowPlaying || card.lookingForGroup) && (
+        {(card.staffRole || card.nowPlaying || card.lookingForGroup) && (
           <p className="flex flex-wrap gap-1.5">
+            {card.staffRole && <StaffBadge role={card.staffRole} />}
             {card.nowPlaying && (
               <Badge tone="primary">
                 <Gamepad2 aria-hidden className="size-3.5" />

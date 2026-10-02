@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import {
   createCommunity,
   expectAccessible,
+  grantAdmin,
   joinAsMember,
   post,
   signUp,
@@ -12,6 +13,8 @@ import {
 test('hovering a name shows a slice of their profile', async ({ page, browser }) => {
   const owner = await signUp(page, uniqueUser('carded'), '/new');
   const { slug } = await createCommunity(page, { template: 'Game server' });
+  // They're on Magnox's team, too.
+  grantAdmin(owner.email);
   const url = await startThread(page, slug, 'support', 'Card test', 'Hover my name');
 
   const member = await joinAsMember(browser, slug, 'hoverer');
@@ -21,6 +24,7 @@ test('hovering a name shows a slice of their profile', async ({ page, browser })
   await expect(member.page.getByText('Joined Magnox')).toBeVisible();
   await expect(member.page.getByText(`@${owner.username}`)).toBeVisible();
   await expect(member.page.getByRole('img', { name: 'Community owner' })).toBeVisible();
+  await expect(member.page.getByText('Magnox Admin')).toBeVisible();
   await expect(member.page.getByText(/^In E2E .+ since$/)).toBeVisible();
   await expect(member.page.getByRole('link', { name: 'View full profile' })).toBeVisible();
   await expectAccessible(member.page, 'profile card');
@@ -49,6 +53,8 @@ test('hovering a name shows a slice of their profile', async ({ page, browser })
 
   // On the profile page the avatar sits on top of the banner it overlaps.
   await page.goto(`/u/${owner.username}`);
+  await expect(page.getByText('Magnox Admin')).toBeVisible();
+  await expectAccessible(page, 'staff profile');
   const avatar = page.locator('[data-profile-avatar]');
   const box = (await avatar.boundingBox())!;
   const onTop = await page.evaluate(
