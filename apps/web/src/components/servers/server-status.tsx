@@ -128,7 +128,7 @@ export function ServerCard({
         <div className="min-w-0">
           <h3 id={`srv-${server.id}`} className="flex items-center gap-1.5 truncate font-bold">
             {href ? (
-              <Link href={href} className="truncate hover:underline">
+              <Link href={href} prefetch={false} className="truncate hover:underline">
                 {server.name}
               </Link>
             ) : (
@@ -209,6 +209,7 @@ export function ServerCard({
           {community && (
             <Link
               href={`/c/${community.slug}`}
+              prefetch={false}
               className="flex items-center gap-1 font-medium text-fg hover:underline"
             >
               <Users className="size-4" aria-hidden />
@@ -227,6 +228,7 @@ export function ServerCard({
                 <li key={tag}>
                   <Link
                     href={tagHrefs[tag] ?? `/servers?tag=${encodeURIComponent(tag)}`}
+                    prefetch={false}
                     className="rounded-full border border-border px-2 py-0.5 text-xs hover:border-primary hover:text-fg"
                   >
                     #{tag}

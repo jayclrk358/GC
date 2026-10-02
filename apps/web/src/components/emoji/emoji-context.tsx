@@ -2,10 +2,20 @@
 
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
-import { customReactionId, type CustomEmoji } from '@magnox/shared';
+import { customReactionId, type CustomEmoji } from '@magnox/shared/emoji-values';
 
 /** The community's custom emoji, for reactions (pickers and the reactions on messages). */
 const EmojiContext = React.createContext<CustomEmoji[]>([]);
+
+/**
+ * The mounted EmojiProvider's list, for code outside React: the editor's ":" suggestions use it
+ * instead of asking the server again. Null when no provider is mounted.
+ */
+let pageEmoji: CustomEmoji[] | null = null;
+
+export function providedEmoji(): CustomEmoji[] | null {
+  return pageEmoji;
+}
 
 export function EmojiProvider({
   emoji,
@@ -14,6 +24,12 @@ export function EmojiProvider({
   emoji: CustomEmoji[];
   children: React.ReactNode;
 }) {
+  React.useEffect(() => {
+    pageEmoji = emoji;
+    return () => {
+      if (pageEmoji === emoji) pageEmoji = null;
+    };
+  }, [emoji]);
   return <EmojiContext.Provider value={emoji}>{children}</EmojiContext.Provider>;
 }
 
@@ -33,7 +49,7 @@ export function EmojiImage({
   className?: string;
 }) {
   return (
-    // eslint-disable-next-line @next/next/no-img-element -- tiny images served by redirect
+    // eslint-disable-next-line @next/next/no-img-element -- tiny images, served as uploaded
     <img
       src={emoji.url}
       alt={label ?? ''}

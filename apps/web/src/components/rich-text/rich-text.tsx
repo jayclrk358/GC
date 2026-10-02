@@ -1,12 +1,7 @@
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
-import {
-  docHeadings,
-  emojiImagePath,
-  isSafeHref,
-  type RichMark,
-  type RichNode,
-} from '@magnox/shared';
+import { docHeadings, isSafeHref, type RichMark, type RichNode } from '@magnox/shared';
+import { emojiImagePath } from '@magnox/shared/emoji-values';
 import { imgSources } from '@/lib/media';
 import { cn } from '@/lib/utils';
 import { MediaScope } from '@/components/media/media-scope';

@@ -2,6 +2,11 @@ import { z } from 'zod';
 import { emptyDoc } from './richtext';
 import { richDocSchema } from './richtext-schema';
 import { uploadKey } from './theme';
+import { DEFAULT_NAV, LINK_KINDS, NAV_TABS } from './blocks-values';
+
+// The plain lists (block types, link kinds, nav tabs) are in blocks-values.ts, which client code
+// imports directly.
+export * from './blocks-values';
 
 const httpsUrl = z
   .string()
@@ -11,23 +16,6 @@ const httpsUrl = z
   .refine((u) => /^https:\/\//i.test(u), 'Links must start with https://');
 
 const heading = z.string().trim().max(80);
-
-export const LINK_KINDS = [
-  'website',
-  'discord',
-  'steam',
-  'youtube',
-  'twitch',
-  'x',
-  'bluesky',
-  'reddit',
-  'github',
-  'tiktok',
-  'instagram',
-  'patreon',
-  'store',
-  'other',
-] as const;
 
 export const blockConfigSchemas = {
   hero: z.object({
@@ -138,7 +126,6 @@ export const blockConfigSchemas = {
 } as const;
 
 export type BlockType = keyof typeof blockConfigSchemas;
-export const BLOCK_TYPES = Object.keys(blockConfigSchemas) as BlockType[];
 
 export type BlockConfig<T extends BlockType> = z.infer<(typeof blockConfigSchemas)[T]>;
 
@@ -159,10 +146,6 @@ export function defaultBlockConfig<T extends BlockType>(type: T): BlockConfig<T>
   return parseBlockConfig(type, defaults[type] ?? {});
 }
 
-/** Tabs a community can show. The order and labels are customisable. */
-export const NAV_TABS = ['home', 'forum', 'chat', 'wiki', 'events', 'servers', 'members'] as const;
-export type NavTab = (typeof NAV_TABS)[number];
-
 export const navSchema = z
   .array(
     z.object({
@@ -176,8 +159,6 @@ export const navSchema = z
   .refine((items) => items.some((i) => i.tab === 'home' && i.visible), 'Home must stay visible');
 
 export type NavConfig = z.infer<typeof navSchema>;
-
-export const DEFAULT_NAV: NavConfig = NAV_TABS.map((tab) => ({ tab, label: '', visible: true }));
 
 /** Merge a stored nav config with any tabs added since it was saved. */
 export function normalizeNav(stored: unknown): NavConfig {

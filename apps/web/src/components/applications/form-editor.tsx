@@ -5,12 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react';
+import type { ApplicationForm } from '@magnox/shared';
 import {
   MAX_APPLICATION_QUESTIONS,
   QUESTION_KINDS,
-  type ApplicationForm,
   type QuestionKind,
-} from '@magnox/shared';
+} from '@magnox/shared/applications-values';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Input, Select, Textarea } from '@/components/ui/input';

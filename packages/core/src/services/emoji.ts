@@ -27,13 +27,25 @@ export async function listEmoji(communityId: string): Promise<CustomEmoji[]> {
   const hit = await redis.get(listKey(communityId)).catch(() => null);
   if (hit) return JSON.parse(hit) as CustomEmoji[];
   const rows = await db
-    .select({ id: schema.customEmoji.id, name: schema.customEmoji.name })
+    .select({
+      id: schema.customEmoji.id,
+      name: schema.customEmoji.name,
+      imageKey: schema.customEmoji.imageKey,
+    })
     .from(schema.customEmoji)
     .where(eq(schema.customEmoji.communityId, communityId))
     .orderBy(asc(schema.customEmoji.name));
-  const list = rows.map((r) => ({ ...r, url: emojiImagePath(r.id) }));
+  const list = rows.map((r) => ({ id: r.id, name: r.name, url: emojiUrl(r.id, r.imageKey) }));
   await redis.set(listKey(communityId), JSON.stringify(list), 'EX', 60).catch(() => undefined);
   return list;
+}
+
+/**
+ * The file itself, so browsers skip the /emoji/<id> redirect. That path stays for posts and
+ * reactions, which only store the id.
+ */
+function emojiUrl(id: string, imageKey: string): string {
+  return mediaUrl(imageKey) ?? emojiImagePath(id);
 }
 
 async function forget(communityId: string) {
@@ -105,7 +117,7 @@ export async function createEmoji(ctx: MemberContext, raw: unknown): Promise<Cus
     targetId: id,
     diff: { name: input.name },
   });
-  return { id, name: input.name, url: emojiImagePath(id) };
+  return { id, name: input.name, url: emojiUrl(id, input.imageKey) };
 }
 
 async function ownEmoji(ctx: MemberContext, id: string) {

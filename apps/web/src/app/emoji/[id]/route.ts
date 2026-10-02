@@ -9,8 +9,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       headers: { 'cache-control': 'public, max-age=60' },
     });
   }
+  // An emoji's image never changes (it can only be renamed or deleted), so keep it a day.
   return new Response(null, {
     status: 302,
-    headers: { location: url, 'cache-control': 'public, max-age=3600' },
+    headers: {
+      location: url,
+      'cache-control': 'public, max-age=86400, stale-while-revalidate=604800',
+    },
   });
 }

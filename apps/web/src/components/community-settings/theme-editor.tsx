@@ -5,25 +5,22 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { AlertTriangle, CheckCircle2, Wand2 } from 'lucide-react';
+import { contrastRatio, isHex, roundRatio, type Theme } from '@magnox/shared';
 import {
   autoFixTheme,
   checkTheme,
   COLOR_KEYS,
   colorSetToDeclarations,
-  contrastRatio,
   FONT_KEYS,
   FONT_STACKS,
-  isHex,
   PRESET_KEYS,
   RADIUS_VALUES,
-  roundRatio,
   THEME_PRESETS,
   themeFromPreset,
   type ColorKey,
   type ContrastIssue,
   type PresetKey,
-  type Theme,
-} from '@magnox/shared';
+} from '@magnox/shared/theme-values';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Input, Select } from '@/components/ui/input';

@@ -1,6 +1,10 @@
 import { z } from 'zod';
+import { WEBHOOK_EVENTS } from './integrations-values';
 
 // The public API and webhooks.
+// The webhook event list is in integrations-values.ts, which client code imports directly.
+
+export * from './integrations-values';
 
 export const API_SCOPES = ['read', 'write'] as const;
 export type ApiScope = (typeof API_SCOPES)[number];
@@ -10,20 +14,6 @@ export const apiTokenInputSchema = z.object({
   /** Also let it post (as you). */
   write: z.boolean().default(false),
 });
-
-export const WEBHOOK_EVENTS = [
-  'member.joined',
-  'member.left',
-  'message.created',
-  'thread.created',
-  'post.created',
-  'announcement.created',
-  'event.created',
-  'application.submitted',
-  'server.down',
-  'server.up',
-] as const;
-export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number];
 
 /** A Discord channel webhook (Server Settings → Integrations → Webhooks → Copy Webhook URL). */
 const DISCORD_WEBHOOK_RE =

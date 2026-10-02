@@ -1,9 +1,10 @@
 import { z } from 'zod';
+import { MAX_APPLICATION_QUESTIONS, QUESTION_KINDS } from './applications-values';
 
 // Applying to join a community ("Apply" join mode) and the welcome steps after joining.
+// The plain lists and limits are in applications-values.ts, which client code imports directly.
 
-export const QUESTION_KINDS = ['short', 'long', 'choice', 'checkboxes'] as const;
-export type QuestionKind = (typeof QUESTION_KINDS)[number];
+export * from './applications-values';
 
 export const applicationQuestionSchema = z
   .object({
@@ -24,8 +25,6 @@ export const applicationQuestionSchema = z
     }
   });
 export type ApplicationQuestion = z.infer<typeof applicationQuestionSchema>;
-
-export const MAX_APPLICATION_QUESTIONS = 20;
 
 export const applicationFormSchema = z.object({
   intro: z.string().trim().max(2000).default(''),

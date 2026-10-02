@@ -44,6 +44,7 @@ function Item({
   label,
   collapsed,
   exact,
+  prefetch,
   onNavigate,
   children,
 }: {
@@ -51,6 +52,8 @@ function Item({
   label: string;
   collapsed: boolean;
   exact?: boolean;
+  /** False for long lists, so they aren't all fetched ahead (and again after every refresh). */
+  prefetch?: boolean;
   onNavigate?: () => void;
   children: React.ReactNode;
 }) {
@@ -59,6 +62,7 @@ function Item({
   const link = (
     <Link
       href={href}
+      prefetch={prefetch}
       onClick={onNavigate}
       aria-current={active ? 'page' : undefined}
       aria-label={collapsed ? label : undefined}
@@ -192,6 +196,7 @@ export function SidebarContent({
                   href={`/c/${c.slug}`}
                   label={c.name}
                   collapsed={collapsed}
+                  prefetch={false}
                   onNavigate={onNavigate}
                 >
                   <CommunityTile c={c} />

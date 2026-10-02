@@ -48,7 +48,11 @@ export async function ThreadList({
               {th.unread && (
                 <span className="size-2 shrink-0 rounded-full bg-primary" aria-hidden />
               )}
-              <Link href={`/c/${slug}/t/${th.id}`} className="text-base font-bold hover:underline">
+              <Link
+                href={`/c/${slug}/t/${th.id}`}
+                prefetch={false}
+                className="text-base font-bold hover:underline"
+              >
                 {th.title}
                 {th.unread && <span className="sr-only"> ({t('newActivity')})</span>}
               </Link>

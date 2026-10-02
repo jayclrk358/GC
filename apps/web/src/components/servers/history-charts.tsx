@@ -11,6 +11,14 @@ const PLOT_H = 180;
 const AXIS_H = 24;
 const PAD = { left: 40, right: 44, top: 12 };
 const STRIP_H = 18;
+/** How often the charts refetch the range shown, while the tab is showing. */
+const REFRESH_MS = 5 * 60_000;
+
+function loadHistory(serverId: string, range: HistoryRange): Promise<ServerHistory> {
+  return fetch(`/api/servers/${serverId}/history?range=${range}`).then((r) =>
+    r.ok ? (r.json() as Promise<ServerHistory>) : Promise.reject(new Error()),
+  );
+}
 
 type Uptime = 'up' | 'partial' | 'down' | 'none';
 
@@ -115,16 +123,48 @@ export function ServerHistoryCharts({
   // Loading is simply "the range shown isn't the one picked yet".
   const failed = failedRange === range;
   const loading = range !== history.range && !failed;
+  // When the data shown was asked for (`initial` was rendered just before the first effect).
+  const fetchedAt = React.useRef(0);
 
   React.useEffect(() => {
     if (range === history.range) return;
     let live = true;
-    fetch(`/api/servers/${serverId}/history?range=${range}`, { cache: 'no-store' })
-      .then((r) => (r.ok ? (r.json() as Promise<ServerHistory>) : Promise.reject(new Error())))
+    fetchedAt.current = Date.now();
+    loadHistory(serverId, range)
       .then((h) => live && setHistory(h))
       .catch(() => live && setFailedRange(range));
     return () => {
       live = false;
+    };
+  }, [range, history.range, serverId]);
+
+  // Status is live over the socket; the charts catch up on their own. Every 5 minutes while the
+  // tab is showing, and straight away on coming back to it after longer than that.
+  React.useEffect(() => {
+    // Switching ranges is fetching fresh data already.
+    if (range !== history.range) return;
+    fetchedAt.current ||= Date.now();
+    let live = true;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const tick = () => {
+      clearTimeout(timer);
+      if (document.visibilityState !== 'visible') return;
+      const wait = fetchedAt.current + REFRESH_MS - Date.now();
+      if (wait <= 0) {
+        fetchedAt.current = Date.now();
+        loadHistory(serverId, range)
+          .then((h) => live && setHistory(h))
+          // Keep showing what's there; the next round tries again.
+          .catch(() => undefined);
+      }
+      timer = setTimeout(tick, wait > 0 ? wait : REFRESH_MS);
+    };
+    tick();
+    document.addEventListener('visibilitychange', tick);
+    return () => {
+      live = false;
+      clearTimeout(timer);
+      document.removeEventListener('visibilitychange', tick);
     };
   }, [range, history.range, serverId]);
 

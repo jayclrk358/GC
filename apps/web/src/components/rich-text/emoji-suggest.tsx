@@ -4,7 +4,13 @@ import * as React from 'react';
 import { mergeAttributes, Node, ReactRenderer } from '@tiptap/react';
 import Suggestion, { type SuggestionKeyDownProps, type SuggestionProps } from '@tiptap/suggestion';
 import { PluginKey } from '@tiptap/pm/state';
-import { emojiImagePath, matchEmoji, STANDARD_EMOJI, type CustomEmoji } from '@magnox/shared';
+import {
+  emojiImagePath,
+  matchEmoji,
+  STANDARD_EMOJI,
+  type CustomEmoji,
+} from '@magnox/shared/emoji-values';
+import { providedEmoji } from '@/components/emoji/emoji-context';
 import { cn } from '@/lib/utils';
 import { place, setComboboxAttrs } from './mentions';
 
@@ -95,7 +101,7 @@ const EmojiList = React.forwardRef<ListHandle, ListProps>(function EmojiList(pro
             )}
           >
             {item.kind === 'custom' ? (
-              // eslint-disable-next-line @next/next/no-img-element -- tiny images served by redirect
+              // eslint-disable-next-line @next/next/no-img-element -- tiny images, served as uploaded
               <img src={item.url} alt="" className="size-6 object-contain" />
             ) : (
               <span aria-hidden className="grid size-6 place-items-center text-lg">
@@ -110,33 +116,36 @@ const EmojiList = React.forwardRef<ListHandle, ListProps>(function EmojiList(pro
   );
 });
 
-/** The community's emoji, asked for once per editor (the first time ":" is used). */
+/**
+ * The community's emoji: the list the page already has (an EmojiProvider, as in chat), or else
+ * asked for once per editor (the first time ":" is used).
+ */
 function emojiSource(communityId: string | undefined) {
-  let custom: Promise<EmojiItem[]> | null = null;
+  let fetched: Promise<CustomEmoji[]> | null = null;
   const standard: EmojiItem[] = STANDARD_EMOJI.map(([name, char]) => ({
     kind: 'unicode',
     name,
     char,
   }));
+  const customEmoji = async (): Promise<CustomEmoji[]> => {
+    if (!communityId) return [];
+    const provided = providedEmoji();
+    if (provided) return provided;
+    fetched ??= fetch(`/api/communities/${communityId}/emoji`)
+      .then(async (r) => (r.ok ? ((await r.json()) as { items: CustomEmoji[] }).items : []))
+      .catch(() => {
+        fetched = null;
+        return [];
+      });
+    return fetched;
+  };
   return async (query: string): Promise<EmojiItem[]> => {
-    if (communityId && !custom) {
-      custom = fetch(`/api/communities/${communityId}/emoji`)
-        .then(async (r) =>
-          r.ok
-            ? ((await r.json()) as { items: CustomEmoji[] }).items.map((e): EmojiItem => ({
-                kind: 'custom',
-                ...e,
-              }))
-            : [],
-        )
-        .catch(() => {
-          custom = null;
-          return [];
-        });
-    }
-    const mine = custom ? await custom : [];
+    const mine = matchEmoji(await customEmoji(), query, 8).map((e): EmojiItem => ({
+      kind: 'custom',
+      ...e,
+    }));
     // The community's own come first: they're why people type ":" here.
-    return [...matchEmoji(mine, query, 8), ...matchEmoji(standard, query, 8)].slice(0, 10);
+    return [...mine, ...matchEmoji(standard, query, 8)].slice(0, 10);
   };
 }
 

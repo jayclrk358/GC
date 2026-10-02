@@ -7,16 +7,18 @@ const log = logger('api');
 
 /**
  * Run a read-only JSON endpoint in a community's context. App errors become their HTTP status
- * with a safe message; anything else is logged and returned as a generic 500.
+ * with a safe message; anything else is logged and returned as a generic 500. Successful
+ * responses aren't cached unless `cacheControl` says otherwise.
  */
 export async function communityJson<T>(
   communityId: string,
   fn: (ctx: MemberContext) => Promise<T>,
+  { cacheControl = 'no-store' }: { cacheControl?: string } = {},
 ): Promise<Response> {
   try {
     const user = await getUser();
     const ctx = await getMemberContext({ id: communityId }, user?.id ?? null);
-    return Response.json(await fn(ctx), { headers: { 'cache-control': 'no-store' } });
+    return Response.json(await fn(ctx), { headers: { 'cache-control': cacheControl } });
   } catch (e) {
     if (isAppError(e)) return Response.json({ error: e.message }, { status: e.status });
     if (e instanceof ZodError) return Response.json({ error: 'Invalid request' }, { status: 400 });

@@ -7,6 +7,7 @@ import {
   type HistoryPoint,
   type HistoryRange,
 } from '@magnox/shared';
+import { cached } from '../cache';
 import { logger } from '../logger';
 import { cacheRedis } from '../redis';
 
@@ -181,12 +182,24 @@ interface BucketRow extends Record<string, unknown> {
 
 /**
  * Player and uptime history for a chart. 24 hours and 7 days come from raw samples (kept for a
- * week); 30 days come from the hourly rollups.
+ * week); 30 days come from the hourly rollups. Kept for a minute per endpoint and range, since
+ * everyone looking at a server asks for the same few series; passing `now` reads it fresh.
  */
 export async function endpointHistory(
   endpointId: string,
   range: HistoryRange,
-  now = Date.now(),
+  now?: number,
+): Promise<ServerHistory> {
+  if (now !== undefined) return readEndpointHistory(endpointId, range, now);
+  return cached(`history:${endpointId}:${range}`, 60, () =>
+    readEndpointHistory(endpointId, range, Date.now()),
+  );
+}
+
+async function readEndpointHistory(
+  endpointId: string,
+  range: HistoryRange,
+  now: number,
 ): Promise<ServerHistory> {
   const { hours, bucketMinutes } = HISTORY_BUCKETS[range];
   const bucketMs = bucketMinutes * 60_000;

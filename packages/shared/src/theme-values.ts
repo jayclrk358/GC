@@ -1,0 +1,448 @@
+import { contrastRatio, roundRatio, suggestForeground } from './color';
+import type { ColorSet, Theme } from './theme';
+
+// Kept free of zod so the theme editor and the create wizard stay small in the browser. The
+// schemas in theme.ts validate input; a unit test checks themeFromPreset matches themeSchema.
+
+export const COLOR_KEYS = [
+  'bg',
+  'surface',
+  'surface2',
+  'text',
+  'textMuted',
+  'primary',
+  'onPrimary',
+  'accent',
+  'border',
+  'danger',
+  'success',
+  'warning',
+] as const;
+export type ColorKey = (typeof COLOR_KEYS)[number];
+
+export const FONT_KEYS = [
+  'inter',
+  'system',
+  'atkinson',
+  'nunito',
+  'space-grotesk',
+  'lora',
+  'jetbrains-mono',
+  'oxanium',
+  'exo-2',
+] as const;
+export type FontKey = (typeof FONT_KEYS)[number];
+
+export const FONT_STACKS: Record<FontKey, string> = {
+  inter: "'Inter Variable', ui-sans-serif, system-ui, sans-serif",
+  system: "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+  atkinson: "'Atkinson Hyperlegible', ui-sans-serif, system-ui, sans-serif",
+  nunito: "'Nunito Variable', ui-rounded, ui-sans-serif, system-ui, sans-serif",
+  'space-grotesk': "'Space Grotesk Variable', ui-sans-serif, system-ui, sans-serif",
+  lora: "'Lora Variable', ui-serif, Georgia, serif",
+  'jetbrains-mono': "'JetBrains Mono Variable', ui-monospace, SFMono-Regular, monospace",
+  oxanium: "'Oxanium Variable', ui-sans-serif, system-ui, sans-serif",
+  'exo-2': "'Exo 2 Variable', ui-sans-serif, system-ui, sans-serif",
+};
+
+export const RADIUS_VALUES = {
+  none: '0px',
+  sm: '0.25rem',
+  md: '0.5rem',
+  lg: '0.75rem',
+  xl: '1.25rem',
+} as const;
+export type RadiusKey = keyof typeof RADIUS_VALUES;
+
+/** Contrast requirements checked for every colour set (WCAG 2.2 AA). */
+export const CONTRAST_RULES: readonly {
+  id: string;
+  fg: ColorKey;
+  bg: ColorKey;
+  min: number;
+}[] = [
+  { id: 'text-on-bg', fg: 'text', bg: 'bg', min: 4.5 },
+  { id: 'text-on-surface', fg: 'text', bg: 'surface', min: 4.5 },
+  { id: 'text-on-surface2', fg: 'text', bg: 'surface2', min: 4.5 },
+  { id: 'muted-on-bg', fg: 'textMuted', bg: 'bg', min: 4.5 },
+  { id: 'muted-on-surface', fg: 'textMuted', bg: 'surface', min: 4.5 },
+  { id: 'primary-on-bg', fg: 'primary', bg: 'bg', min: 4.5 },
+  { id: 'primary-on-surface', fg: 'primary', bg: 'surface', min: 4.5 },
+  { id: 'on-primary', fg: 'onPrimary', bg: 'primary', min: 4.5 },
+  { id: 'accent-on-bg', fg: 'accent', bg: 'bg', min: 3 },
+  { id: 'danger-on-bg', fg: 'danger', bg: 'bg', min: 4.5 },
+  { id: 'danger-on-surface', fg: 'danger', bg: 'surface', min: 4.5 },
+  { id: 'success-on-bg', fg: 'success', bg: 'bg', min: 4.5 },
+  { id: 'success-on-surface', fg: 'success', bg: 'surface', min: 4.5 },
+  { id: 'warning-on-bg', fg: 'warning', bg: 'bg', min: 4.5 },
+  { id: 'warning-on-surface', fg: 'warning', bg: 'surface', min: 4.5 },
+];
+
+export interface ContrastIssue {
+  rule: string;
+  scheme: 'light' | 'dark';
+  fg: ColorKey;
+  bg: ColorKey;
+  ratio: number;
+  min: number;
+  suggestion: string | null;
+}
+
+export function checkColorSet(set: ColorSet, scheme: 'light' | 'dark'): ContrastIssue[] {
+  const issues: ContrastIssue[] = [];
+  for (const rule of CONTRAST_RULES) {
+    const ratio = contrastRatio(set[rule.fg], set[rule.bg]);
+    if (ratio < rule.min) {
+      issues.push({
+        rule: rule.id,
+        scheme,
+        fg: rule.fg,
+        bg: rule.bg,
+        ratio: roundRatio(ratio),
+        min: rule.min,
+        suggestion: suggestForeground(set[rule.fg], set[rule.bg], rule.min + 0.05),
+      });
+    }
+  }
+  return issues;
+}
+
+export function checkTheme(theme: Pick<Theme, 'light' | 'dark'>): ContrastIssue[] {
+  return [...checkColorSet(theme.light, 'light'), ...checkColorSet(theme.dark, 'dark')];
+}
+
+/**
+ * Repeatedly apply suggestions until the colour set passes. A foreground can appear in several
+ * rules (e.g. text on bg and text on surface), so we iterate a few times.
+ */
+export function autoFixColorSet(set: ColorSet): ColorSet {
+  let current = { ...set };
+  for (let pass = 0; pass < 6; pass++) {
+    const issues = checkColorSet(current, 'light');
+    if (issues.length === 0) break;
+    for (const issue of issues) {
+      // Against all backgrounds this foreground must satisfy, choose the strictest.
+      const rules = CONTRAST_RULES.filter((r) => r.fg === issue.fg);
+      let candidate = current[issue.fg];
+      for (const r of rules) {
+        const s = suggestForeground(candidate, current[r.bg], r.min + 0.05);
+        if (s) candidate = s;
+      }
+      current = { ...current, [issue.fg]: candidate };
+    }
+  }
+  return current;
+}
+
+export function autoFixTheme<T extends Pick<Theme, 'light' | 'dark'>>(theme: T): T {
+  return { ...theme, light: autoFixColorSet(theme.light), dark: autoFixColorSet(theme.dark) };
+}
+
+const CSS_VAR: Record<ColorKey, string> = {
+  bg: '--c-bg',
+  surface: '--c-surface',
+  surface2: '--c-surface-2',
+  text: '--c-text',
+  textMuted: '--c-text-muted',
+  primary: '--c-primary',
+  onPrimary: '--c-on-primary',
+  accent: '--c-accent',
+  border: '--c-border',
+  danger: '--c-danger',
+  success: '--c-success',
+  warning: '--c-warning',
+};
+
+export function colorSetToDeclarations(set: ColorSet): string {
+  // Values are validated hex strings, so they are safe to interpolate into CSS.
+  return COLOR_KEYS.map((k) => `${CSS_VAR[k]}:${set[k]}`).join(';');
+}
+
+type PresetDef = Pick<Theme, 'light' | 'dark'> &
+  Partial<Pick<Theme, 'radius' | 'fontBody' | 'fontHeading' | 'defaultScheme'>>;
+
+export const THEME_PRESETS = {
+  magnox: {
+    light: {
+      bg: '#f3f4fb',
+      surface: '#ffffff',
+      surface2: '#e9ebf8',
+      text: '#0c0d1a',
+      textMuted: '#4a4f6a',
+      primary: '#5b21b6',
+      onPrimary: '#ffffff',
+      accent: '#0a7c73',
+      border: '#d5d8ec',
+      danger: '#b91c3c',
+      success: '#12733d',
+      warning: '#8a4b00',
+    },
+    dark: {
+      bg: '#07080f',
+      surface: '#0e1020',
+      surface2: '#161a2e',
+      text: '#eef0ff',
+      textMuted: '#a4aac8',
+      primary: '#a78bfa',
+      onPrimary: '#0a0714',
+      accent: '#22e5c7',
+      border: '#272c47',
+      danger: '#ff8f8f',
+      success: '#4ff08e',
+      warning: '#ffcf5c',
+    },
+    fontHeading: 'oxanium',
+  },
+  midnight: {
+    defaultScheme: 'dark',
+    fontHeading: 'space-grotesk',
+    light: {
+      bg: '#f4f6fb',
+      surface: '#ffffff',
+      surface2: '#e8ecf6',
+      text: '#0b1020',
+      textMuted: '#465069',
+      primary: '#1d4ed8',
+      onPrimary: '#ffffff',
+      accent: '#7c3aed',
+      border: '#d3d9e8',
+      danger: '#b91c1c',
+      success: '#15803d',
+      warning: '#8a4b00',
+    },
+    dark: {
+      bg: '#070a14',
+      surface: '#0f1424',
+      surface2: '#161d33',
+      text: '#e7ecff',
+      textMuted: '#9aa6c7',
+      primary: '#7aa2ff',
+      onPrimary: '#070a14',
+      accent: '#c4b5fd',
+      border: '#232c47',
+      danger: '#ff9b9b',
+      success: '#7ee2a8',
+      warning: '#ffd27a',
+    },
+  },
+  forest: {
+    fontHeading: 'lora',
+    radius: 'lg',
+    light: {
+      bg: '#f5f7f2',
+      surface: '#ffffff',
+      surface2: '#e9efe3',
+      text: '#16200f',
+      textMuted: '#4b5a42',
+      primary: '#2f6b1f',
+      onPrimary: '#ffffff',
+      accent: '#8a5a00',
+      border: '#d5ddcc',
+      danger: '#a8261b',
+      success: '#2f6b1f',
+      warning: '#7d4e00',
+    },
+    dark: {
+      bg: '#0d130b',
+      surface: '#141c11',
+      surface2: '#1c2717',
+      text: '#e8f1e1',
+      textMuted: '#a4b59a',
+      primary: '#9bd87c',
+      onPrimary: '#0d130b',
+      accent: '#f2c46b',
+      border: '#2a3825',
+      danger: '#f7a39b',
+      success: '#9bd87c',
+      warning: '#f2c46b',
+    },
+  },
+  ember: {
+    defaultScheme: 'dark',
+    fontHeading: 'space-grotesk',
+    radius: 'sm',
+    light: {
+      bg: '#fbf6f3',
+      surface: '#ffffff',
+      surface2: '#f4e9e2',
+      text: '#23120a',
+      textMuted: '#5f4538',
+      primary: '#b03a0e',
+      onPrimary: '#ffffff',
+      accent: '#9a3412',
+      border: '#ead8cd',
+      danger: '#b4161b',
+      success: '#2b6e2f',
+      warning: '#7c4a00',
+    },
+    dark: {
+      bg: '#140a06',
+      surface: '#1e110b',
+      surface2: '#2a1810',
+      text: '#fbece4',
+      textMuted: '#c9a999',
+      primary: '#ff8a50',
+      onPrimary: '#140a06',
+      accent: '#ffb86b',
+      border: '#3b2419',
+      danger: '#ff9a9a',
+      success: '#8fdc95',
+      warning: '#ffcf70',
+    },
+  },
+  ocean: {
+    radius: 'lg',
+    fontHeading: 'nunito',
+    fontBody: 'nunito',
+    light: {
+      bg: '#f2f8fb',
+      surface: '#ffffff',
+      surface2: '#e2f0f6',
+      text: '#0a1a24',
+      textMuted: '#3f5663',
+      primary: '#006494',
+      onPrimary: '#ffffff',
+      accent: '#0f766e',
+      border: '#cfe2ea',
+      danger: '#b3261e',
+      success: '#1b6e3c',
+      warning: '#7a4f00',
+    },
+    dark: {
+      bg: '#06131b',
+      surface: '#0b1d28',
+      surface2: '#112836',
+      text: '#e3f3fb',
+      textMuted: '#98b7c6',
+      primary: '#6cc7f5',
+      onPrimary: '#06131b',
+      accent: '#5eead4',
+      border: '#1d3a4b',
+      danger: '#ffa29c',
+      success: '#86e3a8',
+      warning: '#ffd37a',
+    },
+  },
+  arcade: {
+    defaultScheme: 'dark',
+    fontHeading: 'jetbrains-mono',
+    radius: 'none',
+    light: {
+      bg: '#faf7ff',
+      surface: '#ffffff',
+      surface2: '#efe8ff',
+      text: '#150b29',
+      textMuted: '#4e4266',
+      primary: '#8e00b8',
+      onPrimary: '#ffffff',
+      accent: '#0369a1',
+      border: '#ddd2f2',
+      danger: '#b0132a',
+      success: '#146c2e',
+      warning: '#7a4800',
+    },
+    dark: {
+      bg: '#0a0514',
+      surface: '#120a22',
+      surface2: '#1b1030',
+      text: '#f5edff',
+      textMuted: '#b9a8d6',
+      primary: '#f472ff',
+      onPrimary: '#0a0514',
+      accent: '#22d3ee',
+      border: '#2d1f47',
+      danger: '#ff8fa3',
+      success: '#6ef2a0',
+      warning: '#ffe066',
+    },
+  },
+  parchment: {
+    defaultScheme: 'light',
+    fontBody: 'lora',
+    fontHeading: 'lora',
+    radius: 'sm',
+    light: {
+      bg: '#f6f0e1',
+      surface: '#fdf9ef',
+      surface2: '#ede3cc',
+      text: '#2a1f0f',
+      textMuted: '#5c4b31',
+      primary: '#7a3b0c',
+      onPrimary: '#ffffff',
+      accent: '#6b4d00',
+      border: '#dccfb1',
+      danger: '#9e1c14',
+      success: '#2e5e1b',
+      warning: '#744800',
+    },
+    dark: {
+      bg: '#17120a',
+      surface: '#201910',
+      surface2: '#2b2216',
+      text: '#f3e9d4',
+      textMuted: '#c2b193',
+      primary: '#e6a66a',
+      onPrimary: '#17120a',
+      accent: '#e2c26d',
+      border: '#3a2f1f',
+      danger: '#f29a8e',
+      success: '#a5d68a',
+      warning: '#f0c96e',
+    },
+  },
+  mono: {
+    radius: 'none',
+    fontHeading: 'jetbrains-mono',
+    light: {
+      bg: '#ffffff',
+      surface: '#ffffff',
+      surface2: '#f0f0f0',
+      text: '#000000',
+      textMuted: '#4a4a4a',
+      primary: '#000000',
+      onPrimary: '#ffffff',
+      accent: '#444444',
+      border: '#cccccc',
+      danger: '#a00000',
+      success: '#1f5f1f',
+      warning: '#6b4400',
+    },
+    dark: {
+      bg: '#000000',
+      surface: '#0d0d0d',
+      surface2: '#1a1a1a',
+      text: '#ffffff',
+      textMuted: '#b5b5b5',
+      primary: '#ffffff',
+      onPrimary: '#000000',
+      accent: '#bbbbbb',
+      border: '#333333',
+      danger: '#ff9a9a',
+      success: '#9be29b',
+      warning: '#ffd98a',
+    },
+  },
+} satisfies Record<string, PresetDef>;
+
+export type PresetKey = keyof typeof THEME_PRESETS;
+export const PRESET_KEYS = Object.keys(THEME_PRESETS) as PresetKey[];
+
+/** A preset as a whole theme, with the same defaults themeSchema fills in. */
+export function themeFromPreset(key: PresetKey): Theme {
+  const p: PresetDef = THEME_PRESETS[key];
+  return {
+    v: 1,
+    preset: key,
+    light: { ...p.light },
+    dark: { ...p.dark },
+    defaultScheme: p.defaultScheme ?? 'auto',
+    radius: p.radius ?? 'md',
+    fontBody: p.fontBody ?? 'inter',
+    fontHeading: p.fontHeading ?? p.fontBody ?? 'inter',
+    headerStyle: 'banner',
+    bannerFocalY: 50,
+    backgroundDim: 70,
+  };
+}
+
+export const DEFAULT_THEME: Theme = themeFromPreset('magnox');

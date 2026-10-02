@@ -7,13 +7,11 @@ import { Check, Clapperboard, Server, Shield, Sparkles } from 'lucide-react';
 import {
   COMMUNITY_TEMPLATES,
   LANGUAGES,
-  PRESET_KEYS,
   REGIONS,
   slugify,
-  THEME_PRESETS,
   type CommunityTemplate,
-  type PresetKey,
 } from '@magnox/shared';
+import { PRESET_KEYS, THEME_PRESETS, type PresetKey } from '@magnox/shared/theme-values';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Input, Select } from '@/components/ui/input';
