@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { FormError } from '@/components/auth/form-error';
 import { acceptTermsAction } from '@/app/actions/account';
+import { safeNext } from '@/lib/safe-redirect';
 
 /** Agreeing to the terms (and being old enough), for people who haven't yet. */
 export function AcceptTerms({ next, updated }: { next: string; updated: boolean }) {
@@ -25,7 +26,7 @@ export function AcceptTerms({ next, updated }: { next: string; updated: boolean 
         const r = await acceptTermsAction();
         setPending(false);
         if (!r.ok) return setError(r.error);
-        router.replace(next);
+        router.replace(safeNext(next));
         router.refresh();
       }}
     >

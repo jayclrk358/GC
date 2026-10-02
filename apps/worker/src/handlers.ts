@@ -14,6 +14,7 @@ import {
   sendDigests,
   sendEventReminders,
   sendPushes,
+  sweepUnusedUploads,
   type PushItem,
   type FanoutJob,
   type WebhookJob,
@@ -70,6 +71,8 @@ export const handlers: Record<string, Handler> = {
     const removed = await cleanupUnverifiedServers();
     const giftsEnded = await expirePlanGifts();
     const digests = await sendDigests();
-    return { removed, giftsEnded, digests };
+    // Chat files and post images uploaded over a day ago and never used.
+    const unusedUploads = await sweepUnusedUploads();
+    return { removed, giftsEnded, digests, unusedUploads };
   },
 };

@@ -1,21 +1,62 @@
-import { isAppError, isUploadPurpose, logger, saveUpload } from '@magnox/core';
+import { checkUploadAllowed, isAppError, isUploadPurpose, logger, saveUpload } from '@magnox/core';
 import { MAX_PLAN_LIMITS } from '@magnox/shared';
 import { getUser } from '@/lib/auth';
 
 /** The biggest upload any plan allows, plus room for the form around it (and a video's still). */
 const MAX_BODY = (MAX_PLAN_LIMITS.videoMb + 6) * 1_000_000;
 
+const tooLarge = () => Response.json({ error: 'That file is too large.' }, { status: 413 });
+
+/**
+ * The request body, cut off (and the rest never read) once it's longer than `limit`. The proxy
+ * skips this route so it never holds a copy of a video, so nothing else caps it here.
+ */
+function limitedBody(body: ReadableStream<Uint8Array>, limit: number) {
+  const state = { tooLarge: false };
+  let size = 0;
+  const stream = body.pipeThrough(
+    new TransformStream<Uint8Array, Uint8Array>({
+      transform(chunk, controller) {
+        size += chunk.byteLength;
+        if (size > limit) {
+          state.tooLarge = true;
+          controller.error(new Error('Request body too large'));
+          return;
+        }
+        controller.enqueue(chunk);
+      },
+    }),
+  );
+  return { stream, state };
+}
+
 export async function POST(req: Request) {
   const user = await getUser();
   if (!user) return Response.json({ error: 'Please sign in to upload.' }, { status: 401 });
-  // Turn away anything too big before reading it into memory.
-  if (Number(req.headers.get('content-length') ?? 0) > MAX_BODY) {
-    return Response.json({ error: 'That file is too large.' }, { status: 413 });
+  // Uploads must say how big they are, so anything too big is turned away before it's read.
+  const length = req.headers.get('content-length');
+  const declared = Number(length);
+  if (!length || !Number.isSafeInteger(declared) || declared < 0) {
+    return Response.json({ error: 'Invalid upload.' }, { status: 411 });
   }
-  let form: FormData;
+  if (declared > MAX_BODY) return tooLarge();
   try {
-    form = await req.formData();
+    await checkUploadAllowed(user.id);
+  } catch (e) {
+    if (isAppError(e)) return Response.json({ error: e.message }, { status: e.status });
+    throw e;
+  }
+  if (!req.body) return Response.json({ error: 'Invalid upload.' }, { status: 400 });
+
+  let form: FormData;
+  // No more than it said it would send (chunked bodies have no length, and are turned away above).
+  const body = limitedBody(req.body, declared);
+  try {
+    form = await new Response(body.stream, {
+      headers: { 'content-type': req.headers.get('content-type') ?? '' },
+    }).formData();
   } catch {
+    if (body.state.tooLarge) return tooLarge();
     return Response.json({ error: 'Invalid upload.' }, { status: 400 });
   }
   const file = form.get('file');

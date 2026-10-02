@@ -185,20 +185,28 @@ function attr(tag: string, name: string): string | null {
 const clean = (s: string, max: number) =>
   decodeEntities(s).replace(/\s+/g, ' ').trim().slice(0, max);
 
+/** How much of a page is read for its preview: its <head>, and never more than this. */
+export const PREVIEW_HEAD_BYTES = 64 * 1024;
+
 /**
  * Pull preview fields out of an HTML document's <head>: OpenGraph first, then Twitter cards,
  * then <title> and meta description. Only reads tags; never executes or renders anything.
+ *
+ * Pages are untrusted, so the patterns are bounded (a tag or title past 2 KB is skipped) and
+ * only the <head> is read: open-ended patterns take seconds on a page of unclosed tags.
  */
 export function parseOpenGraph(html: string, pageUrl: string): OpenGraph | null {
-  const head = html.slice(0, 300_000);
+  let head = html.slice(0, PREVIEW_HEAD_BYTES);
+  const headEnd = head.search(/<\/head\s*>/i);
+  if (headEnd >= 0) head = head.slice(0, headEnd);
   const meta = new Map<string, string>();
-  for (const m of head.matchAll(/<meta\b[^>]*>/gi)) {
+  for (const m of head.matchAll(/<meta\b[^>]{0,2048}>/gi)) {
     const tag = m[0];
     const key = (attr(tag, 'property') ?? attr(tag, 'name') ?? '').toLowerCase();
     const content = attr(tag, 'content');
     if (key && content !== null && !meta.has(key)) meta.set(key, content);
   }
-  const titleTag = head.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? '';
+  const titleTag = head.match(/<title\b[^>]{0,256}>([\s\S]{0,2048}?)<\/title>/i)?.[1] ?? '';
   const title = clean(meta.get('og:title') ?? meta.get('twitter:title') ?? titleTag, 200);
   const description = clean(
     meta.get('og:description') ?? meta.get('twitter:description') ?? meta.get('description') ?? '',

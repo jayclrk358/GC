@@ -38,7 +38,7 @@ export const PALETTE_EFFECTS = {
 export type PaletteEffect = keyof typeof PALETTE_EFFECTS;
 
 export function isPaletteEffect(e: string): e is PaletteEffect {
-  return e in PALETTE_EFFECTS;
+  return Object.hasOwn(PALETTE_EFFECTS, e);
 }
 
 export const NAME_ANIMATIONS = [

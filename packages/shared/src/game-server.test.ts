@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { fillSeries, formatDuration, summariseHistory } from './game-server';
+import { fillSeries, formatDuration, isServerProtocol, summariseHistory } from './game-server';
 import { serverIntegrationsSchema, serverSearchSchema } from './game-server-schema';
+
+describe('isServerProtocol', () => {
+  it('accepts only the protocols listed', () => {
+    expect(isServerProtocol('minecraft')).toBe(true);
+    expect(isServerProtocol('fivem')).toBe(true);
+    for (const p of ['toString', 'constructor', '__proto__', 'hasOwnProperty', '']) {
+      expect(isServerProtocol(p)).toBe(false);
+    }
+  });
+});
 
 describe('serverSearchSchema', () => {
   it('parses query strings leniently', () => {

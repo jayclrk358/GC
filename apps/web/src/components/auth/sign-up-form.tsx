@@ -11,6 +11,7 @@ import { Alert } from '@/components/ui/misc';
 import { Turnstile, type TurnstileHandle } from '@/components/ui/turnstile';
 import { acceptTermsAction } from '@/app/actions/account';
 import { authClient } from '@/lib/auth-client';
+import { safeNext } from '@/lib/safe-redirect';
 import { captchaOptions, isCaptchaError } from './captcha';
 import { FormError } from './form-error';
 
@@ -63,7 +64,7 @@ export function SignUpForm({
       email,
       password,
       username,
-      callbackURL: next,
+      callbackURL: safeNext(next),
       fetchOptions: captchaOptions(captcha),
     });
     setPending(false);
@@ -86,7 +87,8 @@ export function SignUpForm({
       return;
     }
     await acceptTermsAction();
-    router.push(next === '/' ? '/new?welcome=1' : next);
+    const to = safeNext(next);
+    router.push(to === '/' ? '/new?welcome=1' : to);
     router.refresh();
   }
 

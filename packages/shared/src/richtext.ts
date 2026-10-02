@@ -7,7 +7,9 @@
 const SAFE_URL = /^(https?:\/\/|mailto:|\/(?!\/))/i;
 
 export function isSafeHref(href: string): boolean {
-  return SAFE_URL.test(href) && href.length <= 2048 && !/[\s<>"']/.test(href);
+  if (!SAFE_URL.test(href) || href.length > 2048 || /[\s<>"'\p{Cc}]/u.test(href)) return false;
+  // Browsers read `\` as `/`, so a "relative" `/\evil.com` is really `//evil.com`: another site.
+  return !href.startsWith('/') || !href.includes('\\');
 }
 
 /** Formatting on a run of text. Checked by the sanitizer in richtext-schema.ts. */

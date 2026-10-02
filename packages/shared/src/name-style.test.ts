@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { contrastRatio } from './color';
 import {
+  isPaletteEffect,
   LETTER_ANIMATIONS,
   nameStyleView,
   PALETTE_EFFECTS,
@@ -9,6 +10,13 @@ import {
 } from './name-style';
 
 describe('name styles', () => {
+  it('only treats real palette effects as palette effects', () => {
+    expect(isPaletteEffect('gold')).toBe(true);
+    for (const e of ['color', 'toString', 'constructor', '__proto__']) {
+      expect(isPaletteEffect(e)).toBe(false);
+    }
+  });
+
   it('gives plain names no style', () => {
     expect(nameStyleView('#ff0000', { effect: 'none' })).toBeNull();
     expect(nameStyleView('#ff0000', null)).toBeNull();

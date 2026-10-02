@@ -36,10 +36,13 @@ const nextConfig: NextConfig = {
     '@opentelemetry/exporter-trace-otlp-http',
   ],
   experimental: {
-    serverActions: { bodySizeLimit: '12mb' },
-    // Server actions pass through the proxy (CSP), which otherwise cuts bodies off at 10 MB.
-    // Uploads skip it (see the matcher in proxy.ts), so it never holds a copy of a video.
-    proxyClientMaxBodySize: '13mb',
+    // No server action takes files (they go to /api/uploads); the biggest bodies are long posts
+    // and wiki pages as rich text, well under this.
+    serverActions: { bodySizeLimit: '2mb' },
+    // The proxy keeps a copy of each request body up to this size, cutting off the rest, so it
+    // caps every route that passes through it (server actions, webhooks, the API). Uploads skip
+    // it (see the matcher in proxy.ts) and check their own size; Caddy caps everything too.
+    proxyClientMaxBodySize: '2mb',
     // Import only the Radix components used, not the whole umbrella package.
     optimizePackageImports: ['radix-ui'],
   },

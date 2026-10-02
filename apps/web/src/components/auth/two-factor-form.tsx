@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { authClient } from '@/lib/auth-client';
+import { safeNext } from '@/lib/safe-redirect';
 import { syncPrefsFromAccount } from '@/app/actions/prefs';
 import { FormError } from './form-error';
 
@@ -32,7 +33,7 @@ export function TwoFactorForm({ next }: { next: string }) {
       return;
     }
     await syncPrefsFromAccount();
-    router.push(next);
+    router.push(safeNext(next));
     router.refresh();
   }
 

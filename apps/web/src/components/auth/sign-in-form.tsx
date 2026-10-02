@@ -9,6 +9,7 @@ import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Turnstile, type TurnstileHandle } from '@/components/ui/turnstile';
 import { authClient } from '@/lib/auth-client';
+import { safeNext } from '@/lib/safe-redirect';
 import { syncPrefsFromAccount } from '@/app/actions/prefs';
 import { captchaOptions, isCaptchaError } from './captcha';
 import { FormError } from './form-error';
@@ -55,7 +56,7 @@ export function SignInForm({
     }
     if ((res.data as { twoFactorRedirect?: boolean } | null)?.twoFactorRedirect) return;
     await syncPrefsFromAccount();
-    router.push(next);
+    router.push(safeNext(next));
     router.refresh();
   }
 
