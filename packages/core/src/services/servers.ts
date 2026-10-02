@@ -8,6 +8,7 @@ import {
   Permission,
   randomToken,
   serverInputSchema,
+  isServerProtocol,
   SERVER_PROTOCOLS,
   type ServerProtocol,
   type ServerStatus,
@@ -104,7 +105,7 @@ export function endpointStatus(row: {
 }
 
 function toView(r: ViewRow, opts: { showToken: boolean }): ServerView {
-  const protocol = (r.protocol in SERVER_PROTOCOLS ? r.protocol : 'source') as ServerProtocol;
+  const protocol: ServerProtocol = isServerProtocol(r.protocol) ? r.protocol : 'source';
   return {
     id: r.id,
     endpointId: r.endpointId,
@@ -186,7 +187,7 @@ function loadPublicServers(opts: { q?: string; protocol?: string; limit?: number
     eq(schema.gameServers.listed, true),
     isNotNull(schema.gameServers.verifiedAt),
   ];
-  if (opts.protocol && opts.protocol in SERVER_PROTOCOLS)
+  if (opts.protocol && isServerProtocol(opts.protocol))
     where.push(eq(schema.serverEndpoints.protocol, opts.protocol));
   const q = opts.q?.trim().slice(0, 100);
   if (q) {
