@@ -114,7 +114,14 @@ export async function deliver(items: NotificationInput[]): Promise<void> {
       targetId: n.targetId ?? null,
     }));
     await db.insert(schema.notifications).values(batch);
+    // Live only to people connected right now; everyone else sees them on their next visit.
+    const ids = [...new Set(batch.map((n) => n.userId))];
+    const states = await cacheRedis()
+      .mget(ids.map((id) => `presence:${id}`))
+      .catch(() => null);
+    const online = states && new Set(ids.filter((_, i) => states[i]));
     for (const n of batch) {
+      if (online && !online.has(n.userId)) continue;
       realtime()
         .to(rooms.user(n.userId))
         .emit('notification:new', { id: n.id, type: n.type, url: n.url, data: n.data });
@@ -731,11 +738,13 @@ export async function listNotifications(
 }
 
 export async function unreadCount(userId: string): Promise<number> {
-  const [row] = await db
-    .select({ n: sql<number>`count(*)::int` })
-    .from(schema.notifications)
-    .where(and(eq(schema.notifications.userId, userId), isNull(schema.notifications.readAt)));
-  return Math.min(row?.n ?? 0, 999);
+  // The badge stops at 999, so there's no need to count further.
+  const n = schema.notifications;
+  const [row] = await db.execute<{ n: number }>(sql`
+    SELECT count(*)::int AS n FROM (
+      SELECT 1 FROM ${n} WHERE ${n.userId} = ${userId} AND ${n.readAt} IS NULL LIMIT 999
+    ) unread`);
+  return row?.n ?? 0;
 }
 
 export async function markNotificationsRead(userId: string, raw: unknown): Promise<void> {

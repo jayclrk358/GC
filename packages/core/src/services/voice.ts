@@ -249,11 +249,16 @@ export async function handleVoiceWebhook(body: string, auth: string | null): Pro
 
 /**
  * Check the list against LiveKit itself (when someone opens the channel), in case a webhook
- * was missed while the site was restarting.
+ * was missed while the site was restarting. At most every 15 seconds per channel: in between,
+ * the list the webhooks keep is current.
  */
 export async function syncVoicePeople(channelId: string): Promise<VoicePerson[]> {
   if (!voiceEnabled()) return [];
   const key = peopleKey(channelId);
+  const due = await cacheRedis()
+    .set(`voice-sync:${channelId}`, '1', 'EX', 15, 'NX')
+    .catch(() => 'OK');
+  if (!due) return (await cacheRedis().hvals(key)).map((v) => JSON.parse(v) as VoicePerson);
   let inside: ParticipantInfo[];
   try {
     inside = await livekit().listParticipants(roomOf(channelId));

@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import { boolean, index, jsonb, pgTable, primaryKey, text, uuid } from 'drizzle-orm/pg-core';
 import { users } from './auth';
 import { communities } from './communities';
@@ -39,7 +40,13 @@ export const notifications = pgTable(
     readAt: tz('read_at'),
     createdAt: createdAt(),
   },
-  (t) => [index('notifications_user_idx').on(t.userId, t.id)],
+  (t) => [
+    index('notifications_user_idx').on(t.userId, t.id),
+    // Unread counts, asked for on most page loads.
+    index('notifications_unread_idx')
+      .on(t.userId)
+      .where(sql`${t.readAt} is null`),
+  ],
 );
 
 export const notificationSettings = pgTable('notification_settings', {

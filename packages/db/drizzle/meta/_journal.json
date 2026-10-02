@@ -197,6 +197,13 @@
       "when": 1790942893513,
       "tag": "0027_history_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1790944794631,
+      "tag": "0028_notifications_unread_idx",
+      "breakpoints": true
     }
   ]
 }
