@@ -142,6 +142,26 @@ export async function banMember(ctx: MemberContext, userId: string, raw: unknown
           ),
         )
         .returning({ id: schema.posts.id });
+      // Their threads count the removed replies off, as deleting one reply does.
+      if (posts.length) {
+        const t = schema.threads;
+        const p = schema.posts;
+        await tx.execute(sql`
+          update ${t}
+          set reply_count = greatest(${t.replyCount} - d.n, 0),
+              solution_post_id = case when ${t.solutionPostId} = any(d.ids) then null
+                                      else ${t.solutionPostId} end
+          from (
+            select ${p.threadId} as thread_id, count(*)::int as n, array_agg(${p.id}) as ids
+            from ${p}
+            where ${inArray(
+              p.id,
+              posts.map((r) => r.id),
+            )} and not ${p.isOp}
+            group by ${p.threadId}
+          ) d
+          where ${t.id} = d.thread_id`);
+      }
       const threads = await tx
         .update(schema.threads)
         .set({ deletedAt: new Date() })

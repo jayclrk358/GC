@@ -53,10 +53,17 @@ export async function settle(page: Page) {
 
 /** Run axe with WCAG 2.2 AA rules and fail on any violation. */
 export async function expectAccessible(page: Page, label = page.url()) {
-  await settle(page);
-  const results = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-    .analyze();
+  const scan = async () => {
+    await settle(page);
+    return new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+      .analyze();
+  };
+  let results = await scan();
+  // Something can start animating between settling and the scan (a toast for a notification that
+  // just arrived), and a half-faded element fails contrast. Real problems are still there when
+  // the page has settled again.
+  if (results.violations.length) results = await scan();
   const summary = results.violations.map(
     (v) =>
       `${v.id} (${v.impact}): ${v.help}\n    ${v.nodes

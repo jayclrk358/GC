@@ -29,6 +29,7 @@ import { TEMPLATES } from '../templates';
 import { Permission } from '@magnox/shared';
 import { audit, diffOf } from './audit';
 import { cached } from '../cache';
+import { accessChanged } from '../emitter';
 import { cancelCommunitySubscriptions } from './billing';
 import { queueMediaCleanup } from './media-cleanup';
 import { notifyUser } from './notify';
@@ -193,6 +194,8 @@ export async function updateCommunityBasics(ctx: MemberContext, raw: unknown): P
       diff: diffOf(before as unknown as Record<string, unknown>, patch),
     });
   });
+  // Visitors following a public community's channels lose them when it goes private.
+  if (input.visibility && input.visibility !== before.visibility) accessChanged(ctx.community.id);
 }
 
 export async function changeSlug(ctx: MemberContext, raw: unknown): Promise<string> {
@@ -302,6 +305,7 @@ export async function deleteCommunity(ctx: MemberContext, confirmSlug: string): 
       action: 'community.delete',
     });
   });
+  accessChanged(ctx.community.id);
   // A deleted community shouldn't keep being charged for.
   await cancelCommunitySubscriptions(ctx.community.id);
   await endCommunityVoiceCalls(ctx.community.id);

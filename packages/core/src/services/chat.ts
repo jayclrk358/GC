@@ -41,7 +41,7 @@ import {
 } from '@magnox/shared';
 import { z } from 'zod';
 import type { MemberContext } from '../access';
-import { cached } from '../cache';
+import { cached, uncache } from '../cache';
 import { AppError, forbidden, notFound, unauthorized } from '../errors';
 import { realtime } from '../emitter';
 import { QUEUES, enqueue } from '../queues';
@@ -1169,7 +1169,20 @@ const MEMBER_LIST_MAX = 100;
  */
 export async function memberList(ctx: MemberContext): Promise<MemberListView> {
   // The same for everyone in the community, and every open chat asks for it now and then.
-  return cached(`memberlist:${ctx.community.id}`, 15, () => loadMemberList(ctx.community.id));
+  const key = memberListKey(ctx.community.id);
+  const load = () => loadMemberList(ctx.community.id, ctx.userId);
+  const list = await cached(key, 15, load);
+  // Worked out before this person's tab connected: they're clearly here, so redo it.
+  const offline = list.groups.find((g) => g.id === 'offline');
+  if (ctx.userId && offline?.members.some((m) => m.id === ctx.userId)) {
+    await uncache(key);
+    return cached(key, 15, load);
+  }
+  return list;
+}
+
+function memberListKey(communityId: string): string {
+  return `memberlist:${communityId}`;
 }
 
 interface MemberListView {
@@ -1178,7 +1191,11 @@ interface MemberListView {
   members: number;
 }
 
-async function loadMemberList(communityId: string): Promise<MemberListView> {
+/** `viewerId` is asking for it, so counts as online even if their tab hasn't connected yet. */
+async function loadMemberList(
+  communityId: string,
+  viewerId: string | null,
+): Promise<MemberListView> {
   const all = await db
     .select({ userId: schema.members.userId })
     .from(schema.members)
@@ -1186,8 +1203,9 @@ async function loadMemberList(communityId: string): Promise<MemberListView> {
     .limit(2000);
   if (!all.length) return { groups: [], online: 0, members: 0 };
   const flags = await cacheRedis().mget(...all.map((m) => `presence:${m.userId}`));
-  const onlineIds = all.filter((_, i) => flags[i]).map((m) => m.userId);
-  const offlineIds = all.filter((_, i) => !flags[i]).map((m) => m.userId);
+  const online = (m: { userId: string }, i: number) => Boolean(flags[i]) || m.userId === viewerId;
+  const onlineIds = all.filter(online).map((m) => m.userId);
+  const offlineIds = all.filter((m, i) => !online(m, i)).map((m) => m.userId);
   const shownOnline = onlineIds.slice(0, MEMBER_LIST_MAX);
   // Offline people are many and rarely looked for: only some, and only for smaller communities.
   const shownOffline = all.length <= 1000 ? offlineIds.slice(0, MEMBER_LIST_MAX) : [];

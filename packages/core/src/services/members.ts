@@ -3,7 +3,7 @@ import { db, schema, type DbOrTx } from '@magnox/db';
 import { requireMember, type MemberContext } from '../access';
 import { AppError, forbidden } from '../errors';
 import { enforceRateLimit } from '../ratelimit';
-import { cached } from '../cache';
+import { cached, uncache } from '../cache';
 import { communityChanged } from '../emitter';
 import { cacheRedis } from '../redis';
 import { audit } from './audit';
@@ -81,6 +81,7 @@ export async function joinCommunity(ctx: MemberContext): Promise<void> {
 
 /** Someone became a member: tell webhooks. */
 export function memberJoined(communityId: string, userId: string): void {
+  void uncache(`memberlist:${communityId}`);
   emitMemberEvent(communityId, userId, 'member.joined');
 }
 
@@ -90,6 +91,7 @@ export function memberLeft(
   userId: string,
   reason: 'left' | 'kicked' | 'banned',
 ): void {
+  void uncache(`memberlist:${communityId}`);
   emitMemberEvent(communityId, userId, 'member.left', reason);
 }
 
