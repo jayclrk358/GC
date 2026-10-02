@@ -54,7 +54,6 @@ export * from './services/push';
 export * from './services/digest';
 export * from './services/api-tokens';
 export * from './services/webhooks';
-export * from './services/discord';
 export * from './services/public-api';
 export * from './services/custom-domains';
 export * from './domain-lookup';

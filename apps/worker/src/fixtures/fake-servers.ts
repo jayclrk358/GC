@@ -19,9 +19,6 @@
  *   GET  /pushes       what it received, newest last (headers only: the payload is encrypted)
  *   POST /hook/:id     a webhook receiver (answers 204; /hook/fail answers 500)
  *   GET  /hooks        deliveries it received, newest last (headers and parsed body)
- *   PUT|DELETE /discord/api/guilds/:g/members/:u/roles/:r   a fake Discord API (DISCORD_API_URL
- *                      http://127.0.0.1:25591/discord/api); member "404" isn't in the server
- *   GET  /discord/calls   what the fake Discord API was asked to do
  *   POST /dns {"name":"...","type":"TXT|CNAME|A","value":"..."}   add a record to the fake DNS
  *                      server (UDP, FAKE_DNS_PORT, default 25593; set DNS_SERVERS to use it)
  *   Stripe (HTTP)                     : control port, see fake-stripe.ts (STRIPE_API_URL)
@@ -241,8 +238,6 @@ const pushes: {
 }[] = [];
 
 const hooks: { id: string; headers: Record<string, string>; body: unknown }[] = [];
-const discordCalls: { method: string; guild: string; user: string; role: string; bot: boolean }[] =
-  [];
 
 const ctl = createHttpServer((req, res) => {
   if (handleStripe(req, res)) return;
@@ -313,22 +308,6 @@ const ctl = createHttpServer((req, res) => {
     res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ hooks }));
     return;
   }
-  const role = req.url?.match(/^\/discord\/api\/guilds\/(\d+)\/members\/(\d+)\/roles\/(\d+)$/);
-  if ((req.method === 'PUT' || req.method === 'DELETE') && role) {
-    discordCalls.push({
-      method: req.method,
-      guild: role[1]!,
-      user: role[2]!,
-      role: role[3]!,
-      bot: String(req.headers.authorization ?? '').startsWith('Bot '),
-    });
-    if (role[2] === '404') {
-      res
-        .writeHead(404, { 'content-type': 'application/json' })
-        .end(JSON.stringify({ message: 'Unknown Member', code: 10007 }));
-    } else res.writeHead(204).end();
-    return;
-  }
   if (req.method === 'POST' && req.url === '/dns') {
     let body = '';
     req.on('data', (c: Buffer) => (body += c));
@@ -342,12 +321,6 @@ const ctl = createHttpServer((req, res) => {
         res.writeHead(400).end();
       }
     });
-    return;
-  }
-  if (req.method === 'GET' && req.url === '/discord/calls') {
-    res
-      .writeHead(200, { 'content-type': 'application/json' })
-      .end(JSON.stringify({ discordCalls }));
     return;
   }
   if (req.method === 'GET' && req.url === '/pushes') {

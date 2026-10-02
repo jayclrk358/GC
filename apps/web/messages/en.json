@@ -3077,7 +3077,7 @@
   },
   "integrations": {
     "title": "Integrations",
-    "description": "Send what happens here to Discord or your own code, and give members matching Discord roles.",
+    "description": "Send what happens here to a Discord channel or your own code.",
     "docs": "Webhook and API docs"
   },
   "webhooks": {
@@ -3121,32 +3121,6 @@
     "deleteLabel": "Delete webhook {name}",
     "confirmDelete": "Delete the webhook “{name}”?",
     "deleted": "Deleted “{name}”"
-  },
-  "discord": {
-    "title": "Discord role sync",
-    "description": "Members who connect their Discord account get the Discord roles that match their roles here, and lose them when they lose the role or leave.",
-    "notSetUp": "Discord role sync isn’t set up on this site yet. The site’s operator needs to add a Discord bot token.",
-    "step1": "Add the Magnox bot to your Discord server.",
-    "addBot": "Add the bot",
-    "newTab": "(opens in a new tab)",
-    "step2": "In Discord, drag the bot’s role above the roles it should give out.",
-    "step3": "Turn on Developer Mode in Discord (Settings → Advanced), then right-click your server and roles to copy their IDs.",
-    "step4": "Paste them below. Members connect Discord in Settings → Account.",
-    "lastSync": "Last sync",
-    "guildId": "Discord server ID",
-    "guildIdHint": "Right-click the server icon → Copy Server ID.",
-    "roles": "Matching Discord roles",
-    "rolesHint": "Leave a role blank to not sync it.",
-    "roleLabel": "Discord role ID for {name}",
-    "rolePlaceholder": "Not synced",
-    "noRoles": "Make some roles first, then match them to Discord roles here.",
-    "save": "Save",
-    "saved": "Saved. Members’ Discord roles are being updated.",
-    "syncNow": "Sync now",
-    "syncing": "Syncing everyone’s Discord roles",
-    "remove": "Unlink",
-    "confirmRemove": "Unlink the Discord server? Roles already given in Discord stay as they are.",
-    "removed": "Discord server unlinked"
   },
   "customDomain": {
     "pageTitle": "Custom domain",

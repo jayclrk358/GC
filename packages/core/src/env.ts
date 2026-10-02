@@ -27,10 +27,6 @@ const schema = z.object({
   REQUIRE_EMAIL_VERIFICATION: bool,
   DISCORD_CLIENT_ID: z.string().default(''),
   DISCORD_CLIENT_SECRET: z.string().default(''),
-  /** A Discord bot (same application as the sign-in client) for giving people Discord roles. */
-  DISCORD_BOT_TOKEN: z.string().default(''),
-  /** Only for tests: where the Discord API is. */
-  DISCORD_API_URL: z.string().url().default('https://discord.com/api/v10'),
   /** The host communities point their own domains at (CNAME). Default: APP_URL's host. */
   CUSTOM_DOMAIN_TARGET: z.string().default(''),
   /** DNS resolvers for checking custom domains, comma-separated (default: the system's). */

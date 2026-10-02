@@ -14,8 +14,6 @@ import {
   sendDigests,
   sendEventReminders,
   sendPushes,
-  syncDiscordCommunity,
-  syncDiscordMember,
   type PushItem,
   type FanoutJob,
   type WebhookJob,
@@ -58,14 +56,6 @@ export const handlers: Record<string, Handler> = {
     if (result === 'retry') throw new Error('Webhook delivery failed; will retry');
     return result;
   },
-  'discord-member': async (job) => {
-    const { communityId, userId } = job.data as { communityId: string; userId: string };
-    await syncDiscordMember(communityId, userId);
-    return null;
-  },
-  'discord-sync': async (job) => ({
-    result: await syncDiscordCommunity((job.data as { communityId: string }).communityId),
-  }),
   'media-cleanup': async (job) => ({ removed: await cleanupMedia(job.data as MediaCleanup) }),
   push: async (job) => ({ sent: await sendPushes((job.data as { items: PushItem[] }).items) }),
   'media-variants': async () => {

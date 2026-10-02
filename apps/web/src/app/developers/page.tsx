@@ -201,14 +201,6 @@ function isFromMagnox(secret, headers, rawBody) {
     timingSafeEqual(Buffer.from(given), Buffer.from(expected));
 }`}</Code>
       </Section>
-
-      <Section id="discord" title="Discord role sync">
-        <p>
-          Communities can also link their Discord server so members who connected Discord (in
-          Settings → Account) get Discord roles matching their roles here. Set it up under{' '}
-          <strong>Integrations</strong> in community settings.
-        </p>
-      </Section>
     </article>
   );
 }

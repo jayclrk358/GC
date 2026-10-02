@@ -6,12 +6,9 @@ import {
   createWebhook,
   deleteWebhook,
   removeCustomDomain,
-  removeDiscordLink,
   revokeApiToken,
-  saveDiscordLink,
   setCustomDomain,
   setWebhookActive,
-  syncDiscordNow,
   testWebhook,
   verifyCustomDomain,
 } from '@magnox/core';
@@ -36,7 +33,7 @@ export async function revokeApiTokenAction(id: string) {
   });
 }
 
-// ── Community webhooks and Discord ─────────────────────────────────────────
+// ── Community webhooks ─────────────────────────────────────────────────────
 
 async function integrations(communityId: string) {
   const ctx = await ctxFor(communityId);
@@ -74,30 +71,6 @@ export async function testWebhookAction(communityId: string, id: string) {
     const r = await testWebhook(ctx, id);
     revalidatePath(path);
     return r;
-  });
-}
-
-export async function saveDiscordLinkAction(communityId: string, input: unknown) {
-  return runAction(async () => {
-    const { ctx, path } = await integrations(communityId);
-    await saveDiscordLink(ctx, input);
-    revalidatePath(path);
-  });
-}
-
-export async function removeDiscordLinkAction(communityId: string) {
-  return runAction(async () => {
-    const { ctx, path } = await integrations(communityId);
-    await removeDiscordLink(ctx);
-    revalidatePath(path);
-  });
-}
-
-export async function syncDiscordAction(communityId: string) {
-  return runAction(async () => {
-    const { ctx, path } = await integrations(communityId);
-    await syncDiscordNow(ctx);
-    revalidatePath(path);
   });
 }
 

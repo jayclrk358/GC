@@ -1,7 +1,7 @@
-import { boolean, index, integer, jsonb, pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import { boolean, index, integer, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { users } from './auth';
 import { communities } from './communities';
-import { createdAt, tz, updatedAt } from './_helpers';
+import { createdAt, tz } from './_helpers';
 
 /** Personal API tokens for the public API (only a hash is kept; the token is shown once). */
 export const apiTokens = pgTable(
@@ -50,19 +50,6 @@ export const webhooks = pgTable(
   },
   (t) => [index('webhooks_community_idx').on(t.communityId)],
 );
-
-/** A community's Discord server, for giving members Discord roles that match their roles here. */
-export const discordLinks = pgTable('discord_links', {
-  communityId: uuid('community_id')
-    .primaryKey()
-    .references(() => communities.id, { onDelete: 'cascade' }),
-  guildId: text('guild_id').notNull(),
-  /** Magnox role id → Discord role id. */
-  roleMap: jsonb('role_map').$type<Record<string, string>>().notNull().default({}),
-  lastSyncAt: tz('last_sync_at'),
-  lastSyncResult: text('last_sync_result'),
-  updatedAt: updatedAt(),
-});
 
 /** A community's own domain for its public pages, once its DNS proves it's theirs. */
 export const customDomains = pgTable('custom_domains', {

@@ -183,6 +183,13 @@
       "when": 1790899604842,
       "tag": "0025_custom_domains",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1790942386040,
+      "tag": "0026_drop_discord_links",
+      "breakpoints": true
     }
   ]
 }

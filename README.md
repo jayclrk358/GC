@@ -254,7 +254,7 @@ everyone else the page doesn't exist). It has:
   user", unless you also choose to remove your chat messages and forum replies. Owners hand over
   or delete their communities first.
 
-## API, webhooks and Discord
+## API and webhooks
 
 - **Public API:** people make personal tokens in Settings → Developer; scripts and bots then call
   `/api/v1` with `Authorization: Bearer mx_…`, acting as that person with exactly their access
@@ -266,12 +266,6 @@ everyone else the page doesn't exist). It has:
   so on, never pinging anyone); any other `https://` address gets signed JSON. Only content from
   channels everyone in the community can see is sent. Failed deliveries are retried, and a
   webhook that keeps failing switches itself off.
-- **Discord role sync:** members who connect Discord (Settings → Account) get the Discord roles
-  matching their roles in a community, and lose them when they lose the role or leave. It needs
-  a bot: in the [Discord Developer Portal](https://discord.com/developers/applications), on the
-  same application as `DISCORD_CLIENT_ID`, open **Bot**, reset the token and put it in
-  `DISCORD_BOT_TOKEN`. Community managers then add the bot to their Discord server from
-  Settings → Integrations and match roles.
 
 ## Custom domains
 
@@ -426,6 +420,6 @@ Found a barrier? Please open an issue. Accessibility bugs are treated as high pr
 - [x] **Phase 6 — Platform and polish:** an admin console (gift plans, suspend communities, ban
       people, a log); downloading your data and deleting your account; terms, privacy and an
       age gate; sitemaps, share images, an installable app, push notifications and email
-      round-ups; a public API with personal tokens, webhooks (signed JSON or Discord) and
-      Discord role sync; custom domains with on-demand certificates; Spanish, French, German and
+      round-ups; a public API with personal tokens and webhooks (signed JSON or Discord);
+      custom domains with on-demand certificates; Spanish, French, German and
       Brazilian Portuguese; Sentry and OpenTelemetry; backup and restore scripts

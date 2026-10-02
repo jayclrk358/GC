@@ -3077,7 +3077,7 @@
   },
   "integrations": {
     "title": "Intégrations",
-    "description": "Envoie ce qui se passe ici vers Discord ou ton propre code, et donne aux membres les rôles Discord correspondants.",
+    "description": "Envoie ce qui se passe ici vers un salon Discord ou ton propre code.",
     "docs": "Documentation des webhooks et de l’API"
   },
   "webhooks": {
@@ -3121,32 +3121,6 @@
     "deleteLabel": "Supprimer le webhook {name}",
     "confirmDelete": "Supprimer le webhook « {name} » ?",
     "deleted": "« {name} » supprimé"
-  },
-  "discord": {
-    "title": "Synchronisation des rôles Discord",
-    "description": "Les membres qui associent leur compte Discord reçoivent les rôles Discord qui correspondent à leurs rôles ici, et les perdent s’ils perdent le rôle ou s’ils partent.",
-    "notSetUp": "La synchronisation des rôles Discord n’est pas encore configurée sur ce site. La personne qui gère le site doit ajouter un jeton de bot Discord.",
-    "step1": "Ajoute le bot Magnox à ton serveur Discord.",
-    "addBot": "Ajouter le bot",
-    "newTab": "(s’ouvre dans un nouvel onglet)",
-    "step2": "Dans Discord, fais glisser le rôle du bot au-dessus des rôles qu’il doit attribuer.",
-    "step3": "Active le mode développeur dans Discord (Paramètres → Avancés), puis fais un clic droit sur ton serveur et tes rôles pour copier leurs identifiants.",
-    "step4": "Colle-les ci-dessous. Les membres associent Discord dans Paramètres → Compte.",
-    "lastSync": "Dernière synchronisation",
-    "guildId": "ID du serveur Discord",
-    "guildIdHint": "Clic droit sur l’icône du serveur → Copier l’identifiant du serveur.",
-    "roles": "Rôles Discord correspondants",
-    "rolesHint": "Laisse un rôle vide pour ne pas le synchroniser.",
-    "roleLabel": "ID du rôle Discord pour {name}",
-    "rolePlaceholder": "Non synchronisé",
-    "noRoles": "Crée d’abord des rôles, puis associe-les ici à des rôles Discord.",
-    "save": "Enregistrer",
-    "saved": "Enregistré. Les rôles Discord des membres sont en cours de mise à jour.",
-    "syncNow": "Synchroniser",
-    "syncing": "Synchronisation des rôles Discord de tout le monde",
-    "remove": "Dissocier",
-    "confirmRemove": "Dissocier le serveur Discord ? Les rôles déjà attribués dans Discord restent tels quels.",
-    "removed": "Serveur Discord dissocié"
   },
   "customDomain": {
     "pageTitle": "Domaine personnalisé",

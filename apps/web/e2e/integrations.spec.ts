@@ -27,7 +27,7 @@ async function shownSecret(page: Page, title: string) {
   return (await box.locator('code').textContent())!.trim();
 }
 
-test('webhooks, the public API and Discord role sync', async ({ page, browser }) => {
+test('webhooks and the public API', async ({ page, browser }) => {
   await signUp(page, uniqueUser('dev'));
   const { slug } = await createCommunity(page);
   const hookId = `e2e${Date.now()}`;
@@ -140,24 +140,6 @@ test('webhooks, the public API and Discord role sync', async ({ page, browser })
   await expect(page.getByText('Deleted “Reader”')).toBeVisible();
   expect((await api('/me', { token: readToken })).status()).toBe(401);
   expect((await api(`/communities/does-not-exist-${Date.now()}`)).status()).toBe(404);
-
-  // Discord role sync: link a server, match a role, and the worker syncs.
-  await page.goto(`/c/${slug}/settings/integrations`);
-  await page.getByLabel('Discord server ID').fill('123456789012345678');
-  await page.getByLabel('Discord role ID for Moderator').fill('234567890123456789');
-  await page.getByRole('button', { name: 'Save', exact: true }).click();
-  await expect(page.getByText('Saved. Members’ Discord roles are being updated.')).toBeVisible();
-  await expect
-    .poll(
-      async () => {
-        await page.reload();
-        return page.getByText('No members have connected Discord yet.').count();
-      },
-      { timeout: 20_000 },
-    )
-    .toBe(1);
-  await expect(page.getByLabel('Discord role ID for Moderator')).toHaveValue('234567890123456789');
-  await expectAccessible(page, 'integrations with Discord linked');
 });
 
 test('the developer docs', async ({ page }) => {

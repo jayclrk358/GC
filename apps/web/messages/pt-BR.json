@@ -3077,7 +3077,7 @@
   },
   "integrations": {
     "title": "Integrações",
-    "description": "Envie o que acontece aqui para o Discord ou para o seu próprio código e dê aos membros os cargos correspondentes no Discord.",
+    "description": "Envie o que acontece aqui para um canal do Discord ou para o seu próprio código.",
     "docs": "Documentação de webhooks e da API"
   },
   "webhooks": {
@@ -3121,32 +3121,6 @@
     "deleteLabel": "Excluir o webhook {name}",
     "confirmDelete": "Excluir o webhook “{name}”?",
     "deleted": "“{name}” excluído"
-  },
-  "discord": {
-    "title": "Sincronização de cargos do Discord",
-    "description": "Os membros que conectam a conta do Discord recebem os cargos do Discord que correspondem aos cargos deles aqui, e perdem esses cargos quando perdem o cargo daqui ou saem.",
-    "notSetUp": "A sincronização de cargos do Discord ainda não foi configurada neste site. Quem administra o site precisa adicionar um token de bot do Discord.",
-    "step1": "Adicione o bot do Magnox ao seu servidor do Discord.",
-    "addBot": "Adicionar o bot",
-    "newTab": "(abre em uma nova aba)",
-    "step2": "No Discord, arraste o cargo do bot para cima dos cargos que ele vai atribuir.",
-    "step3": "Ative o Modo desenvolvedor no Discord (Configurações → Avançado) e depois clique com o botão direito no seu servidor e nos cargos para copiar os IDs.",
-    "step4": "Cole os IDs abaixo. Os membros conectam o Discord em Configurações → Conta.",
-    "lastSync": "Última sincronização",
-    "guildId": "ID do servidor do Discord",
-    "guildIdHint": "Clique com o botão direito no ícone do servidor → Copiar ID do servidor.",
-    "roles": "Cargos correspondentes no Discord",
-    "rolesHint": "Deixe um cargo em branco para não sincronizá-lo.",
-    "roleLabel": "ID do cargo do Discord para {name}",
-    "rolePlaceholder": "Não sincronizado",
-    "noRoles": "Crie alguns cargos primeiro e depois associe-os aos cargos do Discord aqui.",
-    "save": "Salvar",
-    "saved": "Salvo. Os cargos dos membros no Discord estão sendo atualizados.",
-    "syncNow": "Sincronizar agora",
-    "syncing": "Sincronizando os cargos do Discord de todo mundo",
-    "remove": "Desvincular",
-    "confirmRemove": "Desvincular o servidor do Discord? Os cargos já dados no Discord continuam como estão.",
-    "removed": "Servidor do Discord desvinculado"
   },
   "customDomain": {
     "pageTitle": "Domínio personalizado",

@@ -8,7 +8,6 @@ import { communityChanged } from '../emitter';
 import { cacheRedis } from '../redis';
 import { audit } from './audit';
 import { checkJoinAllowed } from './automod';
-import { queueDiscordMember } from './discord';
 import { removeFromVoice } from './voice-rooms';
 import { emitMemberEvent } from './webhooks';
 
@@ -80,10 +79,9 @@ export async function joinCommunity(ctx: MemberContext): Promise<void> {
   if (added) memberJoined(ctx.community.id, ctx.userId);
 }
 
-/** Someone became a member: tell webhooks, and give them their Discord roles. */
+/** Someone became a member: tell webhooks. */
 export function memberJoined(communityId: string, userId: string): void {
   emitMemberEvent(communityId, userId, 'member.joined');
-  queueDiscordMember(communityId, userId);
 }
 
 /** Someone stopped being a member. */
@@ -93,7 +91,6 @@ export function memberLeft(
   reason: 'left' | 'kicked' | 'banned',
 ): void {
   emitMemberEvent(communityId, userId, 'member.left', reason);
-  queueDiscordMember(communityId, userId);
 }
 
 export async function leaveCommunity(ctx: MemberContext): Promise<void> {

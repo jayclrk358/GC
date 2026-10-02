@@ -3077,7 +3077,7 @@
   },
   "integrations": {
     "title": "Integrationen",
-    "description": "Schick, was hier passiert, an Discord oder deinen eigenen Code und gib Mitgliedern passende Discord-Rollen.",
+    "description": "Schick, was hier passiert, an einen Discord-Kanal oder deinen eigenen Code.",
     "docs": "Webhook- und API-Doku"
   },
   "webhooks": {
@@ -3121,32 +3121,6 @@
     "deleteLabel": "Webhook {name} löschen",
     "confirmDelete": "Den Webhook „{name}“ löschen?",
     "deleted": "„{name}“ gelöscht"
-  },
-  "discord": {
-    "title": "Discord-Rollen synchronisieren",
-    "description": "Mitglieder, die ihr Discord-Konto verknüpfen, bekommen die Discord-Rollen, die zu ihren Rollen hier passen, und verlieren sie wieder, wenn sie die Rolle verlieren oder austreten.",
-    "notSetUp": "Die Synchronisierung von Discord-Rollen ist auf dieser Website noch nicht eingerichtet. Der Betreiber der Website muss ein Discord-Bot-Token hinzufügen.",
-    "step1": "Füg den Magnox-Bot zu deinem Discord-Server hinzu.",
-    "addBot": "Bot hinzufügen",
-    "newTab": "(öffnet in neuem Tab)",
-    "step2": "Zieh in Discord die Rolle des Bots über die Rollen, die er vergeben soll.",
-    "step3": "Schalte in Discord den Entwicklermodus ein (Einstellungen → Erweitert) und klick dann mit der rechten Maustaste auf deinen Server und die Rollen, um ihre IDs zu kopieren.",
-    "step4": "Füg sie unten ein. Mitglieder verknüpfen Discord unter Einstellungen → Konto.",
-    "lastSync": "Letzte Synchronisierung",
-    "guildId": "Discord-Server-ID",
-    "guildIdHint": "Rechtsklick auf das Server-Symbol → Server-ID kopieren.",
-    "roles": "Passende Discord-Rollen",
-    "rolesHint": "Lass eine Rolle leer, um sie nicht zu synchronisieren.",
-    "roleLabel": "Discord-Rollen-ID für {name}",
-    "rolePlaceholder": "Nicht synchronisiert",
-    "noRoles": "Erstelle zuerst ein paar Rollen und ordne sie dann hier Discord-Rollen zu.",
-    "save": "Speichern",
-    "saved": "Gespeichert. Die Discord-Rollen der Mitglieder werden aktualisiert.",
-    "syncNow": "Jetzt synchronisieren",
-    "syncing": "Discord-Rollen aller Mitglieder werden synchronisiert",
-    "remove": "Trennen",
-    "confirmRemove": "Den Discord-Server trennen? Bereits in Discord vergebene Rollen bleiben, wie sie sind.",
-    "removed": "Discord-Server getrennt"
   },
   "customDomain": {
     "pageTitle": "Eigene Domain",

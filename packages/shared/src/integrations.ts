@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-// The public API, webhooks and Discord.
+// The public API and webhooks.
 
 export const API_SCOPES = ['read', 'write'] as const;
 export type ApiScope = (typeof API_SCOPES)[number];
@@ -37,24 +37,6 @@ export const webhookInputSchema = z.object({
   name: z.string().trim().min(1, 'Give it a name.').max(60),
   url: z.string().trim().url('Enter a full address, starting with https://').max(500),
   events: z.array(z.enum(WEBHOOK_EVENTS)).min(1, 'Choose at least one thing to send.'),
-});
-
-export const discordLinkSchema = z.object({
-  /** The Discord server's id (Developer Mode → right-click the server → Copy Server ID). */
-  guildId: z
-    .string()
-    .trim()
-    .regex(/^\d{5,25}$/, 'A Discord server ID is a long number.'),
-  /** Magnox role id → Discord role id (blank: not synced). */
-  roleMap: z
-    .record(
-      z.string().uuid(),
-      z
-        .string()
-        .trim()
-        .regex(/^\d{5,25}$/),
-    )
-    .default({}),
 });
 
 /** A webhook delivery's signature header: `sha256=` and the hex HMAC of the body. */
