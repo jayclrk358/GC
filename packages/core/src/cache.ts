@@ -6,10 +6,18 @@ const log = logger('cache');
 /** Hot keys are also kept in this process for a few seconds, saving a Redis round trip each. */
 const LOCAL_MS = 5_000;
 const LOCAL_MAX = 5_000;
-// Stored as JSON so each caller gets its own copy (some sort or extend what they get back).
-const local = new Map<string, { json: string; until: number }>();
-/** Loads in progress: concurrent misses on one key wait for the same load. */
-const inflight = new Map<string, Promise<string>>();
+// Next.js can load this module more than once in one process (once per server layer: pages,
+// route handlers, server actions), so the maps live on globalThis and every copy shares them;
+// otherwise dropping a value in one copy would leave it in the others.
+const shared = globalThis as typeof globalThis & {
+  __magnoxCache?: {
+    // Stored as JSON so each caller gets its own copy (some sort or extend what they get back).
+    local: Map<string, { json: string; until: number }>;
+    /** Loads in progress: concurrent misses on one key wait for the same load. */
+    inflight: Map<string, Promise<string>>;
+  };
+};
+const { local, inflight } = (shared.__magnoxCache ??= { local: new Map(), inflight: new Map() });
 
 /**
  * Read-through cache for small results that are the same for everyone (platform counts, the game

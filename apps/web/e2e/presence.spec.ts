@@ -19,14 +19,14 @@ test('avatars show who is online, idle or offline', async ({ page, browser }) =>
   const row = page.getByRole('listitem').filter({ hasText: user.name });
   await expect(row.getByRole('img', { name: 'Online' })).toBeVisible();
 
-  // Their tab is hidden for a while: idle.
+  // Their tab is hidden for a while (five minutes): idle.
   const setVisibility = (state: 'hidden' | 'visible') =>
     other.evaluate((s) => {
       Object.defineProperty(document, 'visibilityState', { value: s, configurable: true });
       document.dispatchEvent(new Event('visibilitychange'));
     }, state);
   await setVisibility('hidden');
-  await other.clock.fastForward(31_000);
+  await other.clock.fastForward(5 * 60_000 + 1_000);
   await expect(row.getByRole('img', { name: 'Idle' })).toBeVisible();
 
   // Back on the page: online again.
