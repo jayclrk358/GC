@@ -36,3 +36,13 @@ export function communityChanged(
     .to(onlyUser ? `user:${onlyUser}` : `community:${communityId}`)
     .emit('community:changed', { communityId, actorId, scope });
 }
+
+/**
+ * Someone's access in a community may have shrunk (kicked, banned, roles or channel permissions
+ * changed, community made private or suspended). The realtime server re-checks the rooms its
+ * sockets joined there (only that person's, with `userId`) and leaves those no longer allowed:
+ * rooms are otherwise only checked when joined.
+ */
+export function accessChanged(communityId: string, userId?: string): void {
+  realtime().serverSideEmit('access:changed', { communityId, userId: userId ?? null });
+}
