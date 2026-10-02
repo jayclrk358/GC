@@ -31,6 +31,99 @@ export const SERVER_PROTOCOLS = {
   sevendays: { label: '7 Days to Die', gamedig: 'sdtd', defaultPort: 26900, steam: true },
   dayz: { label: 'DayZ', gamedig: 'dayz', defaultPort: 27016, steam: true },
   squad: { label: 'Squad', gamedig: 'squad', defaultPort: 27165, steam: true },
+  // Steam query (A2S) games. Default ports are the query port, which some games keep apart
+  // from the port players join on. "steam" adds a steam://connect link: only for games that
+  // take one on the query port (the Source engine ones).
+  arma3: { label: 'Arma 3', gamedig: 'arma3', defaultPort: 2303, steam: false },
+  'arma-reforger': {
+    label: 'Arma Reforger',
+    gamedig: 'armareforger',
+    defaultPort: 17777,
+    steam: false,
+  },
+  conan: { label: 'Conan Exiles', gamedig: 'conanexiles', defaultPort: 27015, steam: false },
+  css: { label: 'Counter-Strike: Source', gamedig: 'css', defaultPort: 27015, steam: true },
+  cs16: {
+    label: 'Counter-Strike 1.6',
+    gamedig: 'counterstrike16',
+    defaultPort: 27015,
+    steam: true,
+  },
+  l4d2: { label: 'Left 4 Dead 2', gamedig: 'l4d2', defaultPort: 27015, steam: true },
+  insurgency: {
+    label: 'Insurgency (2014)',
+    gamedig: 'insurgency',
+    defaultPort: 27015,
+    steam: true,
+  },
+  sandstorm: {
+    label: 'Insurgency: Sandstorm',
+    gamedig: 'insurgencysandstorm',
+    defaultPort: 27131,
+    steam: false,
+  },
+  dods: { label: 'Day of Defeat: Source', gamedig: 'dods', defaultPort: 27015, steam: true },
+  nmrih: { label: 'No More Room in Hell', gamedig: 'nmrih', defaultPort: 27015, steam: true },
+  hll: { label: 'Hell Let Loose', gamedig: 'hll', defaultPort: 27015, steam: false },
+  'post-scriptum': {
+    label: 'Squad 44 (Post Scriptum)',
+    gamedig: 'postscriptum',
+    defaultPort: 10037,
+    steam: false,
+  },
+  mordhau: { label: 'Mordhau', gamedig: 'mordhau', defaultPort: 27015, steam: false },
+  kf2: { label: 'Killing Floor 2', gamedig: 'killingfloor2', defaultPort: 27015, steam: false },
+  zomboid: {
+    label: 'Project Zomboid',
+    gamedig: 'projectzomboid',
+    defaultPort: 16261,
+    steam: false,
+  },
+  unturned: { label: 'Unturned', gamedig: 'unturned', defaultPort: 27016, steam: false },
+  'v-rising': { label: 'V Rising', gamedig: 'vrising', defaultPort: 27016, steam: false },
+  enshrouded: { label: 'Enshrouded', gamedig: 'enshrouded', defaultPort: 15637, steam: false },
+  'the-forest': { label: 'The Forest', gamedig: 'theforest', defaultPort: 27016, steam: false },
+  'sons-of-the-forest': {
+    label: 'Sons of the Forest',
+    gamedig: 'sotf',
+    defaultPort: 27016,
+    steam: false,
+  },
+  soulmask: { label: 'Soulmask', gamedig: 'soulmask', defaultPort: 27015, steam: false },
+  icarus: { label: 'Icarus', gamedig: 'icarus', defaultPort: 27015, steam: false },
+  'the-front': { label: 'The Front', gamedig: 'thefront', defaultPort: 27015, steam: false },
+  'abiotic-factor': {
+    label: 'Abiotic Factor',
+    gamedig: 'abioticfactor',
+    defaultPort: 27015,
+    steam: false,
+  },
+  hurtworld: { label: 'Hurtworld', gamedig: 'hurtworld', defaultPort: 12881, steam: false },
+  'space-engineers': {
+    label: 'Space Engineers',
+    gamedig: 'spaceengineers',
+    defaultPort: 27016,
+    steam: false,
+  },
+  avorion: { label: 'Avorion', gamedig: 'avorion', defaultPort: 27020, steam: false },
+  starbound: { label: 'Starbound', gamedig: 'starbound', defaultPort: 21025, steam: false },
+  barotrauma: { label: 'Barotrauma', gamedig: 'barotrauma', defaultPort: 27016, steam: false },
+  dst: { label: "Don't Starve Together", gamedig: 'dst', defaultPort: 27016, steam: false },
+  ets2: { label: 'Euro Truck Simulator 2', gamedig: 'ets2', defaultPort: 27016, steam: false },
+  // Other query protocols.
+  samp: {
+    label: 'GTA: San Andreas (SA-MP / open.mp)',
+    gamedig: 'gtasam',
+    defaultPort: 7777,
+    steam: false,
+  },
+  cod4: {
+    label: 'Call of Duty 4: Modern Warfare',
+    gamedig: 'cod4mw',
+    defaultPort: 28960,
+    steam: false,
+  },
+  bf4: { label: 'Battlefield 4', gamedig: 'battlefield4', defaultPort: 47200, steam: false },
   // Not a server you connect to: a Roblox experience, listed by its link and polled through
   // Roblox's public games API. Its "host" is the place id and its port is 0.
   roblox: { label: 'Roblox experience', gamedig: '', defaultPort: 0, steam: false },
@@ -38,6 +131,18 @@ export const SERVER_PROTOCOLS = {
 
 export type ServerProtocol = keyof typeof SERVER_PROTOCOLS;
 export const PROTOCOL_KEYS = Object.keys(SERVER_PROTOCOLS) as [ServerProtocol, ...ServerProtocol[]];
+
+/**
+ * The order to offer protocols in: the most common first, then alphabetically, with the
+ * catch-all Steam query last.
+ */
+export function protocolsForPicker(): ServerProtocol[] {
+  const pinned: ServerProtocol[] = ['minecraft', 'minecraft-bedrock', 'roblox'];
+  const rest = PROTOCOL_KEYS.filter((k) => !pinned.includes(k) && k !== 'source').sort((a, b) =>
+    SERVER_PROTOCOLS[a].label.localeCompare(SERVER_PROTOCOLS[b].label, 'en'),
+  );
+  return [...pinned, ...rest, 'source'];
+}
 
 /** One of SERVER_PROTOCOLS' own keys (`in` would also accept "toString" and the like). */
 export function isServerProtocol(p: string): p is ServerProtocol {

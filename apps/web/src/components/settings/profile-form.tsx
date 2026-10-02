@@ -144,6 +144,7 @@ export function ProfileForm({
   const router = useRouter();
   const zones = useTimeZones(initial.timezone);
   const [state, setState] = React.useState(initial);
+  const [gameQuery, setGameQuery] = React.useState('');
   const [error, setError] = React.useState<string | null>(null);
   const [fields, setFields] = React.useState<Record<string, string>>({});
   const [pending, setPending] = React.useState(false);
@@ -479,34 +480,56 @@ export function ProfileForm({
         </SettingsSection>
 
         <SettingsSection id="games" title={t('favoriteGames')} description={t('favoriteGamesDesc')}>
+          <Field label={t('findGame')}>
+            {(p) => (
+              <Input
+                {...p}
+                type="search"
+                value={gameQuery}
+                autoComplete="off"
+                onChange={(e) => setGameQuery(e.target.value)}
+              />
+            )}
+          </Field>
           <fieldset>
             <legend className="sr-only">{t('favoriteGames')}</legend>
-            <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {games.map((g) => {
-                const checked = state.favoriteGames.includes(g.id);
-                return (
-                  <li key={g.id}>
-                    <label className="flex items-center gap-2 rounded-ui border border-border px-3 py-2 text-sm has-[:checked]:border-primary">
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        disabled={!checked && state.favoriteGames.length >= 10}
-                        onChange={(e) =>
-                          set(
-                            'favoriteGames',
-                            e.target.checked
-                              ? [...state.favoriteGames, g.id]
-                              : state.favoriteGames.filter((x) => x !== g.id),
-                          )
-                        }
-                      />
-                      {g.name}
-                    </label>
-                  </li>
-                );
-              })}
+            {/* The ones already picked stay in view whatever the search. */}
+            <ul className="grid max-h-96 gap-2 overflow-y-auto p-0.5 sm:grid-cols-2 lg:grid-cols-3">
+              {games
+                .filter(
+                  (g) =>
+                    state.favoriteGames.includes(g.id) ||
+                    g.name.toLowerCase().includes(gameQuery.trim().toLowerCase()),
+                )
+                .map((g) => {
+                  const checked = state.favoriteGames.includes(g.id);
+                  return (
+                    <li key={g.id}>
+                      <label className="flex items-center gap-2 rounded-ui border border-border px-3 py-2 text-sm has-[:checked]:border-primary">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          disabled={!checked && state.favoriteGames.length >= 10}
+                          onChange={(e) =>
+                            set(
+                              'favoriteGames',
+                              e.target.checked
+                                ? [...state.favoriteGames, g.id]
+                                : state.favoriteGames.filter((x) => x !== g.id),
+                            )
+                          }
+                        />
+                        {g.name}
+                      </label>
+                    </li>
+                  );
+                })}
             </ul>
           </fieldset>
+          {gameQuery.trim() &&
+            !games.some((g) => g.name.toLowerCase().includes(gameQuery.trim().toLowerCase())) && (
+              <p className="text-sm text-muted">{t('noGamesFound')}</p>
+            )}
         </SettingsSection>
 
         <div>

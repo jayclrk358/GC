@@ -342,7 +342,7 @@ test.describe('community hubs', () => {
     await expect(page.getByRole('main').getByRole('link', { name })).toBeVisible();
 
     await page.goto('/settings/profile');
-    await page.getByLabel('Bio').fill('I build castles.');
+    await page.getByLabel('Bio', { exact: true }).fill('I build castles.');
     await page.getByLabel('Pronouns').fill('they/them');
     await page.getByLabel('Custom status').fill('Building a moat');
     await choose(page.getByLabel('Currently playing'), 'Roblox');

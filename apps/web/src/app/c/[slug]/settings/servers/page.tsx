@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { listCommunityServers } from '@magnox/core';
-import { PROTOCOL_KEYS, SERVER_PROTOCOLS } from '@magnox/shared';
+import { protocolsForPicker, SERVER_PROTOCOLS } from '@magnox/shared';
 import { loadCommunityForSettings } from '@/lib/community';
 import { PageHeader } from '@/components/ui/misc';
 import { ServerManager } from '@/components/community-settings/server-manager';
@@ -23,7 +23,7 @@ export default async function ServerSettingsPage({
       <ServerManager
         communityId={community.id}
         servers={servers}
-        protocols={PROTOCOL_KEYS.map((k) => ({
+        protocols={protocolsForPicker().map((k) => ({
           key: k,
           label: SERVER_PROTOCOLS[k].label,
           defaultPort: SERVER_PROTOCOLS[k].defaultPort,

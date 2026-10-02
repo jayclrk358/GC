@@ -559,6 +559,8 @@
     "removeLink": "Quitar el enlace {n}",
     "addLink": "Añadir enlace",
     "favoriteGamesDesc": "Elige hasta 10.",
+    "findGame": "Buscar un juego",
+    "noGamesFound": "Ningún juego coincide.",
     "save": "Guardar perfil",
     "statusSection": "Estado",
     "status": "Estado personalizado",
