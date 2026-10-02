@@ -23,9 +23,18 @@ export function LegalPage({
   );
 }
 
-export function Section({ title, children }: { title: string; children: React.ReactNode }) {
+export function Section({
+  title,
+  id,
+  children,
+}: {
+  title: string;
+  /** For linking straight to this part. */
+  id?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <section className="flex flex-col gap-2">
+    <section id={id} className="flex scroll-mt-20 flex-col gap-2">
       <h2 className="text-xl font-bold">{title}</h2>
       {children}
     </section>

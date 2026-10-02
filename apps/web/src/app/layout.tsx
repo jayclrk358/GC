@@ -31,10 +31,13 @@ import { SiteFooter } from '@/components/shell/site-footer';
 import { AutoRefresh } from '@/components/live/live';
 import { AppSidebar, type SidebarCommunity } from '@/components/shell/app-sidebar';
 import { SIDEBAR_COOKIE } from '@/lib/sidebar';
+import { CONSENT_COOKIE, parseConsent } from '@/lib/consent';
+import { CookieBanner } from '@/components/shell/cookie-banner';
 
 const SITE_TOKENS = themeToCss(DEFAULT_THEME, ':root', 'mx-tokens');
 
 // Tell the server the browser's time zone (a cookie), so event times show on the viewer's clock.
+// Only for visitors who allowed optional cookies.
 const TZ_SCRIPT = `try{var z=Intl.DateTimeFormat().resolvedOptions().timeZone;if(z&&document.cookie.indexOf('mx-tz='+encodeURIComponent(z))<0)document.cookie='mx-tz='+encodeURIComponent(z)+';path=/;max-age=31536000;samesite=lax'}catch(e){}`;
 
 export const metadata: Metadata = {
@@ -85,6 +88,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       }))
     : [];
   const collapsed = jar.get(SIDEBAR_COOKIE)?.value === 'collapsed';
+  const cookieChoice = parseConsent(jar.get(CONSENT_COOKIE)?.value);
 
   return (
     <html
@@ -97,7 +101,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <style nonce={nonce} dangerouslySetInnerHTML={{ __html: SITE_TOKENS }} />
         <meta name="mx-media-base" content={mediaBase()} />
         <script nonce={nonce} dangerouslySetInnerHTML={{ __html: MEDIA_FALLBACK }} />
-        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: TZ_SCRIPT }} />
+        {cookieChoice === 'all' && (
+          <script nonce={nonce} dangerouslySetInnerHTML={{ __html: TZ_SCRIPT }} />
+        )}
       </head>
       <body className="min-h-dvh">
         <NextIntlClientProvider>
@@ -120,6 +126,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <SiteFooter />
               </div>
             </div>
+            <CookieBanner initialChoice={cookieChoice} />
           </AppProviders>
         </NextIntlClientProvider>
       </body>

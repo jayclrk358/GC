@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
+import { CookieSettingsButton } from './cookie-banner';
 import { Logo } from './logo';
 
 export async function SiteFooter() {
@@ -49,6 +50,9 @@ export async function SiteFooter() {
               <Link href="/legal/privacy" className="transition-colors hover:text-fg">
                 {t('privacyPolicy')}
               </Link>
+            </li>
+            <li>
+              <CookieSettingsButton className="transition-colors hover:text-fg" />
             </li>
           </ul>
         </nav>

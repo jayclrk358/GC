@@ -3154,5 +3154,16 @@
     "newTab": "(se abre en una pestaña nueva)",
     "lastChecked": "Última comprobación {when}",
     "neverChecked": "Aún no se ha comprobado"
+  },
+  "cookies": {
+    "title": "Cookies",
+    "body": "Magnox usa cookies para mantener tu sesión iniciada, comprobar que los formularios no los envían bots y recordar los ajustes que elijas. Si lo permites, también recordaremos tu zona horaria para mostrar los eventos en tu hora. Sin cookies de publicidad ni de seguimiento.",
+    "details": "Detalles de las cookies",
+    "acceptAll": "Aceptar todas",
+    "necessaryOnly": "Solo las necesarias",
+    "currentAll": "Has permitido todas las cookies.",
+    "currentNecessary": "Solo has permitido las cookies necesarias.",
+    "saved": "Preferencia de cookies guardada.",
+    "settings": "Ajustes de cookies"
   }
 }

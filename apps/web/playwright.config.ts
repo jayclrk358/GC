@@ -34,6 +34,23 @@ export default defineConfig({
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : [['list']],
   use: {
     baseURL: 'http://localhost:3000',
+    // Everyone has already answered the cookie question, so the banner stays out of the way
+    // (cookies.spec.ts starts without this to ask it).
+    storageState: {
+      cookies: [
+        {
+          name: 'mx-cookies',
+          value: '1.all',
+          domain: 'localhost',
+          path: '/',
+          expires: -1,
+          httpOnly: false,
+          secure: false,
+          sameSite: 'Lax',
+        },
+      ],
+      origins: [],
+    },
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     launchOptions: {

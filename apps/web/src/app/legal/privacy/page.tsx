@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { contactEmail } from '@magnox/core';
 import { PRIVACY_UPDATED } from '@magnox/shared';
 import { LegalPage, Section } from '@/components/legal/legal-page';
+import { CookieSettingsButton } from '@/components/shell/cookie-banner';
 
 export const metadata = { title: 'Privacy Policy' };
 
@@ -59,10 +60,41 @@ export default function PrivacyPolicyPage() {
           <li>We share data with authorities only when the law requires it.</li>
         </ul>
       </Section>
-      <Section title="Cookies">
+      <Section title="Cookies" id="cookies">
         <p>
-          We only use cookies Magnox needs: one to keep you signed in, and some to remember your
-          settings (like colour scheme and time zone). No advertising or tracking cookies.
+          Magnox uses a handful of its own cookies and no advertising or tracking cookies. The first
+          time you visit we ask whether you allow the optional one; you can change your mind any
+          time.
+        </p>
+        <p>
+          <strong>Always on</strong>, because the site needs them or you asked for them:
+        </p>
+        <ul>
+          <li>
+            <strong>Signing in:</strong> keeps you signed in (Better Auth session cookies).
+          </li>
+          <li>
+            <strong>Bot checks:</strong> Cloudflare Turnstile, on sign-up and a few other forms, to
+            stop automated abuse.
+          </li>
+          <li>
+            <strong>Your settings:</strong> appearance and accessibility settings you change,
+            whether the sidebar is collapsed, and that you confirmed your age for adult communities.
+          </li>
+          <li>
+            <strong>Your cookie choice</strong> (<code>mx-cookies</code>), kept for six months.
+          </li>
+        </ul>
+        <p>
+          <strong>Optional:</strong> your time zone (<code>mx-tz</code>), so event times show on
+          your own clock. Without it they’re shown in the event’s own time zone, or UTC.
+        </p>
+        <p>
+          Videos from YouTube or Twitch on community pages only load when you press play; those
+          sites may then set their own cookies.
+        </p>
+        <p>
+          <CookieSettingsButton className="font-semibold text-primary underline underline-offset-2" />
         </p>
       </Section>
       <Section title="How long we keep it">
