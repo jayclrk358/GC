@@ -8,7 +8,7 @@ import { domainCacheKey } from '../domain-lookup';
 import { env } from '../env';
 import { AppError, conflict, isUniqueViolation } from '../errors';
 import { enforceRateLimit } from '../ratelimit';
-import { cacheRedis } from '../redis';
+import { uncache } from '../cache';
 import { audit } from './audit';
 import { assertPlanPerk, communityPlan } from './billing';
 
@@ -54,9 +54,7 @@ export async function getCustomDomain(ctx: MemberContext): Promise<CustomDomainV
 
 async function forgetDomain(domain: string | null | undefined) {
   if (!domain) return;
-  await cacheRedis()
-    .del(`cache:${domainCacheKey(domain)}`)
-    .catch(() => undefined);
+  await uncache(domainCacheKey(domain));
 }
 
 /** Domains that belong to Magnox itself can't be claimed. */

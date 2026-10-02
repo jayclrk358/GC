@@ -11,7 +11,7 @@ import {
   type WebhookEvent,
 } from '@magnox/shared';
 import { everyoneCanView, requirePerm, type MemberContext } from '../access';
-import { cached } from '../cache';
+import { cached, uncache } from '../cache';
 import { env } from '../env';
 import { AppError, notFound } from '../errors';
 import { logger } from '../logger';
@@ -93,9 +93,7 @@ function toView(r: typeof schema.webhooks.$inferSelect): WebhookView {
 
 const hooksKey = (communityId: string) => `webhooks:${communityId}`;
 async function forgetHooks(communityId: string) {
-  await cacheRedis()
-    .del(`cache:${hooksKey(communityId)}`)
-    .catch(() => undefined);
+  await uncache(hooksKey(communityId));
 }
 
 export async function listWebhooks(ctx: MemberContext): Promise<WebhookView[]> {
