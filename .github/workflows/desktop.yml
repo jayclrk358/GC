@@ -92,7 +92,16 @@ jobs:
             [System.Drawing.Graphics]::FromImage($image).CopyFromScreen($screen.Location, [System.Drawing.Point]::Empty, $screen.Size)
             $image.Save("$PWD\wack-stuck.png")
             $last = (Get-Content $out -Tail 6 -ErrorAction SilentlyContinue) -join ' / '
-            Write-Output "::error title=Certification kit didn't finish::Still running after 25 minutes. Windows open: $seen. Last output: $last"
+            # What the open windows say (a dialog waiting for an answer, say).
+            Add-Type -AssemblyName UIAutomationClient, UIAutomationTypes
+            $said = foreach ($p in Get-Process | Where-Object { $_.MainWindowTitle }) {
+              $mine = New-Object System.Windows.Automation.PropertyCondition(
+                [System.Windows.Automation.AutomationElement]::ProcessIdProperty, $p.Id)
+              $parts = [System.Windows.Automation.AutomationElement]::RootElement.FindAll(
+                [System.Windows.Automation.TreeScope]::Descendants, $mine)
+              "$($p.ProcessName): " + (($parts | ForEach-Object { $_.Current.Name } | Where-Object { $_ }) -join ' | ')
+            }
+            Write-Output "::error title=Certification kit didn't finish::Still running after 25 minutes. Windows open: $seen. They say: $($said -join ' // '). Last output: $last"
             Stop-Process -Id $proc.Id -Force
             Get-Process 'Game Central', 'Uninstall Game Central' -ErrorAction SilentlyContinue | Stop-Process -Force
             exit 1
