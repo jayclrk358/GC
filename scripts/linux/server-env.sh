@@ -61,10 +61,13 @@ SMTP_URL=
 EMAIL_FROM="Game Central <no-reply@$site>"
 # REQUIRE_EMAIL_VERIFICATION=true
 
-# Optional sign-in providers and the Cloudflare Turnstile check on sign-up, sign-in and votes
-# (see .env.example for all options).
+# Optional sign-in providers (README → "Sign-in with Discord and Google"; redirect URLs are
+# https://$site/api/auth/callback/discord and /google) and the Cloudflare Turnstile check on
+# sign-up, sign-in and votes (see .env.example for all options).
 DISCORD_CLIENT_ID=
 DISCORD_CLIENT_SECRET=
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
 TURNSTILE_SITE_KEY=
 TURNSTILE_SECRET_KEY=
 PLATFORM_ADMIN_EMAILS=

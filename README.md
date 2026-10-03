@@ -144,6 +144,92 @@ keeps the databases off the network and restarts everything after a reboot.
   Redis is used for every live event, so it's usually best left on the server. The queue Redis
   needs `maxmemory-policy noeviction`; pay-per-command Redis plans get expensive with job queues.
 
+### Sign-in with Discord and Google
+
+The sign-in and sign-up pages show **Continue with Discord** and **Continue with Google** once
+their keys are in `.env`. Each one needs an app registered with Discord or Google that sends
+people back to your site at this address (replace `YOUR-DOMAIN` with the address in `APP_URL`):
+
+| Provider | Redirect URL                                    |
+| -------- | ----------------------------------------------- |
+| Discord  | `https://YOUR-DOMAIN/api/auth/callback/discord` |
+| Google   | `https://YOUR-DOMAIN/api/auth/callback/google`  |
+| Twitch   | `https://YOUR-DOMAIN/api/auth/callback/twitch`  |
+
+It must match `APP_URL` exactly: `https`, with or without `www` as `APP_URL` has it, and no
+slash at the end. Otherwise Discord says "Invalid OAuth2 redirect_uri" and Google says
+"redirect_uri_mismatch".
+
+**Discord**
+
+1. Open the [Discord Developer Portal](https://discord.com/developers/applications) and click
+   **New Application**. Name it after your site (people see the name when they sign in).
+2. Optional, under **General Information**: an app icon (`docs/brand/game-central-app-icon.png`),
+   a description, and your Terms of Service and Privacy Policy addresses
+   (`https://YOUR-DOMAIN/legal/terms`, `https://YOUR-DOMAIN/legal/privacy`).
+3. Open **OAuth2**. Copy the **Client ID**, then **Reset Secret** and copy the **Client Secret**
+   (Discord shows it once).
+4. Under **Redirects**, click **Add Redirect**, paste the Discord redirect URL and click
+   **Save Changes**.
+
+No bot is needed. Game Central asks Discord only for the account's name, picture and email.
+
+**Google**
+
+1. In the [Google Cloud console](https://console.cloud.google.com), create a project (project
+   picker → **New project**).
+2. Open [Google Auth Platform](https://console.cloud.google.com/auth/overview) and click
+   **Get started**: your site's name, a support email, **External** as the audience, and a contact
+   email.
+3. Go to **Clients** → **Create client**, choose **Web application**, add the Google redirect URL
+   under **Authorized redirect URIs** and click **Create**. Copy the **Client ID** and **Client
+   secret**: Google shows the secret in full only now, so download the JSON as well.
+4. Go to **Audience** and click **Publish app**. Until you do, the app is "Testing", and only the
+   test users listed there can sign in.
+5. Optional, under **Branding**: your home page, privacy policy and terms addresses. Adding a
+   logo means Google has to verify the app first, which takes days. Game Central works without
+   one.
+
+Game Central asks Google only for the account's name, picture and email, so Google doesn't need
+to review the app.
+
+**Turning them on**
+
+Add the values to `.env` on the server, then restart:
+
+```bash
+DISCORD_CLIENT_ID=123456789012345678
+DISCORD_CLIENT_SECRET=...
+GOOGLE_CLIENT_ID=1234567890-abc.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=GOCSPX-...
+```
+
+```bash
+docker compose up -d
+```
+
+Twitch works the same way: register an app at the
+[Twitch developer console](https://dev.twitch.tv/console/apps) with the Twitch redirect URL, then
+set `TWITCH_CLIENT_ID` and `TWITCH_CLIENT_SECRET`. To leave a provider off, leave its values empty.
+
+**How accounts join up**
+
+- **Someone new** gets a Game Central account. Before anything else, they're asked to confirm
+  they're 13 or older and agree to the terms.
+- **The same email as an existing account:** signing in with Google uses that account. Discord
+  does too if Discord has confirmed the address. Either way, the Game Central account must have
+  confirmed its email. This stops someone from adding another person's email to a Discord account
+  and using it to get into theirs.
+- **Signed-in people** can add Discord or Google under Settings → Account → **Connected
+  accounts**. The Discord or Google account must use the same email as their Game Central account.
+
+**Local development:** add `http://localhost:3000/api/auth/callback/discord` (and `…/google`) as a
+second redirect in the same apps, and put the keys in your local `.env`. Both providers accept
+`http://localhost`.
+
+Google may refuse to sign in inside the Windows app, because Google blocks embedded browsers.
+Discord sign-in works there.
+
 ### Payments (Stripe)
 
 Communities can buy the **Plus** or **Pro** plan from `/store` (or Plan & billing in their
