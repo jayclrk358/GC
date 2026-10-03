@@ -12,9 +12,8 @@ import { Turnstile, type TurnstileHandle } from '@/components/ui/turnstile';
 import { authClient } from '@/lib/auth-client';
 import { captchaOptions, isCaptchaError } from '@/components/auth/captcha';
 import { FormError } from '@/components/auth/form-error';
+import { PROVIDER_LABELS, ProviderIcon } from '@/components/auth/provider-icons';
 import { SettingsSection } from './section';
-
-const LABELS: Record<string, string> = { discord: 'Discord', google: 'Google', twitch: 'Twitch' };
 
 export function AccountForms({
   user,
@@ -231,7 +230,10 @@ export function AccountForms({
           <ul className="flex flex-col gap-2">
             {providers.map((p) => (
               <li key={p} className="flex items-center justify-between gap-3">
-                <span className="font-semibold">{LABELS[p] ?? p}</span>
+                <span className="flex items-center gap-2.5 font-semibold">
+                  <ProviderIcon provider={p} className="size-5 shrink-0" />
+                  {PROVIDER_LABELS[p] ?? p}
+                </span>
                 {linked.includes(p) ? (
                   <Badge tone="success">{t('connected')}</Badge>
                 ) : (
@@ -245,7 +247,7 @@ export function AccountForms({
                       })
                     }
                   >
-                    {t('connect', { provider: LABELS[p] ?? p })}
+                    {t('connect', { provider: PROVIDER_LABELS[p] ?? p })}
                   </Button>
                 )}
               </li>

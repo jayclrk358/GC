@@ -3,8 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { authClient } from '@/lib/auth-client';
-
-const LABELS: Record<string, string> = { discord: 'Discord', google: 'Google', twitch: 'Twitch' };
+import { PROVIDER_LABELS, ProviderIcon } from './provider-icons';
 
 export function SocialButtons({ providers, next }: { providers: string[]; next: string }) {
   const t = useTranslations('auth');
@@ -29,7 +28,8 @@ export function SocialButtons({ providers, next }: { providers: string[]; next: 
               })
             }
           >
-            {t('continueWith', { provider: LABELS[p] ?? p })}
+            <ProviderIcon provider={p} className="size-[18px]!" />
+            {t('continueWith', { provider: PROVIDER_LABELS[p] ?? p })}
           </Button>
         ))}
       </div>
