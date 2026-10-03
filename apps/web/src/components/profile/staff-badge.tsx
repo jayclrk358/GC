@@ -1,16 +1,18 @@
 import { useTranslations } from 'next-intl';
-import { Crown, Shield, ShieldCheck, type LucideIcon } from 'lucide-react';
-import type { StaffRole } from '@magnox/core';
+import { Shield, ShieldCheck, type LucideIcon } from 'lucide-react';
+import type { PublicStaffRole } from '@magnox/core';
 import { cn } from '@/lib/utils';
 
-const STYLE: Record<StaffRole, { icon: LucideIcon; className: string }> = {
-  owner: { icon: Crown, className: 'border-primary bg-primary text-on-primary' },
+const STYLE: Record<PublicStaffRole, { icon: LucideIcon; className: string }> = {
   admin: { icon: ShieldCheck, className: 'border-primary/40 bg-primary/10 text-primary' },
   moderator: { icon: Shield, className: 'border-border bg-surface-2 text-fg' },
 };
 
-/** Marks someone on the team that runs Magnox, wherever their profile is shown. */
-export function StaffBadge({ role, className }: { role: StaffRole; className?: string }) {
+/**
+ * Marks someone on the team that runs Magnox, wherever their profile is shown. The owner shows
+ * as an admin.
+ */
+export function StaffBadge({ role, className }: { role: PublicStaffRole; className?: string }) {
   const t = useTranslations('staffBadge');
   const { icon: Icon, className: tone } = STYLE[role];
   return (

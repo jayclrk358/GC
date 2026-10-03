@@ -191,11 +191,74 @@ docker compose up -d --build
   `http://localhost:3000/api/voice/webhook`), and set `LIVEKIT_URL=ws://localhost:7880`.
 - **More capacity:** one LiveKit server handles hundreds of people talking. For more, run LiveKit
   on more servers, all pointed at the same Redis (add a `redis:` block to `LIVEKIT_CONFIG`) and
-  each with its own public IP and open ports. List them all after `reverse_proxy @voice` in
+  each with its own public IP and open ports. List them all after `reverse_proxy livekit:7880` in
   `docker/Caddyfile`, and LiveKit places each call on a server with room. Set `LIVEKIT_API_URL`
   if LiveKit no longer runs next to the app.
 
 Without the keys, voice channels say that voice isn't set up yet.
+
+### Several servers (load balancing)
+
+When one server isn't enough, Magnox can spread visitors over several. The server you have now
+becomes the **main server**: it keeps the database, Redis, the worker, voice and Caddy, and runs
+the web app too. **App servers** run more copies of the web app and the realtime server (chat and
+live updates). Caddy on the main server shares visitors out between them all, keeps each visitor
+on the same one (with a cookie), and stops sending anyone to a server that stops answering.
+
+```
+visitors ─▶ main server: Caddy ─┬─▶ web app + realtime   (main server)
+            Postgres, Redis,    ├─▶ web app + realtime   (app server 1)
+            worker, LiveKit     └─▶ web app + realtime   (app server 2)
+```
+
+**Before you start:**
+
+1. **A private network.** Put the servers in one private network at your host (Hetzner Cloud
+   Networks, DigitalOcean VPC, Vultr VPC, Linode VLAN…) and note each one's private address
+   (`ip -4 addr`). App servers reach the database and Redis over it; nothing new is opened on the
+   public addresses. If your host has no private network, or it's shared with other customers,
+   connect the servers with [WireGuard](https://www.wireguard.com/) or
+   [Tailscale](https://tailscale.com/) and use those addresses.
+2. **Uploads in S3 or R2.** Every server has to see the same files: set `STORAGE_DRIVER=s3`, the
+   `S3_*` values and `MEDIA_BASE_URL` in `.env` (see `.env.example`). Copy existing uploads into the
+   bucket first, for example with [rclone](https://rclone.org/) after `rclone config`:
+   `docker run --rm -v magnox_media:/data:ro -v ~/.config/rclone:/config/rclone rclone/rclone copy /data r2:magnox`,
+   then `docker compose up -d`.
+3. **App servers:** fresh Linux servers with
+   [Docker Engine and the Compose plugin](https://docs.docker.com/engine/install/). Nothing else:
+   the main server sends them everything.
+4. **SSH from the main server to each app server**, with a key: `ssh-keygen -t ed25519` (if you
+   have no key yet) and `ssh-copy-id root@10.0.0.3`, then check that
+   `ssh root@10.0.0.3 docker info` works. For a user other than root, set `CLUSTER_SSH_USER` in
+   `.env` (the user must be allowed to run `docker`).
+
+**Set it up**, on the main server in the Magnox folder:
+
+```bash
+scripts/linux/cluster.sh setup 10.0.0.2 10.0.0.3 10.0.0.4   # this server's private address first, then each app server's
+scripts/linux/cluster.sh deploy
+```
+
+`setup` adds a few settings to `.env`: the list of servers, a Redis password, a higher Postgres
+connection limit, and `docker-compose.cluster.yml`, which publishes Postgres, Redis, LiveKit's
+API and Mailpit's mail port on the private address only. The first deploy restarts Postgres and
+Redis with these settings, so the site is offline for a few seconds.
+
+`deploy` builds Magnox once, sends the same build to every app server over SSH, updates the main
+server (migrations run first), then updates the app servers one at a time, waiting for each to
+answer before moving on, while the others keep serving visitors.
+
+- **Updating:** `git pull && scripts/linux/cluster.sh deploy` (instead of
+  `docker compose up -d --build`).
+- **Adding or removing a server:** run `setup` again with the new list, then `deploy`. To stop
+  one you removed: `ssh root@<address> 'cd magnox && docker compose -f docker-compose.node.yml down'`.
+- **Checking:** `scripts/linux/cluster.sh status`. An app server's logs:
+  `ssh root@10.0.0.3 'cd magnox && docker compose -f docker-compose.node.yml logs -f web'`.
+- **Settings:** change them in the main server's `.env` only; `deploy` copies them to the app
+  servers.
+- **DNS** doesn't change: it points at the main server, the only one visitors connect to.
+- The main server still holds the data, so the site needs it running. App servers add capacity
+  and keep the site up when one of them fails or restarts.
 
 ## Admin console
 

@@ -8,6 +8,10 @@
 	}
 }
 
+# Where requests for the app go: the web app and realtime server on this machine, or spread over
+# several servers (CADDY_UPSTREAMS=cluster, see "Several servers" in the README).
+import /etc/caddy/upstreams-{$CADDY_UPSTREAMS:single}.caddy
+
 # Request bodies are capped here, before anything reads them: uploads at the largest video a
 # plan allows plus the form around it (the app checks each plan's limit), everything else well
 # above what any form or webhook sends.
@@ -27,14 +31,19 @@
 	encode zstd gzip
 	import body_limits
 
-	@socket path /socket.io/*
-	reverse_proxy @socket realtime:3001
+	handle /socket.io/* {
+		import realtime_upstream
+	}
 
 	# Voice: LiveKit's signalling (the audio itself goes straight to LiveKit's UDP port).
 	@voice path /rtc /rtc/*
-	reverse_proxy @voice livekit:7880
+	handle @voice {
+		reverse_proxy livekit:7880
+	}
 
-	reverse_proxy web:3000
+	handle {
+		import web_upstream
+	}
 }
 
 # User uploads are served from a separate, cookie-less origin.
@@ -81,8 +90,11 @@ https:// {
 		close
 	}
 
-	@socket path /socket.io/*
-	reverse_proxy @socket realtime:3001
+	handle /socket.io/* {
+		import realtime_upstream
+	}
 
-	reverse_proxy web:3000
+	handle {
+		import web_upstream
+	}
 }

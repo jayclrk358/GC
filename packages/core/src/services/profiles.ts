@@ -18,7 +18,7 @@ import { z } from 'zod';
 import { getMemberContext } from '../access';
 import { AppError } from '../errors';
 import { mediaUrl } from '../storage';
-import { staffRoleOf } from './admin';
+import { publicStaffRole } from './admin';
 import { loadAuthors } from './chat';
 import { communitiesForUser } from './communities';
 
@@ -220,7 +220,7 @@ export async function getPublicProfile(username: string, viewerId?: string | nul
     image: user.image,
     createdAt: user.createdAt,
     /** On Magnox's own team: shown as a badge. */
-    staffRole: staffRoleOf(user),
+    staffRole: publicStaffRole(user),
     bio: profile?.bio ?? '',
     pronouns: profile?.pronouns ?? '',
     location: profile?.location ?? '',
@@ -323,7 +323,7 @@ export async function getProfileCard(
     username: user.username!,
     image: user.image,
     joinedAt: user.createdAt.toISOString(),
-    staffRole: staffRoleOf(user),
+    staffRole: publicStaffRole(user),
     pronouns: profile?.pronouns ?? '',
     status: profile?.status ?? '',
     bio: bio.length > 200 ? `${bio.slice(0, 199).trimEnd()}…` : bio,

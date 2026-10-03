@@ -1,0 +1,70 @@
+# The main server when Magnox runs on several servers (set up by scripts/linux/cluster.sh, which
+# adds this file to COMPOSE_FILE; see "Several servers" in the README).
+#
+# This server keeps running everything. Caddy here spreads requests over its own web app and
+# realtime server and those on the app servers (WEB_UPSTREAMS, REALTIME_UPSTREAMS), and the app
+# servers use this server's Postgres, Redis, LiveKit and Mailpit over the private network: those
+# are published on PRIVATE_IP only, never on the public address. Redis gets a password.
+x-redis-urls: &redis-urls
+  REDIS_QUEUE_URL: ${EXTERNAL_REDIS_QUEUE_URL:-redis://:${REDIS_PASSWORD:?run scripts/linux/cluster.sh setup}@redis-queue:6379/0}
+  REDIS_CACHE_URL: ${EXTERNAL_REDIS_CACHE_URL:-redis://:${REDIS_PASSWORD}@redis-cache:6379/0}
+
+services:
+  postgres:
+    ports: !override ['${PRIVATE_IP:?run scripts/linux/cluster.sh setup}:5432:5432']
+
+  redis-queue:
+    command:
+      [
+        'redis-server',
+        '--appendonly',
+        'yes',
+        '--maxmemory-policy',
+        'noeviction',
+        '--requirepass',
+        '${REDIS_PASSWORD}',
+      ]
+    # redis-cli (the health check) reads the password from here.
+    environment: { REDISCLI_AUTH: '${REDIS_PASSWORD}' }
+    ports: !override ['${PRIVATE_IP}:6379:6379']
+
+  redis-cache:
+    command:
+      [
+        'redis-server',
+        '--maxmemory',
+        '256mb',
+        '--maxmemory-policy',
+        'allkeys-lru',
+        '--save',
+        '',
+        '--appendonly',
+        'no',
+        '--requirepass',
+        '${REDIS_PASSWORD}',
+      ]
+    environment: { REDISCLI_AUTH: '${REDIS_PASSWORD}' }
+    ports: !override ['${PRIVATE_IP}:6380:6379']
+
+  # Mail from the app servers, when SMTP_URL is empty (the inbox stays on this machine only).
+  mailpit:
+    ports: !override ['127.0.0.1:8025:8025', '${PRIVATE_IP}:1025:1025']
+
+  # The app servers create voice rooms and tokens through LiveKit's API.
+  livekit:
+    ports: !override ['7881:7881', '7882:7882/udp', '${PRIVATE_IP}:7880:7880']
+
+  migrate:
+    environment: *redis-urls
+  web:
+    environment: *redis-urls
+  realtime:
+    environment: *redis-urls
+  worker:
+    environment: *redis-urls
+
+  caddy:
+    environment:
+      CADDY_UPSTREAMS: cluster
+      WEB_UPSTREAMS: ${WEB_UPSTREAMS:?run scripts/linux/cluster.sh setup}
+      REALTIME_UPSTREAMS: ${REALTIME_UPSTREAMS:?run scripts/linux/cluster.sh setup}

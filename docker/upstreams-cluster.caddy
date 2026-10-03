@@ -1,0 +1,30 @@
+# Several servers (scripts/linux/cluster.sh sets this up; see "Several servers" in the README).
+# Requests are spread over the web app and realtime servers in WEB_UPSTREAMS and
+# REALTIME_UPSTREAMS.
+#
+# Each browser sticks to one server (a cookie), so a page and the scripts and actions it loads
+# all come from the same version while servers are updated one at a time, and Socket.IO's
+# fallback transport (long polling) keeps talking to the server that knows it. A server that fails
+# its health check (the web app's also checks Postgres and Redis) gets no new requests until it
+# passes again, and requests that can't reach a server are tried on another.
+(web_upstream) {
+	reverse_proxy {$WEB_UPSTREAMS} {
+		lb_policy cookie mx_web
+		lb_try_duration 5s
+		health_uri /api/health
+		health_interval 5s
+		health_timeout 4s
+		fail_duration 30s
+	}
+}
+
+(realtime_upstream) {
+	reverse_proxy {$REALTIME_UPSTREAMS} {
+		lb_policy cookie mx_rt
+		lb_try_duration 5s
+		health_uri /health
+		health_interval 5s
+		health_timeout 4s
+		fail_duration 30s
+	}
+}

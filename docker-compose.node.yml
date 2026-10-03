@@ -1,0 +1,36 @@
+# An app server when Magnox runs on several servers: just the web app and realtime server, using
+# the main server's Postgres, Redis and LiveKit over the private network. Set up and updated from
+# the main server by scripts/linux/cluster.sh, which copies this file and a .env here and ships
+# the images it built (so every server runs exactly the same build). See "Several servers" in the
+# README.
+#
+# The ports are published on this server's private address only: Caddy on the main server is
+# the only way in from the internet.
+name: magnox
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: '10m', max-file: '3' }
+
+# Everything else (database and Redis addresses, secrets, settings) comes from .env.
+x-app: &app
+  env_file: .env
+  environment:
+    NODE_ENV: production
+    MALLOC_ARENA_MAX: '2'
+  logging: *logging
+  restart: unless-stopped
+  pull_policy: never
+
+services:
+  web:
+    <<: *app
+    image: magnox-web
+    ports: ['${PRIVATE_IP:?set PRIVATE_IP in .env}:3000:3000']
+
+  realtime:
+    <<: *app
+    image: magnox-realtime
+    command: ['node', '--import', 'tsx', 'apps/realtime/src/index.ts']
+    ports: ['${PRIVATE_IP}:3001:3001']
+    stop_grace_period: 30s

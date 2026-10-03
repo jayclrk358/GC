@@ -80,6 +80,14 @@ export function staffRoleOf(user: {
   return null;
 }
 
+/** A staff role as others see it: the owner shows as an admin, so who owns Magnox stays private. */
+export type PublicStaffRole = Exclude<StaffRole, 'owner'>;
+
+export function publicStaffRole(user: Parameters<typeof staffRoleOf>[0]): PublicStaffRole | null {
+  const role = staffRoleOf(user);
+  return role === 'owner' ? 'admin' : role;
+}
+
 /** Whether an account is Magnox staff of any kind (and so sees the console). */
 export function isPlatformAdminUser(user: Parameters<typeof staffRoleOf>[0]): boolean {
   return staffRoleOf(user) !== null;
