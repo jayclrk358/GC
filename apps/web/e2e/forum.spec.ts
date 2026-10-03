@@ -291,6 +291,7 @@ test.describe('forum', () => {
       .getByRole('dialog', { name: `Ban ${member.user.name}` })
       .getByRole('button', { name: 'Ban' })
       .click();
+    await expect(page.getByText(`${member.user.name} was banned.`)).toBeVisible();
     await page.goto(`/c/${slug}/settings/bans`);
     await expect(page.getByText(member.user.name)).toBeVisible();
     await expectAccessible(page, 'bans');
