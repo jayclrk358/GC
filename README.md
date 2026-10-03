@@ -122,7 +122,9 @@ keeps the databases off the network and restarts everything after a reboot.
 - **With a domain:** point DNS records for `gamecentral.example.com` and `media.gamecentral.example.com` at
   the server and open ports 80 and 443. Caddy gets Let's Encrypt certificates automatically.
 - **Email:** with `SMTP_URL` empty, mail (sign-up confirmations, password resets) lands in
-  Mailpit at http://localhost:8025 on the server. Set `SMTP_URL` in `.env` for real email.
+  Mailpit at http://localhost:8025 on the server. For real email, set `SMTP_URL` in `.env`, e.g.
+  `smtps://no-reply%40example.com:password@smtp.example.com:465` (write the `@` in the user name
+  as `%40`), and make `EMAIL_FROM` the same mailbox. Then `docker compose up -d`.
 - **Bot protection:** create a Cloudflare Turnstile widget for your domain and put its keys in
   `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` in `.env`, then `docker compose up -d`. Sign-up,
   sign-in, password resets and server votes then ask for the check.

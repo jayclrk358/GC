@@ -54,7 +54,9 @@ VAPID_PRIVATE_KEY=$vapid_private
 VAPID_SUBJECT=mailto:admin@$site
 
 # Email. Empty sends everything to the built-in Mailpit inbox (http://localhost:8025 on the
-# server). For real email: SMTP_URL=smtps://user:password@smtp.example.com:465
+# server). For real email: SMTP_URL=smtps://user:password@smtp.example.com:465 (a user name that
+# is an email address has its @ written as %40, e.g. no-reply%40example.com; EMAIL_FROM must be
+# that address too)
 SMTP_URL=
 EMAIL_FROM="Game Central <no-reply@$site>"
 # REQUIRE_EMAIL_VERIFICATION=true
