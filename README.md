@@ -227,8 +227,8 @@ set `TWITCH_CLIENT_ID` and `TWITCH_CLIENT_SECRET`. To leave a provider off, leav
 second redirect in the same apps, and put the keys in your local `.env`. Both providers accept
 `http://localhost`.
 
-Google may refuse to sign in inside the Windows app, because Google blocks embedded browsers.
-Discord sign-in works there.
+In the Windows app (1.1 and later), these sign-ins happen in your own browser and are handed back
+to the app, so Google works there too.
 
 ### Payments (Stripe)
 
@@ -371,6 +371,12 @@ you've confirmed it), or after signing up run
   user", unless you also choose to remove your chat messages and forum replies. Owners hand over
   or delete their communities first.
 
+## What's new
+
+`/changelog` (linked as "What's new" in the footer) lists updates people will notice, newest first.
+The Windows app shows the same list. To add one, put an entry at the top of `CHANGELOG` in
+`packages/shared/src/changelog.ts` with a new `id`, and it appears once the site is updated.
+
 ## API and webhooks
 
 - **Public API:** people make personal tokens in Settings → Developer; scripts and bots then call
@@ -448,10 +454,18 @@ nothing to reinstall. It adds what a desktop app should have:
   and a right-click menu (copy, paste, copy link, save image).
 - Back and forward with Alt+← / Alt+→ or the mouse's side buttons, zoom with Ctrl+= / Ctrl+-,
   F11 for full screen. Press Alt for the menu.
-- It remembers its size and position, opens only one copy, and shows a "Can't reach Game Central"
-  page that retries by itself when the site is down or you're offline.
-- Links to other sites open in your normal browser. Sign-in (Discord, Twitch, Steam) and Stripe
-  checkout stay in the app, since they send you back to Game Central.
+- A loading screen with the logo while the site opens, showing the latest update. It remembers
+  its size and position, opens only one copy, and shows a "Can't reach Game Central" page that
+  retries by itself when the site is down or you're offline.
+- **What's new** (Help → What's new) lists the latest updates, and opens by itself once after each
+  new one. It reads the site's changelog (`/changelog`, below), so it needs no app update.
+- **Signing in with Discord, Google or Twitch happens in your own browser**, where you're usually
+  signed in to them already, so it's a click or two. The browser then hands the app a session of
+  its own through a `gamecentral://` link (the installer registers it). Google, which blocks
+  sign-in inside apps, works this way too. If the link doesn't reach the app, "Sign in in this
+  window instead" signs in inside the app as before.
+- Links to other sites open in your normal browser. Stripe checkout stays in the app, since it
+  sends you back to Game Central.
 
 **Getting the installer:** every push that changes `apps/desktop` builds `GameCentral-Setup-<version>.exe`
 on GitHub (Actions → **Windows app** → the latest run → **Artifacts**). You can also start a build
@@ -466,8 +480,14 @@ there by hand, optionally for another site address. To build it yourself on Wind
 - **Unsigned:** Windows SmartScreen warns about apps without a code-signing certificate ("More
   info" → "Run anyway"). A certificate (for example through Azure Trusted Signing) removes the
   warning; electron-builder signs with it during the build.
-- **Google sign-in** may refuse to work inside apps like this one (Google blocks embedded browsers).
-  Email, Discord, Twitch and Steam sign-in work.
+- **Why it's ~100 MB:** the app carries its own copy of Chromium (the browser engine Chrome uses),
+  so it works the same on every PC and supports screen sharing with its own picker; the app's
+  own code is a few hundred KB. It only includes the interface languages the site comes in. A
+  shell built on Windows' built-in Edge engine (WebView2, for example with Tauri) would be a 5–10
+  MB download, at the cost of rewriting the app.
+- **Windows App Certification Kit:** every installer build is also put through Microsoft's kit
+  (`appcert.exe`) on GitHub. The results are in the run's summary, with the full report under
+  **Artifacts**.
 
 ## Scripts
 

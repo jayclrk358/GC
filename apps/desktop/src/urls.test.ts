@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { navigationFor, originOf, serverOrigin } from './urls';
+import {
+  handoffCode,
+  navigationFor,
+  originOf,
+  serverOrigin,
+  signInRequest,
+  sitePath,
+} from './urls';
 
 const app = 'https://gamecentral.example.com';
 
@@ -53,5 +60,69 @@ describe('originOf', () => {
   it('is empty for non-web URLs', () => {
     expect(originOf('https://a.example/x')).toBe('https://a.example');
     expect(originOf('file:///C:/')).toBe('');
+  });
+});
+
+const code = 'A'.repeat(21) + '-_' + 'b'.repeat(20);
+
+describe('signInRequest', () => {
+  it('spots the site asking the app to sign in', () => {
+    expect(
+      signInRequest(`${app}/desktop/sign-in?provider=google&next=%2Fc%2Ffoo%3Ftab%3D1`, app),
+    ).toEqual({ provider: 'google', next: '/c/foo?tab=1' });
+    expect(signInRequest(`${app}/desktop/sign-in?provider=discord`, app)).toEqual({
+      provider: 'discord',
+      next: '/',
+    });
+  });
+
+  it('leaves everything else alone', () => {
+    // The browser's copy of the link.
+    expect(signInRequest(`${app}/desktop/sign-in?provider=google&challenge=x`, app)).toBeNull();
+    expect(signInRequest(`https://evil.example/desktop/sign-in?provider=google`, app)).toBeNull();
+    expect(signInRequest(`${app}/sign-in?provider=google`, app)).toBeNull();
+    expect(signInRequest(`${app}/desktop/sign-in?provider=Goo%20gle`, app)).toBeNull();
+    expect(signInRequest(`${app}/desktop/sign-in`, app)).toBeNull();
+  });
+
+  it('never sends you off the site afterwards', () => {
+    for (const next of [
+      '//evil.example',
+      '/\\evil.example',
+      'https://evil.example',
+      '/%2Fevil.example',
+      '/\tx',
+    ]) {
+      expect(
+        signInRequest(
+          `${app}/desktop/sign-in?provider=google&next=${encodeURIComponent(next)}`,
+          app,
+        )?.next,
+      ).toBe('/');
+    }
+  });
+});
+
+describe('sitePath', () => {
+  it('keeps paths on the site', () => {
+    expect(sitePath('/c/foo/chat/general')).toBe('/c/foo/chat/general');
+    expect(sitePath(null)).toBe('/');
+    expect(sitePath('//evil.example/x')).toBe('/');
+  });
+});
+
+describe('handoffCode', () => {
+  it("reads the code from the browser's link", () => {
+    expect(handoffCode(`gamecentral://auth?code=${code}`)).toBe(code);
+    expect(handoffCode(`gamecentral://auth/?code=${code}`)).toBe(code);
+  });
+
+  it('ignores anything else', () => {
+    expect(handoffCode(`gamecentral://auth?code=short`)).toBeNull();
+    expect(handoffCode(`gamecentral://other?code=${code}`)).toBeNull();
+    expect(handoffCode(`gamecentral://auth/extra?code=${code}`)).toBeNull();
+    expect(handoffCode(`https://auth?code=${code}`)).toBeNull();
+    expect(handoffCode(`gamecentral://auth?code=${code}<script>`)).toBeNull();
+    expect(handoffCode('not a url')).toBeNull();
   });
 });

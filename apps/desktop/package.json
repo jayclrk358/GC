@@ -1,7 +1,7 @@
 {
   "name": "gamecentral-desktop",
   "productName": "Game Central",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Game Central for Windows: the Game Central website in its own window.",
   "author": "Game Central",
   "private": true,
@@ -32,6 +32,16 @@
       "static/**/*",
       "package.json"
     ],
+    "electronLanguages": [
+      "en-US",
+      "en-GB",
+      "es",
+      "es-419",
+      "fr",
+      "de",
+      "pt-BR",
+      "pt-PT"
+    ],
     "win": {
       "target": "nsis",
       "icon": "build/icon.png"
@@ -41,7 +51,8 @@
       "perMachine": false,
       "artifactName": "GameCentral-Setup-${version}.exe",
       "shortcutName": "Game Central",
-      "uninstallDisplayName": "Game Central"
+      "uninstallDisplayName": "Game Central",
+      "include": "build/installer.nsh"
     }
   }
 }

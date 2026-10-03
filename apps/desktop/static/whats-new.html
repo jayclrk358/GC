@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'"
+    />
+    <title>What’s new</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="whats-new.css" />
+  </head>
+  <body>
+    <main>
+      <h1>What’s new</h1>
+      <p class="muted" id="intro">The latest updates to Game Central.</p>
+      <ol class="entries" id="entries"></ol>
+      <p class="muted" id="empty" hidden>Nothing to show yet. Check back after the next update.</p>
+      <div class="actions">
+        <button type="button" id="all" class="start">See all updates</button>
+        <button type="button" class="primary" id="close">Close</button>
+      </div>
+    </main>
+    <script src="whats-new.js"></script>
+  </body>
+</html>

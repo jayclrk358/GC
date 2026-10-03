@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { app, screen, type Rectangle } from 'electron';
+import type { ChangelogEntry } from './changelog';
 
 /** What the app remembers between runs (in %APPDATA%\Game Central\settings.json). */
 export interface Settings {
@@ -8,6 +9,10 @@ export interface Settings {
   serverUrl?: string;
   bounds?: Rectangle;
   maximized?: boolean;
+  /** The site's latest updates, as last fetched (for the loading screen, before it connects). */
+  changelog?: ChangelogEntry[];
+  /** The newest update shown in "What's new", so each one is shown once. */
+  seenChangelog?: string;
 }
 
 const file = () => path.join(app.getPath('userData'), 'settings.json');

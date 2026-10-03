@@ -57,16 +57,52 @@ jobs:
         shell: pwsh
         run: |
           $kit = "${env:ProgramFiles(x86)}\Windows Kits\10\App Certification Kit\appcert.exe"
-          if (-not (Test-Path $kit)) { throw "The Windows App Certification Kit isn't installed on this runner." }
+          if (-not (Test-Path $kit)) {
+            Write-Output "::error::The Windows App Certification Kit isn't installed on this runner."
+            exit 1
+          }
           $setup = (Get-ChildItem installer\GameCentral-Setup-*.exe | Select-Object -First 1).FullName
           $report = Join-Path $env:RUNNER_TEMP 'wack-report.xml'
-          & $kit reset
-          # Installs the app silently (per user, as the installer does), runs it, checks it, and
-          # uninstalls it again.
-          & $kit test -apptype desktop -setuppath $setup -setupcommandline '/S' -appusage peruser -reportoutputpath $report
-          if ($LASTEXITCODE -ne 0 -or -not (Test-Path $report)) {
-            & $kit /?
-            throw "appcert.exe failed (exit code $LASTEXITCODE)."
+          $out = Join-Path $env:RUNNER_TEMP 'wack-output.txt'
+          & $kit reset | Out-Host
+          # Installs the app silently (per user, as the installer does), checks it, and uninstalls
+          # it again. Run in the background so a test waiting on a window can't hang the job: the
+          # windows open along the way are noted, and it's stopped after 25 minutes.
+          $proc = Start-Process -FilePath $kit -PassThru -NoNewWindow -RedirectStandardOutput $out -ArgumentList @(
+            'test', '-apptype', 'desktop', '-setuppath', "`"$setup`"", '-setupcommandline', '/S',
+            '-appusage', 'peruser', '-reportoutputpath', "`"$report`"")
+          $seen = ''
+          $notes = 0
+          $deadline = (Get-Date).AddMinutes(25)
+          while (-not $proc.HasExited -and (Get-Date) -lt $deadline) {
+            Start-Sleep -Seconds 15
+            $windows = (Get-Process | Where-Object { $_.MainWindowTitle } |
+              ForEach-Object { "$($_.ProcessName): $($_.MainWindowTitle)" }) -join '; '
+            if ($windows -ne $seen) {
+              $seen = $windows
+              $minutes = [int]((Get-Date) - $proc.StartTime).TotalMinutes
+              Write-Output "[$minutes min] Windows open: $windows"
+              if ($notes -lt 8) { Write-Output "::notice title=Certification kit, $minutes min in::Windows open: $windows"; $notes++ }
+            }
+          }
+          if (-not $proc.HasExited) {
+            Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+            $screen = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+            $image = New-Object System.Drawing.Bitmap $screen.Width, $screen.Height
+            [System.Drawing.Graphics]::FromImage($image).CopyFromScreen($screen.Location, [System.Drawing.Point]::Empty, $screen.Size)
+            $image.Save("$PWD\wack-stuck.png")
+            $last = (Get-Content $out -Tail 6 -ErrorAction SilentlyContinue) -join ' / '
+            Write-Output "::error title=Certification kit didn't finish::Still running after 25 minutes. Windows open: $seen. Last output: $last"
+            Stop-Process -Id $proc.Id -Force
+            Get-Process 'Game Central', 'Uninstall Game Central' -ErrorAction SilentlyContinue | Stop-Process -Force
+            exit 1
+          }
+          Get-Content $out -ErrorAction SilentlyContinue | Out-Host
+          if (-not (Test-Path $report)) {
+            & $kit /? | Out-Host
+            $last = (Get-Content $out -Tail 6 -ErrorAction SilentlyContinue) -join ' / '
+            Write-Output "::error title=Certification kit failed::No report (exit code $($proc.ExitCode)). Last output: $last"
+            exit 1
           }
           Copy-Item $report wack-report.xml
           [xml]$xml = Get-Content $report
@@ -83,11 +119,20 @@ jobs:
           foreach ($row in $rows) {
             "| $($row.Result) | $($row.Test) | $($row.Details -replace '\|', '/') |" | Out-File $env:GITHUB_STEP_SUMMARY -Append
           }
-          Write-Output "Overall: $overall"
+          $failed = @($rows | Where-Object { $_.Result -eq 'FAIL' })
+          foreach ($row in $failed | Select-Object -First 9) {
+            Write-Output "::warning title=Certification kit: $($row.Test)::$($row.Details)"
+          }
+          Write-Output "::notice title=Certification kit: $overall::$(@($rows).Count - $failed.Count) of $(@($rows).Count) tests passed."
+          # Signing needs a code-signing certificate (see the README); anything else failing is ours.
+          $ours = @($failed | Where-Object { $_.Test -notmatch 'sign' })
+          if ($ours.Count) { exit 1 }
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: Windows-App-Certification-Kit-report
-          path: wack-report.xml
+          path: |
+            wack-report.xml
+            wack-stuck.png
           if-no-files-found: ignore
           retention-days: 30

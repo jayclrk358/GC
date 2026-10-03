@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'"
+    />
+    <title>Continue in your browser</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="offline.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Continue in your browser</h1>
+      <p id="intro">We’ve opened sign-in in your browser.</p>
+      <p class="muted" id="detail">
+        If you’re already signed in there, it only takes a click. Once you’re done, you’ll come
+        straight back here.
+      </p>
+      <p class="error" id="error" role="alert"></p>
+      <div class="actions">
+        <button type="button" class="primary" id="reopen">Open the browser again</button>
+        <button type="button" id="here">Sign in in this window instead</button>
+        <button type="button" id="cancel">Cancel</button>
+      </div>
+    </main>
+    <script src="browser-sign-in.js"></script>
+  </body>
+</html>
