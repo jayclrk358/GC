@@ -154,6 +154,21 @@ jobs:
           }
           $hits = ($hits | Select-Object -First 25) -join ' / '
           if ($hits) { Write-Output "::notice title=Certification kit log lines::$($hits.Substring(0, [Math]::Min(3500, $hits.Length)))" }
+          $kitLogs = Join-Path $env:LOCALAPPDATA 'Microsoft\AppCertKit'
+          foreach ($name in 'Log_InstallOSVersionCheck_POST-PROCESS.xml', 'Log_InstallOSVersionCheck_PRE-PROCESS.xml') {
+            $text = (Get-Content (Join-Path $kitLogs $name) -Raw -ErrorAction SilentlyContinue) -replace '\s+', ' '
+            if ($text) { Write-Output "::notice title=$name::$($text.Substring(0, [Math]::Min(3500, $text.Length)))" }
+          }
+          # The kit's trace while the installer ran with the simulated version.
+          $trace = Get-ChildItem $kitLogs -Filter 'AppCert_Trace_*.txt' -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($trace) {
+            $t = @(Get-Content $trace.FullName)
+            $from = [Array]::FindIndex([string[]]$t, [Predicate[string]]{ param($l) $l -match 'Enabled HighVersionLie' })
+            if ($from -ge 0) {
+              $part = ($t[$from..([Math]::Min($t.Count - 1, $from + 40))] | ForEach-Object { $_.Trim() }) -join ' / '
+              Write-Output "::notice title=Certification kit trace under the simulated version::$($part.Substring(0, [Math]::Min(3500, $part.Length)))"
+            }
+          }
           Write-Output "::notice title=Certification kit: $overall::$(@($rows).Count - $failed.Count) of $(@($rows).Count) tests passed."
           # Signing needs a code-signing certificate (see the README); anything else failing is ours.
           $ours = @($failed | Where-Object { $_.Test -notmatch 'sign' })
