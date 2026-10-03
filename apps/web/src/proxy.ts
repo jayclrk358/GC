@@ -118,6 +118,7 @@ export async function proxy(request: NextRequest) {
   requestHeaders.set('x-nonce', nonce);
   requestHeaders.set('content-security-policy', csp);
   requestHeaders.set('x-pathname', rewrite ?? request.nextUrl.pathname);
+  requestHeaders.set('x-search', request.nextUrl.search);
 
   const response = rewrite
     ? NextResponse.rewrite(new URL(`${rewrite}${request.nextUrl.search}`, request.url), {

@@ -12,6 +12,7 @@ import { logger } from '@gamecentral/core/logger';
 import { renderEmail, sendMail } from '@gamecentral/core/mail';
 import { cacheRedis } from '@gamecentral/core/redis';
 import { DEFAULT_PREFS } from '@gamecentral/shared';
+import { desktopHandoff } from './desktop-handoff';
 import { clampName, userInputProblem } from './user-input';
 
 export const USERNAME_RE = /^[a-zA-Z0-9_.]{3,24}$/;
@@ -205,6 +206,8 @@ function createAuth<P extends BetterAuthPlugin[]>(extraPlugins: P) {
       }),
       twoFactor({ issuer: 'Game Central' }),
       admin({ defaultRole: 'user', adminRoles: ['admin'] }),
+      // Signing in to the Windows app through the browser (see desktop-handoff.ts).
+      desktopHandoff(),
       // With Turnstile keys set, sign-up, sign-in and password resets need a solved challenge.
       ...(e.TURNSTILE_SITE_KEY && e.TURNSTILE_SECRET_KEY
         ? [

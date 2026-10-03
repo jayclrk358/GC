@@ -30,3 +30,4 @@ export * from './legal';
 export * from './integrations';
 export * from './domains';
 export * from './locales';
+export * from './changelog';

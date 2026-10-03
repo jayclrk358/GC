@@ -74,7 +74,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     const path = h.get('x-pathname') ?? '/';
     const open = path === '/accept-terms' || path.startsWith('/legal/');
     if (!open && (await getConsent(user.id)).termsVersion < CURRENT_TERMS_VERSION) {
-      redirect(`/accept-terms?next=${encodeURIComponent(path)}`);
+      // With the query, so where they were going (a sign-in for the Windows app, say) survives.
+      const search = h.get('x-search') ?? '';
+      redirect(`/accept-terms?next=${encodeURIComponent(path + search)}`);
     }
   }
   // The sidebar lists the communities you belong to, in the colours of each one's theme.

@@ -53,6 +53,11 @@ export async function SiteFooter() {
               </Link>
             </li>
             <li>
+              <Link href="/changelog" className="transition-colors hover:text-fg">
+                {t('whatsNew')}
+              </Link>
+            </li>
+            <li>
               <Link href="/feedback" className="transition-colors hover:text-fg">
                 {t('feedback')}
               </Link>

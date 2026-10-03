@@ -58,6 +58,7 @@
     "privacyPolicy": "Privacidade",
     "footerNav": "Rodapé",
     "developers": "Desenvolvedores",
+    "whatsNew": "Novidades",
     "sendFeedback": "Enviar feedback",
     "feedback": "Feedback"
   },
@@ -126,6 +127,21 @@
     "captchaFailed": "A verificação de segurança não passou. Tente de novo.",
     "termsAgree": "Tenho 13 anos ou mais e concordo com os <terms>Termos de Serviço</terms> e a <privacy>Política de Privacidade</privacy>.",
     "termsRequired": "Marque a caixa para concordar com os termos."
+  },
+  "desktopAuth": {
+    "title": "Entrar no Game Central para Windows",
+    "subtitle": "Entre aqui e levaremos você de volta ao aplicativo.",
+    "goingTo": "Levando você ao {provider}…",
+    "didntFinish": "O login não foi concluído. Tente novamente.",
+    "handoffFailed": "Não foi possível entrar no aplicativo. Tente novamente.",
+    "openedTitle": "Abrindo o Game Central",
+    "openedBody": "Se o navegador perguntar, permita que ele abra o Game Central. Você pode fechar esta aba quando o aplicativo tiver feito seu login.",
+    "notOpening": "Nada aconteceu? Verifique se o Game Central para Windows está aberto e atualizado.",
+    "openAgain": "Abrir o Game Central novamente",
+    "signedInAs": "Você entrou como <strong>{name}</strong>.",
+    "openAs": "Continuar no aplicativo como {name}",
+    "useProviderInstead": "Entrar com {provider}",
+    "signInFirst": "Entre para continuar"
   },
   "settings": {
     "title": "Configurações",
@@ -3446,6 +3462,11 @@
     "you": "Você",
     "team": "Equipe do Game Central",
     "sentFrom": "Enviado de"
+  },
+  "changelog": {
+    "title": "Novidades",
+    "subtitle": "As últimas atualizações do Game Central.",
+    "latest": "Mais recente"
   },
   "staffBadge": {
     "admin": "Administrador do Game Central",

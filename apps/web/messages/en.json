@@ -58,6 +58,7 @@
     "privacyPolicy": "Privacy",
     "footerNav": "Footer",
     "developers": "Developers",
+    "whatsNew": "What’s new",
     "sendFeedback": "Send feedback",
     "feedback": "Feedback"
   },
@@ -126,6 +127,21 @@
     "captchaFailed": "The security check didn't pass. Please try it again.",
     "termsAgree": "I’m 13 or older and I agree to the <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
     "termsRequired": "Tick the box to agree to the terms."
+  },
+  "desktopAuth": {
+    "title": "Sign in to Game Central for Windows",
+    "subtitle": "Sign in here and we’ll take you back to the app.",
+    "goingTo": "Taking you to {provider}…",
+    "didntFinish": "Signing in didn’t finish. Please try again.",
+    "handoffFailed": "We couldn’t sign the app in. Please try again.",
+    "openedTitle": "Opening Game Central",
+    "openedBody": "If your browser asks, let it open Game Central. You can close this tab once the app has signed you in.",
+    "notOpening": "Nothing happening? Make sure Game Central for Windows is open and up to date.",
+    "openAgain": "Open Game Central again",
+    "signedInAs": "You’re signed in as <strong>{name}</strong>.",
+    "openAs": "Continue in the app as {name}",
+    "useProviderInstead": "Sign in with {provider} instead",
+    "signInFirst": "Sign in to continue"
   },
   "settings": {
     "title": "Settings",
@@ -3446,6 +3462,11 @@
     "you": "You",
     "team": "Game Central team",
     "sentFrom": "Sent from"
+  },
+  "changelog": {
+    "title": "What’s new",
+    "subtitle": "The latest updates to Game Central.",
+    "latest": "Latest"
   },
   "staffBadge": {
     "admin": "Game Central Admin",

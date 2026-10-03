@@ -58,6 +58,7 @@
     "privacyPolicy": "Datenschutz",
     "footerNav": "Fußzeile",
     "developers": "Entwickler",
+    "whatsNew": "Neuigkeiten",
     "sendFeedback": "Feedback senden",
     "feedback": "Feedback"
   },
@@ -126,6 +127,21 @@
     "captchaFailed": "Die Sicherheitsprüfung hat nicht geklappt. Bitte versuch es noch mal.",
     "termsAgree": "Ich bin mindestens 13 Jahre alt und stimme den <terms>Nutzungsbedingungen</terms> und der <privacy>Datenschutzerklärung</privacy> zu.",
     "termsRequired": "Setz das Häkchen, um den Bedingungen zuzustimmen."
+  },
+  "desktopAuth": {
+    "title": "Bei Game Central für Windows anmelden",
+    "subtitle": "Melde dich hier an, dann bringen wir dich zurück zur App.",
+    "goingTo": "Weiter zu {provider}…",
+    "didntFinish": "Die Anmeldung wurde nicht abgeschlossen. Bitte versuche es erneut.",
+    "handoffFailed": "Die App konnte nicht angemeldet werden. Bitte versuche es erneut.",
+    "openedTitle": "Game Central wird geöffnet",
+    "openedBody": "Wenn dein Browser fragt, erlaube ihm, Game Central zu öffnen. Du kannst diesen Tab schließen, sobald die App dich angemeldet hat.",
+    "notOpening": "Passiert nichts? Prüfe, ob Game Central für Windows geöffnet und aktuell ist.",
+    "openAgain": "Game Central erneut öffnen",
+    "signedInAs": "Du bist als <strong>{name}</strong> angemeldet.",
+    "openAs": "In der App als {name} fortfahren",
+    "useProviderInstead": "Stattdessen mit {provider} anmelden",
+    "signInFirst": "Zum Fortfahren anmelden"
   },
   "settings": {
     "title": "Einstellungen",
@@ -3446,6 +3462,11 @@
     "you": "Du",
     "team": "Game-Central-Team",
     "sentFrom": "Gesendet von"
+  },
+  "changelog": {
+    "title": "Neuigkeiten",
+    "subtitle": "Die neuesten Updates von Game Central.",
+    "latest": "Neu"
   },
   "staffBadge": {
     "admin": "Game-Central-Admin",
