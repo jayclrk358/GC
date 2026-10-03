@@ -1,5 +1,5 @@
 import 'server-only';
-import { getMemberContext } from '@magnox/core';
+import { getMemberContext } from '@gamecentral/core';
 import { getUser } from '@/lib/auth';
 
 /** Member context for the signed-in user (or a guest) in a community. */

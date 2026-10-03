@@ -1,4 +1,4 @@
-import type { BlockConfig } from '@magnox/shared';
+import type { BlockConfig } from '@gamecentral/shared';
 import { BlockSection } from './section';
 
 export function FaqBlock({ id, config }: { id: string; config: BlockConfig<'faq'> }) {

@@ -3,8 +3,8 @@
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react';
-import type { Block, BlockConfig, BlockType } from '@magnox/shared';
-import { LINK_KINDS } from '@magnox/shared/blocks-values';
+import type { Block, BlockConfig, BlockType } from '@gamecentral/shared';
+import { LINK_KINDS } from '@gamecentral/shared/blocks-values';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Input, Select, Textarea } from '@/components/ui/input';

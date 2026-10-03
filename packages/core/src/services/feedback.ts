@@ -1,5 +1,5 @@
 import { and, asc, count, desc, eq, ilike, inArray, or, type SQL } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
+import { db, schema } from '@gamecentral/db';
 import {
   FEEDBACK_BODY_MAX,
   FEEDBACK_KINDS,
@@ -10,14 +10,14 @@ import {
   newId,
   type FeedbackKind,
   type FeedbackStatus,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import { z } from 'zod';
 import { notFound, unauthorized } from '../errors';
 import { enforceRateLimit } from '../ratelimit';
 import { recordStaffAction, requireStaff } from './admin';
 import { notifyUser } from './notify';
 
-// Feedback: bugs, ideas and requests, and questions people send Magnox's team. They can follow
+// Feedback: bugs, ideas and requests, and questions people send Game Central's team. They can follow
 // what happens to each (a status, and replies); the team works through them in the console.
 
 export interface FeedbackSummary {
@@ -144,7 +144,7 @@ async function messagesOf(feedbackId: string, opts: { internal: boolean; staffNa
     body: r.body,
     fromStaff: r.fromStaff,
     internal: r.internal,
-    // The person who sent it hears from "the Magnox team", not a particular member of it.
+    // The person who sent it hears from "the Game Central team", not a particular member of it.
     authorName: r.fromStaff && !opts.staffNames ? null : r.authorName,
     createdAt: r.createdAt.toISOString(),
   }));
@@ -311,7 +311,10 @@ export async function adminReplyFeedback(
       actorId: null,
       type: 'system',
       url: `/feedback/${id}`,
-      data: { title: `The Magnox team replied: ${row.title}`, excerpt: input.body.slice(0, 140) },
+      data: {
+        title: `The Game Central team replied: ${row.title}`,
+        excerpt: input.body.slice(0, 140),
+      },
     }).catch(() => undefined);
   }
 }

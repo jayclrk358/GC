@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { CheckCircle2, Flag, History, MoreHorizontal, Pencil, Reply, Trash2 } from 'lucide-react';
-import type { RichNode } from '@magnox/shared';
+import type { RichNode } from '@gamecentral/shared';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import {

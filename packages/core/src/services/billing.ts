@@ -1,6 +1,6 @@
 import Stripe from 'stripe';
 import { and, desc, eq, isNull, sql } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
+import { db, schema } from '@gamecentral/db';
 import {
   isActiveSubscriptionStatus,
   isBillingInterval,
@@ -20,7 +20,7 @@ import {
   planFor,
   planPerks,
   type PlanPerks,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import { requirePerm, type MemberContext } from '../access';
 import { communityChanged } from '../emitter';
 import { env } from '../env';
@@ -190,7 +190,7 @@ export async function assertPlanPerk(
   );
 }
 
-/** A plan Magnox gave the community, if it's still running. */
+/** A plan Game Central gave the community, if it's still running. */
 async function activeGift(communityId: string) {
   const gift = await db.query.planGifts.findFirst({
     where: eq(schema.planGifts.communityId, communityId),
@@ -211,7 +211,7 @@ export async function syncCommunityPlan(communityId: string): Promise<PlanId> {
   for (const s of subs) {
     if (isActiveSubscriptionStatus(s.status) && planRank(s.plan) > planRank(plan)) plan = s.plan;
   }
-  // A plan Magnox gave for free counts too, while it lasts (the better plan wins).
+  // A plan Game Central gave for free counts too, while it lasts (the better plan wins).
   const gift = await activeGift(communityId);
   if (gift && planRank(gift.plan) > planRank(plan)) plan = gift.plan;
   const changed = await db

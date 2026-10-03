@@ -1,5 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
-import { getMessage, isAppError } from '@magnox/core';
+import { getMessage, isAppError } from '@gamecentral/core';
 import { loadCommunity } from '@/lib/community';
 
 /** Chat message permalink: opens the channel scrolled to the message. */

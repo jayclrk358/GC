@@ -1,6 +1,6 @@
 import { and, eq, inArray, sql } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
-import { newId } from '@magnox/shared';
+import { db, schema } from '@gamecentral/db';
+import { newId } from '@gamecentral/shared';
 import type * as WebPushModule from 'web-push';
 import { z } from 'zod';
 import { env } from '../env';
@@ -9,7 +9,7 @@ import { logger } from '../logger';
 import { enqueue, QUEUES } from '../queues';
 import { cacheRedis } from '../redis';
 
-// Web Push: notifications on people's phones and desktops, even with Magnox closed.
+// Web Push: notifications on people's phones and desktops, even with Game Central closed.
 
 const log = logger('push');
 
@@ -141,7 +141,7 @@ async function client(): Promise<WebPush> {
   return webpush;
 }
 
-/** The worker's side: deliver to each person's devices, skipping people using Magnox right now. */
+/** The worker's side: deliver to each person's devices, skipping people using Game Central right now. */
 export async function sendPushes(items: PushItem[]): Promise<number> {
   if (!pushPublicKey() || !items.length) return 0;
   const userIds = [...new Set(items.map((i) => i.userId))];

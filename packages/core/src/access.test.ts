@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { canSubscribe, getMemberContext, loadChannel, revokedRooms } from './access';
 
 // Malformed ids must be turned away before any query: Postgres rejects them with an error.
-vi.mock('@magnox/db', async (importOriginal) => {
+vi.mock('@gamecentral/db', async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>();
   const db = new Proxy(
     {},

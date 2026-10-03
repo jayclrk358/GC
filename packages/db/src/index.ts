@@ -6,7 +6,7 @@ import { loadRootEnv } from './env';
 loadRootEnv();
 
 export const DATABASE_URL =
-  process.env.DATABASE_URL ?? 'postgres://magnox:magnox@localhost:5432/magnox';
+  process.env.DATABASE_URL ?? 'postgres://gamecentral:gamecentral@localhost:5432/gamecentral';
 
 const globalForDb = globalThis as unknown as { __mxSql?: postgres.Sql };
 

@@ -24,7 +24,7 @@ export function initTelemetry(service: ServiceName): Promise<void> {
 async function start(service: ServiceName) {
   const e = env();
   const log = logger('telemetry');
-  const version = process.env.MAGNOX_VERSION || undefined;
+  const version = process.env.GAMECENTRAL_VERSION || undefined;
 
   if (e.OTEL_EXPORTER_OTLP_ENDPOINT) {
     const [
@@ -42,7 +42,7 @@ async function start(service: ServiceName) {
       resource: resourceFromAttributes({
         [ATTR_SERVICE_NAME]: e.OTEL_SERVICE_NAME
           ? `${e.OTEL_SERVICE_NAME}-${service}`
-          : `magnox-${service}`,
+          : `gamecentral-${service}`,
         ...(version ? { [ATTR_SERVICE_VERSION]: version } : {}),
       }),
       sampler: new ParentBasedSampler({
@@ -62,7 +62,7 @@ async function start(service: ServiceName) {
       dsn: e.SENTRY_DSN,
       environment: e.SENTRY_ENVIRONMENT || process.env.NODE_ENV || 'production',
       release: version,
-      serverName: `magnox-${service}`,
+      serverName: `gamecentral-${service}`,
       tracesSampleRate: e.SENTRY_TRACES_SAMPLE_RATE,
       // No user details, cookies, headers or request bodies: tokens and personal data stay here.
       dataCollection: {
@@ -96,7 +96,7 @@ export async function flushTelemetry(timeoutMs = 2000): Promise<void> {
   if (sentry) await sentry.flush(timeoutMs).catch(() => false);
 }
 
-const tracer = () => trace.getTracer('magnox');
+const tracer = () => trace.getTracer('gamecentral');
 
 /**
  * Run `fn` inside a span (a no-op without tracing). Errors are recorded on the span and

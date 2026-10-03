@@ -1,4 +1,4 @@
-import type { BlockConfig } from '@magnox/shared';
+import type { BlockConfig } from '@gamecentral/shared';
 import { RichText } from '@/components/rich-text/rich-text';
 import { BlockSection } from './section';
 

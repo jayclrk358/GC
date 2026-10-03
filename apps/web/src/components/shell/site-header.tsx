@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { Plus } from 'lucide-react';
-import { platformAdminFor, unreadCount } from '@magnox/core';
+import { platformAdminFor, unreadCount } from '@gamecentral/core';
 import type { SessionUser } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { Logo, Wordmark } from './logo';
@@ -33,12 +33,12 @@ export async function SiteHeader({
         <MobileNav communities={communities} signedIn={Boolean(user)} />
         <Link
           href="/"
-          aria-label="Magnox Resources"
+          aria-label="Game Central"
           className="mx-press flex shrink-0 items-center gap-2 rounded-ui lg:hidden"
         >
           <Logo size={28} />
           {/* Phones show the mark alone; the full logo needs a bit more room. */}
-          <Wordmark className="hidden h-4 sm:block" label="" />
+          <Wordmark className="hidden h-3.5 sm:block" label="" />
         </Link>
         <div className="flex min-w-0 flex-1 justify-end sm:justify-center">
           <PaletteButton />

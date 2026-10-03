@@ -83,7 +83,7 @@ export const GAMES: {
   { id: 'roblox', name: 'Roblox', protocol: 'roblox', color: '#e2231a' },
   { id: 'deep-rock-galactic', name: 'Deep Rock Galactic', steamAppId: 548430, color: '#d17d1b' },
   { id: 'satisfactory', name: 'Satisfactory', steamAppId: 526870, color: '#f39c12' },
-  // Games whose servers Magnox can check (see SERVER_PROTOCOLS).
+  // Games whose servers Game Central can check (see SERVER_PROTOCOLS).
   { id: 'arma-3', name: 'Arma 3', protocol: 'arma3', steamAppId: 107410, color: '#6b7a3a' },
   {
     id: 'arma-reforger',

@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { FilePlus2, History, Lock, Pencil } from 'lucide-react';
-import { canEditWiki, type WikiTreeNode } from '@magnox/core';
-import { docHeadings, has, Permission } from '@magnox/shared';
+import { canEditWiki, type WikiTreeNode } from '@gamecentral/core';
+import { docHeadings, has, Permission } from '@gamecentral/shared';
 import { formatDateTime, relativeTime } from '@/lib/format';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/misc';

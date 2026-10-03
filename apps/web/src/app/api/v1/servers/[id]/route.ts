@@ -1,4 +1,4 @@
-import { apiServer } from '@magnox/core';
+import { apiServer } from '@gamecentral/core';
 import { apiV1 } from '@/lib/api-v1';
 
 type Params = { params: Promise<{ id: string }> };

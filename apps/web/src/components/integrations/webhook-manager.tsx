@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Send, Trash2, Webhook } from 'lucide-react';
-import { WEBHOOK_EVENTS, type WebhookEvent } from '@magnox/shared/integrations-values';
+import { WEBHOOK_EVENTS, type WebhookEvent } from '@gamecentral/shared/integrations-values';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { isAppError, myFeedbackItem } from '@magnox/core';
+import { isAppError, myFeedbackItem } from '@gamecentral/core';
 import { getUser } from '@/lib/auth';
 import { formatDateTime } from '@/lib/format';
 import { BackLink } from '@/components/ui/back-link';

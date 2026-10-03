@@ -1,6 +1,6 @@
 import { and, desc, eq, sql } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
-import { has, inviteInputSchema, Permission, randomToken } from '@magnox/shared';
+import { db, schema } from '@gamecentral/db';
+import { has, inviteInputSchema, Permission, randomToken } from '@gamecentral/shared';
 import { requireMember, type MemberContext } from '../access';
 import { AppError, forbidden, notFound, unauthorized } from '../errors';
 import { enforceRateLimit } from '../ratelimit';

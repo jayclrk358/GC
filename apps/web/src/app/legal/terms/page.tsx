@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import { contactEmail } from '@magnox/core';
+import { contactEmail } from '@gamecentral/core';
 import { LegalPage, Section } from '@/components/legal/legal-page';
-import { TERMS_UPDATED } from '@magnox/shared';
+import { TERMS_UPDATED } from '@gamecentral/shared';
 
 export const metadata = { title: 'Terms of Service' };
 
@@ -10,15 +10,15 @@ export default function TermsPage() {
   return (
     <LegalPage title="Terms of Service" updated={TERMS_UPDATED}>
       <p>
-        These terms are the agreement between you and the people who run Magnox (“we”, “us”). By
-        creating an account or using Magnox you agree to them, and to our{' '}
+        These terms are the agreement between you and the people who run Game Central (“we”, “us”).
+        By creating an account or using Game Central you agree to them, and to our{' '}
         <Link href="/legal/privacy">Privacy Policy</Link>.
       </p>
-      <Section title="Who can use Magnox">
+      <Section title="Who can use Game Central">
         <ul>
           <li>You must be at least 13 years old, or older where the law where you live says so.</li>
           <li>Communities marked 18+ are only for adults. Don’t open them if you’re under 18.</li>
-          <li>You can’t use Magnox if we’ve banned you, or if the law forbids it.</li>
+          <li>You can’t use Game Central if we’ve banned you, or if the law forbids it.</li>
         </ul>
       </Section>
       <Section title="Your account">
@@ -35,15 +35,15 @@ export default function TermsPage() {
       </Section>
       <Section title="What you post">
         <p>
-          You own what you post. So that we can run Magnox, you give us permission to store, copy,
-          show and send it to the people it’s meant for (for example, the members of a community),
-          and to make the small changes that needs (like resizing images). That permission ends when
-          you delete it, except for copies kept for a short time in backups or where the law needs
-          us to keep them.
+          You own what you post. So that we can run Game Central, you give us permission to store,
+          copy, show and send it to the people it’s meant for (for example, the members of a
+          community), and to make the small changes that needs (like resizing images). That
+          permission ends when you delete it, except for copies kept for a short time in backups or
+          where the law needs us to keep them.
         </p>
       </Section>
       <Section title="The rules">
-        <p>Don’t use Magnox to:</p>
+        <p>Don’t use Game Central to:</p>
         <ul>
           <li>break the law, or help someone else break it;</li>
           <li>harass, threaten, bully or dox anyone, or attack people for who they are;</li>
@@ -60,7 +60,7 @@ export default function TermsPage() {
             servers;
           </li>
           <li>post other people’s private information, or content you don’t have the rights to;</li>
-          <li>get around a ban, a timeout or Magnox’s limits.</li>
+          <li>get around a ban, a timeout or Game Central’s limits.</li>
         </ul>
       </Section>
       <Section title="Communities">
@@ -89,17 +89,17 @@ export default function TermsPage() {
       </Section>
       <Section title="Ending things">
         <p>
-          You can stop using Magnox and delete your account whenever you like. We can suspend or end
-          your access if you break these terms or put others at risk, and will tell you why unless
-          the law or safety stops us.
+          You can stop using Game Central and delete your account whenever you like. We can suspend
+          or end your access if you break these terms or put others at risk, and will tell you why
+          unless the law or safety stops us.
         </p>
       </Section>
       <Section title="No guarantees">
         <p>
-          We work hard to keep Magnox running and safe, but it’s provided as it is: we can’t promise
-          it will always be available or free of mistakes. As far as the law allows, we aren’t
-          liable for indirect losses, or for what other people post. Nothing here limits rights you
-          have by law as a consumer.
+          We work hard to keep Game Central running and safe, but it’s provided as it is: we can’t
+          promise it will always be available or free of mistakes. As far as the law allows, we
+          aren’t liable for indirect losses, or for what other people post. Nothing here limits
+          rights you have by law as a consumer.
         </p>
       </Section>
       <Section title="Changes">

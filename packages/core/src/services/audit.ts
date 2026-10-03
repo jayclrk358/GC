@@ -1,5 +1,5 @@
-import { schema, type DbOrTx } from '@magnox/db';
-import { newId } from '@magnox/shared';
+import { schema, type DbOrTx } from '@gamecentral/db';
+import { newId } from '@gamecentral/shared';
 import { communityChanged, type ChangeScope } from '../emitter';
 
 export interface AuditEntry {

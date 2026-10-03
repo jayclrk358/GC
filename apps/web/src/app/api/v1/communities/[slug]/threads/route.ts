@@ -1,4 +1,4 @@
-import { apiCommunityContext, apiThreads } from '@magnox/core';
+import { apiCommunityContext, apiThreads } from '@gamecentral/core';
 import { apiV1, queryOf } from '@/lib/api-v1';
 
 type Params = { params: Promise<{ slug: string }> };

@@ -1,6 +1,6 @@
 import { and, asc, eq, gt, inArray, isNotNull, lt, sql, type SQL } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
-import { MEDIA_KEY_RE as KEY_RE, uuidAtTime, variantKey } from '@magnox/shared';
+import { db, schema } from '@gamecentral/db';
+import { MEDIA_KEY_RE as KEY_RE, uuidAtTime, variantKey } from '@gamecentral/shared';
 import { enforceRateLimit } from '../ratelimit';
 import { enqueue, QUEUES } from '../queues';
 import { logger } from '../logger';

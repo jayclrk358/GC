@@ -1,6 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { canEditWiki } from '@magnox/core';
+import { canEditWiki } from '@gamecentral/core';
 import { loadWikiTree } from '../_load';
 import { loadCommunity } from '@/lib/community';
 import { WikiEditor } from '@/components/wiki/wiki-editor';

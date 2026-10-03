@@ -48,7 +48,7 @@ export const prefsSchema = z.object({
     .default({}),
   /** Sound effects for notifications, voice and a few actions. */
   sounds: z.boolean().default(true),
-  soundPack: z.enum(SOUND_PACKS).default('magnox'),
+  soundPack: z.enum(SOUND_PACKS).default('gamecentral'),
   soundVolume: z.number().int().min(0).max(100).default(60),
   /** Events changed from their defaults (see soundForEvent). */
   soundEvents: z.partialRecord(z.enum(SOUND_EVENTS), z.enum(SOUND_CHOICES)).default({}),

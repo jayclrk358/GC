@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { getAutomod, listRoles } from '@magnox/core';
+import { getAutomod, listRoles } from '@gamecentral/core';
 import { loadCommunityForSettings } from '@/lib/community';
 import { PageHeader } from '@/components/ui/misc';
 import { AutomodEditor } from '@/components/automod/automod-editor';

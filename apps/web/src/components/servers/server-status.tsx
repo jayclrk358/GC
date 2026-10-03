@@ -4,7 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { Check, Copy, ExternalLink, Play, ShieldCheck, ThumbsUp, Users } from 'lucide-react';
-import { isLinkProtocol, type ServerStatus } from '@magnox/shared';
+import { isLinkProtocol, type ServerStatus } from '@gamecentral/shared';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/misc';
 import { useRoom } from '@/lib/realtime';

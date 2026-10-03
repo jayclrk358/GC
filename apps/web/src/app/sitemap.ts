@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { env, sitemapEntries } from '@magnox/core';
+import { env, sitemapEntries } from '@gamecentral/core';
 
 // Made on request, never at build time: Docker image builds have no database, and a prerendered
 // copy would miss every community made since. The rows behind it are cached for an hour.

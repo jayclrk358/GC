@@ -1,7 +1,12 @@
 import { getTranslations } from 'next-intl/server';
 import { Crown, Users } from 'lucide-react';
-import type { MemberRow, RoleSummary } from '@magnox/core';
-import { nameStyleView, pickRoleDecor, type DecorPerks, type NameBackdrops } from '@magnox/shared';
+import type { MemberRow, RoleSummary } from '@gamecentral/core';
+import {
+  nameStyleView,
+  pickRoleDecor,
+  type DecorPerks,
+  type NameBackdrops,
+} from '@gamecentral/shared';
 import { Avatar, EmptyState } from '@/components/ui/misc';
 import { RoleBadge } from './role-badge';
 import { StyledName } from './role-decor';

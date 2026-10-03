@@ -54,7 +54,7 @@ export function UserMenu({
   admin = false,
 }: {
   user: { id: string; name: string; username: string | null; image: string | null };
-  /** A Magnox admin: show the way to the admin console. */
+  /** A Game Central admin: show the way to the admin console. */
   admin?: boolean;
 }) {
   const t = useTranslations('shell');

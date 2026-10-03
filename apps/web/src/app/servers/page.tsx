@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { Server, X } from 'lucide-react';
-import { browserGames, searchServers } from '@magnox/core';
+import { browserGames, searchServers } from '@gamecentral/core';
 import { EmptyState, PageHeader } from '@/components/ui/misc';
 import { ServerCard } from '@/components/servers/server-status';
 import { ServerFilters } from '@/components/servers/server-filters';

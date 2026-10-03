@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { billingEnabled, manageableCommunities, planPrices } from '@magnox/core';
+import { billingEnabled, manageableCommunities, planPrices } from '@gamecentral/core';
 import { getUser } from '@/lib/auth';
 import { StoreClient } from '@/components/billing/store-client';
 

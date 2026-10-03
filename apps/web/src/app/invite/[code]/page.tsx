@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { getInvitePreview, getMemberContext } from '@magnox/core';
+import { getInvitePreview, getMemberContext } from '@gamecentral/core';
 import { getUser } from '@/lib/auth';
 import { imgSources } from '@/lib/media';
 import { formatCount } from '@/lib/utils';

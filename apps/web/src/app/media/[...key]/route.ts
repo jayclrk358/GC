@@ -1,5 +1,5 @@
-import { env, storage } from '@magnox/core';
-import { STORED_KEY_RE } from '@magnox/shared';
+import { env, storage } from '@gamecentral/core';
+import { STORED_KEY_RE } from '@gamecentral/shared';
 
 const TYPES: Record<string, string> = {
   webp: 'image/webp',

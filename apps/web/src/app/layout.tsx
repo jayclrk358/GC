@@ -3,13 +3,13 @@ import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { communitiesForUser, getConsent } from '@magnox/core';
+import { communitiesForUser, getConsent } from '@gamecentral/core';
 import {
   CURRENT_TERMS_VERSION,
   DEFAULT_THEME,
   prefsToHtmlAttributes,
   themeToCss,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
 import '@fontsource-variable/lora';
@@ -42,12 +42,12 @@ const TZ_SCRIPT = `try{var z=Intl.DateTimeFormat().resolvedOptions().timeZone;if
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.APP_URL ?? 'http://localhost:3000'),
-  title: { default: 'Magnox', template: '%s · Magnox' },
+  title: { default: 'Game Central', template: '%s · Game Central' },
   description: 'Customisable, accessible community hubs for games and game servers.',
-  applicationName: 'Magnox',
-  openGraph: { siteName: 'Magnox', type: 'website' },
+  applicationName: 'Game Central',
+  openGraph: { siteName: 'Game Central', type: 'website' },
   twitter: { card: 'summary_large_image' },
-  appleWebApp: { capable: true, title: 'Magnox', statusBarStyle: 'black-translucent' },
+  appleWebApp: { capable: true, title: 'Game Central', statusBarStyle: 'black-translucent' },
 };
 
 export const viewport: Viewport = {

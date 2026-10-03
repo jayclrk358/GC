@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { env } from '@magnox/core';
+import { env } from '@gamecentral/core';
 
 /** Let search engines in, except where only signed-in people go. */
 export default function robots(): MetadataRoute.Robots {

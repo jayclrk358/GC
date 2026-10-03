@@ -1,5 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
-import { isAppError, locatePost } from '@magnox/core';
+import { isAppError, locatePost } from '@gamecentral/core';
 import { loadCommunity } from '@/lib/community';
 
 /** Post permalink: works however many replies have been added since it was shared. */

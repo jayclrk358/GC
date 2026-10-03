@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { AtSign, Film, CirclePlus, SendHorizontal, Type, X } from 'lucide-react';
-import { docToText, MAX_MESSAGE_CHARS, VIDEO_TYPES, type RichNode } from '@magnox/shared';
+import { docToText, MAX_MESSAGE_CHARS, VIDEO_TYPES, type RichNode } from '@gamecentral/shared';
 import { Button } from '@/components/ui/button';
 import { discardUpload, uploadImage, UploadProgress } from '@/components/upload/image-upload';
 import { emitSocket } from '@/lib/realtime';

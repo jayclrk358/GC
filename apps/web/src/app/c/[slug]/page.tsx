@@ -1,4 +1,4 @@
-import { listBlocks } from '@magnox/core';
+import { listBlocks } from '@gamecentral/core';
 import { getTranslations } from 'next-intl/server';
 import { loadCommunity } from '@/lib/community';
 import { BlockList } from '@/components/blocks/block-list';

@@ -1,6 +1,6 @@
 import { getLocale, getTranslations } from 'next-intl/server';
-import { countOnlineServers, onlineInCommunity } from '@magnox/core';
-import type { BlockConfig } from '@magnox/shared';
+import { countOnlineServers, onlineInCommunity } from '@gamecentral/core';
+import type { BlockConfig } from '@gamecentral/shared';
 import type { LoadedCommunity } from '@/lib/community';
 import { formatCount } from '@/lib/utils';
 import { BlockSection } from './section';

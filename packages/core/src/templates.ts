@@ -7,7 +7,7 @@ import {
   type BlockType,
   type CommunityTemplate,
   type NavConfig,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 
 export interface TemplateRole {
   name: string;

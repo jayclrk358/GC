@@ -10,7 +10,7 @@ import {
   uuid,
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
-import type { RichNode } from '@magnox/shared';
+import type { RichNode } from '@gamecentral/shared';
 import { users } from './auth';
 import { communities } from './communities';
 import { createdAt, tsvector, tz } from './_helpers';

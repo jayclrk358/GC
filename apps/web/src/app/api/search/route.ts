@@ -1,4 +1,4 @@
-import { searchCommunities } from '@magnox/core';
+import { searchCommunities } from '@gamecentral/core';
 
 export async function GET(req: Request) {
   const url = new URL(req.url);

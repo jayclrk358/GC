@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { confirmCheckout, getBilling, planPrices } from '@magnox/core';
+import { confirmCheckout, getBilling, planPrices } from '@gamecentral/core';
 import { loadCommunityForSettings } from '@/lib/community';
 import { PageHeader } from '@/components/ui/misc';
 import { BillingPanel } from '@/components/billing/billing-panel';

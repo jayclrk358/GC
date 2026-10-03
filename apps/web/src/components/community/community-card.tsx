@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Users } from 'lucide-react';
-import type { CommunityCard as Card } from '@magnox/core';
+import type { CommunityCard as Card } from '@gamecentral/core';
 import { imgSources } from '@/lib/media';
 import { formatCount } from '@/lib/utils';
 import { Badge } from '@/components/ui/misc';

@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { getNotificationSettings, listMutes, pushPublicKey } from '@magnox/core';
+import { getNotificationSettings, listMutes, pushPublicKey } from '@gamecentral/core';
 import { requireUser } from '@/lib/auth';
 import { PageHeader } from '@/components/ui/misc';
 import { MuteList, NotificationSettingsForm } from '@/components/settings/notification-settings';

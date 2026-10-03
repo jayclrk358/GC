@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Search } from 'lucide-react';
-import { searchForum } from '@magnox/core';
+import { searchForum } from '@gamecentral/core';
 import { loadCommunity } from '@/lib/community';
 import { relativeTime } from '@/lib/format';
 import { EmptyState } from '@/components/ui/misc';

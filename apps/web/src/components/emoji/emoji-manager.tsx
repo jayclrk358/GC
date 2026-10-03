@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { ImagePlus, Pencil, Trash2 } from 'lucide-react';
-import type { CustomEmoji } from '@magnox/shared';
+import type { CustomEmoji } from '@gamecentral/shared';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';

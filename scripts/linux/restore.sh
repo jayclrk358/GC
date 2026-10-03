@@ -34,9 +34,9 @@ if [ -n "$external_db" ]; then
     docker run --rm -i postgres:16-alpine psql -q --single-transaction -v ON_ERROR_STOP=1 "$external_db" >/dev/null
 else
   docker compose up -d postgres >/dev/null
-  until docker compose exec -T postgres pg_isready -U magnox -d magnox >/dev/null 2>&1; do sleep 1; done
+  until docker compose exec -T postgres pg_isready -U gamecentral -d gamecentral >/dev/null 2>&1; do sleep 1; done
   { echo "$reset_sql"; gunzip -c "$src/db.sql.gz"; } |
-    docker compose exec -T postgres psql -q --single-transaction -v ON_ERROR_STOP=1 -U magnox -d magnox >/dev/null
+    docker compose exec -T postgres psql -q --single-transaction -v ON_ERROR_STOP=1 -U gamecentral -d gamecentral >/dev/null
 fi
 
 if [ "${storage:-local}" = "local" ] && [ -f "$src/media.tar.gz" ]; then

@@ -1,4 +1,4 @@
-import { attachmentDisposition, rateLimit, storage, uploadDownloadName } from '@magnox/core';
+import { attachmentDisposition, rateLimit, storage, uploadDownloadName } from '@gamecentral/core';
 import { mediaUrl } from '@/lib/media';
 import { clientIp } from '@/lib/request';
 

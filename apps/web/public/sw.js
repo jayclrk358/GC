@@ -1,4 +1,4 @@
-/* Magnox service worker: shows push notifications and opens them. No caching: pages always come
+/* Game Central service worker: shows push notifications and opens them. No caching: pages always come
    fresh from the server. */
 
 self.addEventListener('install', () => self.skipWaiting());
@@ -9,9 +9,9 @@ self.addEventListener('push', (event) => {
   try {
     data = event.data ? event.data.json() : {};
   } catch {
-    data = { title: event.data ? event.data.text() : 'Magnox' };
+    data = { title: event.data ? event.data.text() : 'Game Central' };
   }
-  const title = data.title || 'Magnox';
+  const title = data.title || 'Game Central';
   event.waitUntil(
     self.registration.showNotification(title, {
       body: data.body || '',
@@ -28,7 +28,7 @@ self.addEventListener('notificationclick', (event) => {
   const url = (event.notification.data && event.notification.data.url) || '/';
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
-      // Use an open Magnox tab if there is one.
+      // Use an open Game Central tab if there is one.
       for (const w of windows) {
         if (new URL(w.url).origin === self.location.origin && 'focus' in w) {
           w.navigate(url);

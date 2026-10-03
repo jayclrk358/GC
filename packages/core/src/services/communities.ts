@@ -1,6 +1,6 @@
 import { and, count, desc, eq, inArray, isNull, sql, type SQL } from 'drizzle-orm';
 import { generateNKeysBetween } from 'fractional-indexing';
-import { db, schema } from '@magnox/db';
+import { db, schema } from '@gamecentral/db';
 import {
   blockConfigSchemas,
   checkTheme,
@@ -20,13 +20,13 @@ import {
   PLAN_IDS,
   planPerks,
   type PlanId,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import { z } from 'zod';
 import { requirePerm, type MemberContext } from '../access';
 import { AppError, conflict, forbidden } from '../errors';
 import { enforceRateLimit } from '../ratelimit';
 import { TEMPLATES } from '../templates';
-import { Permission } from '@magnox/shared';
+import { Permission } from '@gamecentral/shared';
 import { audit, diffOf } from './audit';
 import { cached } from '../cache';
 import { accessChanged } from '../emitter';
@@ -82,7 +82,7 @@ export async function createCommunity(
 
   const preset = (PRESET_KEYS as string[]).includes(input.preset)
     ? (input.preset as PresetKey)
-    : 'magnox';
+    : 'gamecentral';
   const template = TEMPLATES[input.template];
   const id = newId();
 

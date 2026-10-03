@@ -1,5 +1,5 @@
 import { Gem, Sparkles } from 'lucide-react';
-import { planPerks, type PlanId } from '@magnox/shared';
+import { planPerks, type PlanId } from '@gamecentral/shared';
 import { cn } from '@/lib/utils';
 
 /** "Plus" / "Pro" pill for communities on a paid plan (nothing for Free). */

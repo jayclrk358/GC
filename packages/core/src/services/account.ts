@@ -1,6 +1,6 @@
 import { and, desc, eq, isNull, sql } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
-import { CURRENT_TERMS_VERSION } from '@magnox/shared';
+import { db, schema } from '@gamecentral/db';
+import { CURRENT_TERMS_VERSION } from '@gamecentral/shared';
 import { z } from 'zod';
 import { AppError, notFound, unauthorized } from '../errors';
 import { logger } from '../logger';
@@ -30,7 +30,7 @@ export async function getConsent(userId: string): Promise<Consent> {
   return { termsVersion: row?.termsVersion ?? 0, adult: Boolean(row?.adultAt) };
 }
 
-/** They agree to the current terms and say they're old enough to use Magnox (13+). */
+/** They agree to the current terms and say they're old enough to use Game Central (13+). */
 export async function acceptTerms(userId: string | null): Promise<void> {
   if (!userId) throw unauthorized();
   const now = new Date();
@@ -57,7 +57,7 @@ export async function confirmAdult(userId: string | null): Promise<void> {
 const EXPORT_LIMIT = 50_000;
 
 /**
- * Everything Magnox keeps about someone, as one JSON document (GDPR access/portability): the
+ * Everything Game Central keeps about someone, as one JSON document (GDPR access/portability): the
  * account, profile and settings, communities, and what they've written.
  */
 export async function exportAccount(userId: string | null): Promise<Record<string, unknown>> {
@@ -292,7 +292,7 @@ export async function deleteAccount(userId: string | null, raw: unknown): Promis
 }
 
 /**
- * The deletion itself, once it's been confirmed (by the person, or by Magnox staff) and they own
+ * The deletion itself, once it's been confirmed (by the person, or by Game Central staff) and they own
  * no communities. Sessions must also be ended by the caller.
  */
 export async function eraseAccount(userId: string, removeContent: boolean): Promise<void> {

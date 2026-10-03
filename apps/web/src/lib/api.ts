@@ -1,6 +1,6 @@
 import 'server-only';
 import { ZodError } from 'zod';
-import { getMemberContext, isAppError, logger, type MemberContext } from '@magnox/core';
+import { getMemberContext, isAppError, logger, type MemberContext } from '@gamecentral/core';
 import { getUser } from './auth';
 
 const log = logger('api');

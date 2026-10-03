@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { FilePlus2, Search } from 'lucide-react';
-import { canEditWiki } from '@magnox/core';
+import { canEditWiki } from '@gamecentral/core';
 import { loadWikiTree } from './_load';
 import { loadCommunity } from '@/lib/community';
 import { Button } from '@/components/ui/button';

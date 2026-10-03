@@ -7,7 +7,7 @@ import {
   sendMessage,
   setMessagePinned,
   toggleMessageReaction,
-} from '@magnox/core';
+} from '@gamecentral/core';
 import { runAction } from '@/lib/action';
 import { ctxFor } from './_ctx';
 

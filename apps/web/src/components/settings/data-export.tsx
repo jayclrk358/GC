@@ -5,7 +5,7 @@ import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SettingsSection } from '@/components/settings/section';
 
-/** Download everything Magnox keeps about you. */
+/** Download everything Game Central keeps about you. */
 export function DataExport() {
   const t = useTranslations('account.data');
   return (

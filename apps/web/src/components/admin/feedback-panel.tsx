@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { FEEDBACK_REPLY_MAX, FEEDBACK_STATUSES, type FeedbackStatus } from '@magnox/shared';
+import { FEEDBACK_REPLY_MAX, FEEDBACK_STATUSES, type FeedbackStatus } from '@gamecentral/shared';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Select, Textarea } from '@/components/ui/input';

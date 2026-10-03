@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Search } from 'lucide-react';
-import { REGIONS, SERVER_SORTS } from '@magnox/shared';
+import { REGIONS, SERVER_SORTS } from '@gamecentral/shared';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Input, Select } from '@/components/ui/input';

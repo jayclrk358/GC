@@ -5,8 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Crown, Tags } from 'lucide-react';
-import type { RoleSummary } from '@magnox/core';
-import { nameStyleView, pickRoleDecor, type DecorPerks, type NameBackdrops } from '@magnox/shared';
+import type { RoleSummary } from '@gamecentral/core';
+import {
+  nameStyleView,
+  pickRoleDecor,
+  type DecorPerks,
+  type NameBackdrops,
+} from '@gamecentral/shared';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Avatar, EmptyState } from '@/components/ui/misc';

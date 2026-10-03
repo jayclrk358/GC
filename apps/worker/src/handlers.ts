@@ -19,7 +19,7 @@ import {
   type PushItem,
   type FanoutJob,
   type WebhookJob,
-} from '@magnox/core';
+} from '@gamecentral/core';
 import { pollEndpoint, pollTick, wakeHotDormant } from './poll';
 
 const log = logger('jobs');

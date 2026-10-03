@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { navigationFor, originOf, serverOrigin } from './urls';
 
-const app = 'https://magnox.example.com';
+const app = 'https://gamecentral.example.com';
 
 describe('navigationFor', () => {
-  it('keeps Magnox in the window', () => {
-    expect(navigationFor('https://magnox.example.com/c/foo/chat/general', app)).toBe('allow');
+  it('keeps Game Central in the window', () => {
+    expect(navigationFor('https://gamecentral.example.com/c/foo/chat/general', app)).toBe('allow');
   });
 
   it('keeps sign-in and payment pages in the window', () => {
@@ -15,7 +15,7 @@ describe('navigationFor', () => {
   });
 
   it('sends other sites to the browser', () => {
-    expect(navigationFor('https://media.magnox.example.com/u/abc.webp', app)).toBe('external');
+    expect(navigationFor('https://media.gamecentral.example.com/u/abc.webp', app)).toBe('external');
     expect(navigationFor('https://youtube.com/watch?v=1', app)).toBe('external');
     expect(navigationFor('mailto:hi@example.com', app)).toBe('external');
     // Only https for the trusted pages, and only those exact hosts.
@@ -32,14 +32,14 @@ describe('navigationFor', () => {
 
 describe('serverOrigin', () => {
   it('accepts an address with or without https', () => {
-    expect(serverOrigin('magnox.example.com')).toBe(app);
-    expect(serverOrigin(' https://magnox.example.com/c/foo ')).toBe(app);
+    expect(serverOrigin('gamecentral.example.com')).toBe(app);
+    expect(serverOrigin(' https://gamecentral.example.com/c/foo ')).toBe(app);
     expect(serverOrigin('https://192.168.1.50')).toBe('https://192.168.1.50');
   });
 
   it('only allows plain http on this computer', () => {
     expect(serverOrigin('http://localhost:3000')).toBe('http://localhost:3000');
-    expect(serverOrigin('http://magnox.example.com')).toBeNull();
+    expect(serverOrigin('http://gamecentral.example.com')).toBeNull();
   });
 
   it('rejects things that are not web addresses', () => {

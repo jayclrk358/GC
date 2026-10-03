@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { PLAN_LIMITS } from '@magnox/shared';
+import { PLAN_LIMITS } from '@gamecentral/shared';
 import { createCommunity, expectAccessible, signUp, uniqueUser } from './helpers';
 
 const PNG = Buffer.from(

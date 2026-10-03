@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { LETTER_ANIMATIONS, type NameStyleView } from '@magnox/shared';
+import { LETTER_ANIMATIONS, type NameStyleView } from '@gamecentral/shared';
 import { cn } from '@/lib/utils';
 
 /**

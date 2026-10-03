@@ -1,5 +1,5 @@
 import { and, eq, inArray, sql } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
+import { db, schema } from '@gamecentral/db';
 import {
   ACCOUNT_KINDS,
   hexColor,
@@ -13,7 +13,7 @@ import {
   PLATFORMS,
   PLAYSTYLES,
   themeBackdrops,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import { z } from 'zod';
 import { getMemberContext } from '../access';
 import { AppError } from '../errors';
@@ -219,7 +219,7 @@ export async function getPublicProfile(username: string, viewerId?: string | nul
     username: user.username!,
     image: user.image,
     createdAt: user.createdAt,
-    /** On Magnox's own team: shown as a badge. */
+    /** On Game Central's own team: shown as a badge. */
     staffRole: publicStaffRole(user),
     bio: profile?.bio ?? '',
     pronouns: profile?.pronouns ?? '',

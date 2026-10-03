@@ -4,7 +4,7 @@ import {
   MEDIA_KEY_RE,
   variantKey,
   type ImageVariant,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 
 let clientBase: string | undefined;
 

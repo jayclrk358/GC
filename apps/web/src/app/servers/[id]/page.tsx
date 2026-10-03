@@ -3,8 +3,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Globe2, ShieldCheck, Users } from 'lucide-react';
-import { endpointHistory, getServerDetail, isAppError, type ServerDetail } from '@magnox/core';
-import { formatDuration } from '@magnox/shared';
+import { endpointHistory, getServerDetail, isAppError, type ServerDetail } from '@gamecentral/core';
+import { formatDuration } from '@gamecentral/shared';
 import { getUser } from '@/lib/auth';
 import { turnstileSiteKey } from '@/lib/turnstile';
 import { Alert, Badge } from '@/components/ui/misc';
@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: Params) {
   const server = await load(id, user?.id ?? null);
   return {
     title: server.name,
-    description: server.description || `${server.protocolLabel} server on Magnox`,
+    description: server.description || `${server.protocolLabel} server on Game Central`,
   };
 }
 

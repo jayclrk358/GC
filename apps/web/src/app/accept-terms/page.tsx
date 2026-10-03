@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { getConsent } from '@magnox/core';
-import { CURRENT_TERMS_VERSION } from '@magnox/shared';
+import { getConsent } from '@gamecentral/core';
+import { CURRENT_TERMS_VERSION } from '@gamecentral/shared';
 import { requireUser } from '@/lib/auth';
 import { safeNext } from '@/lib/safe-redirect';
 import { AcceptTerms } from '@/components/legal/accept-terms';

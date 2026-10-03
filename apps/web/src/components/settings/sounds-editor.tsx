@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { Play } from 'lucide-react';
-import type { Prefs } from '@magnox/shared';
+import type { Prefs } from '@gamecentral/shared';
 import {
   DEFAULT_PREFS,
   SOUND_EVENTS,
@@ -11,7 +11,7 @@ import {
   SOUND_PACKS,
   type SoundEvent,
   type SoundPack,
-} from '@magnox/shared/prefs-values';
+} from '@gamecentral/shared/prefs-values';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Select } from '@/components/ui/select';

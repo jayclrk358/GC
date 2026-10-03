@@ -2,17 +2,17 @@ import { createServer } from 'node:http';
 import { Server, type Socket } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
 import { fromNodeHeaders } from 'better-auth/node';
-import { auth } from '@magnox/auth';
+import { auth } from '@gamecentral/auth';
 // Just the modules needed here: the package's main entry also loads image processing, S3,
 // Stripe and the rest, which this process never uses.
-import { revokedRooms } from '@magnox/core/access';
-import { communityForDomain } from '@magnox/core/domain-lookup';
-import { noteServerViewer } from '@magnox/core/servers/hot';
-import { env } from '@magnox/core/env';
-import { logger } from '@magnox/core/logger';
-import { cacheRedis, sessionsRevoked } from '@magnox/core/redis';
-import { rooms } from '@magnox/core/rooms';
-import { flushTelemetry, initTelemetry } from '@magnox/core/telemetry';
+import { revokedRooms } from '@gamecentral/core/access';
+import { communityForDomain } from '@gamecentral/core/domain-lookup';
+import { noteServerViewer } from '@gamecentral/core/servers/hot';
+import { env } from '@gamecentral/core/env';
+import { logger } from '@gamecentral/core/logger';
+import { cacheRedis, sessionsRevoked } from '@gamecentral/core/redis';
+import { rooms } from '@gamecentral/core/rooms';
+import { flushTelemetry, initTelemetry } from '@gamecentral/core/telemetry';
 import { authorizeRoom, noteAccessChanged } from './authorize';
 import { addressKey, clientIp, ConnectionCounts, EventLimiter, HotAllowance } from './limits';
 import { registerPresence } from './presence';

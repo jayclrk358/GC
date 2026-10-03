@@ -1,4 +1,4 @@
-import { handleStripeWebhook, isAppError, logger } from '@magnox/core';
+import { handleStripeWebhook, isAppError, logger } from '@gamecentral/core';
 
 /**
  * Stripe webhooks (subscriptions starting, renewing, changing and ending). The raw body is

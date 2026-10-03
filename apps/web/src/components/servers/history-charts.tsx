@@ -3,8 +3,8 @@
 import * as React from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { CircleAlert, CircleCheck, CircleX, Minus } from 'lucide-react';
-import { HISTORY_RANGES, type HistoryPoint, type HistoryRange } from '@magnox/shared';
-import type { ServerHistory } from '@magnox/core';
+import { HISTORY_RANGES, type HistoryPoint, type HistoryRange } from '@gamecentral/shared';
+import type { ServerHistory } from '@gamecentral/core';
 import { cn } from '@/lib/utils';
 
 const PLOT_H = 180;

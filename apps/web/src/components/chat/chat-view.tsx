@@ -6,14 +6,14 @@ import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { AtSign, Hash, Megaphone, Pin, Search, Users } from 'lucide-react';
-import type { MessagePage, MessageView } from '@magnox/core';
+import type { MessagePage, MessageView } from '@gamecentral/core';
 import {
   docToText,
   mentionsMe,
   type ChatVerbosity,
   type CustomEmoji,
   type RichNode,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import {

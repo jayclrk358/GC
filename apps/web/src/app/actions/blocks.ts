@@ -1,7 +1,13 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { addBlock, deleteBlock, getMemberContext, reorderBlocks, updateBlock } from '@magnox/core';
+import {
+  addBlock,
+  deleteBlock,
+  getMemberContext,
+  reorderBlocks,
+  updateBlock,
+} from '@gamecentral/core';
 import { getUser } from '@/lib/auth';
 import { runAction } from '@/lib/action';
 

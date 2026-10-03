@@ -1,4 +1,4 @@
-import { removePushSubscription, savePushSubscription } from '@magnox/core';
+import { removePushSubscription, savePushSubscription } from '@gamecentral/core';
 import { publicJson } from '@/lib/api';
 
 /** Turn on push notifications for this browser. */

@@ -1,5 +1,5 @@
-import type { BlockConfig } from '@magnox/shared';
-import { posterKeysFor } from '@magnox/core';
+import type { BlockConfig } from '@gamecentral/shared';
+import { posterKeysFor } from '@gamecentral/core';
 import { getPrefs } from '@/lib/prefs';
 import { BlockSection } from './section';
 import { GalleryGrid } from './gallery-grid';

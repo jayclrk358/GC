@@ -11,7 +11,7 @@ import {
 } from './helpers';
 
 /** Seeded demo account with a verified email (pnpm db:seed). */
-const VOTER = { login: 'carol', password: 'magnox-demo-1234' };
+const VOTER = { login: 'carol', password: 'gamecentral-demo-1234' };
 
 async function addFixtureServer(page: Page, slug: string, name: string, tags = '') {
   await page.goto(`/c/${slug}/settings/servers`);

@@ -8,7 +8,7 @@ import {
   text,
   uuid,
 } from 'drizzle-orm/pg-core';
-import type { Recurrence } from '@magnox/shared';
+import type { Recurrence } from '@gamecentral/shared';
 import { users } from './auth';
 import { communities } from './communities';
 import { createdAt, tz, updatedAt } from './_helpers';

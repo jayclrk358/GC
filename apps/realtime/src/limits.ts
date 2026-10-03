@@ -69,7 +69,7 @@ export class EventLimiter {
 }
 
 /**
- * Which game servers one socket keeps on the fast polling tier. Watching a server makes Magnox
+ * Which game servers one socket keeps on the fast polling tier. Watching a server makes Game Central
  * poll it every minute, so a socket may only start that for a few different servers in a while.
  */
 export class HotAllowance {

@@ -1,4 +1,4 @@
-import { PLAN_LIMITS, randomToken } from '@magnox/shared';
+import { PLAN_LIMITS, randomToken } from '@gamecentral/shared';
 import { badRequest } from './errors';
 import type { ProcessedImage } from './images';
 

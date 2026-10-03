@@ -1,4 +1,4 @@
-import { planLimits, planPerks } from '@magnox/shared';
+import { planLimits, planPerks } from '@gamecentral/shared';
 import { loadChatChannels, loadChatUnreads, loadCommunity } from '@/lib/community';
 import { ChannelSidebar } from '@/components/chat/sidebar';
 

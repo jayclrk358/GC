@@ -17,41 +17,41 @@ function resolver(records: Record<string, { txt?: string[]; cname?: string[]; a?
 }
 
 describe('checkDomainDns', () => {
-  const txt = { '_magnox.forum.clan.gg': { txt: ['magnox-verify=tok'] } };
+  const txt = { '_gamecentral.forum.clan.gg': { txt: ['gamecentral-verify=tok'] } };
 
   it('needs the TXT record first', async () => {
-    const err = await checkDomainDns('forum.clan.gg', 'tok', 'magnox.example', resolver({}));
+    const err = await checkDomainDns('forum.clan.gg', 'tok', 'gamecentral.example', resolver({}));
     expect(err).toMatch(/TXT record isn’t there/);
     const wrong = await checkDomainDns(
       'forum.clan.gg',
       'tok',
-      'magnox.example',
-      resolver({ '_magnox.forum.clan.gg': { txt: ['magnox-verify=other'] } }),
+      'gamecentral.example',
+      resolver({ '_gamecentral.forum.clan.gg': { txt: ['gamecentral-verify=other'] } }),
     );
     expect(wrong).toMatch(/TXT record isn’t there/);
   });
 
   it('accepts a CNAME to the site', async () => {
-    const r = resolver({ ...txt, 'forum.clan.gg': { cname: ['Magnox.Example.'] } });
-    expect(await checkDomainDns('forum.clan.gg', 'tok', 'magnox.example', r)).toBeNull();
+    const r = resolver({ ...txt, 'forum.clan.gg': { cname: ['GameCentral.Example.'] } });
+    expect(await checkDomainDns('forum.clan.gg', 'tok', 'gamecentral.example', r)).toBeNull();
   });
 
   it('accepts the same addresses (an apex domain with A records)', async () => {
     const r = resolver({
       ...txt,
-      'magnox.example': { a: ['203.0.113.7'] },
+      'gamecentral.example': { a: ['203.0.113.7'] },
       'forum.clan.gg': { a: ['203.0.113.7'] },
     });
-    expect(await checkDomainDns('forum.clan.gg', 'tok', 'magnox.example', r)).toBeNull();
+    expect(await checkDomainDns('forum.clan.gg', 'tok', 'gamecentral.example', r)).toBeNull();
   });
 
   it('refuses a domain that points somewhere else', async () => {
     const r = resolver({
       ...txt,
-      'magnox.example': { a: ['203.0.113.7'] },
+      'gamecentral.example': { a: ['203.0.113.7'] },
       'forum.clan.gg': { a: ['203.0.113.7', '198.51.100.1'] },
     });
-    expect(await checkDomainDns('forum.clan.gg', 'tok', 'magnox.example', r)).toMatch(
+    expect(await checkDomainDns('forum.clan.gg', 'tok', 'gamecentral.example', r)).toMatch(
       /doesn’t point here/,
     );
   });

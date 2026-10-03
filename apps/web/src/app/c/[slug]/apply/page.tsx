@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { ClipboardList } from 'lucide-react';
-import { getApplicationForm, myApplication } from '@magnox/core';
+import { getApplicationForm, myApplication } from '@gamecentral/core';
 import { loadCommunity } from '@/lib/community';
 import { Alert } from '@/components/ui/misc';
 import { Button } from '@/components/ui/button';

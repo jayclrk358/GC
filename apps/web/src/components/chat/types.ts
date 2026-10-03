@@ -1,4 +1,4 @@
-import type { MessageView } from '@magnox/core';
+import type { MessageView } from '@gamecentral/core';
 
 /** A message on screen: server messages plus optimistic ones still sending (or failed). */
 export type ChatMessage = MessageView & { pending?: boolean; failed?: string | null };

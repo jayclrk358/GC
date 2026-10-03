@@ -1,5 +1,5 @@
 import { and, asc, count, desc, eq, inArray, isNull, lt, or, sql, type SQL } from 'drizzle-orm';
-import { db, schema, type Tx } from '@magnox/db';
+import { db, schema, type Tx } from '@gamecentral/db';
 import {
   collectMentions,
   docSizeProblem,
@@ -23,7 +23,7 @@ import {
   THREAD_SORTS,
   threadInputSchema,
   type ThreadSort,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import { z } from 'zod';
 import { channelPermissions, requirePerm, type MemberContext } from '../access';
 import { AppError, forbidden, notFound, unauthorized } from '../errors';

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { AlertTriangle, CheckCircle2, Wand2 } from 'lucide-react';
-import { contrastRatio, isHex, roundRatio, type Theme } from '@magnox/shared';
+import { contrastRatio, isHex, roundRatio, type Theme } from '@gamecentral/shared';
 import {
   autoFixTheme,
   checkTheme,
@@ -20,7 +20,7 @@ import {
   type ColorKey,
   type ContrastIssue,
   type PresetKey,
-} from '@magnox/shared/theme-values';
+} from '@gamecentral/shared/theme-values';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Input, Select } from '@/components/ui/input';

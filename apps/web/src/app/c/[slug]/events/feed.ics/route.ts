@@ -1,4 +1,9 @@
-import { checkCalendarFeedKey, communityIcal, getMemberContext, isAppError } from '@magnox/core';
+import {
+  checkCalendarFeedKey,
+  communityIcal,
+  getMemberContext,
+  isAppError,
+} from '@gamecentral/core';
 
 /**
  * A community's events for calendar apps to subscribe to. Calendar apps can't sign in, so a

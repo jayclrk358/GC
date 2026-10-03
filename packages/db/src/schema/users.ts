@@ -1,5 +1,5 @@
 import { boolean, integer, jsonb, pgTable, text } from 'drizzle-orm/pg-core';
-import type { Prefs } from '@magnox/shared';
+import type { Prefs } from '@gamecentral/shared';
 import { users } from './auth';
 import { tz, updatedAt } from './_helpers';
 

@@ -1,4 +1,4 @@
-import { eventIcal, getMemberContext, isAppError } from '@magnox/core';
+import { eventIcal, getMemberContext, isAppError } from '@gamecentral/core';
 import { getUser } from '@/lib/auth';
 
 /** One event as a calendar file, to add to your own calendar. */

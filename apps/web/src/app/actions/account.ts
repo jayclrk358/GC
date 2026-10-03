@@ -1,7 +1,7 @@
 'use server';
 
 import { headers } from 'next/headers';
-import { acceptTerms, confirmAdult, deleteAccount, markSessionsRevoked } from '@magnox/core';
+import { acceptTerms, confirmAdult, deleteAccount, markSessionsRevoked } from '@gamecentral/core';
 import { auth, endSessions, getUser } from '@/lib/auth';
 import { runAction } from '@/lib/action';
 

@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { Hash, Megaphone, PenSquare } from 'lucide-react';
-import { isMuted, listFlairs, listThreads } from '@magnox/core';
-import { has, Permission, THREAD_SORTS, type ThreadSort } from '@magnox/shared';
+import { isMuted, listFlairs, listThreads } from '@gamecentral/core';
+import { has, Permission, THREAD_SORTS, type ThreadSort } from '@gamecentral/shared';
 import { loadCommunity, loadForumChannel } from '@/lib/community';
 import { pageParam } from '@/lib/page-param';
 import { Button } from '@/components/ui/button';

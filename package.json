@@ -1,5 +1,5 @@
 {
-  "name": "magnox",
+  "name": "gamecentral",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.33.0",
@@ -7,20 +7,20 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev": "concurrently -k -n web,rt,worker -c blue,magenta,yellow \"pnpm --filter @magnox/web dev\" \"pnpm --filter @magnox/realtime dev\" \"pnpm --filter @magnox/worker dev\"",
+    "dev": "concurrently -k -n web,rt,worker -c blue,magenta,yellow \"pnpm --filter @gamecentral/web dev\" \"pnpm --filter @gamecentral/realtime dev\" \"pnpm --filter @gamecentral/worker dev\"",
     "build": "pnpm -r build",
-    "start": "concurrently -k -n web,rt,worker \"pnpm --filter @magnox/web start\" \"pnpm --filter @magnox/realtime start\" \"pnpm --filter @magnox/worker start\"",
+    "start": "concurrently -k -n web,rt,worker \"pnpm --filter @gamecentral/web start\" \"pnpm --filter @gamecentral/realtime start\" \"pnpm --filter @gamecentral/worker start\"",
     "lint": "eslint . --max-warnings=0 && node scripts/check-i18n.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "pnpm -r typecheck",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "pnpm --filter @magnox/web test:e2e",
-    "db:generate": "pnpm --filter @magnox/db generate",
-    "db:migrate": "pnpm --filter @magnox/db migrate",
-    "db:seed": "pnpm --filter @magnox/db seed && pnpm --filter @magnox/auth seed:demo",
-    "db:reset": "pnpm --filter @magnox/db reset"
+    "test:e2e": "pnpm --filter @gamecentral/web test:e2e",
+    "db:generate": "pnpm --filter @gamecentral/db generate",
+    "db:migrate": "pnpm --filter @gamecentral/db migrate",
+    "db:seed": "pnpm --filter @gamecentral/db seed && pnpm --filter @gamecentral/auth seed:demo",
+    "db:reset": "pnpm --filter @gamecentral/db reset"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

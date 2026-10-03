@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { ExternalLink } from 'lucide-react';
-import { isLinkProtocol, type ServerStatus } from '@magnox/shared';
+import { isLinkProtocol, type ServerStatus } from '@gamecentral/shared';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/misc';
 import { CopyAddress, PlayButton, StatusDot, useLiveStatus } from './server-status';

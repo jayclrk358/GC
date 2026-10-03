@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { eq } from 'drizzle-orm';
-import { db, schema, type LinkPreviewData, type MessageEmbed } from '@magnox/db';
-import { extractLinks, parseOpenGraph, PREVIEW_HEAD_BYTES } from '@magnox/shared';
+import { db, schema, type LinkPreviewData, type MessageEmbed } from '@gamecentral/db';
+import { extractLinks, parseOpenGraph, PREVIEW_HEAD_BYTES } from '@gamecentral/shared';
 import { processImage } from '../images';
 import { logger } from '../logger';
 import { safeFetch } from '../net/safe-fetch';

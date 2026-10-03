@@ -1,4 +1,4 @@
-import { listEmoji } from '@magnox/core';
+import { listEmoji } from '@gamecentral/core';
 import { communityJson } from '@/lib/api';
 
 /** The community's custom emoji, for ":" suggestions in editors. */

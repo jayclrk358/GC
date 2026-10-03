@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { adminFeedbackList } from '@magnox/core';
-import { FEEDBACK_KINDS, FEEDBACK_STATUSES } from '@magnox/shared';
+import { adminFeedbackList } from '@gamecentral/core';
+import { FEEDBACK_KINDS, FEEDBACK_STATUSES } from '@gamecentral/shared';
 import { staffFor } from '@/lib/staff';
 import { formatDateTime } from '@/lib/format';
 import { cn } from '@/lib/utils';

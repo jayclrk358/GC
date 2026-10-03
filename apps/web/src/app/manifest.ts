@@ -1,10 +1,10 @@
 import type { MetadataRoute } from 'next';
 
-/** Lets people install Magnox as an app (from the browser menu, or "Add to Home Screen"). */
+/** Lets people install Game Central as an app (from the browser menu, or "Add to Home Screen"). */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Magnox',
-    short_name: 'Magnox',
+    name: 'Game Central',
+    short_name: 'Game Central',
     description: 'Customisable, accessible community hubs for games and game servers.',
     id: '/',
     start_url: '/',

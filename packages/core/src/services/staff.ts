@@ -1,5 +1,5 @@
 import { and, desc, eq, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
+import { db, schema } from '@gamecentral/db';
 import { z } from 'zod';
 import { staffContext } from '../access';
 import { AppError, forbidden, notFound } from '../errors';
@@ -21,7 +21,7 @@ import { queueMediaCleanup } from './media-cleanup';
 import { notifyUser } from './notify';
 
 // The parts of the console for looking after people and what they post: who's on the team,
-// changing someone's account, and finding and removing posts anywhere on Magnox.
+// changing someone's account, and finding and removing posts anywhere on Game Central.
 
 // ── The team ────────────────────────────────────────────────────────────────
 
@@ -137,7 +137,7 @@ export async function setStaffRole(userId: string | null, raw: unknown): Promise
       type: 'system',
       url: '/admin',
       data: {
-        title: `You’re now a Magnox ${input.role}. The admin console is in your account menu.`,
+        title: `You’re now a Game Central ${input.role}. The admin console is in your account menu.`,
       },
     }).catch(() => undefined);
   }

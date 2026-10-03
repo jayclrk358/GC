@@ -3,8 +3,8 @@
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { Maximize2, Play } from 'lucide-react';
-import type { MessageAttachment, MessageEmbed } from '@magnox/db';
-import { isVideoKey } from '@magnox/shared';
+import type { MessageAttachment, MessageEmbed } from '@gamecentral/db';
+import { isVideoKey } from '@gamecentral/shared';
 import { useMediaViewer, VideoUnavailable } from '@/components/media/media-viewer';
 import { imgSources, mediaUrl } from '@/lib/media';
 import { cn } from '@/lib/utils';

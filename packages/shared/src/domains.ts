@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 const LABEL = /^(?!-)[a-z0-9-]{1,63}(?<!-)$/;
 
-/** A hostname someone can point at Magnox: at least two labels, a real-looking TLD, no IPs. */
+/** A hostname someone can point at Game Central: at least two labels, a real-looking TLD, no IPs. */
 export function isValidDomain(domain: string): boolean {
   if (domain.length > 253 || !domain.includes('.')) return false;
   const labels = domain.split('.');
@@ -27,7 +27,7 @@ export const customDomainSchema = z
 
 /** The DNS TXT record that proves a domain is yours. */
 export function domainVerifyRecord(domain: string, token: string) {
-  return { name: `_magnox.${domain}`, value: `magnox-verify=${token}` };
+  return { name: `_gamecentral.${domain}`, value: `gamecentral-verify=${token}` };
 }
 
 /**

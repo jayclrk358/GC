@@ -1,4 +1,4 @@
-# Overrides for running Magnox on a server:
+# Overrides for running Game Central on a server:
 #   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 # Only Caddy (ports 80 and 443) is reachable from other machines. The databases aren't published
 # at all, and the Mailpit inbox listens on this machine only (from elsewhere, use an SSH tunnel:

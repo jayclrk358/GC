@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getFormatter, getTranslations } from 'next-intl/server';
-import { communityAnalytics } from '@magnox/core';
+import { communityAnalytics } from '@gamecentral/core';
 import { loadCommunityForSettings } from '@/lib/community';
 import { PageHeader } from '@/components/ui/misc';
 import { DailyBars } from '@/components/analytics/daily-bars';

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { ArrowDown, ArrowUp } from 'lucide-react';
-import type { NavConfig } from '@magnox/shared';
+import type { NavConfig } from '@gamecentral/shared';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/misc';

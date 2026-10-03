@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { enabledSocialProviders } from '@magnox/auth';
+import { enabledSocialProviders } from '@gamecentral/auth';
 import { AuthCard } from '@/components/auth/auth-card';
 import { SignUpForm } from '@/components/auth/sign-up-form';
 import { SocialButtons } from '@/components/auth/social-buttons';

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { Gem, Sparkles } from 'lucide-react';
-import { planFor, type PaidPlanId, type PlanPerks } from '@magnox/shared';
+import { planFor, type PaidPlanId, type PlanPerks } from '@gamecentral/shared';
 
 /**
  * Says a feature needs a paid plan, with a link to the community's billing settings. Anything

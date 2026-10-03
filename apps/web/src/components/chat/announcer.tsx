@@ -2,7 +2,11 @@
 
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
-import { summariseForAnnouncement, type AnnounceItem, type ChatVerbosity } from '@magnox/shared';
+import {
+  summariseForAnnouncement,
+  type AnnounceItem,
+  type ChatVerbosity,
+} from '@gamecentral/shared';
 
 export interface AnnouncerHandle {
   push: (item: AnnounceItem) => void;

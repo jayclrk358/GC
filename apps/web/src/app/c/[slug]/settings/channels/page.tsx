@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { listChannelRows, listFlairs, listRoles } from '@magnox/core';
-import { planLimits, planPerks } from '@magnox/shared';
+import { listChannelRows, listFlairs, listRoles } from '@gamecentral/core';
+import { planLimits, planPerks } from '@gamecentral/shared';
 import { loadCommunityForSettings } from '@/lib/community';
 import { PageHeader } from '@/components/ui/misc';
 import { ChannelManager } from '@/components/community-settings/channel-manager';

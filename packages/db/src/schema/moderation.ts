@@ -1,5 +1,5 @@
 import { index, jsonb, pgTable, primaryKey, text, uuid } from 'drizzle-orm/pg-core';
-import type { AutomodConfig, AutomodRule } from '@magnox/shared';
+import type { AutomodConfig, AutomodRule } from '@gamecentral/shared';
 import { users } from './auth';
 import { channels } from './channels';
 import { communities } from './communities';

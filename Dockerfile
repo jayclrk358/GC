@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-# One image definition for every Magnox process. Build a specific target:
+# One image definition for every Game Central process. Build a specific target:
 #   docker build --target web .      Next.js standalone server
 #   docker build --target app .      realtime / worker / migrate (run from source with tsx)
 
@@ -30,17 +30,17 @@ COPY . .
 ARG NEXT_PUBLIC_REALTIME_URL=""
 ENV NEXT_PUBLIC_REALTIME_URL=$NEXT_PUBLIC_REALTIME_URL
 # public/ may be empty, and git doesn't keep empty folders, so make sure it exists.
-RUN mkdir -p apps/web/public && pnpm --filter @magnox/web build
+RUN mkdir -p apps/web/public && pnpm --filter @gamecentral/web build
 
 FROM node:22-bookworm-slim AS web
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0
 WORKDIR /srv
 # The upload volume mounts at /data/media; a new volume takes this folder's owner.
-RUN useradd --system --uid 1001 magnox && mkdir -p /data/media && chown magnox /data/media
-COPY --from=build --chown=magnox /repo/apps/web/.next/standalone ./
-COPY --from=build --chown=magnox /repo/apps/web/.next/static ./apps/web/.next/static
-COPY --from=build --chown=magnox /repo/apps/web/public ./apps/web/public
-USER magnox
+RUN useradd --system --uid 1001 gamecentral && mkdir -p /data/media && chown gamecentral /data/media
+COPY --from=build --chown=gamecentral /repo/apps/web/.next/standalone ./
+COPY --from=build --chown=gamecentral /repo/apps/web/.next/static ./apps/web/.next/static
+COPY --from=build --chown=gamecentral /repo/apps/web/public ./apps/web/public
+USER gamecentral
 EXPOSE 3000
 HEALTHCHECK --interval=60s --timeout=5s --start-period=30s CMD node -e "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 CMD ["node", "apps/web/server.js"]
@@ -48,6 +48,6 @@ CMD ["node", "apps/web/server.js"]
 FROM deps AS app
 ENV NODE_ENV=production
 COPY . .
-RUN useradd --system --uid 1001 magnox && mkdir -p /data/media && chown magnox /data/media
-USER magnox
+RUN useradd --system --uid 1001 gamecentral && mkdir -p /data/media && chown gamecentral /data/media
+USER gamecentral
 CMD ["node", "--import", "tsx", "apps/realtime/src/index.ts"]

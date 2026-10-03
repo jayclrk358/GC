@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Clock, MapPin, Repeat, Users } from 'lucide-react';
-import type { EventOccurrenceView } from '@magnox/core';
+import type { EventOccurrenceView } from '@gamecentral/core';
 import { Badge } from '@/components/ui/misc';
 import { dayKey, formatDay, formatEventRange, type ClockOptions } from '@/lib/event-format';
 

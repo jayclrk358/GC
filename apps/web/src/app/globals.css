@@ -58,17 +58,20 @@
     --mx-focus-offset: 2px;
     /* Chart series colour, checked for lightness, chroma and 3:1 contrast on each surface. */
     --mx-chart-1: #5b21b6;
-    /* The logo's dark lettering; lightened on dark backgrounds so it stays visible. */
-    --mx-logo-ink: #3d1a78;
+    /* The wordmark's colours ("GAME", "CENTRAL"), lighter on dark backgrounds. */
+    --mx-logo-ink: #16112a;
+    --mx-logo-accent: #6d28d9;
   }
   html[data-scheme='dark'] {
     --mx-chart-1: #9878f5;
-    --mx-logo-ink: #c9a3ff;
+    --mx-logo-ink: #eef0ff;
+    --mx-logo-accent: #a78bfa;
   }
   @media (prefers-color-scheme: dark) {
     html[data-scheme='system'] {
       --mx-chart-1: #9878f5;
-      --mx-logo-ink: #c9a3ff;
+      --mx-logo-ink: #eef0ff;
+      --mx-logo-accent: #a78bfa;
     }
   }
 }
@@ -957,6 +960,7 @@
   html[data-contrast='high'] {
     --mx-chart-1: var(--c-text);
     --mx-logo-ink: var(--c-text);
+    --mx-logo-accent: var(--c-text);
   }
 
   /* High contrast replaces every colour token, including community themes. */

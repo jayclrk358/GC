@@ -6,8 +6,8 @@ import {
   listMessages,
   syncVoicePeople,
   voiceEnabled,
-} from '@magnox/core';
-import { has, isUuid, Permission, planLimits, planPerks } from '@magnox/shared';
+} from '@gamecentral/core';
+import { has, isUuid, Permission, planLimits, planPerks } from '@gamecentral/shared';
 import { imgSources } from '@/lib/media';
 import { loadChatChannel, loadChatUnreads, loadCommunity } from '@/lib/community';
 import { formatDateTime } from '@/lib/format';

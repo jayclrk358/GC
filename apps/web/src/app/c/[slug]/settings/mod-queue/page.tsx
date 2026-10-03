@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { ShieldCheck } from 'lucide-react';
-import { listHeldPosts } from '@magnox/core';
+import { listHeldPosts } from '@gamecentral/core';
 import { loadCommunityForSettings } from '@/lib/community';
 import { EmptyState, PageHeader } from '@/components/ui/misc';
 import { HeldQueue } from '@/components/automod/held-queue';

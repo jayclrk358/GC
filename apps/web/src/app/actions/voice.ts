@@ -1,6 +1,6 @@
 'use server';
 
-import { joinVoice, moderateVoice } from '@magnox/core';
+import { joinVoice, moderateVoice } from '@gamecentral/core';
 import { runAction } from '@/lib/action';
 import { ctxFor } from './_ctx';
 

@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import type { PollResults } from '@magnox/core';
+import type { PollResults } from '@gamecentral/core';
 import { Button } from '@/components/ui/button';
 import { votePollAction } from '@/app/actions/forum';
 

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
-import { searchWiki } from '@magnox/core';
+import { searchWiki } from '@gamecentral/core';
 import { loadCommunity } from '@/lib/community';
 import { BackLink } from '@/components/ui/back-link';
 

@@ -16,7 +16,7 @@ import {
   updateCommunityNav,
   updateCommunitySettings,
   updateCommunityTheme,
-} from '@magnox/core';
+} from '@gamecentral/core';
 import { getUser } from '@/lib/auth';
 import { runAction } from '@/lib/action';
 

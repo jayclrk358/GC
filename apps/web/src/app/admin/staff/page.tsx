@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { listStaff } from '@magnox/core';
+import { listStaff } from '@gamecentral/core';
 import { staffFor } from '@/lib/staff';
 import { PageHeader } from '@/components/ui/misc';
 import { StaffManager } from '@/components/admin/staff-manager';

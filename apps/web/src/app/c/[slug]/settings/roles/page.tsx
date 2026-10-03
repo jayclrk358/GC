@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { listRoles, roleSummary } from '@magnox/core';
-import { ALL_PERMISSIONS, planPerks, themeBackdrops } from '@magnox/shared';
+import { listRoles, roleSummary } from '@gamecentral/core';
+import { ALL_PERMISSIONS, planPerks, themeBackdrops } from '@gamecentral/shared';
 import { loadCommunityForSettings } from '@/lib/community';
 import { PageHeader } from '@/components/ui/misc';
 import { RoleEditor } from '@/components/community-settings/role-editor';

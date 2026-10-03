@@ -1,6 +1,6 @@
 import 'server-only';
-import { calendarFeedKey, env } from '@magnox/core';
-import { utcToZoned, weekdayOf, type Recurrence } from '@magnox/shared';
+import { calendarFeedKey, env } from '@gamecentral/core';
+import { utcToZoned, weekdayOf, type Recurrence } from '@gamecentral/shared';
 
 /** Where calendar apps fetch a community's events (with a member key if it's private). */
 export function feedUrl(

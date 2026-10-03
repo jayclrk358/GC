@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Check, HelpCircle, X } from 'lucide-react';
-import type { RsvpStatus } from '@magnox/shared';
+import type { RsvpStatus } from '@gamecentral/shared';
 import { Button } from '@/components/ui/button';
 import { rsvpAction } from '@/app/actions/events';
 

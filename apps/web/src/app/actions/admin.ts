@@ -16,11 +16,11 @@ import {
   suspendCommunity,
   unbanUser,
   unsuspendCommunity,
-} from '@magnox/core';
+} from '@gamecentral/core';
 import { endSessions, getUser, refreshSessions } from '@/lib/auth';
 import { runAction } from '@/lib/action';
 
-// Platform admin actions. Each service checks the caller is a Magnox admin.
+// Platform admin actions. Each service checks the caller is a Game Central admin.
 
 const me = async () => (await getUser())?.id ?? null;
 

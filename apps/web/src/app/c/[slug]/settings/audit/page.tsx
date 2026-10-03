@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { desc, eq } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
+import { db, schema } from '@gamecentral/db';
 import { loadCommunityForSettings } from '@/lib/community';
 import { formatDateTime } from '@/lib/format';
 import { getPrefs } from '@/lib/prefs';

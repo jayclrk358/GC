@@ -1,14 +1,14 @@
 name: Windows app
 
-# Builds the Magnox for Windows installer whenever the app changes, or on demand from the
-# Actions tab (optionally for another Magnox site). Download it from the run's artifacts.
+# Builds the Game Central for Windows installer whenever the app changes, or on demand from the
+# Actions tab (optionally for another Game Central site). Download it from the run's artifacts.
 on:
   push:
     paths: ['apps/desktop/**', '.github/workflows/desktop.yml']
   workflow_dispatch:
     inputs:
       url:
-        description: 'Magnox site the app opens (leave empty for the one in apps/desktop/package.json)'
+        description: 'Game Central site the app opens (leave empty for the one in apps/desktop/package.json)'
         required: false
 
 jobs:
@@ -29,16 +29,16 @@ jobs:
       - run: npm ci
       - name: Build
         env:
-          MAGNOX_URL: ${{ inputs.url }}
+          GAMECENTRAL_URL: ${{ inputs.url }}
         run: |
-          if [ -n "$MAGNOX_URL" ]; then
-            npm run dist -- "-c.extraMetadata.magnoxUrl=$MAGNOX_URL"
+          if [ -n "$GAMECENTRAL_URL" ]; then
+            npm run dist -- "-c.extraMetadata.siteUrl=$GAMECENTRAL_URL"
           else
             npm run dist
           fi
       - uses: actions/upload-artifact@v4
         with:
-          name: Magnox-Windows-installer
-          path: apps/desktop/release/Magnox-Setup-*.exe
+          name: GameCentral-Windows-installer
+          path: apps/desktop/release/GameCentral-Setup-*.exe
           if-no-files-found: error
           retention-days: 30

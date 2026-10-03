@@ -1,9 +1,9 @@
-import { communityShareCard } from '@magnox/core';
+import { communityShareCard } from '@gamecentral/core';
 import { OG_SIZE, shareImage } from '@/lib/og';
 
 export const size = OG_SIZE;
 export const contentType = 'image/png';
-export const alt = 'A community on Magnox';
+export const alt = 'A community on Game Central';
 
 /** A community's link preview, in its own colours (public communities only). */
 export default async function Image({ params }: { params: Promise<{ slug: string }> }) {

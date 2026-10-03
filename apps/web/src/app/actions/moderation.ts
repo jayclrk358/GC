@@ -1,7 +1,13 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { banMember, kickMember, resolveReport, timeoutMember, unbanMember } from '@magnox/core';
+import {
+  banMember,
+  kickMember,
+  resolveReport,
+  timeoutMember,
+  unbanMember,
+} from '@gamecentral/core';
 import { runAction } from '@/lib/action';
 import { ctxFor } from './_ctx';
 

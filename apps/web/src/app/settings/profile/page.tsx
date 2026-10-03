@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { getOwnProfile, listGames } from '@magnox/core';
+import { getOwnProfile, listGames } from '@gamecentral/core';
 import { PageHeader } from '@/components/ui/misc';
 import { ProfileForm } from '@/components/settings/profile-form';
 import { requireUser } from '@/lib/auth';

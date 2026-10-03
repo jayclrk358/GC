@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { endpointHistory, getServerDetail } from '@magnox/core';
-import { HISTORY_RANGES } from '@magnox/shared';
+import { endpointHistory, getServerDetail } from '@gamecentral/core';
+import { HISTORY_RANGES } from '@gamecentral/shared';
 import { publicJson } from '@/lib/api';
 
 const rangeSchema = z.enum(HISTORY_RANGES).catch('24h');

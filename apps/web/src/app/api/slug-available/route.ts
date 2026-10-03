@@ -1,5 +1,5 @@
-import { isSlugAvailable } from '@magnox/core';
-import { isValidSlug } from '@magnox/shared';
+import { isSlugAvailable } from '@gamecentral/core';
+import { isValidSlug } from '@gamecentral/shared';
 
 export async function GET(req: Request) {
   const slug = (new URL(req.url).searchParams.get('slug') ?? '').trim().toLowerCase();

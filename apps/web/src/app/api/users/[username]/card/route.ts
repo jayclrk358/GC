@@ -1,4 +1,4 @@
-import { getProfileCard } from '@magnox/core';
+import { getProfileCard } from '@gamecentral/core';
 import { getUser } from '@/lib/auth';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

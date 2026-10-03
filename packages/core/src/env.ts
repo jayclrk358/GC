@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { loadRootEnv } from '@magnox/db';
+import { loadRootEnv } from '@gamecentral/db';
 
 const bool = z
   .enum(['true', 'false', '1', '0', ''])
@@ -19,11 +19,11 @@ const schema = z.object({
   MEDIA_BASE_URL: z.string().default('http://localhost:3000/media'),
   S3_ENDPOINT: z.string().default(''),
   S3_REGION: z.string().default('auto'),
-  S3_BUCKET: z.string().default('magnox'),
+  S3_BUCKET: z.string().default('gamecentral'),
   S3_ACCESS_KEY_ID: z.string().default(''),
   S3_SECRET_ACCESS_KEY: z.string().default(''),
   SMTP_URL: z.string().default(''),
-  EMAIL_FROM: z.string().default('Magnox <no-reply@magnox.local>'),
+  EMAIL_FROM: z.string().default('Game Central <no-reply@gamecentral.local>'),
   REQUIRE_EMAIL_VERIFICATION: bool,
   DISCORD_CLIENT_ID: z.string().default(''),
   DISCORD_CLIENT_SECRET: z.string().default(''),

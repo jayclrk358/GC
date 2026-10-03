@@ -1,5 +1,5 @@
 import { useTranslations } from 'next-intl';
-import type { FeedbackKind, FeedbackStatus } from '@magnox/shared';
+import type { FeedbackKind, FeedbackStatus } from '@gamecentral/shared';
 import { Badge } from '@/components/ui/misc';
 
 const STATUS_TONE = {

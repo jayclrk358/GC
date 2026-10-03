@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { logger, rateLimit, reportError } from '@magnox/core';
+import { logger, rateLimit, reportError } from '@gamecentral/core';
 import { clientIp } from '@/lib/request';
 
 const log = logger('client');

@@ -1,4 +1,4 @@
-import { listMessages } from '@magnox/core';
+import { listMessages } from '@gamecentral/core';
 import { communityJson } from '@/lib/api';
 
 type Params = { params: Promise<{ id: string; channelId: string }> };

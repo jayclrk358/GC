@@ -1,6 +1,6 @@
 import 'server-only';
 import { ZodError } from 'zod';
-import { authenticateApiToken, isAppError, logger, type ApiCaller } from '@magnox/core';
+import { authenticateApiToken, isAppError, logger, type ApiCaller } from '@gamecentral/core';
 
 const log = logger('api-v1');
 

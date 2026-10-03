@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Ban } from 'lucide-react';
-import { listBans } from '@magnox/core';
+import { listBans } from '@gamecentral/core';
 import { loadCommunityForSettings } from '@/lib/community';
 import { formatDateTime } from '@/lib/format';
 import { Avatar, EmptyState, PageHeader } from '@/components/ui/misc';

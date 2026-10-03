@@ -1,6 +1,6 @@
-// Make an account a Magnox platform admin (or take that away with --revoke):
-//   pnpm --filter @magnox/db admin:grant you@example.com
-//   pnpm --filter @magnox/db admin:grant you@example.com --revoke
+// Make an account a Game Central platform admin (or take that away with --revoke):
+//   pnpm --filter @gamecentral/db admin:grant you@example.com
+//   pnpm --filter @gamecentral/db admin:grant you@example.com --revoke
 import postgres from 'postgres';
 import { loadRootEnv } from './env';
 
@@ -17,7 +17,8 @@ if (!who) {
   process.exit(1);
 }
 
-const url = process.env.DATABASE_URL ?? 'postgres://magnox:magnox@localhost:5432/magnox';
+const url =
+  process.env.DATABASE_URL ?? 'postgres://gamecentral:gamecentral@localhost:5432/gamecentral';
 const sql = postgres(url, { max: 1, prepare: process.env.DATABASE_PREPARE !== 'false' });
 const rows = await sql<{ email: string }[]>`
   update users set role = ${revoke ? 'user' : 'admin'}
@@ -31,5 +32,5 @@ if (!rows.length) {
 console.log(
   revoke
     ? `✔ ${rows[0]!.email} is no longer an admin`
-    : `✔ ${rows[0]!.email} is now a Magnox admin`,
+    : `✔ ${rows[0]!.email} is now a Game Central admin`,
 );

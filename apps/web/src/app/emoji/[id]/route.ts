@@ -1,4 +1,4 @@
-import { emojiImageUrl } from '@magnox/core';
+import { emojiImageUrl } from '@gamecentral/core';
 
 /** A custom emoji's picture: posts only store the emoji's id, so this points at its file. */
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {

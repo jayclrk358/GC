@@ -22,7 +22,12 @@ const nextConfig: NextConfig = {
   // Screen readers announce the document title on load, so it must be there from the start
   // (WCAG 2.4.2). Our generateMetadata reuses the request-cached community load, so it's cheap.
   htmlLimitedBots: /.*/,
-  transpilePackages: ['@magnox/shared', '@magnox/core', '@magnox/db', '@magnox/auth'],
+  transpilePackages: [
+    '@gamecentral/shared',
+    '@gamecentral/core',
+    '@gamecentral/db',
+    '@gamecentral/auth',
+  ],
   serverExternalPackages: [
     'sharp',
     'postgres',

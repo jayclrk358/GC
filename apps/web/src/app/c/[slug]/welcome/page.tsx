@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { Sparkles } from 'lucide-react';
-import { getOnboarding, isOnboarded, listRoles, mediaUrl } from '@magnox/core';
+import { getOnboarding, isOnboarded, listRoles, mediaUrl } from '@gamecentral/core';
 import { loadCommunity } from '@/lib/community';
 import { WelcomeSteps } from '@/components/onboarding/welcome-steps';
 

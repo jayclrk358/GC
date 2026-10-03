@@ -3,7 +3,7 @@
  * Skipped in production and when SEED_DEMO=false. Idempotent: existing demo data is left alone.
  */
 import { and, eq, lt, sql as dsql } from 'drizzle-orm';
-import { db, schema, sql } from '@magnox/db';
+import { db, schema, sql } from '@gamecentral/db';
 import {
   addBlock,
   backfillHistory,
@@ -31,7 +31,7 @@ import {
   updateProfile,
   updateWikiPage,
   voteThread,
-} from '@magnox/core';
+} from '@gamecentral/core';
 import {
   CURRENT_TERMS_VERSION,
   docFromText,
@@ -40,19 +40,19 @@ import {
   themeFromPreset,
   type NameStyle,
   type RichNode,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import { auth } from './index';
 
-const PASSWORD = 'magnox-demo-1234';
+const PASSWORD = 'gamecentral-demo-1234';
 
 const USERS = [
-  { name: 'Alice Moreno', username: 'alice', email: 'alice@demo.magnox.local' },
-  { name: 'Bob Okafor', username: 'bob', email: 'bob@demo.magnox.local' },
-  { name: 'Carol Nguyen', username: 'carol', email: 'carol@demo.magnox.local' },
+  { name: 'Alice Moreno', username: 'alice', email: 'alice@demo.gamecentral.local' },
+  { name: 'Bob Okafor', username: 'bob', email: 'bob@demo.gamecentral.local' },
+  { name: 'Carol Nguyen', username: 'carol', email: 'carol@demo.gamecentral.local' },
 ];
 
 async function ensureUser(u: (typeof USERS)[number]): Promise<string> {
-  const existing = await db.query.users.findFirst({ where: eq(schema.users.email, u.email) });
+  const existing = await db.query.users.findFirst({ where: eq(schema.users.username, u.username) });
   const id =
     existing?.id ?? (await auth().api.signUpEmail({ body: { ...u, password: PASSWORD } })).user.id;
   if (!existing) {
@@ -522,7 +522,7 @@ async function main() {
     });
 
     if (c.slug === 'blockhaven' && env().SERVER_QUERY_ALLOW_PRIVATE) {
-      // Points at the local fake Minecraft server (pnpm --filter @magnox/worker fixtures:servers).
+      // Points at the local fake Minecraft server (pnpm --filter @gamecentral/worker fixtures:servers).
       const endpointId = newId();
       await db
         .insert(schema.serverEndpoints)

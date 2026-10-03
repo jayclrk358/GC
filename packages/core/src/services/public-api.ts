@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
-import { docFromText, THREAD_SORTS } from '@magnox/shared';
+import { db, schema } from '@gamecentral/db';
+import { docFromText, THREAD_SORTS } from '@gamecentral/shared';
 import { z } from 'zod';
 import { getMemberContext, loadChannel, type MemberContext } from '../access';
 import { env } from '../env';

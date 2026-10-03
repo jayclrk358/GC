@@ -1,5 +1,5 @@
 import { and, asc, eq, inArray } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
+import { db, schema } from '@gamecentral/db';
 import {
   isUuid,
   MAX_PLAN_LIMITS,
@@ -8,7 +8,7 @@ import {
   planLimits,
   type PlanId,
   VARIANTS_BY_PURPOSE,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import { getMemberContext, requireMember, requirePerm } from '../access';
 import { env } from '../env';
 import { makeVariants, processImage, UPLOAD_PURPOSES, type UploadPurpose } from '../images';

@@ -1,6 +1,6 @@
 import { diffText } from '../diff';
 import { and, asc, desc, eq, isNull, sql } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
+import { db, schema } from '@gamecentral/db';
 import {
   docSizeProblem,
   docToText,
@@ -15,7 +15,7 @@ import {
   slugifyTitle,
   WIKI_DOC_LIMITS,
   wikiPageInputSchema,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import { z } from 'zod';
 import { requirePerm, type MemberContext } from '../access';
 import { AppError, forbidden, notFound } from '../errors';

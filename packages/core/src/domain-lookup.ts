@@ -1,6 +1,6 @@
 import { and, eq, isNotNull, isNull } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
-import { planPerks } from '@magnox/shared';
+import { db, schema } from '@gamecentral/db';
+import { planPerks } from '@gamecentral/shared';
 import { cached } from './cache';
 
 // Kept apart from the custom domain service so the realtime server can use it without loading

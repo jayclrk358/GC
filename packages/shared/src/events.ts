@@ -356,7 +356,7 @@ export function toIcal(events: IcalEvent[], calendarName: string): string {
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Magnox//Events//EN',
+    'PRODID:-//Game Central//Events//EN',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     `X-WR-CALNAME:${icalText(calendarName)}`,

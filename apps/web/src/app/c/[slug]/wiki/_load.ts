@@ -1,7 +1,7 @@
 import 'server-only';
 import { cache } from 'react';
 import { notFound } from 'next/navigation';
-import { getWikiPage, isAppError, listWikiTree } from '@magnox/core';
+import { getWikiPage, isAppError, listWikiTree } from '@gamecentral/core';
 import { loadCommunity } from '@/lib/community';
 
 /** A wiki page, loaded once per request however many times it's asked for (title, page). */

@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { listBlocks, listCommunityServers, listRoles } from '@magnox/core';
+import { listBlocks, listCommunityServers, listRoles } from '@gamecentral/core';
 import { loadCommunityForSettings } from '@/lib/community';
 import { PageHeader } from '@/components/ui/misc';
 import { PageBuilder } from '@/components/community-settings/page-builder';

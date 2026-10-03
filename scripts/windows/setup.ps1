@@ -1,5 +1,5 @@
 <#
-  One-time setup for running Magnox on a Windows PC.
+  One-time setup for running Game Central on a Windows PC.
 
   Easiest: double-click windows-setup.cmd in the project folder.
   Or from PowerShell in the project folder:
@@ -97,5 +97,5 @@ Invoke-Checked 'Seeding' { pnpm db:seed }
 
 Write-Host ''
 Write-Host 'All set!' -ForegroundColor Green
-Write-Host 'Start Magnox by double-clicking windows-start.cmd (or run: pnpm dev), then open http://localhost:3000'
-Write-Host 'Demo logins: alice, bob or carol with the password magnox-demo-1234'
+Write-Host 'Start Game Central by double-clicking windows-start.cmd (or run: pnpm dev), then open http://localhost:3000'
+Write-Host 'Demo logins: alice, bob or carol with the password gamecentral-demo-1234'

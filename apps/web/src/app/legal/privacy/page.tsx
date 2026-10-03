@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { contactEmail } from '@magnox/core';
-import { PRIVACY_UPDATED } from '@magnox/shared';
+import { contactEmail } from '@gamecentral/core';
+import { PRIVACY_UPDATED } from '@gamecentral/shared';
 import { LegalPage, Section } from '@/components/legal/legal-page';
 import { CookieSettingsButton } from '@/components/shell/cookie-banner';
 
@@ -11,9 +11,9 @@ export default function PrivacyPolicyPage() {
   return (
     <LegalPage title="Privacy Policy" updated={PRIVACY_UPDATED}>
       <p>
-        This explains what Magnox keeps about you, why, and what you can do about it. The short
-        version: we keep what’s needed to run your account and the communities you’re in, we don’t
-        sell it, and you can download or delete it any time.
+        This explains what Game Central keeps about you, why, and what you can do about it. The
+        short version: we keep what’s needed to run your account and the communities you’re in, we
+        don’t sell it, and you can download or delete it any time.
       </p>
       <Section title="What we keep">
         <ul>
@@ -41,9 +41,9 @@ export default function PrivacyPolicyPage() {
       </Section>
       <Section title="Why">
         <p>
-          To run Magnox for you (your account, communities, notifications and emails you’ve asked
-          for), to keep it safe (spotting spam, abuse and attacks, and acting on reports), and to
-          fix and improve it. We don’t use your data for advertising and we don’t sell it.
+          To run Game Central for you (your account, communities, notifications and emails you’ve
+          asked for), to keep it safe (spotting spam, abuse and attacks, and acting on reports), and
+          to fix and improve it. We don’t use your data for advertising and we don’t sell it.
         </p>
       </Section>
       <Section title="Who sees it">
@@ -54,7 +54,7 @@ export default function PrivacyPolicyPage() {
           </li>
           <li>Community moderators see reports and applications sent to their community.</li>
           <li>
-            Services that help us run Magnox handle data for us: hosting, file storage, email
+            Services that help us run Game Central handle data for us: hosting, file storage, email
             delivery and payments (Stripe). They can only use it to provide that service.
           </li>
           <li>We share data with authorities only when the law requires it.</li>
@@ -62,9 +62,9 @@ export default function PrivacyPolicyPage() {
       </Section>
       <Section title="Cookies" id="cookies">
         <p>
-          Magnox uses a handful of its own cookies and no advertising or tracking cookies. The first
-          time you visit we ask whether you allow the optional one; you can change your mind any
-          time.
+          Game Central uses a handful of its own cookies and no advertising or tracking cookies. The
+          first time you visit we ask whether you allow the optional one; you can change your mind
+          any time.
         </p>
         <p>
           <strong>Always on</strong>, because the site needs them or you asked for them:
@@ -128,8 +128,8 @@ export default function PrivacyPolicyPage() {
       </Section>
       <Section title="Children">
         <p>
-          Magnox isn’t for children under 13. If we learn an account belongs to someone younger, we
-          delete it.
+          Game Central isn’t for children under 13. If we learn an account belongs to someone
+          younger, we delete it.
         </p>
       </Section>
       <Section title="Changes">

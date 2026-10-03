@@ -6,12 +6,12 @@ import { admin } from 'better-auth/plugins/admin';
 import { twoFactor } from 'better-auth/plugins/two-factor';
 import { username } from 'better-auth/plugins/username';
 import { eq } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
-import { env, platformAdminEmails } from '@magnox/core/env';
-import { logger } from '@magnox/core/logger';
-import { renderEmail, sendMail } from '@magnox/core/mail';
-import { cacheRedis } from '@magnox/core/redis';
-import { DEFAULT_PREFS } from '@magnox/shared';
+import { db, schema } from '@gamecentral/db';
+import { env, platformAdminEmails } from '@gamecentral/core/env';
+import { logger } from '@gamecentral/core/logger';
+import { renderEmail, sendMail } from '@gamecentral/core/mail';
+import { cacheRedis } from '@gamecentral/core/redis';
+import { DEFAULT_PREFS } from '@gamecentral/shared';
 import { clampName, userInputProblem } from './user-input';
 
 export const USERNAME_RE = /^[a-zA-Z0-9_.]{3,24}$/;
@@ -50,7 +50,7 @@ function createAuth<P extends BetterAuthPlugin[]>(extraPlugins: P) {
   const e = env();
   const redis = cacheRedis();
   return betterAuth({
-    appName: 'Magnox',
+    appName: 'Game Central',
     baseURL: e.APP_URL,
     secret: e.BETTER_AUTH_SECRET,
     trustedOrigins: [e.APP_URL],
@@ -105,10 +105,10 @@ function createAuth<P extends BetterAuthPlugin[]>(extraPlugins: P) {
       sendResetPassword: async ({ user, url }) => {
         const { text, html } = renderEmail({
           heading: 'Reset your password',
-          body: `Hi ${user.name}, someone asked to reset the password for your Magnox account. If this wasn't you, you can ignore this email.`,
+          body: `Hi ${user.name}, someone asked to reset the password for your Game Central account. If this wasn't you, you can ignore this email.`,
           action: { label: 'Choose a new password', url },
         });
-        await sendMail({ to: user.email, subject: 'Reset your Magnox password', text, html });
+        await sendMail({ to: user.email, subject: 'Reset your Game Central password', text, html });
       },
     },
     emailVerification: {
@@ -119,10 +119,10 @@ function createAuth<P extends BetterAuthPlugin[]>(extraPlugins: P) {
       sendVerificationEmail: async ({ user, url }) => {
         const { text, html } = renderEmail({
           heading: 'Confirm your email',
-          body: 'Welcome to Magnox! Confirm your email address to finish setting up your account.',
+          body: 'Welcome to Game Central! Confirm your email address to finish setting up your account.',
           action: { label: 'Confirm email', url },
         });
-        await sendMail({ to: user.email, subject: 'Confirm your Magnox email', text, html });
+        await sendMail({ to: user.email, subject: 'Confirm your Game Central email', text, html });
       },
     },
     socialProviders: socialProviders(),
@@ -144,17 +144,17 @@ function createAuth<P extends BetterAuthPlugin[]>(extraPlugins: P) {
       deleteUser: { enabled: false },
       changeEmail: {
         enabled: true,
-        // A confirmed address approves the change first, so only its owner can have Magnox
+        // A confirmed address approves the change first, so only its owner can have Game Central
         // email the new one (accounts without one still get a link at the new address).
         sendChangeEmailConfirmation: async ({ user, newEmail, url }) => {
           const { text, html } = renderEmail({
             heading: 'Approve your new email address',
-            body: `Someone asked to change the email address of your Magnox account to ${newEmail}. If that was you, approve the change and we'll send a link to the new address. If it wasn't, ignore this email and change your password.`,
+            body: `Someone asked to change the email address of your Game Central account to ${newEmail}. If that was you, approve the change and we'll send a link to the new address. If it wasn't, ignore this email and change your password.`,
             action: { label: 'Approve the change', url },
           });
           await sendMail({
             to: user.email,
-            subject: 'Approve your Magnox email change',
+            subject: 'Approve your Game Central email change',
             text,
             html,
           });
@@ -203,7 +203,7 @@ function createAuth<P extends BetterAuthPlugin[]>(extraPlugins: P) {
         maxUsernameLength: 24,
         usernameValidator: (name) => USERNAME_RE.test(name),
       }),
-      twoFactor({ issuer: 'Magnox' }),
+      twoFactor({ issuer: 'Game Central' }),
       admin({ defaultRole: 'user', adminRoles: ['admin'] }),
       // With Turnstile keys set, sign-up, sign-in and password resets need a solved challenge.
       ...(e.TURNSTILE_SITE_KEY && e.TURNSTILE_SECRET_KEY

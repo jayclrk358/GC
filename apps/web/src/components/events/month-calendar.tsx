@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import type { EventOccurrenceView } from '@magnox/core';
-import { daysInMonth, weekdayOf } from '@magnox/shared';
+import type { EventOccurrenceView } from '@gamecentral/core';
+import { daysInMonth, weekdayOf } from '@gamecentral/shared';
 import { cn } from '@/lib/utils';
 import { dayKey, formatClock, formatDay, type ClockOptions } from '@/lib/event-format';
 import { occurrenceHref } from './event-list';

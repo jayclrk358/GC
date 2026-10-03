@@ -53,10 +53,10 @@ test('webhooks and the public API', async ({ page, browser }) => {
   expect(ping!.body!.community.slug).toBe(slug);
   const { raw, ...headers } = ping!.headers;
   const expected = createHmac('sha256', secret)
-    .update(`${headers['x-magnox-timestamp']}.${raw}`)
+    .update(`${headers['x-gamecentral-timestamp']}.${raw}`)
     .digest('hex');
-  expect(headers['x-magnox-signature']).toBe(`sha256=${expected}`);
-  expect(headers['x-magnox-event']).toBe('ping');
+  expect(headers['x-gamecentral-signature']).toBe(`sha256=${expected}`);
+  expect(headers['x-gamecentral-event']).toBe('ping');
 
   // Someone joining is sent (through the worker).
   const member = await joinAsMember(browser, slug, 'hooked');

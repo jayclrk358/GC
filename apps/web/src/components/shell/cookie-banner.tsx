@@ -24,7 +24,7 @@ export function openCookieSettings(): void {
 }
 
 /**
- * Asks first-time visitors about cookies: everything, or only what Magnox needs to work. Not a
+ * Asks first-time visitors about cookies: everything, or only what Game Central needs to work. Not a
  * dialog: the page stays usable around it, and it's a labelled region screen readers can find.
  */
 export function CookieBanner({ initialChoice }: { initialChoice: CookieChoice | null }) {

@@ -1,4 +1,4 @@
-import { channelUnreads, listVisibleChannels } from '@magnox/core';
+import { channelUnreads, listVisibleChannels } from '@gamecentral/core';
 import { communityJson } from '@/lib/api';
 
 /** Unread and mention counts for every text channel (used after reconnecting). */

@@ -15,7 +15,7 @@ import {
   VideoOff,
   ZoomOut,
 } from 'lucide-react';
-import { isVideoKey } from '@magnox/shared';
+import { isVideoKey } from '@gamecentral/shared';
 import { usePrefs } from '@/components/shell/prefs-provider';
 import { downloadHref, mediaUrl } from '@/lib/media';
 import { cn } from '@/lib/utils';

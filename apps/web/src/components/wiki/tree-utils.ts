@@ -1,4 +1,4 @@
-import type { WikiTreeNode } from '@magnox/core';
+import type { WikiTreeNode } from '@gamecentral/core';
 
 /** Flatten the page tree into indented options, leaving out `excludeId` and everything under it. */
 export function parentOptions(

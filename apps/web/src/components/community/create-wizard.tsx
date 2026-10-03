@@ -10,8 +10,8 @@ import {
   REGIONS,
   slugify,
   type CommunityTemplate,
-} from '@magnox/shared';
-import { PRESET_KEYS, THEME_PRESETS, type PresetKey } from '@magnox/shared/theme-values';
+} from '@gamecentral/shared';
+import { PRESET_KEYS, THEME_PRESETS, type PresetKey } from '@gamecentral/shared/theme-values';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Input, Select } from '@/components/ui/input';
@@ -64,7 +64,7 @@ export function CreateWizard({ games }: { games: { id: string; name: string }[] 
     gameId: '',
     tags: '',
     template: 'fanhub' as CommunityTemplate,
-    preset: 'magnox' as PresetKey,
+    preset: 'gamecentral' as PresetKey,
     visibility: 'public' as 'public' | 'unlisted' | 'private',
     joinMode: 'open' as 'open' | 'apply' | 'invite',
     region: 'global',

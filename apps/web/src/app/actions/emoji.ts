@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createEmoji, deleteEmoji, renameEmoji } from '@magnox/core';
+import { createEmoji, deleteEmoji, renameEmoji } from '@gamecentral/core';
 import { runAction } from '@/lib/action';
 import { ctxFor } from './_ctx';
 

@@ -2,7 +2,7 @@
 
 import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-import { replyToMyFeedback, submitFeedback } from '@magnox/core';
+import { replyToMyFeedback, submitFeedback } from '@gamecentral/core';
 import { getUser } from '@/lib/auth';
 import { runAction } from '@/lib/action';
 

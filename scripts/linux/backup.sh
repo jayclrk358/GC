@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Back up a Magnox server: the database, uploaded files (when they're stored on this machine) and
+# Back up a Game Central server: the database, uploaded files (when they're stored on this machine) and
 # .env (its secrets are needed to restore). Run from anywhere; backups go to backups/ in the
-# Magnox folder (or BACKUP_DIR), one folder per run, and the newest BACKUP_KEEP (14) are kept.
+# Game Central folder (or BACKUP_DIR), one folder per run, and the newest BACKUP_KEEP (14) are kept.
 #
 #   bash scripts/linux/backup.sh                  back up now
 #   bash scripts/linux/backup.sh --install-cron   also back up every night at 03:17
 #
 # Optional, in .env or the environment:
-#   BACKUP_DIR=/srv/magnox-backups   where backups go
+#   BACKUP_DIR=/srv/gamecentral-backups   where backups go
 #   BACKUP_KEEP=30                   how many to keep
 #   BACKUP_RCLONE_REMOTE=r2:backups  also copy each backup off the server with rclone
 # Restore with scripts/linux/restore.sh. Redis isn't backed up: it only holds caches and queues.
@@ -26,7 +26,7 @@ if [ "${1:-}" = "--install-cron" ]; then
   fi
 fi
 
-[ -f .env ] || { echo "No .env here. Is this the Magnox folder?" >&2; exit 1; }
+[ -f .env ] || { echo "No .env here. Is this the Game Central folder?" >&2; exit 1; }
 setting() { sed -n "s/^$1=//p" .env | tail -1 | sed 's/^"\(.*\)"$/\1/'; }
 dir="${BACKUP_DIR:-$(setting BACKUP_DIR)}"; dir="${dir:-$root/backups}"
 keep="${BACKUP_KEEP:-$(setting BACKUP_KEEP)}"; keep="${keep:-14}"
@@ -45,7 +45,7 @@ dump_opts=(--no-owner --no-privileges)
 if [ -n "$external_db" ]; then
   docker run --rm -i postgres:16-alpine pg_dump "${dump_opts[@]}" "$external_db" | gzip -6 > "$out/db.sql.gz"
 else
-  docker compose exec -T postgres pg_dump -U magnox -d magnox "${dump_opts[@]}" | gzip -6 > "$out/db.sql.gz"
+  docker compose exec -T postgres pg_dump -U gamecentral -d gamecentral "${dump_opts[@]}" | gzip -6 > "$out/db.sql.gz"
 fi
 gzip -t "$out/db.sql.gz"
 echo "  database   $(du -h "$out/db.sql.gz" | cut -f1)"

@@ -13,7 +13,7 @@ import {
   MAX_PROFILE_LANGUAGES,
   PLATFORMS,
   PLAYSTYLES,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Input, Select, Textarea } from '@/components/ui/input';

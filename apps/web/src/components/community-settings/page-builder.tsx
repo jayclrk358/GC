@@ -23,8 +23,8 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { ArrowDown, ArrowUp, ExternalLink, GripVertical, Pencil, Plus, Trash2 } from 'lucide-react';
-import type { Block, BlockType } from '@magnox/shared';
-import { BLOCK_TYPES } from '@magnox/shared/blocks-values';
+import type { Block, BlockType } from '@gamecentral/shared';
+import { BLOCK_TYPES } from '@gamecentral/shared/blocks-values';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import {

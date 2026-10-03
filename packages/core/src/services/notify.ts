@@ -1,5 +1,5 @@
 import { and, desc, eq, gt, inArray, isNull, lt, or, sql } from 'drizzle-orm';
-import { db, schema, type NotificationType } from '@magnox/db';
+import { db, schema, type NotificationType } from '@gamecentral/db';
 import {
   applyTimeout,
   canPingRole,
@@ -12,7 +12,7 @@ import {
   Permission,
   type Overwrite,
   type RichNode,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import { z } from 'zod';
 import {
   channelPermissions,
@@ -132,7 +132,7 @@ export async function deliver(items: NotificationInput[]): Promise<void> {
         .to(rooms.user(n.userId))
         .emit('notification:new', { id: n.id, type: n.type, url: n.url, data: n.data });
     }
-    // And to their phones and computers, for people not on Magnox right now.
+    // And to their phones and computers, for people not on Game Central right now.
     await queuePush(
       batch.map((n) => ({
         userId: n.userId,
@@ -397,7 +397,7 @@ export async function maybeEmail(
   const { text, html } = renderEmail({
     heading: subject,
     body,
-    action: { label: 'Open in Magnox', url: link },
+    action: { label: 'Open in Game Central', url: link },
   });
   await sendMail({ to: user.email, subject, text, html });
 }

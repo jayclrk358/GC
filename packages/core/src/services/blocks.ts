@@ -1,6 +1,6 @@
 import { and, asc, count, eq, inArray, isNull } from 'drizzle-orm';
 import { generateKeyBetween, generateNKeysBetween } from 'fractional-indexing';
-import { db, schema } from '@magnox/db';
+import { db, schema } from '@gamecentral/db';
 import {
   BLOCK_TYPES,
   blockConfigSchemas,
@@ -10,7 +10,7 @@ import {
   sanitizeDoc,
   type Block,
   type BlockType,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import { z } from 'zod';
 import { requirePerm, type MemberContext } from '../access';
 import { AppError, notFound } from '../errors';

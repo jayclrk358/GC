@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { listGames } from '@magnox/core';
+import { listGames } from '@gamecentral/core';
 import { loadCommunityForSettings } from '@/lib/community';
 import { PageHeader } from '@/components/ui/misc';
 import { GeneralSettings } from '@/components/community-settings/general-settings';

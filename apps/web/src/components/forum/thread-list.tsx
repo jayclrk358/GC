@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { BarChart3, CheckCircle2, Lock, MessageSquare, Pin } from 'lucide-react';
-import type { ThreadListItem } from '@magnox/core';
+import type { ThreadListItem } from '@gamecentral/core';
 import { relativeTime } from '@/lib/format';
 import { Avatar, Badge } from '@/components/ui/misc';
 import { VoteButtons } from './vote-buttons';

@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
-import { ALL_PERMISSIONS, has, Permission, type AutomodRule } from '@magnox/shared';
+import { db, schema } from '@gamecentral/db';
+import { ALL_PERMISSIONS, has, Permission, type AutomodRule } from '@gamecentral/shared';
 import { z } from 'zod';
 import {
   channelPermissions,

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { upcomingEvents } from '@magnox/core';
-import type { BlockConfig } from '@magnox/shared';
+import { upcomingEvents } from '@gamecentral/core';
+import type { BlockConfig } from '@gamecentral/shared';
 import type { LoadedCommunity } from '@/lib/community';
 import { getPrefs } from '@/lib/prefs';
 import { getViewerTimeZone } from '@/lib/timezone';

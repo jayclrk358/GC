@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import type { ServerStatus } from '@magnox/shared';
+import type { ServerStatus } from '@gamecentral/shared';
 import { StatusDot, useLiveStatus } from './server-status';
 
 /** One compact line in the home page's "live now" panel. */

@@ -1,10 +1,10 @@
 import { boolean, index, jsonb, pgTable, text, uuid } from 'drizzle-orm/pg-core';
-import { FEEDBACK_KINDS, FEEDBACK_STATUSES } from '@magnox/shared';
+import { FEEDBACK_KINDS, FEEDBACK_STATUSES } from '@gamecentral/shared';
 import { users } from './auth';
 import { communities } from './communities';
 import { createdAt, tz } from './_helpers';
 
-/** A paid plan Magnox gave a community for free: for a while, or for good (no expiry). */
+/** A paid plan Game Central gave a community for free: for a while, or for good (no expiry). */
 export const planGifts = pgTable(
   'plan_gifts',
   {
@@ -38,7 +38,7 @@ export const adminActions = pgTable(
   (t) => [index('admin_actions_created_idx').on(t.createdAt)],
 );
 
-/** Something someone told Magnox's team: a bug, an idea or request, a question. */
+/** Something someone told Game Central's team: a bug, an idea or request, a question. */
 export const feedback = pgTable(
   'feedback',
   {
@@ -70,7 +70,7 @@ export const feedbackMessages = pgTable(
       .notNull()
       .references(() => feedback.id, { onDelete: 'cascade' }),
     authorId: text('author_id').references(() => users.id, { onDelete: 'set null' }),
-    /** Written by Magnox staff (shown as "Magnox team" to the person who sent it). */
+    /** Written by Game Central staff (shown as "Game Central team" to the person who sent it). */
     fromStaff: boolean('from_staff').notNull().default(false),
     /** Staff-only note, never shown to the person who sent it. */
     internal: boolean('internal').notNull().default(false),

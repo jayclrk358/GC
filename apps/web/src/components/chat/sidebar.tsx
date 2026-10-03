@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { ChevronDown, Hash, Plus, Volume2 } from 'lucide-react';
-import { mentionsMe } from '@magnox/shared';
+import { mentionsMe } from '@gamecentral/shared';
 import { useRooms, useUserEvents } from '@/lib/realtime';
 import { useStored } from '@/lib/use-stored';
 import { cn } from '@/lib/utils';

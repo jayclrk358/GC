@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Creates .env for hosting Magnox with Docker (docker-compose.yml + docker-compose.prod.yml).
+# Creates .env for hosting Game Central with Docker (docker-compose.yml + docker-compose.prod.yml).
 #
 #   scripts/linux/server-env.sh                    this machine only: https://localhost
 #   scripts/linux/server-env.sh 192.168.1.50       your network: https://192.168.1.50
-#   scripts/linux/server-env.sh magnox.example.com a domain on the internet (real certificates)
+#   scripts/linux/server-env.sh gamecentral.example.com a domain on the internet (real certificates)
 #
 # Secrets are random. Run it once, before the first start: the database password is fixed when
 # the database is first created.
@@ -36,7 +36,7 @@ vapid_private=$(printf '%s\n' "$vapid_key" | openssl ec -outform DER 2>/dev/null
 vapid_public=$(printf '%s\n' "$vapid_key" | openssl ec -pubout -outform DER 2>/dev/null | tail -c 65 | base64 | tr '+/' '-_' | tr -d '=\n')
 
 cat > .env <<ENV
-# Magnox server settings (created by scripts/linux/server-env.sh). Keep this file private.
+# Game Central server settings (created by scripts/linux/server-env.sh). Keep this file private.
 # Plain \`docker compose\` commands use the server overrides too, and start voice (LiveKit).
 COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml
 COMPOSE_PROFILES=voice
@@ -56,7 +56,7 @@ VAPID_SUBJECT=mailto:admin@$site
 # Email. Empty sends everything to the built-in Mailpit inbox (http://localhost:8025 on the
 # server). For real email: SMTP_URL=smtps://user:password@smtp.example.com:465
 SMTP_URL=
-EMAIL_FROM="Magnox <no-reply@$site>"
+EMAIL_FROM="Game Central <no-reply@$site>"
 # REQUIRE_EMAIL_VERIFICATION=true
 
 # Optional sign-in providers and the Cloudflare Turnstile check on sign-up, sign-in and votes

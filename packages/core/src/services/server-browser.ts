@@ -12,8 +12,8 @@ import {
   sql,
   type SQL,
 } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
-import { serverSearchSchema, type ServerSearch } from '@magnox/shared';
+import { db, schema } from '@gamecentral/db';
+import { serverSearchSchema, type ServerSearch } from '@gamecentral/shared';
 import { notFound } from '../errors';
 import { queryServerViews, type ServerView } from './servers';
 import { recentVoteCount } from './history';

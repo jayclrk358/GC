@@ -1,5 +1,5 @@
 import { and, asc, eq, gte, inArray, ne, sql } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
+import { db, schema } from '@gamecentral/db';
 import {
   ALL_PERMISSIONS,
   has,
@@ -8,7 +8,7 @@ import {
   parsePermissions,
   Permission,
   roleInputSchema,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import { z } from 'zod';
 import { channelPermissionsMany, requirePerm, type MemberContext } from '../access';
 import { accessChanged } from '../emitter';

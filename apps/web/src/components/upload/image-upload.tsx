@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { ImagePlus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { VARIANTS_BY_PURPOSE } from '@magnox/shared';
+import { VARIANTS_BY_PURPOSE } from '@gamecentral/shared';
 import { imgSources, mediaUrl } from '@/lib/media';
 import { cn } from '@/lib/utils';
 

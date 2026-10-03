@@ -1,10 +1,18 @@
-# Magnox
+# Game Central
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/brand/game-central-logo-dark.svg">
+  <img alt="Game Central" src="docs/brand/game-central-logo.svg" width="420">
+</picture>
 
 Community hubs for games and game servers. Anyone can create a community with a fully
 customisable landing page, forum, wiki, events, real-time chat and live game server status.
-Magnox is built around two ideas: **deep customisation** and **first-class accessibility**.
+Game Central is built around two ideas: **deep customisation** and **first-class accessibility**.
 
 > Status: under active development. See [Roadmap](#roadmap) for what is done.
+
+The logo files (the icon, and the full logo for light and dark backgrounds, as SVG and PNG) are in
+[`docs/brand`](docs/brand).
 
 ## Highlights
 
@@ -31,7 +39,7 @@ Magnox is built around two ideas: **deep customisation** and **first-class acces
 apps/web          Next.js 16 (App Router): UI, route handlers, server actions
 apps/realtime     Socket.IO server: authenticated room subscriptions, presence, typing
 apps/worker       BullMQ workers: game server polling, rollups, notifications, maintenance
-apps/desktop      Magnox for Windows: the website in its own window (Electron, built with npm)
+apps/desktop      Game Central for Windows: the website in its own window (Electron, built with npm)
 packages/shared   Isomorphic domain logic: permissions, theme tokens + contrast, prefs, rich text
 packages/db       Drizzle ORM schema, migrations and seed data (Postgres 16)
 packages/core     Server-side services: access control, rate limits, storage, email, queues
@@ -79,7 +87,7 @@ in the project folder:
 1. Double-click **`windows-setup.cmd`** (once). It checks the tools, installs pnpm if needed,
    creates `.env` with a random secret, installs packages, starts Postgres and Redis in Docker,
    and loads the demo data.
-2. Double-click **`windows-start.cmd`** whenever you want to run Magnox. It opens
+2. Double-click **`windows-start.cmd`** whenever you want to run Game Central. It opens
    http://localhost:3000 when it's ready; press Ctrl+C in its window to stop.
 
 The scripts live in `scripts/windows/`. To do the same by hand in PowerShell: copy
@@ -96,11 +104,11 @@ handles HTTPS and serves uploads from a separate, cookie-less address. You need
 `openssl`.
 
 ```bash
-git clone -b claude/nice-davinci-h3tk5l https://github.com/jayclrk358/Magnox.git magnox
-cd magnox
+git clone -b claude/nice-davinci-h3tk5l https://github.com/jayclrk358/Magnox.git gamecentral
+cd gamecentral
 scripts/linux/server-env.sh                     # just this machine: https://localhost
 scripts/linux/server-env.sh 192.168.1.50        # or: other devices on your network (your IP)
-scripts/linux/server-env.sh magnox.example.com  # or: a domain on the internet
+scripts/linux/server-env.sh gamecentral.example.com  # or: a domain on the internet
 docker compose up -d --build                    # first build takes a few minutes
 ```
 
@@ -111,7 +119,7 @@ keeps the databases off the network and restarts everything after a reboot.
 - **By IP address:** Caddy signs its own certificate, so each browser warns once; continue past
   the warning, or install Caddy's root certificate on your devices
   (`docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt .`). Uploads use port 8443.
-- **With a domain:** point DNS records for `magnox.example.com` and `media.magnox.example.com` at
+- **With a domain:** point DNS records for `gamecentral.example.com` and `media.gamecentral.example.com` at
   the server and open ports 80 and 443. Caddy gets Let's Encrypt certificates automatically.
 - **Email:** with `SMTP_URL` empty, mail (sign-up confirmations, password resets) lands in
   Mailpit at http://localhost:8025 on the server. Set `SMTP_URL` in `.env` for real email.
@@ -119,10 +127,13 @@ keeps the databases off the network and restarts everything after a reboot.
   `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` in `.env`, then `docker compose up -d`. Sign-up,
   sign-in, password resets and server votes then ask for the check.
 - **Update:** `git pull && docker compose up -d --build` (migrations run automatically).
+- **Set up before the rename to Game Central?** Run `scripts/linux/move-to-gamecentral.sh` once
+  after `git pull` instead: it moves the database, uploads and certificates to the new names
+  (keeping the old copies until you remove them) and starts the site again.
 - **Logs / stop:** `docker compose logs -f web worker`, `docker compose down` (data stays in
   Docker volumes).
-- **Backup:** `docker compose exec postgres pg_dump -U magnox magnox > magnox.sql`, plus the
-  `magnox_media` volume (uploads).
+- **Backup:** `docker compose exec postgres pg_dump -U gamecentral gamecentral > gamecentral.sql`, plus the
+  `gamecentral_media` volume (uploads).
 - **Hosted Postgres or Redis (optional):** set `EXTERNAL_DATABASE_URL` (and, for Redis,
   `EXTERNAL_REDIS_QUEUE_URL` / `EXTERNAL_REDIS_CACHE_URL`) in `.env`, then add
   `-f docker-compose.external.yml` to your `docker compose` command; the bundled containers are
@@ -199,7 +210,7 @@ Without the keys, voice channels say that voice isn't set up yet.
 
 ## Admin console
 
-Magnox staff look after the whole site at **/admin** (it's in the account menu for staff; for
+Game Central staff look after the whole site at **/admin** (it's in the account menu for staff; for
 everyone else the page doesn't exist). There are three staff roles:
 
 | Role      | Who                                         | Can                                                                       |
@@ -216,9 +227,9 @@ Nobody can change the account of someone at their own level or above. The consol
   follow what happens to theirs at /feedback.
 - **People:** search by name, username or email; change their display name or username, clear
   their profile text, picture or banner, or mark their email as confirmed; sign someone out
-  everywhere, or ban them from Magnox (for a set time or for good), which also signs them out.
+  everywhere, or ban them from Game Central (for a set time or for good), which also signs them out.
   Admins can also delete an account, optionally with everything it wrote.
-- **Posts and messages:** find anything written on Magnox by words, author or community, and
+- **Posts and messages:** find anything written on Game Central by words, author or community, and
   remove what breaks the rules (with a reason). Removals show in the community's audit log too.
 - **Reports:** open reports from every community, to step in where a community doesn't.
 - **Communities:** search, and for each one (admins and the owner):
@@ -232,22 +243,22 @@ Nobody can change the account of someone at their own level or above. The consol
 
 **Making yourself an admin:** put your email in `PLATFORM_ADMIN_EMAILS` to be the owner (once
 you've confirmed it), or after signing up run
-`pnpm --filter @magnox/db admin:grant you@example.com` (on the server with Docker:
-`docker compose run --rm migrate pnpm --filter @magnox/db admin:grant you@example.com`). Add
+`pnpm --filter @gamecentral/db admin:grant you@example.com` (on the server with Docker:
+`docker compose run --rm migrate pnpm --filter @gamecentral/db admin:grant you@example.com`). Add
 `--revoke` to take it away. Then add the rest of your team from the Staff page.
 
 ## Notifications, search and installing
 
-- **Push notifications** reach phones and computers even with Magnox closed (not while you're
-  using Magnox somewhere else). People turn them on per device in Settings → Notifications. On
-  iPhone and iPad they work once Magnox is added to the Home Screen.
+- **Push notifications** reach phones and computers even with Game Central closed (not while you're
+  using Game Central somewhere else). People turn them on per device in Settings → Notifications. On
+  iPhone and iPad they work once Game Central is added to the Home Screen.
   - New servers set up with `scripts/linux/server-env.sh` get push keys automatically. For a
-    server set up before, run `bash scripts/linux/push-keys.sh` in the Magnox folder, then
+    server set up before, run `bash scripts/linux/push-keys.sh` in the Game Central folder, then
     `docker compose up -d`. Elsewhere, set `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` (make a pair
     with `npx web-push generate-vapid-keys`). Without keys the push setting is hidden.
 - **Email round-ups:** people can ask for a daily or weekly email of notifications they haven't
   read (Settings → Notifications). It's only sent when there's something new.
-- **Install as an app:** Magnox has a web app manifest and icons, so browsers offer to install
+- **Install as an app:** Game Central has a web app manifest and icons, so browsers offer to install
   it (Chrome's install button, Safari's Add to Home Screen).
 - **Search engines and link previews:** `/sitemap.xml` lists public communities and listed
   servers, `/robots.txt` keeps search engines out of settings and sign-in pages, and links to a
@@ -256,7 +267,7 @@ you've confirmed it), or after signing up run
 ## Terms, privacy and your data
 
 - **Terms of Service** (`/legal/terms`) and **Privacy Policy** (`/legal/privacy`) are linked from
-  the footer and the sign-up form. They're written for a typical Magnox site; read them through
+  the footer and the sign-up form. They're written for a typical Game Central site; read them through
   and adjust them for your own (edit `apps/web/src/app/legal/*/page.tsx`). Set `CONTACT_EMAIL` to
   show an address for questions.
 - **Agreeing:** signing up asks people to confirm they're 13 or older and agree. Anyone who hasn't
@@ -265,7 +276,7 @@ you've confirmed it), or after signing up run
   `packages/shared/src/legal.ts`.
 - **18+ communities:** communities marked "Mature content (18+)" ask visitors to confirm they're
   adults before showing anything.
-- **Download your data:** Account settings → Your data gives a JSON file of everything Magnox keeps
+- **Download your data:** Account settings → Your data gives a JSON file of everything Game Central keeps
   about you.
 - **Delete your account:** Account settings → Delete account removes your profile, settings,
   sign-in methods and memberships and signs you out everywhere. What you wrote stays as "Deleted
@@ -290,7 +301,7 @@ you've confirmed it), or after signing up run
 Communities on the Pro plan can show their pages on their own address (Settings → Custom
 domain): the owner enters it, adds a CNAME record pointing at the site and a TXT record that
 proves it's theirs, then checks. Once verified, Caddy fetches a certificate on the first visit
-(on-demand TLS; it asks Magnox first, so only verified domains get one). Visitors there see the
+(on-demand TLS; it asks Game Central first, so only verified domains get one). Visitors there see the
 community's pages; signing in, settings and the rest of the site send them to the main address.
 
 - Nothing to set up on a server made with `scripts/linux/server-env.sh`: ports 80 and 443 already
@@ -320,7 +331,7 @@ Both are off until configured, and their code isn't loaded until then.
 - **OpenTelemetry:** set `OTEL_EXPORTER_OTLP_ENDPOINT` (an OTLP/HTTP collector, e.g. Grafana
   Alloy, the OpenTelemetry Collector, Honeycomb or Jaeger) to export traces: Next.js's own spans
   for pages, route handlers and server actions, and a span for each worker job. Services are
-  named `magnox-web`, `magnox-realtime` and `magnox-worker`; `OTEL_TRACES_SAMPLE_RATE` keeps a
+  named `gamecentral-web`, `gamecentral-realtime` and `gamecentral-worker`; `OTEL_TRACES_SAMPLE_RATE` keeps a
   share of them.
 
 ## Backups
@@ -329,7 +340,7 @@ Both are off until configured, and their code isn't loaded until then.
 server rather than in S3/R2) and `.env` into `backups/<date>`, keeping the newest 14.
 
 - `bash scripts/linux/backup.sh --install-cron` also backs up every night at 03:17.
-- Set `BACKUP_RCLONE_REMOTE` (e.g. `r2:magnox-backups`, after `rclone config`) to copy each backup
+- Set `BACKUP_RCLONE_REMOTE` (e.g. `r2:gamecentral-backups`, after `rclone config`) to copy each backup
   off the server, and `BACKUP_KEEP` or `BACKUP_DIR` to change how many are kept and where.
 - Restore with `bash scripts/linux/restore.sh backups/<date>`: it stops the site, replaces the
   database (in one transaction, so a bad backup changes nothing) and the uploads, and starts it
@@ -337,9 +348,9 @@ server rather than in S3/R2) and `.env` into `backups/<date>`, keeping the newes
 - Backups hold the site's secrets (`.env`), so keep them private. With uploads in S3 or R2, turn on
   the bucket's own versioning or replication too.
 
-## Magnox for Windows
+## Game Central for Windows
 
-`apps/desktop` is a Windows app that shows your Magnox site in its own window. None of the site is
+`apps/desktop` is a Windows app that shows your Game Central site in its own window. None of the site is
 bundled into it, so **every update to the website appears in the app straight away**, with
 nothing to reinstall. It adds what a desktop app should have:
 
@@ -349,17 +360,17 @@ nothing to reinstall. It adds what a desktop app should have:
   and a right-click menu (copy, paste, copy link, save image).
 - Back and forward with Alt+← / Alt+→ or the mouse's side buttons, zoom with Ctrl+= / Ctrl+-,
   F11 for full screen. Press Alt for the menu.
-- It remembers its size and position, opens only one copy, and shows a "Can't reach Magnox"
+- It remembers its size and position, opens only one copy, and shows a "Can't reach Game Central"
   page that retries by itself when the site is down or you're offline.
 - Links to other sites open in your normal browser. Sign-in (Discord, Twitch, Steam) and Stripe
-  checkout stay in the app, since they send you back to Magnox.
+  checkout stay in the app, since they send you back to Game Central.
 
-**Getting the installer:** every push that changes `apps/desktop` builds `Magnox-Setup-<version>.exe`
+**Getting the installer:** every push that changes `apps/desktop` builds `GameCentral-Setup-<version>.exe`
 on GitHub (Actions → **Windows app** → the latest run → **Artifacts**). You can also start a build
 there by hand, optionally for another site address. To build it yourself on Windows:
 `cd apps/desktop`, `npm install`, `npm run dist`; the installer lands in `apps/desktop/release`.
 
-- **Which site it opens:** `magnoxUrl` in `apps/desktop/package.json`. People can point their copy
+- **Which site it opens:** `siteUrl` in `apps/desktop/package.json`. People can point their copy
   elsewhere from the app's menu (Alt → File → Server address…).
 - **Updating the app itself** is only needed for changes in `apps/desktop` (rare): raise
   `version` in its `package.json` and build again. The new installer updates the installed app in

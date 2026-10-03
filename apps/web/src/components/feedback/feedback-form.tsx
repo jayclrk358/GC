@@ -10,7 +10,7 @@ import {
   FEEDBACK_REPLY_MAX,
   FEEDBACK_TITLE_MAX,
   type FeedbackKind,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Input, Textarea } from '@/components/ui/input';
@@ -18,7 +18,7 @@ import { RadioCards } from '@/components/ui/radio-cards';
 import { FormError } from '@/components/auth/form-error';
 import { replyToFeedbackAction, submitFeedbackAction } from '@/app/actions/feedback';
 
-/** Tell Magnox's team about a bug, an idea or a question. */
+/** Tell Game Central's team about a bug, an idea or a question. */
 export function FeedbackForm({ from }: { from: string | null }) {
   const t = useTranslations('feedback');
   const router = useRouter();

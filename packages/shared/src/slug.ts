@@ -14,7 +14,7 @@ export const RESERVED_SLUGS = new Set([
   'home',
   'login',
   'logout',
-  'magnox',
+  'gamecentral',
   'media',
   'new',
   'notifications',

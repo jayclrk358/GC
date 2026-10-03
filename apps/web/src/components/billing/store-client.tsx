@@ -4,8 +4,13 @@ import * as React from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { Lock } from 'lucide-react';
-import { PAID_PLAN_IDS, type BillingInterval, type PaidPlanId, type PlanId } from '@magnox/shared';
-import type { PlanPrices } from '@magnox/core';
+import {
+  PAID_PLAN_IDS,
+  type BillingInterval,
+  type PaidPlanId,
+  type PlanId,
+} from '@gamecentral/shared';
+import type { PlanPrices } from '@gamecentral/core';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Field } from '@/components/ui/field';

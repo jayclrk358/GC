@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useFormatter, useTranslations } from 'next-intl';
 import { HoverCard } from 'radix-ui';
 import { Crown, Gamepad2, Users } from 'lucide-react';
-import type { ProfileCard } from '@magnox/core';
+import type { ProfileCard } from '@gamecentral/core';
 import { RoleBadge } from '@/components/community/role-badge';
 import { StyledName } from '@/components/community/role-decor';
 import { usePrefs } from '@/components/shell/prefs-provider';

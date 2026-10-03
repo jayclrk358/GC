@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { DEFAULT_PREFS, FONT_SCALES, LOCALE_NAMES, LOCALES, type Prefs } from '@magnox/shared';
+import { DEFAULT_PREFS, FONT_SCALES, LOCALE_NAMES, LOCALES, type Prefs } from '@gamecentral/shared';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Select } from '@/components/ui/input';

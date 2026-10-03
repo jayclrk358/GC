@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { listFlairs } from '@magnox/core';
-import { has, Permission } from '@magnox/shared';
+import { listFlairs } from '@gamecentral/core';
+import { has, Permission } from '@gamecentral/shared';
 import { loadCommunity, loadForumChannel } from '@/lib/community';
 import { ThreadComposer } from '@/components/forum/thread-composer';
 import { BackLink } from '@/components/ui/back-link';

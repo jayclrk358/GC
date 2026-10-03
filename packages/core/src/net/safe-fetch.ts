@@ -33,7 +33,7 @@ export interface SafeFetchOptions {
   onConnect?: (target: { host: string; ip: string }) => void | Promise<void>;
 }
 
-const USER_AGENT = 'MagnoxBot/1.0 (link previews; +https://github.com/magnox)';
+const USER_AGENT = 'GameCentralBot/1.0 (link previews; +https://gamecentral.app)';
 
 function assertFetchable(url: URL, allowPrivate: boolean) {
   if (url.protocol !== 'http:' && url.protocol !== 'https:') throw new BlockedAddressError();
@@ -192,7 +192,7 @@ export async function pinnedGet(
     {
       ...opts,
       strictSize: true,
-      userAgent: 'MagnoxBot/1.0 (server status)',
+      userAgent: 'GameCentralBot/1.0 (server status)',
       headers: name ? { host: target.port === 80 ? name : `${name}:${target.port}` } : {},
     },
     target.ip,

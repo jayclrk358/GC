@@ -27,8 +27,8 @@ describe('custom domains', () => {
 
   it('names the TXT record', () => {
     expect(domainVerifyRecord('forum.example.com', 'abc')).toEqual({
-      name: '_magnox.forum.example.com',
-      value: 'magnox-verify=abc',
+      name: '_gamecentral.forum.example.com',
+      value: 'gamecentral-verify=abc',
     });
   });
 

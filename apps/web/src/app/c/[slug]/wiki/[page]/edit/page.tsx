@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { canEditWiki } from '@magnox/core';
+import { canEditWiki } from '@gamecentral/core';
 import { WikiEditor } from '@/components/wiki/wiki-editor';
 import { parentOptions } from '@/components/wiki/tree-utils';
 import { loadWikiPage, loadWikiTree } from '../../_load';

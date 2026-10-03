@@ -33,19 +33,19 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: magnox
-          POSTGRES_PASSWORD: magnox
-          POSTGRES_DB: magnox
+          POSTGRES_USER: gamecentral
+          POSTGRES_PASSWORD: gamecentral
+          POSTGRES_DB: gamecentral
         ports: ['5432:5432']
         options: >-
-          --health-cmd "pg_isready -U magnox" --health-interval 5s --health-retries 10
+          --health-cmd "pg_isready -U gamecentral" --health-interval 5s --health-retries 10
       redis:
         image: redis:7-alpine
         ports: ['6379:6379']
     env:
       APP_URL: http://localhost:3000
       BETTER_AUTH_SECRET: ci-secret-0123456789abcdefghijklmnop
-      DATABASE_URL: postgres://magnox:magnox@localhost:5432/magnox
+      DATABASE_URL: postgres://gamecentral:gamecentral@localhost:5432/gamecentral
       REDIS_QUEUE_URL: redis://localhost:6379/0
       REDIS_CACHE_URL: redis://localhost:6379/1
       NEXT_PUBLIC_REALTIME_URL: http://localhost:3001
@@ -59,10 +59,10 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @magnox/web exec playwright install --with-deps chromium
+      - run: pnpm --filter @gamecentral/web exec playwright install --with-deps chromium
       - run: pnpm db:migrate
       - run: pnpm db:seed
-      - run: pnpm --filter @magnox/web build
+      - run: pnpm --filter @gamecentral/web build
         env:
           NODE_ENV: production
       - run: pnpm test:e2e

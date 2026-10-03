@@ -9,7 +9,7 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import type { RichNode } from '@magnox/shared';
+import type { RichNode } from '@gamecentral/shared';
 import { users } from './auth';
 import { channels } from './channels';
 import { communities } from './communities';

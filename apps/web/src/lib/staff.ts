@@ -1,6 +1,11 @@
 import 'server-only';
 import { notFound } from 'next/navigation';
-import { platformAdminFor, staffCan, type PlatformAdmin, type StaffAbility } from '@magnox/core';
+import {
+  platformAdminFor,
+  staffCan,
+  type PlatformAdmin,
+  type StaffAbility,
+} from '@gamecentral/core';
 import { getUser } from './auth';
 
 /**

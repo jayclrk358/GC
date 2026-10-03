@@ -12,7 +12,7 @@ import {
   Server,
   type LucideIcon,
 } from 'lucide-react';
-import { exploreCommunities, listPublicServers, platformStats } from '@magnox/core';
+import { exploreCommunities, listPublicServers, platformStats } from '@gamecentral/core';
 import { Button } from '@/components/ui/button';
 import { CountUp } from '@/components/ui/count-up';
 import { CommunityCard } from '@/components/community/community-card';

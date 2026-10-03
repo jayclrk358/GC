@@ -29,10 +29,12 @@ describe('preferences', () => {
 
   it('works out which sound an event plays', () => {
     const base = { ...DEFAULT_PREFS };
-    expect(soundForEvent(base, 'mention')).toBe('magnox');
+    expect(soundForEvent(base, 'mention')).toBe('gamecentral');
     // Every message is opt-in.
     expect(soundForEvent(base, 'message')).toBeNull();
-    expect(soundForEvent({ ...base, soundEvents: { message: 'on' } }, 'message')).toBe('magnox');
+    expect(soundForEvent({ ...base, soundEvents: { message: 'on' } }, 'message')).toBe(
+      'gamecentral',
+    );
     expect(soundForEvent({ ...base, soundEvents: { mention: 'arcade' } }, 'mention')).toBe(
       'arcade',
     );
@@ -49,7 +51,7 @@ describe('preferences', () => {
       soundVolume: 300,
       soundEvents: { mention: 'crystal', nonsense: 'on' },
     });
-    expect(p.soundPack).toBe('magnox');
+    expect(p.soundPack).toBe('gamecentral');
     expect(p.soundVolume).toBe(60);
     expect(p.soundEvents).toEqual({});
     expect(

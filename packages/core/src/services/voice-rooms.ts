@@ -1,7 +1,7 @@
 import { RoomServiceClient } from 'livekit-server-sdk';
 import { and, eq } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
-import { has, Permission } from '@magnox/shared';
+import { db, schema } from '@gamecentral/db';
+import { has, Permission } from '@gamecentral/shared';
 import { channelPermissionsMany, getMemberContext, type ChannelRef } from '../access';
 import { env } from '../env';
 import { logger } from '../logger';

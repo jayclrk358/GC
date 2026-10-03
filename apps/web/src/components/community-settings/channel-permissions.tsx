@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { CHANNEL_SCOPED, Permission, type PermissionName } from '@magnox/shared';
+import { CHANNEL_SCOPED, Permission, type PermissionName } from '@gamecentral/shared';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Select } from '@/components/ui/input';

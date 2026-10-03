@@ -1,5 +1,5 @@
 import { and, desc, eq, gt, isNull, ne, or, lt, sql } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
+import { db, schema } from '@gamecentral/db';
 import { env } from '../env';
 import { logger } from '../logger';
 import { renderEmail, sendMail } from '../mail';
@@ -31,9 +31,9 @@ export function digestEmail(
     (i) => `• ${i.title}${i.community ? ` (${i.community})` : ''}\n  ${baseUrl}${i.url}`,
   );
   const more = total > items.length ? `\n…and ${total - items.length} more.` : '';
-  const body = `${period === 'daily' ? 'Since yesterday' : 'This week'} on Magnox:\n\n${lines.join('\n')}${more}\n\nYou can change or turn off these emails in your notification settings.`;
+  const body = `${period === 'daily' ? 'Since yesterday' : 'This week'} on Game Central:\n\n${lines.join('\n')}${more}\n\nYou can change or turn off these emails in your notification settings.`;
   return {
-    subject: `${heading} on Magnox`,
+    subject: `${heading} on Game Central`,
     ...renderEmail({
       heading,
       body,

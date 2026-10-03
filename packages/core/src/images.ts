@@ -9,7 +9,7 @@ import {
   randomToken,
   VARIANTS_BY_PURPOSE,
   variantKey,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import { badRequest } from './errors';
 
 export const UPLOAD_PURPOSES = {

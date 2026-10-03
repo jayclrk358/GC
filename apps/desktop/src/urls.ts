@@ -1,4 +1,4 @@
-// Where the app's window may go. Magnox itself opens in the window; so do the sign-in and payment
+// Where the app's window may go. Game Central itself opens in the window; so do the sign-in and payment
 // pages it sends you to (they send you straight back). Every other link opens in your browser.
 
 /** Sign-in (Discord, Google, Twitch, Steam) and payment (Stripe) pages. */
@@ -44,7 +44,7 @@ export function navigationFor(url: string, appOrigin: string): Navigation {
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
 
 /**
- * A server address as typed ("magnox.example.com", "https://magnox.example.com/c/foo") as the
+ * A server address as typed ("gamecentral.example.com", "https://gamecentral.example.com/c/foo") as the
  * site's origin, or null if it isn't usable. Plain http is only for this computer (testing).
  */
 export function serverOrigin(input: string): string | null {

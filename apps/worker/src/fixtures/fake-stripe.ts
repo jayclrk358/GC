@@ -1,6 +1,6 @@
 /**
  * A stand-in for Stripe, served by the fixture control server (set STRIPE_API_URL to
- * http://127.0.0.1:25591 in the app). It implements just the API calls Magnox makes, plus a
+ * http://127.0.0.1:25591 in the app). It implements just the API calls Game Central makes, plus a
  * fake Checkout page and billing portal that send signed webhooks back like Stripe does.
  *
  *   Prices (use these as the STRIPE_PRICE_* values): price_plus_month, price_plus_year,

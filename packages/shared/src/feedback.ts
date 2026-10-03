@@ -1,4 +1,4 @@
-// Feedback people send Magnox's team, shared by the database, the server and the forms.
+// Feedback people send Game Central's team, shared by the database, the server and the forms.
 
 export const FEEDBACK_KINDS = ['bug', 'idea', 'question', 'other'] as const;
 export type FeedbackKind = (typeof FEEDBACK_KINDS)[number];

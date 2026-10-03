@@ -1,4 +1,4 @@
-import { communityForDomain } from '@magnox/core';
+import { communityForDomain } from '@gamecentral/core';
 
 /**
  * Is this a community's verified domain? Caddy asks before getting a certificate for a domain

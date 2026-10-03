@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Turn on push notifications for an existing Magnox server: adds a Web Push key pair to .env
-# (once; it never replaces keys that are already there). Run from the Magnox folder, then
+# Turn on push notifications for an existing Game Central server: adds a Web Push key pair to .env
+# (once; it never replaces keys that are already there). Run from the Game Central folder, then
 # restart:   bash scripts/linux/push-keys.sh && docker compose up -d
 set -euo pipefail
 cd "$(dirname "$0")/../.."

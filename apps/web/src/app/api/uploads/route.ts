@@ -1,5 +1,11 @@
-import { checkUploadAllowed, isAppError, isUploadPurpose, logger, saveUpload } from '@magnox/core';
-import { MAX_PLAN_LIMITS } from '@magnox/shared';
+import {
+  checkUploadAllowed,
+  isAppError,
+  isUploadPurpose,
+  logger,
+  saveUpload,
+} from '@gamecentral/core';
+import { MAX_PLAN_LIMITS } from '@gamecentral/shared';
 import { getUser } from '@/lib/auth';
 
 /** The biggest upload any plan allows, plus room for the form around it (and a video's still). */

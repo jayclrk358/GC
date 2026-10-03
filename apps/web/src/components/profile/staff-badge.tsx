@@ -1,6 +1,6 @@
 import { useTranslations } from 'next-intl';
 import { Shield, ShieldCheck, type LucideIcon } from 'lucide-react';
-import type { PublicStaffRole } from '@magnox/core';
+import type { PublicStaffRole } from '@gamecentral/core';
 import { cn } from '@/lib/utils';
 
 const STYLE: Record<PublicStaffRole, { icon: LucideIcon; className: string }> = {
@@ -9,7 +9,7 @@ const STYLE: Record<PublicStaffRole, { icon: LucideIcon; className: string }> = 
 };
 
 /**
- * Marks someone on the team that runs Magnox, wherever their profile is shown. The owner shows
+ * Marks someone on the team that runs Game Central, wherever their profile is shown. The owner shows
  * as an admin.
  */
 export function StaffBadge({ role, className }: { role: PublicStaffRole; className?: string }) {

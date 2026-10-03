@@ -1,5 +1,5 @@
 import 'server-only';
-import { localDateKey, utcToZoned, type Recurrence } from '@magnox/shared';
+import { localDateKey, utcToZoned, type Recurrence } from '@gamecentral/shared';
 import type { EventFormValues } from '@/components/events/event-form';
 
 const pad = (n: number) => String(n).padStart(2, '0');

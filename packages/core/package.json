@@ -1,5 +1,5 @@
 {
-  "name": "@magnox/core",
+  "name": "@gamecentral/core",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -13,8 +13,8 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1141.0",
     "@aws-sdk/s3-request-presigner": "^3.1141.0",
-    "@magnox/db": "workspace:*",
-    "@magnox/shared": "workspace:*",
+    "@gamecentral/db": "workspace:*",
+    "@gamecentral/shared": "workspace:*",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/exporter-trace-otlp-http": "^0.222.0",
     "@opentelemetry/resources": "^2.11.0",

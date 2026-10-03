@@ -85,7 +85,7 @@ test('feedback: send it, the team replies and moves it along', async ({ page, br
   await expect(member.getByText('It happens on mobile too.')).toBeVisible();
   // And they were told.
   await member.goto('/notifications');
-  await expect(member.getByText(`The Magnox team replied: ${title}`)).toBeVisible();
+  await expect(member.getByText(`The Game Central team replied: ${title}`)).toBeVisible();
   await expect(member.getByText(`Your feedback is now in progress: ${title}`)).toBeVisible();
   await memberContext.close();
 });
@@ -168,10 +168,10 @@ test('admin menu: give staff access, change an account and remove a message', as
   expect((await poster.goto('/admin/staff'))?.status()).toBe(404);
   // Their profile says so, as does the admin's.
   await poster.goto(`/u/${posterUser.username}`);
-  await expect(poster.getByText('Magnox Moderator')).toBeVisible();
+  await expect(poster.getByText('Game Central Moderator')).toBeVisible();
   await expectAccessible(poster, 'moderator profile');
   await poster.goto(`/u/${adminUser.username}`);
-  await expect(poster.getByText('Magnox Admin')).toBeVisible();
+  await expect(poster.getByText('Game Central Admin')).toBeVisible();
   // A moderator can't change an admin's account.
   await poster.goto('/admin/users');
   await poster.getByRole('searchbox', { name: /Find someone/ }).fill(adminUser.email);
@@ -186,7 +186,7 @@ test('admin menu: give staff access, change an account and remove a message', as
   expect((await poster.goto('/admin'))?.status()).toBe(404);
   await poster.goto(`/u/${posterUser.username}`);
   await expect(poster.getByRole('heading', { level: 1, name: newName })).toBeVisible();
-  await expect(poster.getByText('Magnox Moderator')).toBeHidden();
+  await expect(poster.getByText('Game Central Moderator')).toBeHidden();
 
   // On the record.
   await adminNav(page).getByRole('link', { name: 'Log' }).click();

@@ -4,7 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
 import { ServerCrash, ServerCog } from 'lucide-react';
-import { formatDuration, type ServerAlertMeta } from '@magnox/shared';
+import { formatDuration, type ServerAlertMeta } from '@gamecentral/shared';
 import { cn } from '@/lib/utils';
 import { useChat } from './chat-context';
 import { formatTime, fullDateTime } from './format';
@@ -29,7 +29,7 @@ export function systemText(
   return m.content;
 }
 
-/** "Survival is down" / "back up" notices from Magnox itself. */
+/** "Survival is down" / "back up" notices from Game Central itself. */
 export const SystemMessage = React.memo(function SystemMessage({
   message: m,
   highlighted,

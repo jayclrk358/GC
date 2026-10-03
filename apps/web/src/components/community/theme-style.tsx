@@ -1,5 +1,5 @@
 import { headers } from 'next/headers';
-import { themeToCss, type Theme } from '@magnox/shared';
+import { themeToCss, type Theme } from '@gamecentral/shared';
 import { getPrefs } from '@/lib/prefs';
 
 /** Inject a community's validated theme tokens, unless the viewer turned community themes off. */

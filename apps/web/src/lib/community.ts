@@ -11,8 +11,8 @@ import {
   listGames,
   listVisibleChannels,
   type MemberContext,
-} from '@magnox/core';
-import { has, normalizeNav, Permission, type NavTab } from '@magnox/shared';
+} from '@gamecentral/core';
+import { has, normalizeNav, Permission, type NavTab } from '@gamecentral/shared';
 import { getUser } from './auth';
 
 /** Tabs whose features exist. */
@@ -33,7 +33,7 @@ export const loadCommunity = cache(async (slug: string) => {
     ctx = await getMemberContext({ slug }, user?.id ?? null);
   } catch (e) {
     if (isAppError(e) && e.code === 'not_found') {
-      // Taken offline by Magnox staff: say so, rather than "not found".
+      // Taken offline by Game Central staff: say so, rather than "not found".
       if (await isSuspended(slug)) redirect('/community-suspended');
       notFound();
     }

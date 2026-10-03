@@ -1,12 +1,12 @@
 {
-  "name": "magnox-desktop",
-  "productName": "Magnox",
+  "name": "gamecentral-desktop",
+  "productName": "Game Central",
   "version": "1.0.0",
-  "description": "Magnox for Windows: the Magnox website in its own window.",
-  "author": "Magnox",
+  "description": "Game Central for Windows: the Game Central website in its own window.",
+  "author": "Game Central",
   "private": true,
   "main": "dist/main.js",
-  "magnoxUrl": "https://magnoxresources.com",
+  "siteUrl": "https://gamecentral.app",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "npm run build && electron .",
@@ -19,9 +19,9 @@
     "typescript": "~6.0.3"
   },
   "build": {
-    "appId": "com.magnox.desktop",
-    "productName": "Magnox",
-    "copyright": "Magnox",
+    "appId": "com.gamecentral.desktop",
+    "productName": "Game Central",
+    "copyright": "Game Central",
     "directories": {
       "output": "release",
       "buildResources": "build"
@@ -39,9 +39,9 @@
     "nsis": {
       "oneClick": true,
       "perMachine": false,
-      "artifactName": "Magnox-Setup-${version}.exe",
-      "shortcutName": "Magnox",
-      "uninstallDisplayName": "Magnox"
+      "artifactName": "GameCentral-Setup-${version}.exe",
+      "shortcutName": "Game Central",
+      "uninstallDisplayName": "Game Central"
     }
   }
 }

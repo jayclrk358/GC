@@ -1,4 +1,4 @@
-import type { NameStyleView } from '@magnox/shared';
+import type { NameStyleView } from '@gamecentral/shared';
 import { cn } from '@/lib/utils';
 import { RoleIcon, StyledName } from './role-decor';
 

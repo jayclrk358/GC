@@ -11,7 +11,7 @@ import {
   sendTestVote,
   updateServer,
   updateServerIntegrations,
-} from '@magnox/core';
+} from '@gamecentral/core';
 import { getUser } from '@/lib/auth';
 import { runAction } from '@/lib/action';
 import { clientIp } from '@/lib/request';

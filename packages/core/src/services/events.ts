@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { and, asc, eq, gt, gte, inArray, isNull, lt, lte, or, sql } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
+import { db, schema } from '@gamecentral/db';
 import {
   EVENT_HORIZON_MS,
   eventInputSchema,
@@ -19,7 +19,7 @@ import {
   type Recurrence,
   type RsvpStatus,
   type Schedule,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import { z } from 'zod';
 import { requireMember, requirePerm, type MemberContext } from '../access';
 import { env } from '../env';

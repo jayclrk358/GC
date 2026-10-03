@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Bell, BellOff } from 'lucide-react';
-import { MUTE_DURATIONS } from '@magnox/shared';
+import { MUTE_DURATIONS } from '@gamecentral/shared';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,

@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { ArrowDown, Hash } from 'lucide-react';
-import { startsNewGroup } from '@magnox/shared';
+import { startsNewGroup } from '@gamecentral/shared';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/misc';
 import { useChat } from './chat-context';

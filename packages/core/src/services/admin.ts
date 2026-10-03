@@ -1,6 +1,6 @@
 import { and, count, desc, eq, gte, ilike, isNotNull, isNull, lte, or, sql } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
-import { newId, uuidAtTime, type PaidPlanId } from '@magnox/shared';
+import { db, schema } from '@gamecentral/db';
+import { newId, uuidAtTime, type PaidPlanId } from '@gamecentral/shared';
 import { z } from 'zod';
 import { platformAdminEmails } from '../env';
 import { accessChanged, realtime } from '../emitter';
@@ -12,12 +12,12 @@ import { syncCommunityPlan } from './billing';
 import { notifyUser } from './notify';
 import { endCommunityVoiceCalls } from './voice-rooms';
 
-// The platform admin console: Magnox staff looking after the whole site (not one community).
+// The platform admin console: Game Central staff looking after the whole site (not one community).
 
 const log = logger('admin');
 
 /**
- * Magnox staff. The owner runs the site (listed in PLATFORM_ADMIN_EMAILS with that email
+ * Game Central staff. The owner runs the site (listed in PLATFORM_ADMIN_EMAILS with that email
  * confirmed, so nobody can claim it by signing up first); admins can do everything but manage
  * other admins; moderators look after people, posts, reports and feedback.
  */
@@ -80,7 +80,7 @@ export function staffRoleOf(user: {
   return null;
 }
 
-/** A staff role as others see it: the owner shows as an admin, so who owns Magnox stays private. */
+/** A staff role as others see it: the owner shows as an admin, so who owns Game Central stays private. */
 export type PublicStaffRole = Exclude<StaffRole, 'owner'>;
 
 export function publicStaffRole(user: Parameters<typeof staffRoleOf>[0]): PublicStaffRole | null {
@@ -88,7 +88,7 @@ export function publicStaffRole(user: Parameters<typeof staffRoleOf>[0]): Public
   return role === 'owner' ? 'admin' : role;
 }
 
-/** Whether an account is Magnox staff of any kind (and so sees the console). */
+/** Whether an account is Game Central staff of any kind (and so sees the console). */
 export function isPlatformAdminUser(user: Parameters<typeof staffRoleOf>[0]): boolean {
   return staffRoleOf(user) !== null;
 }
@@ -109,7 +109,7 @@ export async function requireStaff(
   ability: StaffAbility = 'console',
 ): Promise<PlatformAdmin> {
   const admin = await platformAdminFor(userId);
-  if (!admin) throw forbidden('Only Magnox staff can do that.');
+  if (!admin) throw forbidden('Only Game Central staff can do that.');
   if (!staffCan(admin.role, ability)) throw forbidden('Your staff role doesn’t include that.');
   return admin;
 }
@@ -498,7 +498,7 @@ const banSchema = z.object({
   days: z.number().int().min(0).max(3650),
 });
 
-/** Ban someone from Magnox: they're signed out everywhere and can't sign back in. */
+/** Ban someone from Game Central: they're signed out everywhere and can't sign back in. */
 export async function banUser(userId: string | null, targetId: string, raw: unknown) {
   const admin = await requireAdmin(userId, 'users');
   await assertOutranks(admin, targetId);

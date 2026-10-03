@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Search, X } from 'lucide-react';
-import type { ChatAuthor, MessageSearchHit, MessageView } from '@magnox/core';
+import type { ChatAuthor, MessageSearchHit, MessageView } from '@gamecentral/core';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, Spinner } from '@/components/ui/misc';
@@ -100,7 +100,7 @@ function MessageCard({
   const locale = useLocale();
   const { prefs } = useChat();
   const name =
-    m.kind !== 'user' ? 'Magnox' : m.author?.nickname || m.author?.name || t('deletedUser');
+    m.kind !== 'user' ? 'Game Central' : m.author?.nickname || m.author?.name || t('deletedUser');
   return (
     <article
       className="rounded-ui border border-border bg-surface p-2 text-sm"

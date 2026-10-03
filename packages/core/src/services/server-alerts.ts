@@ -1,5 +1,5 @@
 import { and, asc, eq, inArray, isNotNull, isNull, lt, sql } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
+import { db, schema } from '@gamecentral/db';
 import {
   formatDuration,
   has,
@@ -7,7 +7,7 @@ import {
   serverIntegrationsSchema,
   type ServerAlertKind,
   type ServerAlertMeta,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import { channelPermissionsMany, requirePerm, type MemberContext } from '../access';
 import { AppError, notFound } from '../errors';
 import { logger } from '../logger';

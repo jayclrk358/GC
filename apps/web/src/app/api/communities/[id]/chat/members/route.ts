@@ -1,4 +1,4 @@
-import { memberList } from '@magnox/core';
+import { memberList } from '@gamecentral/core';
 import { communityJson } from '@/lib/api';
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {

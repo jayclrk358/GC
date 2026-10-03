@@ -1,6 +1,6 @@
 import { createHmac, randomBytes } from 'node:crypto';
 import { and, asc, eq, sql } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
+import { db, schema } from '@gamecentral/db';
 import {
   formatDuration,
   isDiscordWebhookUrl,
@@ -9,7 +9,7 @@ import {
   SIGNATURE_HEADER,
   webhookInputSchema,
   type WebhookEvent,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import { everyoneCanView, requirePerm, type MemberContext } from '../access';
 import { cached, uncache } from '../cache';
 import { env } from '../env';
@@ -30,7 +30,7 @@ const log = logger('webhooks');
 
 /** Failed deliveries in a row before a webhook is switched off. */
 export const WEBHOOK_MAX_FAILURES = 20;
-const USER_AGENT = 'MagnoxWebhooks/1.0 (+https://magnoxresources.com/developers)';
+const USER_AGENT = 'GameCentralWebhooks/1.0 (+https://gamecentral.app/developers)';
 /** Most deliveries a community can queue in a minute, across its webhooks; the rest are dropped. */
 const DELIVERIES_PER_MINUTE = 600;
 /** A burst of chat messages goes to a Discord webhook together, at most this often. */
@@ -303,7 +303,7 @@ export function discordMessage(p: WebhookPayload): Record<string, unknown> {
   switch (p.event) {
     case 'ping':
       Object.assign(embed, {
-        title: 'Connected to Magnox',
+        title: 'Connected to Game Central',
         description: clip(`News from ${discordText(p.community.name)} will show up here.`, 400),
         url: p.community.url,
         color: BLUE,
@@ -397,7 +397,7 @@ export function discordMessage(p: WebhookPayload): Record<string, unknown> {
     }
   }
   return {
-    username: 'Magnox',
+    username: 'Game Central',
     avatar_url: `${appUrl()}/icons/icon-192.png`,
     embeds: [embed],
     allowed_mentions: { parse: [] },
@@ -451,9 +451,9 @@ async function send(
   const headers: Record<string, string> = { 'content-type': 'application/json' };
   if (hook.kind === 'json') {
     Object.assign(headers, {
-      'x-magnox-event': payload.event,
-      'x-magnox-delivery': payload.id,
-      'x-magnox-timestamp': timestamp,
+      'x-gamecentral-event': payload.event,
+      'x-gamecentral-delivery': payload.id,
+      'x-gamecentral-timestamp': timestamp,
       [SIGNATURE_HEADER]: webhookSignature(hook.secret, timestamp, body),
     });
   }

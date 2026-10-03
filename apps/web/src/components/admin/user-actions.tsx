@@ -11,7 +11,7 @@ import { FormError } from '@/components/auth/form-error';
 import { SettingsSection } from '@/components/settings/section';
 import { banUserAction, revokeSessionsAction, unbanUserAction } from '@/app/actions/admin';
 
-/** Ban someone from Magnox (or lift a ban), and sign them out everywhere. */
+/** Ban someone from Game Central (or lift a ban), and sign them out everywhere. */
 export function UserActions({ userId, banned }: { userId: string; banned: boolean }) {
   const t = useTranslations('admin.ban');
   const router = useRouter();

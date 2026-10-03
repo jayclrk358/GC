@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { listGames } from '@magnox/core';
+import { listGames } from '@gamecentral/core';
 import { requireUser } from '@/lib/auth';
 import { CreateWizard } from '@/components/community/create-wizard';
 import { HistoryBack } from '@/components/ui/history-back';

@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { SmilePlus } from 'lucide-react';
 import { Popover } from 'radix-ui';
-import { REACTION_NAMES, REACTIONS } from '@magnox/shared';
+import { REACTION_NAMES, REACTIONS } from '@gamecentral/shared';
 import { toggleReactionAction } from '@/app/actions/forum';
 import { cn } from '@/lib/utils';
 

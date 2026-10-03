@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { canEditWiki, wikiHistory } from '@magnox/core';
+import { canEditWiki, wikiHistory } from '@gamecentral/core';
 import { formatDateTime, relativeTime } from '@/lib/format';
 import { Badge } from '@/components/ui/misc';
 import { RestoreRevisionButton } from '@/components/wiki/wiki-page-tools';

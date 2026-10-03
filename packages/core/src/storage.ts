@@ -9,7 +9,7 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { MEDIA_KEY_RE, STORED_KEY_RE } from '@magnox/shared';
+import { MEDIA_KEY_RE, STORED_KEY_RE } from '@gamecentral/shared';
 import { env } from './env';
 
 export interface StorageDriver {
@@ -60,7 +60,7 @@ export function downloadFilename(original: string | null | undefined, key: strin
   const name = cleanFilename(original);
   const dot = name?.lastIndexOf('.') ?? -1;
   const base = (name && dot > 0 ? name.slice(0, dot) : name)?.trim();
-  return `${base || `magnox-${key.slice(2, key.lastIndexOf('.'))}`}.${ext}`;
+  return `${base || `gamecentral-${key.slice(2, key.lastIndexOf('.'))}`}.${ext}`;
 }
 
 /**

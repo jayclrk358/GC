@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { listApiTokens } from '@magnox/core';
+import { listApiTokens } from '@gamecentral/core';
 import { requireUser } from '@/lib/auth';
 import { PageHeader } from '@/components/ui/misc';
 import { ApiTokens } from '@/components/developer/api-tokens';

@@ -1,4 +1,4 @@
-import { discardUpload, isAppError } from '@magnox/core';
+import { discardUpload, isAppError } from '@gamecentral/core';
 import { getUser } from '@/lib/auth';
 
 /** Throw away one of your uploads that was never used (e.g. taken off a message before sending). */

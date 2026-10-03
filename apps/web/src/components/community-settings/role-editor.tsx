@@ -24,8 +24,8 @@ import {
   type PermissionGroup,
   type PermissionName,
   type DecorPerks,
-} from '@magnox/shared';
-import type { RoleSummary } from '@magnox/core';
+} from '@gamecentral/shared';
+import type { RoleSummary } from '@gamecentral/core';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Input, Select } from '@/components/ui/input';

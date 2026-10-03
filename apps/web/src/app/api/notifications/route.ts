@@ -1,4 +1,4 @@
-import { listNotifications, unreadCount } from '@magnox/core';
+import { listNotifications, unreadCount } from '@gamecentral/core';
 import { getUser } from '@/lib/auth';
 
 export async function GET(req: Request) {

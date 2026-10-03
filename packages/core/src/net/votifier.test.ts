@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { buildV1Block, buildV2Frame, parseGreeting, toPem } from './votifier';
 
 const vote = {
-  serviceName: 'Magnox',
+  serviceName: 'Game Central',
   username: 'Steve',
   address: '203.0.113.9',
   timestamp: 1790000000000,
@@ -40,7 +40,7 @@ describe('votifier', () => {
       { key: privateKey, padding: constants.RSA_PKCS1_PADDING },
       block,
     ).toString('utf8');
-    expect(text).toBe('VOTE\nMagnox\nSteve\n203.0.113.9\n1790000000000\n');
+    expect(text).toBe('VOTE\nGame Central\nSteve\n203.0.113.9\n1790000000000\n');
   });
 
   it('wraps bare base64 keys in PEM armour', () => {

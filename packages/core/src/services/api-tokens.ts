@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { and, desc, eq, sql } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
-import { apiTokenInputSchema, newId, type ApiScope } from '@magnox/shared';
+import { db, schema } from '@gamecentral/db';
+import { apiTokenInputSchema, newId, type ApiScope } from '@gamecentral/shared';
 import { AppError, notFound, unauthorized } from '../errors';
 import { enforceRateLimit, rateLimit } from '../ratelimit';
 

@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { heldPostCount, openReportCount, pendingApplicationCount } from '@magnox/core';
+import { heldPostCount, openReportCount, pendingApplicationCount } from '@gamecentral/core';
 import { loadCommunityForSettings } from '@/lib/community';
 import { NavLink } from '@/components/shell/nav-link';
 import { BackLink } from '@/components/ui/back-link';

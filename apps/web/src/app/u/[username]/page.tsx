@@ -16,8 +16,8 @@ import {
   Users,
   type LucideIcon,
 } from 'lucide-react';
-import { getPublicProfile, hasBlocked } from '@magnox/core';
-import { ACCOUNT_KINDS, type Platform } from '@magnox/shared';
+import { getPublicProfile, hasBlocked } from '@gamecentral/core';
+import { ACCOUNT_KINDS, type Platform } from '@gamecentral/shared';
 import { getUser } from '@/lib/auth';
 import { BlockButton } from '@/components/moderation/block-button';
 import { CopyHandle, LocalTime } from '@/components/profile/profile-client';

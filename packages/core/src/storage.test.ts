@@ -11,10 +11,10 @@ describe('presignDownload', () => {
       credentials: { accessKeyId: 'AKIDEXAMPLE', secretAccessKey: 'secret' },
     });
     const url = new URL(
-      await presignDownload(client, 'magnox', 'u/abcdefgh12.mp4', 'Boss fight.mp4'),
+      await presignDownload(client, 'gamecentral', 'u/abcdefgh12.mp4', 'Boss fight.mp4'),
     );
     expect(url.origin).toBe('https://account.r2.cloudflarestorage.com');
-    expect(url.pathname).toBe('/magnox/u/abcdefgh12.mp4');
+    expect(url.pathname).toBe('/gamecentral/u/abcdefgh12.mp4');
     expect(url.searchParams.get('response-content-disposition')).toBe(
       `attachment; filename="Boss fight.mp4"; filename*=UTF-8''Boss%20fight.mp4`,
     );
@@ -46,7 +46,7 @@ describe('upload filenames', () => {
     expect(downloadFilename('IMG_2231.JPG', 'u/abcdefgh12.webp')).toBe('IMG_2231.webp');
     expect(downloadFilename('my.map.v2.png', 'u/abcdefgh12.webp')).toBe('my.map.v2.webp');
     expect(downloadFilename('README', 'u/abcdefgh12.webp')).toBe('README.webp');
-    expect(downloadFilename(null, 'u/abcdefgh12.webp')).toBe('magnox-abcdefgh12.webp');
+    expect(downloadFilename(null, 'u/abcdefgh12.webp')).toBe('gamecentral-abcdefgh12.webp');
     expect(downloadFilename('.png', 'u/abcdefgh12.webp')).toBe('.png.webp');
   });
 

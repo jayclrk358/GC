@@ -1,8 +1,8 @@
-# Full Magnox stack. `docker compose up --build` then open https://localhost
+# Full Game Central stack. `docker compose up --build` then open https://localhost
 # For local development you can start only the backing services:
 #   docker compose up -d postgres redis-queue redis-cache mailpit
 # On a server, add the production overrides (see docker-compose.prod.yml).
-name: magnox
+name: gamecentral
 
 # Keep container logs from filling the disk.
 x-logging: &logging
@@ -18,7 +18,7 @@ x-app-env: &app-env
   # The bundled Postgres and Redis. To use hosted ones instead, set the EXTERNAL_* values in
   # .env and add docker-compose.external.yml (see the README). The plain DATABASE_URL/REDIS_*
   # values in .env are for development and aren't used here.
-  DATABASE_URL: ${EXTERNAL_DATABASE_URL:-postgres://magnox:${POSTGRES_PASSWORD:-magnox}@postgres:5432/magnox}
+  DATABASE_URL: ${EXTERNAL_DATABASE_URL:-postgres://gamecentral:${POSTGRES_PASSWORD:-gamecentral}@postgres:5432/gamecentral}
   DATABASE_PREPARE: ${EXTERNAL_DATABASE_PREPARE:-true}
   REDIS_QUEUE_URL: ${EXTERNAL_REDIS_QUEUE_URL:-redis://redis-queue:6379/0}
   REDIS_CACHE_URL: ${EXTERNAL_REDIS_CACHE_URL:-redis://redis-cache:6379/0}
@@ -28,12 +28,12 @@ x-app-env: &app-env
   STORAGE_LOCAL_DIR: /data/media
   S3_ENDPOINT: ${S3_ENDPOINT:-}
   S3_REGION: ${S3_REGION:-auto}
-  S3_BUCKET: ${S3_BUCKET:-magnox}
+  S3_BUCKET: ${S3_BUCKET:-gamecentral}
   S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
   S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
   MEDIA_BASE_URL: ${MEDIA_BASE_URL:-https://media.localhost}
   SMTP_URL: ${SMTP_URL:-smtp://mailpit:1025}
-  EMAIL_FROM: ${EMAIL_FROM:-Magnox <no-reply@magnox.local>}
+  EMAIL_FROM: ${EMAIL_FROM:-Game Central <no-reply@gamecentral.local>}
   REQUIRE_EMAIL_VERIFICATION: ${REQUIRE_EMAIL_VERIFICATION:-false}
   DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
   DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET:-}
@@ -44,7 +44,7 @@ x-app-env: &app-env
   SENTRY_TRACES_SAMPLE_RATE: ${SENTRY_TRACES_SAMPLE_RATE:-0}
   OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
   OTEL_EXPORTER_OTLP_HEADERS: ${OTEL_EXPORTER_OTLP_HEADERS:-}
-  OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-magnox}
+  OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-gamecentral}
   OTEL_TRACES_SAMPLE_RATE: ${OTEL_TRACES_SAMPLE_RATE:-1}
   GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
   GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
@@ -79,13 +79,13 @@ services:
     shm_size: 256mb
     logging: *logging
     environment:
-      POSTGRES_USER: magnox
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-magnox}
-      POSTGRES_DB: magnox
+      POSTGRES_USER: gamecentral
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gamecentral}
+      POSTGRES_DB: gamecentral
     volumes: [pgdata:/var/lib/postgresql/data]
     ports: ['5432:5432']
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U magnox']
+      test: ['CMD-SHELL', 'pg_isready -U gamecentral']
       interval: 10s
       start_period: 30s
       retries: 10
@@ -133,7 +133,7 @@ services:
   # Applies migrations and loads the game catalog (both safe to repeat), then exits.
   migrate:
     build: { context: ., target: app }
-    command: ['sh', '-c', 'pnpm db:migrate && pnpm --filter @magnox/db seed']
+    command: ['sh', '-c', 'pnpm db:migrate && pnpm --filter @gamecentral/db seed']
     environment: *app-env
     depends_on:
       postgres: { condition: service_healthy }

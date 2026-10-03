@@ -1,5 +1,5 @@
 import { and, asc, desc, eq, inArray, isNotNull, isNull, or, sql, type SQL } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
+import { db, schema } from '@gamecentral/db';
 import {
   connectLink,
   displayAddress,
@@ -12,7 +12,7 @@ import {
   SERVER_PROTOCOLS,
   type ServerProtocol,
   type ServerStatus,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import { requirePerm, type MemberContext } from '../access';
 import { AppError, notFound } from '../errors';
 import { BlockedAddressError, resolveTarget, UnresolvableHostError } from '../net/ssrf';

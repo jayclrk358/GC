@@ -1,7 +1,7 @@
 import 'server-only';
 import { unstable_rethrow } from 'next/navigation';
 import { ZodError } from 'zod';
-import { isAppError, logger } from '@magnox/core';
+import { isAppError, logger } from '@gamecentral/core';
 
 export type ActionResult<T = void> =
   | { ok: true; data: T }

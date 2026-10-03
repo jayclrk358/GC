@@ -1,4 +1,4 @@
-// Shown when Magnox can't be reached: tries again by itself every so often.
+// Shown when Game Central can't be reached: tries again by itself every so often.
 (() => {
   const params = new URLSearchParams(location.search);
   const target = params.get('url') ?? '';

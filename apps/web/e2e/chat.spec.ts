@@ -243,7 +243,7 @@ test.describe('chat', () => {
     await expect(withLink.getByRole('link', { name: `Fixture page ${name}` })).toBeVisible({
       timeout: 20_000,
     });
-    await expect(withLink.getByText('Magnox Fixtures')).toBeVisible();
+    await expect(withLink.getByText('Game Central Fixtures')).toBeVisible();
 
     // Attach an image with alt text.
     const png = Buffer.from(

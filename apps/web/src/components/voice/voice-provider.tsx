@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { Participant, RemoteTrack, Room, VideoTrack } from 'livekit-client';
-import type { VoicePerson, VoiceStateEvent } from '@magnox/core';
+import type { VoicePerson, VoiceStateEvent } from '@gamecentral/core';
 import { joinVoiceAction } from '@/app/actions/voice';
 import { useRooms } from '@/lib/realtime';
 import { playSound } from '@/lib/sounds';

@@ -1,4 +1,4 @@
-import { apiMe } from '@magnox/core';
+import { apiMe } from '@gamecentral/core';
 import { apiV1 } from '@/lib/api-v1';
 
 /** The token's owner and the communities they're in. */

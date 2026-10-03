@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { planPerks } from '@magnox/shared';
+import { planPerks } from '@gamecentral/shared';
 import { getTranslations } from 'next-intl/server';
 import { loadCommunityForSettings } from '@/lib/community';
 import { PageHeader } from '@/components/ui/misc';

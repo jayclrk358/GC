@@ -5,7 +5,7 @@ import {
   PROTOCOL_KEYS,
   protocolsForPicker,
   SERVER_PROTOCOLS,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 
 describe('server protocols', () => {
   it('each names a game GameDig knows', () => {

@@ -1,5 +1,5 @@
 import { and, asc, eq, inArray, isNull, max, sql } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
+import { db, schema } from '@gamecentral/db';
 import {
   canEditOverwrite,
   CHANNEL_SCOPED,
@@ -11,7 +11,7 @@ import {
   parsePermissions,
   Permission,
   MAX_PLAN_LIMITS,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import { z } from 'zod';
 import {
   channelPermissions,

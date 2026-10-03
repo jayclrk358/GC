@@ -1,4 +1,4 @@
-// The languages Magnox's interface is translated into. English is complete; any string missing
+// The languages Game Central's interface is translated into. English is complete; any string missing
 // from another language shows in English.
 
 export const LOCALES = ['en', 'es', 'fr', 'de', 'pt-BR'] as const;

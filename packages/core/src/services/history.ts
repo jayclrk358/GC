@@ -1,12 +1,12 @@
 import { and, eq, gte, isNull, sql } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
+import { db, schema } from '@gamecentral/db';
 import {
   fillSeries,
   HISTORY_BUCKETS,
   summariseHistory,
   type HistoryPoint,
   type HistoryRange,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import { cached } from '../cache';
 import { logger } from '../logger';
 import { cacheRedis } from '../redis';

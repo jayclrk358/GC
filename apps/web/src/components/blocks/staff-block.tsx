@@ -1,5 +1,5 @@
-import { listRoles, loadAuthors, membersWithRoles } from '@magnox/core';
-import { nameStyleView, planPerks, themeBackdrops, type BlockConfig } from '@magnox/shared';
+import { listRoles, loadAuthors, membersWithRoles } from '@gamecentral/core';
+import { nameStyleView, planPerks, themeBackdrops, type BlockConfig } from '@gamecentral/shared';
 import type { LoadedCommunity } from '@/lib/community';
 import { getPrefs } from '@/lib/prefs';
 import { mediaUrl } from '@/lib/media';

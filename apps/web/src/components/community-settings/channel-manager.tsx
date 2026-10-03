@@ -18,7 +18,7 @@ import {
   Trash2,
   Volume2,
 } from 'lucide-react';
-import type { PlanId, PlanPerks } from '@magnox/shared';
+import type { PlanId, PlanPerks } from '@gamecentral/shared';
 import { PlanLock } from '@/components/billing/plan-lock';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';

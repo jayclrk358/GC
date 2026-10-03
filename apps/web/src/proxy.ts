@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { customDomainRoute } from '@magnox/shared';
+import { customDomainRoute } from '@gamecentral/shared';
 
 function origin(url: string | undefined): string {
   if (!url) return '';

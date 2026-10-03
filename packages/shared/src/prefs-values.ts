@@ -6,7 +6,7 @@ import type { Prefs } from './prefs';
 export const FONT_SCALES = [87, 100, 112, 125, 150, 175, 200] as const;
 
 /** Sets of sound effects, all made in the browser (no audio files). */
-export const SOUND_PACKS = ['magnox', 'soft', 'arcade', 'crystal'] as const;
+export const SOUND_PACKS = ['gamecentral', 'soft', 'arcade', 'crystal'] as const;
 export type SoundPack = (typeof SOUND_PACKS)[number];
 
 /** What sounds can be set for. Some play one of two cues (joining or leaving, say). */
@@ -78,7 +78,7 @@ export const DEFAULT_PREFS: Prefs = {
   requireAltTextReminder: true,
   keymap: {},
   sounds: true,
-  soundPack: 'magnox',
+  soundPack: 'gamecentral',
   soundVolume: 60,
   soundEvents: {},
 };

@@ -1,6 +1,6 @@
 import { createHmac } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { isDiscordWebhookUrl } from '@magnox/shared';
+import { isDiscordWebhookUrl } from '@gamecentral/shared';
 import {
   discordBatchMessage,
   discordMessage,

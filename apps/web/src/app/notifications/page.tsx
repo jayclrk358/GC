@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { Settings } from 'lucide-react';
-import { listNotifications } from '@magnox/core';
+import { listNotifications } from '@gamecentral/core';
 import { requireUser } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/ui/misc';

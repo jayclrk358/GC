@@ -1,7 +1,7 @@
 import { and, eq, ilike, or } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
-import { getMemberContext, isAppError } from '@magnox/core';
-import { has, Permission } from '@magnox/shared';
+import { db, schema } from '@gamecentral/db';
+import { getMemberContext, isAppError } from '@gamecentral/core';
+import { has, Permission } from '@gamecentral/shared';
 import { getUser } from '@/lib/auth';
 
 /** Suggestions for @mentions: members, mentionable roles and @everyone when allowed. */

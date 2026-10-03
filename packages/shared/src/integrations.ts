@@ -30,4 +30,4 @@ export const webhookInputSchema = z.object({
 });
 
 /** A webhook delivery's signature header: `sha256=` and the hex HMAC of the body. */
-export const SIGNATURE_HEADER = 'x-magnox-signature';
+export const SIGNATURE_HEADER = 'x-gamecentral-signature';

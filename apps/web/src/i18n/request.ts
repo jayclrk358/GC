@@ -7,7 +7,7 @@ import {
   matchLocale,
   PREFS_COOKIE,
   type Locale,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import en from '../../messages/en.json';
 
 type Messages = Record<string, unknown>;

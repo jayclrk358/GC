@@ -14,7 +14,7 @@ import {
   SmilePlus,
   Trash2,
 } from 'lucide-react';
-import { mentionsMe, type RichNode } from '@magnox/shared';
+import { mentionsMe, type RichNode } from '@gamecentral/shared';
 import { Avatar } from '@/components/ui/misc';
 import { Button } from '@/components/ui/button';
 import {
@@ -36,7 +36,7 @@ import { RoleIcon, StyledName } from '@/components/community/role-decor';
 import { UserLink } from '@/components/profile/user-hover-card';
 
 export function authorName(m: ChatMessage): string {
-  if (m.kind !== 'user') return 'Magnox';
+  if (m.kind !== 'user') return 'Game Central';
   return m.author?.nickname || m.author?.name || 'Deleted user';
 }
 

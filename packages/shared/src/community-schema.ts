@@ -50,7 +50,7 @@ export type CommunityBasics = z.infer<typeof communityBasicsSchema>;
 
 export const createCommunitySchema = communityBasicsSchema.extend({
   template: z.enum(COMMUNITY_TEMPLATES).default('fanhub'),
-  preset: z.string().max(32).default('magnox'),
+  preset: z.string().max(32).default('gamecentral'),
 });
 export type CreateCommunityInput = z.infer<typeof createCommunitySchema>;
 

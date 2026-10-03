@@ -1,4 +1,4 @@
-import { listPins } from '@magnox/core';
+import { listPins } from '@gamecentral/core';
 import { communityJson } from '@/lib/api';
 
 export async function GET(

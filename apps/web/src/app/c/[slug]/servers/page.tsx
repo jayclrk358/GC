@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { Server } from 'lucide-react';
-import { listCommunityServers } from '@magnox/core';
+import { listCommunityServers } from '@gamecentral/core';
 import { loadCommunity } from '@/lib/community';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/misc';

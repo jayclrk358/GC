@@ -1,13 +1,13 @@
 'use client';
 
 import * as React from 'react';
-import type { Prefs } from '@magnox/shared';
+import type { Prefs } from '@gamecentral/shared';
 // The zod-free module: this provider is on every page, so it must not pull in the schemas.
 import {
   encodePrefsCookie,
   PREFS_COOKIE,
   prefsToHtmlAttributes,
-} from '@magnox/shared/prefs-values';
+} from '@gamecentral/shared/prefs-values';
 import { savePrefs } from '@/app/actions/prefs';
 import { configureSounds, unlockSoundsOnInteraction } from '@/lib/sounds';
 

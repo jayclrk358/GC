@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { MessageSquare } from 'lucide-react';
-import { recentThreads } from '@magnox/core';
-import type { BlockConfig } from '@magnox/shared';
+import { recentThreads } from '@gamecentral/core';
+import type { BlockConfig } from '@gamecentral/shared';
 import type { LoadedCommunity } from '@/lib/community';
 import { relativeTime } from '@/lib/format';
 import { BlockSection } from './section';

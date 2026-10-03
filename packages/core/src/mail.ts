@@ -41,7 +41,7 @@ export function renderEmail(opts: {
   const button = opts.action
     ? `<p><a href="${escapeHtml(opts.action.url)}" style="display:inline-block;padding:12px 20px;background:#4338ca;color:#ffffff;border-radius:8px;text-decoration:none;font-weight:600">${escapeHtml(opts.action.label)}</a></p><p style="font-size:14px;color:#4f5368">Or paste this link into your browser:<br>${escapeHtml(opts.action.url)}</p>`
     : '';
-  const html = `<!doctype html><html lang="en"><body style="margin:0;padding:24px;background:#f7f7fb;font-family:system-ui,sans-serif;color:#14151f;font-size:16px;line-height:1.5"><main style="max-width:560px;margin:0 auto;background:#ffffff;padding:32px;border-radius:12px"><h1 style="font-size:22px;margin:0 0 16px">${escapeHtml(opts.heading)}</h1><p>${escapeHtml(opts.body).replace(/\n/g, '<br>')}</p>${button}<p style="font-size:13px;color:#4f5368;margin-top:32px">Magnox · You received this because of activity on your account.</p></main></body></html>`;
+  const html = `<!doctype html><html lang="en"><body style="margin:0;padding:24px;background:#f7f7fb;font-family:system-ui,sans-serif;color:#14151f;font-size:16px;line-height:1.5"><main style="max-width:560px;margin:0 auto;background:#ffffff;padding:32px;border-radius:12px"><h1 style="font-size:22px;margin:0 0 16px">${escapeHtml(opts.heading)}</h1><p>${escapeHtml(opts.body).replace(/\n/g, '<br>')}</p>${button}<p style="font-size:13px;color:#4f5368;margin-top:32px">Game Central · You received this because of activity on your account.</p></main></body></html>`;
   return { text, html };
 }
 

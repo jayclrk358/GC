@@ -1,4 +1,4 @@
-import { localDateKey, utcToZoned } from '@magnox/shared';
+import { localDateKey, utcToZoned } from '@gamecentral/shared';
 import type { TimeFormat } from './format';
 
 /** How event times read, on the viewer's clock. */

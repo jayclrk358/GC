@@ -1,4 +1,4 @@
-import type { Prefs } from '@magnox/shared';
+import type { Prefs } from '@gamecentral/shared';
 
 /** "3:04 PM" / "15:04", following the reader's time-format preference. */
 export function formatTime(

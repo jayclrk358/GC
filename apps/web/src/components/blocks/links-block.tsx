@@ -12,7 +12,7 @@ import {
   ShoppingBag,
   type LucideIcon,
 } from 'lucide-react';
-import type { BlockConfig } from '@magnox/shared';
+import type { BlockConfig } from '@gamecentral/shared';
 import { BlockSection } from './section';
 
 const ICONS: Record<string, LucideIcon> = {

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { adminLog } from '@magnox/core';
+import { adminLog } from '@gamecentral/core';
 import { staffFor } from '@/lib/staff';
 import { formatDateTime } from '@/lib/format';
 import { PageHeader } from '@/components/ui/misc';

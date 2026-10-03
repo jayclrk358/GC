@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { index, jsonb, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import type { ApplicationAnswer, ApplicationForm } from '@magnox/shared';
+import type { ApplicationAnswer, ApplicationForm } from '@gamecentral/shared';
 import { users } from './auth';
 import { communities } from './communities';
 import { createdAt, tz, updatedAt } from './_helpers';

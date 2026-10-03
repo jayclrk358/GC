@@ -12,8 +12,8 @@ import {
   queueRedis,
   reportError,
   withSpan,
-} from '@magnox/core';
-import { sql } from '@magnox/db';
+} from '@gamecentral/core';
+import { sql } from '@gamecentral/db';
 import { handlers } from './handlers';
 
 const log = logger('worker');

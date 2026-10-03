@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { resumeJoins, reviewHeldPost, saveAutomod } from '@magnox/core';
+import { resumeJoins, reviewHeldPost, saveAutomod } from '@gamecentral/core';
 import { runAction } from '@/lib/action';
 import { ctxFor } from './_ctx';
 

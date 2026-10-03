@@ -1,10 +1,10 @@
 import Link from 'next/link';
-import { env } from '@magnox/core';
-import { SIGNATURE_HEADER, WEBHOOK_EVENTS } from '@magnox/shared';
+import { env } from '@gamecentral/core';
+import { SIGNATURE_HEADER, WEBHOOK_EVENTS } from '@gamecentral/shared';
 
 export const metadata = {
   title: 'Developers',
-  description: 'The Magnox API and webhooks: build bots, dashboards and integrations.',
+  description: 'The Game Central API and webhooks: build bots, dashboards and integrations.',
 };
 
 function Code({ children }: { children: string }) {
@@ -72,8 +72,8 @@ export default function DevelopersPage() {
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold">Developers</h1>
         <p className="text-muted">
-          Build bots, dashboards and integrations on top of Magnox: read communities, chat, forums,
-          events and game servers with the API, and hear about what happens with webhooks.
+          Build bots, dashboards and integrations on top of Game Central: read communities, chat,
+          forums, events and game servers with the API, and hear about what happens with webhooks.
         </p>
       </header>
 
@@ -158,10 +158,10 @@ export default function DevelopersPage() {
         <p>A delivery looks like this:</p>
         <Code>{`POST /your/endpoint
 Content-Type: application/json
-X-Magnox-Event: thread.created
-X-Magnox-Delivery: 0192f1c4-…
-X-Magnox-Timestamp: 1767225600
-X-Magnox-Signature: sha256=5d41402abc4b2a76…
+X-GameCentral-Event: thread.created
+X-GameCentral-Delivery: 0192f1c4-…
+X-GameCentral-Timestamp: 1767225600
+X-GameCentral-Signature: sha256=5d41402abc4b2a76…
 
 {
   "id": "0192f1c4-…",
@@ -191,8 +191,8 @@ X-Magnox-Signature: sha256=5d41402abc4b2a76…
         </p>
         <Code>{`import { createHmac, timingSafeEqual } from 'node:crypto';
 
-function isFromMagnox(secret, headers, rawBody) {
-  const timestamp = headers['x-magnox-timestamp'];
+function isFromGameCentral(secret, headers, rawBody) {
+  const timestamp = headers['x-gamecentral-timestamp'];
   const expected =
     'sha256=' + createHmac('sha256', secret).update(\`\${timestamp}.\${rawBody}\`).digest('hex');
   const given = headers['${SIGNATURE_HEADER}'] ?? '';

@@ -1,4 +1,4 @@
-import { canSubscribe, forgetRoomAccess, type RoomGrant } from '@magnox/core/access';
+import { canSubscribe, forgetRoomAccess, type RoomGrant } from '@gamecentral/core/access';
 
 /** Bumped whenever access changes somewhere, so a subscribe checked meanwhile is checked again. */
 let generation = 0;

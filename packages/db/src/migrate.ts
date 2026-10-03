@@ -6,7 +6,8 @@ import { loadRootEnv } from './env';
 
 loadRootEnv();
 
-const url = process.env.DATABASE_URL ?? 'postgres://magnox:magnox@localhost:5432/magnox';
+const url =
+  process.env.DATABASE_URL ?? 'postgres://gamecentral:gamecentral@localhost:5432/gamecentral';
 const client = postgres(url, {
   max: 1,
   prepare: process.env.DATABASE_PREPARE !== 'false',

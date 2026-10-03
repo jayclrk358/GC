@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { PLAN_LIMITS } from '@magnox/shared';
+import { PLAN_LIMITS } from '@gamecentral/shared';
 import {
   createCommunity,
   expectAccessible,

@@ -1,6 +1,6 @@
 import type { Server, Socket } from 'socket.io';
-import { logger } from '@magnox/core/logger';
-import { cacheRedis } from '@magnox/core/redis';
+import { logger } from '@gamecentral/core/logger';
+import { cacheRedis } from '@gamecentral/core/redis';
 
 const log = logger('presence');
 

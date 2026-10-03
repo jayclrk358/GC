@@ -1,6 +1,6 @@
 import { GameDig, type QueryResult } from 'gamedig';
 import { and, eq, gt, isNull } from 'drizzle-orm';
-import { db, schema, sql } from '@magnox/db';
+import { db, schema, sql } from '@gamecentral/db';
 import {
   BlockedAddressError,
   cacheRedis,
@@ -25,13 +25,13 @@ import {
   rooms,
   shouldGoDormant,
   UnresolvableHostError,
-} from '@magnox/core';
+} from '@gamecentral/core';
 import {
   isLinkProtocol,
   isServerProtocol,
   SERVER_PROTOCOLS,
   type ServerProtocol,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 
 const log = logger('poll');
 

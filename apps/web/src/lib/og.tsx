@@ -1,19 +1,23 @@
 import { ImageResponse } from 'next/og';
+import { Mark } from '@/components/shell/logo';
+import { WORDMARK } from '@/components/shell/wordmark-paths';
 
 export const OG_SIZE = { width: 1200, height: 630 };
 
-/** The pinwheel mark, as satori can draw it. */
-function Mark({ size }: { size: number }) {
+/** The Game Central logo, as satori can draw it. */
+function Brand({ text, accent }: { text: string; accent: string }) {
+  const h = 26;
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32">
-      <rect width="32" height="32" rx="8" fill="#2e1065" />
-      <g transform="translate(6,6) scale(0.2)">
-        <polygon points="50,50 44,8 74,4 68,44" fill="#c9a3ff" />
-        <polygon points="50,50 44,8 74,4 68,44" fill="#9b6bff" transform="rotate(90,50,50)" />
-        <polygon points="50,50 44,8 74,4 68,44" fill="#6f3fd1" transform="rotate(180,50,50)" />
-        <polygon points="50,50 44,8 74,4 68,44" fill="#3d1a78" transform="rotate(270,50,50)" />
-      </g>
-    </svg>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+      <svg width={48} height={48} viewBox="0 0 64 64">
+        {/* Satori draws only plain SVG elements here, so the mark is inlined. */}
+        {Mark()}
+      </svg>
+      <svg width={(h * WORDMARK.width) / 100} height={h} viewBox={`0 0 ${WORDMARK.width} 100`}>
+        <path d={WORDMARK.game} fill={text} />
+        <path d={WORDMARK.central} fill={accent} />
+      </svg>
+    </div>
   );
 }
 
@@ -29,9 +33,9 @@ export function shareImage(opts: {
     surface: '#151726',
     text: '#f4f4fb',
     muted: '#a9adc8',
-    primary: '#9b6bff',
+    primary: '#a78bfa',
   };
-  const initial = opts.title.trim().charAt(0).toUpperCase() || 'M';
+  const initial = opts.title.trim().charAt(0).toUpperCase() || 'G';
   return new ImageResponse(
     <div
       style={{
@@ -65,7 +69,10 @@ export function shareImage(opts: {
             {initial}
           </div>
         ) : (
-          <Mark size={120} />
+          <svg width={120} height={120} viewBox="0 0 64 64">
+            {/* Satori draws only plain SVG elements here, so the mark is inlined. */}
+            {Mark()}
+          </svg>
         )}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 860 }}>
           <div style={{ fontSize: 72, fontWeight: 800, lineHeight: 1.05 }}>
@@ -96,10 +103,7 @@ export function shareImage(opts: {
             </div>
           ))}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, fontSize: 32 }}>
-          <Mark size={44} />
-          <span style={{ fontWeight: 700 }}>Magnox</span>
-        </div>
+        <Brand text={c.text} accent={c.primary} />
       </div>
     </div>,
     OG_SIZE,

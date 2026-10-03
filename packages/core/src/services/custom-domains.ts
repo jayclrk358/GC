@@ -1,8 +1,8 @@
 import { randomBytes } from 'node:crypto';
 import { promises as dns } from 'node:dns';
 import { and, eq, isNull, lt, ne } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
-import { customDomainSchema, domainVerifyRecord, Permission, planPerks } from '@magnox/shared';
+import { db, schema } from '@gamecentral/db';
+import { customDomainSchema, domainVerifyRecord, Permission, planPerks } from '@gamecentral/shared';
 import { requirePerm, type MemberContext } from '../access';
 import { domainCacheKey } from '../domain-lookup';
 import { env } from '../env';
@@ -57,7 +57,7 @@ async function forgetDomain(domain: string | null | undefined) {
   await uncache(domainCacheKey(domain));
 }
 
-/** Domains that belong to Magnox itself can't be claimed. */
+/** Domains that belong to Game Central itself can't be claimed. */
 function isOwnDomain(domain: string): boolean {
   const own = [new URL(env().APP_URL).hostname, customDomainTarget()];
   try {

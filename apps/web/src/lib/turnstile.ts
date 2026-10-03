@@ -1,6 +1,6 @@
 import 'server-only';
 import { connection } from 'next/server';
-import { env, turnstileEnabled } from '@magnox/core';
+import { env, turnstileEnabled } from '@gamecentral/core';
 
 /**
  * The public Turnstile site key, or null when the check is off. Read per request so a key set

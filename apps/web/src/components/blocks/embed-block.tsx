@@ -1,5 +1,5 @@
 import { headers } from 'next/headers';
-import type { BlockConfig } from '@magnox/shared';
+import type { BlockConfig } from '@gamecentral/shared';
 import { ClickToLoad } from './click-to-load';
 import { BlockSection } from './section';
 

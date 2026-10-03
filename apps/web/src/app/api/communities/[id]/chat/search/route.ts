@@ -1,4 +1,4 @@
-import { enforceRateLimit, searchMessages } from '@magnox/core';
+import { enforceRateLimit, searchMessages } from '@gamecentral/core';
 import { communityJson } from '@/lib/api';
 import { clientIp } from '@/lib/request';
 

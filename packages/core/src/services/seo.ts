@@ -1,6 +1,6 @@
 import { and, desc, eq, isNotNull, isNull } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
-import type { Theme } from '@magnox/shared';
+import { db, schema } from '@gamecentral/db';
+import type { Theme } from '@gamecentral/shared';
 import { cached } from '../cache';
 import { mediaUrl } from '../storage';
 

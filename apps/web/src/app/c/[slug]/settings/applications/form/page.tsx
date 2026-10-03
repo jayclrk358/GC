@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { getApplicationForm } from '@magnox/core';
+import { getApplicationForm } from '@gamecentral/core';
 import { loadCommunityForSettings } from '@/lib/community';
 import { BackLink } from '@/components/ui/back-link';
 import { PageHeader } from '@/components/ui/misc';

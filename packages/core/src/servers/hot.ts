@@ -1,5 +1,5 @@
 import { and, inArray, isNull, or, sql } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
+import { db, schema } from '@gamecentral/db';
 import { POLL } from './schedule';
 
 // "Hot" endpoints (someone is watching them live) are polled every minute. Kept apart from the

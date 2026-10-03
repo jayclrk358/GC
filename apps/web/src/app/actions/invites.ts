@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { acceptInvite, createInvite, getMemberContext, revokeInvite } from '@magnox/core';
+import { acceptInvite, createInvite, getMemberContext, revokeInvite } from '@gamecentral/core';
 import { getUser } from '@/lib/auth';
 import { runAction } from '@/lib/action';
 

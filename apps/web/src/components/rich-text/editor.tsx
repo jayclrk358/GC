@@ -24,7 +24,7 @@ import {
   Strikethrough,
   Undo2,
 } from 'lucide-react';
-import { isSafeHref, type RichNode } from '@magnox/shared';
+import { isSafeHref, type RichNode } from '@gamecentral/shared';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Field } from '@/components/ui/field';

@@ -3,8 +3,8 @@ import { cache } from 'react';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { nextCookies } from 'better-auth/next-js';
-import { createAuth } from '@magnox/auth';
-import { markSessionsStale, sessionsRevoked } from '@magnox/core';
+import { createAuth } from '@gamecentral/auth';
+import { markSessionsStale, sessionsRevoked } from '@gamecentral/core';
 
 const g = globalThis as unknown as { __mxAuth?: ReturnType<typeof make> };
 const make = () => createAuth([nextCookies()]);

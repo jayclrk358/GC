@@ -1,5 +1,5 @@
 import { and, desc, eq, gt, inArray, isNull, sql } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
+import { db, schema } from '@gamecentral/db';
 import {
   BAN_DURATIONS,
   has,
@@ -9,7 +9,7 @@ import {
   Permission,
   reportInputSchema,
   TIMEOUT_DURATIONS,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import { z } from 'zod';
 import {
   channelPermissions,

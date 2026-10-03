@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { canEditWiki, compareRevision, isAppError } from '@magnox/core';
+import { canEditWiki, compareRevision, isAppError } from '@gamecentral/core';
 import { formatDateTime } from '@/lib/format';
 import { RichText } from '@/components/rich-text/rich-text';
 import { RestoreRevisionButton } from '@/components/wiki/wiki-page-tools';

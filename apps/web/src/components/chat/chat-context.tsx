@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import type { Prefs, RichNode } from '@magnox/shared';
+import type { Prefs, RichNode } from '@gamecentral/shared';
 import type { ChatChannelInfo, ChatMe, ChatMessage, ChatPerms } from './types';
 
 export interface ChatActions {

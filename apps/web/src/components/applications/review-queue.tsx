@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Check, X } from 'lucide-react';
-import type { ApplicationView } from '@magnox/core';
+import type { ApplicationView } from '@gamecentral/core';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Field } from '@/components/ui/field';

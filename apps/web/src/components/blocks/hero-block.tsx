@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type { BlockConfig } from '@magnox/shared';
+import type { BlockConfig } from '@gamecentral/shared';
 import type { LoadedCommunity } from '@/lib/community';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';

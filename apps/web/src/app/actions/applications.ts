@@ -8,7 +8,7 @@ import {
   saveOnboarding,
   submitApplication,
   withdrawApplication,
-} from '@magnox/core';
+} from '@gamecentral/core';
 import { runAction } from '@/lib/action';
 import { ctxFor } from './_ctx';
 

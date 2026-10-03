@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
-import { listMembers, listRoles, roleSummary } from '@magnox/core';
-import { planPerks, themeBackdrops } from '@magnox/shared';
+import { listMembers, listRoles, roleSummary } from '@gamecentral/core';
+import { planPerks, themeBackdrops } from '@gamecentral/shared';
 import { loadCommunity } from '@/lib/community';
 import { pageParam } from '@/lib/page-param';
 import { getPrefs } from '@/lib/prefs';

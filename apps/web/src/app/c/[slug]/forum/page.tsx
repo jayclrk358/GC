@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Hash, Megaphone, MessagesSquare, Settings } from 'lucide-react';
-import { forumChannelStats, listVisibleChannels } from '@magnox/core';
+import { forumChannelStats, listVisibleChannels } from '@gamecentral/core';
 import { loadCommunity } from '@/lib/community';
 import { relativeTime } from '@/lib/format';
 import { Button } from '@/components/ui/button';

@@ -100,7 +100,7 @@ test('download your data, then delete your account', async ({ page, browser }) =
   const download = member.page.waitForEvent('download');
   await member.page.getByRole('link', { name: 'Download my data' }).click();
   const file = await download;
-  expect(file.suggestedFilename()).toMatch(/^magnox-data-\d{4}-\d{2}-\d{2}\.json$/);
+  expect(file.suggestedFilename()).toMatch(/^gamecentral-data-\d{4}-\d{2}-\d{2}\.json$/);
   const data = JSON.parse(
     await (await file.createReadStream()).toArray().then((c) => Buffer.concat(c).toString()),
   );

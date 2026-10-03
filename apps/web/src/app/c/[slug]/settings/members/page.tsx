@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { listMembers, listRoles, roleSummary } from '@magnox/core';
-import { planPerks, themeBackdrops } from '@magnox/shared';
+import { listMembers, listRoles, roleSummary } from '@gamecentral/core';
+import { planPerks, themeBackdrops } from '@gamecentral/shared';
 import { loadCommunityForSettings } from '@/lib/community';
 import { PageHeader } from '@/components/ui/misc';
 import { MemberSearch } from '@/components/community/member-search';

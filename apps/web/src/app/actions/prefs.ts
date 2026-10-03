@@ -2,14 +2,14 @@
 
 import { cookies } from 'next/headers';
 import { eq } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
+import { db, schema } from '@gamecentral/db';
 import {
   encodePrefsCookie,
   parsePrefs,
   prefsSchema,
   PREFS_COOKIE,
   type Prefs,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import { getUser } from '@/lib/auth';
 import { runAction } from '@/lib/action';
 

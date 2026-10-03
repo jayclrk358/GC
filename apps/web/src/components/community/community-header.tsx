@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Globe2, Play, Settings, Users } from 'lucide-react';
-import { playLink, planPerks } from '@magnox/shared';
+import { playLink, planPerks } from '@gamecentral/shared';
 import type { LoadedCommunity } from '@/lib/community';
 import { imgSources } from '@/lib/media';
 import { formatCount } from '@/lib/utils';
@@ -13,7 +13,7 @@ import { ScrollList } from '@/components/ui/scroll-list';
 import { JoinButton } from './join-button';
 import { InviteButton } from './invite-button';
 import { MuteMenu } from '@/components/notifications/mute-menu';
-import { isMuted } from '@magnox/core';
+import { isMuted } from '@gamecentral/core';
 
 const TAB_PATHS: Record<string, string> = {
   home: '',

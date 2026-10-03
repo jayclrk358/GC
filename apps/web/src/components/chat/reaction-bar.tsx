@@ -4,8 +4,8 @@ import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { Popover } from 'radix-ui';
 import { SmilePlus } from 'lucide-react';
-import { CHAT_REACTIONS, CHAT_REACTION_NAMES } from '@magnox/shared';
-import { customReaction } from '@magnox/shared/emoji-values';
+import { CHAT_REACTIONS, CHAT_REACTION_NAMES } from '@gamecentral/shared';
+import { customReaction } from '@gamecentral/shared/emoji-values';
 import { EmojiImage, useCustomEmoji, useReactionInfo } from '@/components/emoji/emoji-context';
 import { cn } from '@/lib/utils';
 

@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { Compass, Gem } from 'lucide-react';
-import { exploreCommunities, featuredCommunities, listGames } from '@magnox/core';
-import { LANGUAGES, REGIONS } from '@magnox/shared';
+import { exploreCommunities, featuredCommunities, listGames } from '@gamecentral/core';
+import { LANGUAGES, REGIONS } from '@gamecentral/shared';
 import { CommunityCard } from '@/components/community/community-card';
 import { EmptyState, PageHeader } from '@/components/ui/misc';
 import { ExploreFilters } from '@/components/community/explore-filters';

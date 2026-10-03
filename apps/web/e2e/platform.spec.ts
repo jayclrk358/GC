@@ -33,7 +33,7 @@ test('search engines and link previews: robots, sitemap, share images', async ({
 
 test('installable app, push notifications and email round-ups', async ({ page }) => {
   const manifest = await (await page.request.get('/manifest.webmanifest')).json();
-  expect(manifest.name).toBe('Magnox');
+  expect(manifest.name).toBe('Game Central');
   expect(manifest.display).toBe('standalone');
   expect(manifest.icons.map((i: { sizes: string }) => i.sizes)).toEqual(
     expect.arrayContaining(['192x192', '512x512']),

@@ -6,8 +6,13 @@ import { useRouter } from 'next/navigation';
 import { useFormatter, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { ExternalLink } from 'lucide-react';
-import { PAID_PLAN_IDS, type BillingInterval, type PaidPlanId, type PlanId } from '@magnox/shared';
-import type { BillingView, PlanPrices } from '@magnox/core';
+import {
+  PAID_PLAN_IDS,
+  type BillingInterval,
+  type PaidPlanId,
+  type PlanId,
+} from '@gamecentral/shared';
+import type { BillingView, PlanPrices } from '@gamecentral/core';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/misc';
 import { SettingsSection } from '@/components/settings/section';

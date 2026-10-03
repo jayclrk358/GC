@@ -255,7 +255,7 @@ const ctl = createHttpServer((req, res) => {
       <title>ignored</title>
       <meta property="og:title" content="Fixture page ${name}">
       <meta property="og:description" content="A page served by the local fixtures for link preview tests.">
-      <meta property="og:site_name" content="Magnox Fixtures">
+      <meta property="og:site_name" content="Game Central Fixtures">
       <meta property="og:image" content="/og.png">
       </head><body><h1>${name}</h1></body></html>`);
     return;
@@ -294,7 +294,7 @@ const ctl = createHttpServer((req, res) => {
       }
       const headers: Record<string, string> = {};
       for (const [k, v] of Object.entries(req.headers)) {
-        if (k.startsWith('x-magnox-') || k === 'content-type' || k === 'user-agent') {
+        if (k.startsWith('x-gamecentral-') || k === 'content-type' || k === 'user-agent') {
           headers[k] = String(v);
         }
       }

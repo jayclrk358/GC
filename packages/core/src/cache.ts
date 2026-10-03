@@ -10,14 +10,17 @@ const LOCAL_MAX = 5_000;
 // route handlers, server actions), so the maps live on globalThis and every copy shares them;
 // otherwise dropping a value in one copy would leave it in the others.
 const shared = globalThis as typeof globalThis & {
-  __magnoxCache?: {
+  __gamecentralCache?: {
     // Stored as JSON so each caller gets its own copy (some sort or extend what they get back).
     local: Map<string, { json: string; until: number }>;
     /** Loads in progress: concurrent misses on one key wait for the same load. */
     inflight: Map<string, Promise<string>>;
   };
 };
-const { local, inflight } = (shared.__magnoxCache ??= { local: new Map(), inflight: new Map() });
+const { local, inflight } = (shared.__gamecentralCache ??= {
+  local: new Map(),
+  inflight: new Map(),
+});
 
 /**
  * Read-through cache for small results that are the same for everyone (platform counts, the game

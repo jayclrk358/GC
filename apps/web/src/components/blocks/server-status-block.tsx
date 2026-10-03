@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { getServersByIds, listCommunityServers } from '@magnox/core';
-import type { BlockConfig } from '@magnox/shared';
+import { getServersByIds, listCommunityServers } from '@gamecentral/core';
+import type { BlockConfig } from '@gamecentral/shared';
 import type { LoadedCommunity } from '@/lib/community';
 import { ServerCard } from '@/components/servers/server-status';
 import { BlockSection } from './section';

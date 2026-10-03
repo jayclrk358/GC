@@ -139,13 +139,14 @@ export function SidebarContent({
         <Link
           href="/"
           onClick={onNavigate}
-          aria-label={collapsed ? 'Magnox Resources' : undefined}
+          aria-label="Game Central"
           className={cn(
-            'mx-press flex min-w-0 items-center rounded-ui px-1 py-1',
+            'mx-press flex min-w-0 items-center gap-2.5 rounded-ui px-1 py-1',
             collapsed && 'mx-auto',
           )}
         >
-          {collapsed ? <Logo size={32} /> : <Wordmark className="h-5" />}
+          <Logo size={collapsed ? 32 : 30} />
+          {!collapsed && <Wordmark className="h-3.5" label="" />}
         </Link>
       </div>
 

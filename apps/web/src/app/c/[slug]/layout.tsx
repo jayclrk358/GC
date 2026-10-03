@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
-import { getConsent, onlineInCommunity, voicePeople } from '@magnox/core';
+import { getConsent, onlineInCommunity, voicePeople } from '@gamecentral/core';
 import { loadCommunity } from '@/lib/community';
-import { planPerks } from '@magnox/shared';
+import { planPerks } from '@gamecentral/shared';
 import { imgSources } from '@/lib/media';
 import { CommunityHeader } from '@/components/community/community-header';
 import { CommunityThemeStyle } from '@/components/community/theme-style';
@@ -21,7 +21,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { community } = await loadCommunity((await params).slug);
   return {
-    title: { default: community.name, template: `%s · ${community.name} · Magnox` },
+    title: { default: community.name, template: `%s · ${community.name} · Game Central` },
     description: community.tagline || undefined,
     robots: community.visibility === 'public' ? undefined : { index: false },
   };

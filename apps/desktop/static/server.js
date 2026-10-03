@@ -1,4 +1,4 @@
-// Choosing which Magnox site the app shows.
+// Choosing which Game Central site the app shows.
 (async () => {
   const input = document.getElementById('url');
   const error = document.getElementById('error');

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { myFeedback } from '@magnox/core';
+import { myFeedback } from '@gamecentral/core';
 import { getUser } from '@/lib/auth';
 import { formatDateTime } from '@/lib/format';
 import { Button } from '@/components/ui/button';

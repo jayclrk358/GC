@@ -9,7 +9,7 @@ import {
   matchEmoji,
   STANDARD_EMOJI,
   type CustomEmoji,
-} from '@magnox/shared/emoji-values';
+} from '@gamecentral/shared/emoji-values';
 import { providedEmoji } from '@/components/emoji/emoji-context';
 import { cn } from '@/lib/utils';
 import { place, setComboboxAttrs } from './mentions';

@@ -1,4 +1,4 @@
-import type { Block } from '@magnox/shared';
+import type { Block } from '@gamecentral/shared';
 import type { LoadedCommunity } from '@/lib/community';
 import { AboutBlock } from './about-block';
 import { DiscordBlock } from './discord-block';

@@ -1,5 +1,5 @@
-import { sql } from '@magnox/db';
-import { cacheRedis } from '@magnox/core';
+import { sql } from '@gamecentral/db';
+import { cacheRedis } from '@gamecentral/core';
 
 export const dynamic = 'force-dynamic';
 

@@ -1,5 +1,5 @@
 import { and, asc, count, eq } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
+import { db, schema } from '@gamecentral/db';
 import {
   customReactionId,
   emojiImagePath,
@@ -8,7 +8,7 @@ import {
   newId,
   Permission,
   type CustomEmoji,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import { requirePerm, type MemberContext } from '../access';
 import { cacheRedis } from '../redis';
 import { AppError, conflict, isUniqueViolation, notFound } from '../errors';

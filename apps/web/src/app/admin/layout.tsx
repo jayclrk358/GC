@@ -1,10 +1,10 @@
 import { getTranslations } from 'next-intl/server';
-import { newFeedbackCount, staffCan, type StaffAbility } from '@magnox/core';
+import { newFeedbackCount, staffCan, type StaffAbility } from '@gamecentral/core';
 import { staffFor } from '@/lib/staff';
 import { NavLink } from '@/components/shell/nav-link';
 import { ScrollList } from '@/components/ui/scroll-list';
 
-export const metadata = { title: { default: 'Admin', template: '%s · Admin · Magnox' } };
+export const metadata = { title: { default: 'Admin', template: '%s · Admin · Game Central' } };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   // Not staff: the console doesn't exist as far as they're concerned.

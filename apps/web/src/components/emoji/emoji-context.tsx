@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
-import { customReactionId, type CustomEmoji } from '@magnox/shared/emoji-values';
+import { customReactionId, type CustomEmoji } from '@gamecentral/shared/emoji-values';
 
 /** The community's custom emoji, for reactions (pickers and the reactions on messages). */
 const EmojiContext = React.createContext<CustomEmoji[]>([]);

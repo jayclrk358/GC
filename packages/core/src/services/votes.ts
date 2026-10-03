@@ -1,5 +1,5 @@
 import { and, desc, eq, isNotNull, isNull, sql } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
+import { db, schema } from '@gamecentral/db';
 import {
   formatDuration,
   MINECRAFT_NAME_RE,
@@ -7,7 +7,7 @@ import {
   Permission,
   VOTE_COOLDOWN_MS,
   voteInputSchema,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import { requirePerm, type MemberContext } from '../access';
 import { AppError, notFound, unauthorized } from '../errors';
 import { logger } from '../logger';
@@ -18,7 +18,7 @@ import { enforceRateLimit } from '../ratelimit';
 
 const log = logger('votes');
 
-export const VOTIFIER_SERVICE = 'Magnox';
+export const VOTIFIER_SERVICE = 'Game Central';
 export const VOTIFIER_ATTEMPTS = 3;
 
 export interface VoteStatus {

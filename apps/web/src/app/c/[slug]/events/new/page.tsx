@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { has, Permission } from '@magnox/shared';
+import { has, Permission } from '@gamecentral/shared';
 import { loadCommunity } from '@/lib/community';
 import { getViewerTimeZone } from '@/lib/timezone';
 import { newEventValues } from '@/lib/event-form-values';

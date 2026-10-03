@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { getEventDetail, isAppError } from '@magnox/core';
-import { has, Permission } from '@magnox/shared';
+import { getEventDetail, isAppError } from '@gamecentral/core';
+import { has, Permission } from '@gamecentral/shared';
 import { loadCommunity } from '@/lib/community';
 import { eventValues } from '@/lib/event-form-values';
 import { BackLink } from '@/components/ui/back-link';

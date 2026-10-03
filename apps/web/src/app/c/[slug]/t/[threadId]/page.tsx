@@ -11,8 +11,8 @@ import {
   listVisibleChannels,
   pollResults,
   type PostView,
-} from '@magnox/core';
-import { has, Permission } from '@magnox/shared';
+} from '@gamecentral/core';
+import { has, Permission } from '@gamecentral/shared';
 import { loadCommunity } from '@/lib/community';
 import { getPrefs } from '@/lib/prefs';
 import { formatDateTime, relativeTime } from '@/lib/format';

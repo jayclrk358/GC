@@ -189,9 +189,9 @@ export async function upgradeCommunity(page: Page, slug: string, plan: 'Plus' | 
   await expect(page.getByText(`Thanks! ${plan} is now on.`)).toBeVisible();
 }
 
-/** Make an account a Magnox admin the way a site owner would (the admin:grant script). */
+/** Make an account a Game Central admin the way a site owner would (the admin:grant script). */
 export function grantAdmin(email: string) {
-  execFileSync('pnpm', ['--silent', '--filter', '@magnox/db', 'admin:grant', email], {
+  execFileSync('pnpm', ['--silent', '--filter', '@gamecentral/db', 'admin:grant', email], {
     cwd: path.resolve(process.cwd(), '../..'),
     stdio: 'pipe',
   });

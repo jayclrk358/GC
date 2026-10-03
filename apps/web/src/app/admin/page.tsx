@@ -1,5 +1,5 @@
 import { getFormatter, getTranslations } from 'next-intl/server';
-import { platformOverview } from '@magnox/core';
+import { platformOverview } from '@gamecentral/core';
 import { staffFor } from '@/lib/staff';
 import { PageHeader } from '@/components/ui/misc';
 

@@ -1,5 +1,5 @@
 {
-  "name": "@magnox/auth",
+  "name": "@gamecentral/auth",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -12,9 +12,9 @@
     "seed:demo": "tsx src/seed-demo.ts"
   },
   "dependencies": {
-    "@magnox/core": "workspace:*",
-    "@magnox/db": "workspace:*",
-    "@magnox/shared": "workspace:*",
+    "@gamecentral/core": "workspace:*",
+    "@gamecentral/db": "workspace:*",
+    "@gamecentral/shared": "workspace:*",
     "better-auth": "^1.7.6",
     "drizzle-orm": "^0.45.3"
   }

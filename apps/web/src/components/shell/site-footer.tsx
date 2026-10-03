@@ -11,7 +11,8 @@ export async function SiteFooter() {
         <div className="flex items-center gap-2">
           <Logo size={20} />
           <span>
-            <span className="font-heading font-bold text-fg">Magnox</span> · {t('footerTagline')}
+            <span className="font-heading font-bold text-fg">Game Central</span> ·{' '}
+            {t('footerTagline')}
           </span>
         </div>
         <nav aria-label={t('footerNav')}>

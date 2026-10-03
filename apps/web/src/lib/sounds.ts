@@ -1,8 +1,8 @@
-import type { Prefs } from '@magnox/shared';
+import type { Prefs } from '@gamecentral/shared';
 // The zod-free module: this runs on every page.
-import { soundForEvent, type SoundEvent, type SoundPack } from '@magnox/shared/prefs-values';
+import { soundForEvent, type SoundEvent, type SoundPack } from '@gamecentral/shared/prefs-values';
 
-// Magnox's sound effects. Every sound is made on the spot with the Web Audio API from a short
+// Game Central's sound effects. Every sound is made on the spot with the Web Audio API from a short
 // pattern of notes, voiced differently by each pack, so there are no audio files to download and
 // nothing borrowed from anyone else.
 
@@ -131,7 +131,7 @@ interface Voice {
 
 const PACKS: Record<SoundPack, Voice> = {
   // Bright and clear, with a slight chorus shimmer.
-  magnox: {
+  gamecentral: {
     base: 587.33,
     wave: 'triangle',
     partials: [

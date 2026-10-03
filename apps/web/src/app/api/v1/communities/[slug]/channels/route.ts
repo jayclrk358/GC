@@ -1,4 +1,4 @@
-import { apiChannels, apiCommunityContext } from '@magnox/core';
+import { apiChannels, apiCommunityContext } from '@gamecentral/core';
 import { apiV1 } from '@/lib/api-v1';
 
 type Params = { params: Promise<{ slug: string }> };

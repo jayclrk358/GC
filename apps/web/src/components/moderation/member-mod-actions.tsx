@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Ban, Clock, DoorOpen, Gavel } from 'lucide-react';
-import { BAN_DURATIONS, TIMEOUT_DURATIONS } from '@magnox/shared';
+import { BAN_DURATIONS, TIMEOUT_DURATIONS } from '@gamecentral/shared';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import {

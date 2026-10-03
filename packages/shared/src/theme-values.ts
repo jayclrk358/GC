@@ -162,7 +162,7 @@ type PresetDef = Pick<Theme, 'light' | 'dark'> &
   Partial<Pick<Theme, 'radius' | 'fontBody' | 'fontHeading' | 'defaultScheme'>>;
 
 export const THEME_PRESETS = {
-  magnox: {
+  gamecentral: {
     light: {
       bg: '#f3f4fb',
       surface: '#ffffff',
@@ -445,4 +445,4 @@ export function themeFromPreset(key: PresetKey): Theme {
   };
 }
 
-export const DEFAULT_THEME: Theme = themeFromPreset('magnox');
+export const DEFAULT_THEME: Theme = themeFromPreset('gamecentral');

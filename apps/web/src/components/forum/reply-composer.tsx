@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { X } from 'lucide-react';
-import { docToText, emptyDoc, type RichNode } from '@magnox/shared';
+import { docToText, emptyDoc, type RichNode } from '@gamecentral/shared';
 import { Button } from '@/components/ui/button';
 import { FormError } from '@/components/auth/form-error';
 import { Alert } from '@/components/ui/misc';

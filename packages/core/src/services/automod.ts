@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { and, eq, sql } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
+import { db, schema } from '@gamecentral/db';
 import {
   automodMessage,
   automodSchema,
@@ -13,7 +13,7 @@ import {
   scanContent,
   type AutomodConfig,
   type AutomodHit,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import { requirePerm, type MemberContext } from '../access';
 import { env } from '../env';
 import { AppError, forbidden } from '../errors';

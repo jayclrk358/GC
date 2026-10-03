@@ -1,4 +1,4 @@
-import type { MessageView } from '@magnox/core';
+import type { MessageView } from '@gamecentral/core';
 import type { ChatMessage } from './types';
 
 export interface ChatState {

@@ -1,7 +1,7 @@
-import { exportAccount, isAppError } from '@magnox/core';
+import { exportAccount, isAppError } from '@gamecentral/core';
 import { getUser } from '@/lib/auth';
 
-/** Everything Magnox keeps about you, as a JSON file to download. */
+/** Everything Game Central keeps about you, as a JSON file to download. */
 export async function GET() {
   const user = await getUser();
   try {
@@ -10,7 +10,7 @@ export async function GET() {
     return new Response(JSON.stringify(data, null, 2), {
       headers: {
         'content-type': 'application/json; charset=utf-8',
-        'content-disposition': `attachment; filename="magnox-data-${day}.json"`,
+        'content-disposition': `attachment; filename="gamecentral-data-${day}.json"`,
         'cache-control': 'no-store',
       },
     });

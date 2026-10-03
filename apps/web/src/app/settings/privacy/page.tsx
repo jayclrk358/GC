@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { listBlockedUsers } from '@magnox/core';
+import { listBlockedUsers } from '@gamecentral/core';
 import { requireUser } from '@/lib/auth';
 import { PageHeader } from '@/components/ui/misc';
 import { BlockedUsers } from '@/components/settings/blocked-users';

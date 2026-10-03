@@ -5,8 +5,8 @@ import {
   type ParticipantInfo,
 } from 'livekit-server-sdk';
 import { and, eq, isNull } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
-import { has, outranks, Permission, planLimits, planPerks } from '@magnox/shared';
+import { db, schema } from '@gamecentral/db';
+import { has, outranks, Permission, planLimits, planPerks } from '@gamecentral/shared';
 import {
   channelPermissions,
   channelPermissionsMany,

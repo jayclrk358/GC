@@ -20,19 +20,19 @@ import {
 import { readSettings, savedBounds, writeSettings } from './settings';
 import { navigationFor, originOf, serverOrigin } from './urls';
 
-// Magnox for Windows: the Magnox website in its own window. Nothing of the site is bundled, so
+// Game Central for Windows: the Game Central website in its own window. Nothing of the site is bundled, so
 // every update to the website shows up here straight away, with nothing to reinstall.
 
 const STATIC = path.join(__dirname, '..', 'static');
 const PRELOAD = path.join(__dirname, 'preload.js');
 const page = (name: string) => path.join(STATIC, name);
 
-/** The site the app was built for (package.json "magnoxUrl"). */
+/** The site the app was built for (package.json "siteUrl"). */
 const BUILT_FOR: string = (() => {
   const pkg = JSON.parse(fs.readFileSync(path.join(app.getAppPath(), 'package.json'), 'utf8')) as {
-    magnoxUrl?: string;
+    siteUrl?: string;
   };
-  return serverOrigin(pkg.magnoxUrl ?? '') ?? 'https://magnoxresources.com';
+  return serverOrigin(pkg.siteUrl ?? '') ?? 'https://gamecentral.app';
 })();
 
 let appOrigin = serverOrigin(readSettings().serverUrl ?? '') ?? BUILT_FOR;
@@ -41,14 +41,14 @@ let main: BrowserWindow | null = null;
 const background = () => (nativeTheme.shouldUseDarkColors ? '#07080f' : '#f3f4fb');
 
 // Windows needs this for notifications to show (it must match the installer's app id).
-app.setAppUserModelId('com.magnox.desktop');
+app.setAppUserModelId('com.gamecentral.desktop');
 
 // Look like the Chrome this is, so sites (sign-in pages especially) treat it as a browser. The
-// MagnoxDesktop part lets Magnox tell it's the app, should it ever need to.
+// GameCentralDesktop part lets Game Central tell it's the app, should it ever need to.
 app.userAgentFallback = `${app.userAgentFallback
   .replace(/ Electron\/\S+/, '')
   .replace(new RegExp(` ${app.getName()}\\/\\S+`, 'i'), '')
-  .replace(/ magnox-desktop\/\S+/i, '')} MagnoxDesktop/${app.getVersion()}`;
+  .replace(/ gamecentral-desktop\/\S+/i, '')} GameCentralDesktop/${app.getVersion()}`;
 
 // ── The window ──────────────────────────────────────────────────────────────
 
@@ -62,7 +62,7 @@ function createWindow(): BrowserWindow {
     minWidth: 400,
     minHeight: 480,
     show: false,
-    title: 'Magnox',
+    title: 'Game Central',
     icon: page('icon.png'),
     backgroundColor: background(),
     // The menu (back, reload, zoom, server address...) shows when you press Alt.
@@ -108,7 +108,7 @@ function createWindow(): BrowserWindow {
   return win;
 }
 
-/** Keep a window on Magnox (and its sign-in pages); everything else goes to the browser. */
+/** Keep a window on Game Central (and its sign-in pages); everything else goes to the browser. */
 function guard(contents: WebContents) {
   const check = (e: Electron.Event, url: string) => {
     const where = navigationFor(url, appOrigin);
@@ -172,7 +172,7 @@ function addContextMenu(win: BrowserWindow) {
   });
 }
 
-// ── Permissions: the microphone, screen sharing and notifications, for Magnox only ──────────
+// ── Permissions: the microphone, screen sharing and notifications, for Game Central only ──────────
 
 const ALLOWED = new Set([
   'media',
@@ -331,7 +331,7 @@ ipcMain.handle('server:get', (e) =>
 ipcMain.handle('server:set', (e, input: unknown) => {
   if (!fromOwnPage(e) || typeof input !== 'string') return 'Something went wrong.';
   const origin = serverOrigin(input);
-  if (!origin) return 'Enter a web address, like magnox.example.com.';
+  if (!origin) return 'Enter a web address, like gamecentral.example.com.';
   appOrigin = origin;
   writeSettings({ serverUrl: origin === BUILT_FOR ? undefined : origin });
   void main?.loadURL(origin);
@@ -398,12 +398,12 @@ function buildMenu() {
           },
         },
         {
-          label: 'About Magnox',
+          label: 'About Game Central',
           click: () =>
             void dialog.showMessageBox({
               type: 'info',
-              title: 'About Magnox',
-              message: `Magnox for Windows ${app.getVersion()}`,
+              title: 'About Game Central',
+              message: `Game Central for Windows ${app.getVersion()}`,
               detail: `Showing ${appOrigin}\nElectron ${process.versions.electron}, Chrome ${process.versions.chrome}`,
             }),
         },

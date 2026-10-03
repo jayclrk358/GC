@@ -1,5 +1,5 @@
 import { and, asc, desc, eq, sql } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
+import { db, schema } from '@gamecentral/db';
 import {
   applicationFormSchema,
   DEFAULT_APPLICATION_FORM,
@@ -12,7 +12,7 @@ import {
   type ApplicationAnswer,
   type ApplicationForm,
   type Onboarding,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import { z } from 'zod';
 import { requireMember, requirePerm, type MemberContext } from '../access';
 import {
@@ -185,7 +185,7 @@ export interface ApplicationView {
     name: string;
     username: string | null;
     image: string | null;
-    /** When they joined Magnox, to spot brand-new accounts. */
+    /** When they joined Game Central, to spot brand-new accounts. */
     since: string;
   };
   reviewerName: string | null;

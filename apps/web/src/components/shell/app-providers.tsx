@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { Toaster } from 'sonner';
-import type { Prefs } from '@magnox/shared';
+import type { Prefs } from '@gamecentral/shared';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { PrefsProvider } from './prefs-provider';
 import { ShortcutsProvider, useShortcut } from './shortcuts-provider';

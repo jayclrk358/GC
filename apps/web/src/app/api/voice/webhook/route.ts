@@ -1,4 +1,4 @@
-import { handleVoiceWebhook, logger } from '@magnox/core';
+import { handleVoiceWebhook, logger } from '@gamecentral/core';
 
 /**
  * LiveKit's webhook: people joining and leaving voice channels, which keeps the "who's in

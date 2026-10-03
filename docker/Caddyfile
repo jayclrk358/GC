@@ -1,7 +1,7 @@
 {
 	# Browsers send no server name (SNI) when the site is reached by IP address; use the site's.
 	default_sni {$SITE_ADDRESS}
-	# Communities' own domains get a certificate on their first visit, but only once Magnox has
+	# Communities' own domains get a certificate on their first visit, but only once Game Central has
 	# verified them (the web app answers 200 for those).
 	on_demand_tls {
 		ask http://web:3000/api/domains/check

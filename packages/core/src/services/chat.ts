@@ -14,7 +14,7 @@ import {
   sql,
   type SQL,
 } from 'drizzle-orm';
-import { db, schema, type MessageAttachment, type MessageEmbed } from '@magnox/db';
+import { db, schema, type MessageAttachment, type MessageEmbed } from '@gamecentral/db';
 import {
   collectMentions,
   customReactionId,
@@ -38,7 +38,7 @@ import {
   themeBackdrops,
   toChatDoc,
   uuidAtTime,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import { z } from 'zod';
 import type { MemberContext } from '../access';
 import { cached, uncache } from '../cache';
@@ -697,7 +697,7 @@ export async function sendMessage(
 }
 
 /**
- * Post a notice from Magnox itself (no author), e.g. "Survival is down". It goes out live like any
+ * Post a notice from Game Central itself (no author), e.g. "Survival is down". It goes out live like any
  * other message but doesn't ping anyone.
  */
 export async function postSystemMessage(

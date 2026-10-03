@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PLAN_LIMITS } from '@magnox/shared';
+import { PLAN_LIMITS } from '@gamecentral/shared';
 import { processVideo } from './video';
 
 function box(type: string, body: Buffer): Buffer {

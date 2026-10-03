@@ -58,7 +58,7 @@ export const customDomains = pgTable('custom_domains', {
     .references(() => communities.id, { onDelete: 'cascade' }),
   /** Lowercase, no trailing dot. */
   domain: text('domain').notNull().unique(),
-  /** Goes in a TXT record at _magnox.<domain>. */
+  /** Goes in a TXT record at _gamecentral.<domain>. */
   verifyToken: text('verify_token').notNull(),
   verifiedAt: tz('verified_at'),
   lastCheckedAt: tz('last_checked_at'),

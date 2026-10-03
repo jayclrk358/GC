@@ -1,5 +1,5 @@
 <#
-  Start Magnox on a Windows PC (after running setup once).
+  Start Game Central on a Windows PC (after running setup once).
 
   Easiest: double-click windows-start.cmd in the project folder.
   Or: powershell -ExecutionPolicy Bypass -File scripts\windows\start.ps1
@@ -47,7 +47,7 @@ if (-not $NoBrowser) {
   }
 }
 
-Write-Host '==> Starting Magnox on http://localhost:3000 (press Ctrl+C to stop)' -ForegroundColor Cyan
+Write-Host '==> Starting Game Central on http://localhost:3000 (press Ctrl+C to stop)' -ForegroundColor Cyan
 try {
   pnpm dev
 } finally {

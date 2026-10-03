@@ -1,5 +1,5 @@
 import { and, asc, eq, ilike, inArray, or, sql } from 'drizzle-orm';
-import { db, schema, type DbOrTx } from '@magnox/db';
+import { db, schema, type DbOrTx } from '@gamecentral/db';
 import { requireMember, type MemberContext } from '../access';
 import { AppError, forbidden } from '../errors';
 import { enforceRateLimit } from '../ratelimit';

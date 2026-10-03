@@ -62,7 +62,7 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: [
     {
-      command: prod ? 'pnpm --filter @magnox/web start' : 'pnpm --filter @magnox/web dev',
+      command: prod ? 'pnpm --filter @gamecentral/web start' : 'pnpm --filter @gamecentral/web dev',
       url: 'http://localhost:3000/api/health',
       cwd: '../..',
       env,
@@ -70,7 +70,7 @@ export default defineConfig({
       timeout: 180_000,
     },
     {
-      command: 'pnpm --filter @magnox/realtime start',
+      command: 'pnpm --filter @gamecentral/realtime start',
       url: 'http://localhost:3001/health',
       cwd: '../..',
       env,
@@ -78,14 +78,14 @@ export default defineConfig({
       timeout: 90_000,
     },
     {
-      command: 'pnpm --filter @magnox/worker fixtures:servers',
+      command: 'pnpm --filter @gamecentral/worker fixtures:servers',
       url: 'http://127.0.0.1:25591/health',
       cwd: '../..',
       reuseExistingServer: !process.env.CI,
       timeout: 30_000,
     },
     {
-      command: 'pnpm --filter @magnox/worker start',
+      command: 'pnpm --filter @gamecentral/worker start',
       url: 'http://localhost:3002/health',
       cwd: '../..',
       env,

@@ -180,11 +180,11 @@ describe('toIcal', () => {
       [
         {
           ...s,
-          uid: 'e1@magnox',
+          uid: 'e1@gamecentral',
           title: 'Raid, night; part 1',
           description: 'Bring\nsnacks',
           location: '',
-          url: 'https://magnox.example/c/x/events/e1',
+          url: 'https://gamecentral.example/c/x/events/e1',
           allDay: false,
           cancelled: false,
           updatedAt: new Date('2026-09-01Z'),
@@ -207,11 +207,11 @@ describe('toIcal', () => {
       [
         {
           ...s,
-          uid: 'e2@magnox',
+          uid: 'e2@gamecentral',
           title: 'A\rSTATUS:CANCELLED',
           description: 'one\r\ntwo\nthree\rfour',
           location: '',
-          url: 'https://magnox.example/c/x/events/e2',
+          url: 'https://gamecentral.example/c/x/events/e2',
           allDay: false,
           cancelled: false,
           updatedAt: new Date('2026-09-01Z'),

@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { app, screen, type Rectangle } from 'electron';
 
-/** What the app remembers between runs (in %APPDATA%\Magnox\settings.json). */
+/** What the app remembers between runs (in %APPDATA%\Game Central\settings.json). */
 export interface Settings {
   /** A server other than the one the app was built for. */
   serverUrl?: string;

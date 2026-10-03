@@ -8,7 +8,8 @@ export default defineConfig({
   schema: './src/schema/index.ts',
   out: './drizzle',
   dbCredentials: {
-    url: process.env.DATABASE_URL ?? 'postgres://magnox:magnox@localhost:5432/magnox',
+    url:
+      process.env.DATABASE_URL ?? 'postgres://gamecentral:gamecentral@localhost:5432/gamecentral',
   },
   strict: true,
   verbose: true,

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react';
-import type { Onboarding } from '@magnox/shared';
+import type { Onboarding } from '@gamecentral/shared';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Textarea } from '@/components/ui/input';

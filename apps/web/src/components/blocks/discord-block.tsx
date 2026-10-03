@@ -1,5 +1,5 @@
 import { MessageCircle } from 'lucide-react';
-import type { BlockConfig } from '@magnox/shared';
+import type { BlockConfig } from '@gamecentral/shared';
 import { Button } from '@/components/ui/button';
 import { BlockSection } from './section';
 

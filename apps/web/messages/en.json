@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "Magnox",
+    "appName": "Game Central",
     "save": "Save",
     "saving": "Saving…",
     "saved": "Saved",
@@ -87,7 +87,7 @@
   },
   "auth": {
     "signInTitle": "Welcome back",
-    "signInSubtitle": "Sign in to your Magnox account.",
+    "signInSubtitle": "Sign in to your Game Central account.",
     "signUpTitle": "Create your account",
     "signUpSubtitle": "Join communities, follow servers and build your own hub.",
     "email": "Email",
@@ -99,7 +99,7 @@
     "username": "Username",
     "usernameHint": "3–24 letters, numbers, dots or underscores. Used for @mentions and your profile link.",
     "forgotPassword": "Forgot password?",
-    "noAccount": "New to Magnox?",
+    "noAccount": "New to Game Central?",
     "haveAccount": "Already have an account?",
     "orContinueWith": "or continue with",
     "continueWith": "Continue with {provider}",
@@ -142,7 +142,7 @@
   },
   "prefs": {
     "title": "Accessibility & display",
-    "intro": "These settings apply everywhere on Magnox and always override community themes. They are saved to your account and this browser.",
+    "intro": "These settings apply everywhere on Game Central and always override community themes. They are saved to your account and this browser.",
     "preview": "Preview",
     "previewText": "The quick brown fox jumps over the lazy dog.",
     "sections": {
@@ -210,7 +210,7 @@
     "simplified": "Simplified layout",
     "simplifiedDesc": "Hides decorative images and secondary panels to reduce clutter.",
     "communityThemes": "Show community themes",
-    "communityThemesDesc": "Turn off to see every community in the standard Magnox colours and fonts.",
+    "communityThemesDesc": "Turn off to see every community in the standard Game Central colours and fonts.",
     "cbRoles": "Colour-blind friendly role colours",
     "cbRolesDesc": "Adds icons and patterns next to role colours so they can be told apart.",
     "chatAnnouncements": "Announce new chat messages",
@@ -298,7 +298,7 @@
     "noProviders": "No sign-in providers are configured on this server.",
     "data": {
       "title": "Your data",
-      "description": "Download everything Magnox keeps about you: your account, profile, settings, communities and what you’ve written, as a JSON file.",
+      "description": "Download everything Game Central keeps about you: your account, profile, settings, communities and what you’ve written, as a JSON file.",
       "download": "Download my data"
     },
     "delete": {
@@ -437,7 +437,7 @@
     "none": "No servers yet",
     "noneManage": "Link a game server to show its live status.",
     "browserTitle": "Server browser",
-    "browserDescription": "Verified game servers from Magnox communities. Filter by game, region and players, then jump in.",
+    "browserDescription": "Verified game servers from Game Central communities. Filter by game, region and players, then jump in.",
     "browserEmpty": "No verified servers are listed yet.",
     "ping": "{ms} ms",
     "votes": "{count, plural, one {# vote} other {# votes}}",
@@ -536,7 +536,7 @@
     "joined": "Joined {date}",
     "favoriteGames": "Favourite games",
     "settingsTitle": "Profile",
-    "settingsDescription": "How you appear to others on Magnox.",
+    "settingsDescription": "How you appear to others on Game Central.",
     "saved": "Profile saved",
     "usernameSaved": "Username updated",
     "username": "Username",
@@ -620,7 +620,7 @@
     "opensNewTab": "(opens in a new tab)"
   },
   "create": {
-    "welcome": "Welcome to Magnox! Let's set up your first community.",
+    "welcome": "Welcome to Game Central! Let's set up your first community.",
     "title": "Create a community",
     "subtitle": "It takes about a minute. You can change everything later.",
     "steps": {
@@ -675,7 +675,7 @@
     },
     "lookHint": "Every theme meets WCAG AA contrast in light and dark mode. You can fine-tune colours, fonts and images later.",
     "presets": {
-      "magnox": "Magnox",
+      "gamecentral": "Game Central",
       "midnight": "Midnight",
       "forest": "Forest",
       "ember": "Ember",
@@ -823,7 +823,7 @@
     "presets": "Presets",
     "presetsDesc": "Start from a preset. Your images are kept.",
     "presetNames": {
-      "magnox": "Magnox",
+      "gamecentral": "Game Central",
       "midnight": "Midnight",
       "forest": "Forest",
       "ember": "Ember",
@@ -1481,7 +1481,7 @@
     "alertChannel": "Alert channel",
     "alertsOff": "Don't post alerts",
     "votifierTitle": "Vote rewards (Votifier)",
-    "votifierDesc": "Magnox sends each vote to your server's NuVotifier or Votifier plugin so players can be rewarded in game.",
+    "votifierDesc": "Game Central sends each vote to your server's NuVotifier or Votifier plugin so players can be rewarded in game.",
     "votifierHost": "Votifier host",
     "votifierHostHint": "Usually the same address as the server. Leave blank to turn vote rewards off.",
     "votifierPort": "Port",
@@ -1836,10 +1836,10 @@
     "digestWeekly": "Weekly",
     "push": {
       "title": "Push notifications",
-      "description": "Get notified on this phone or computer even when Magnox isn’t open. Turn it on separately on each device.",
+      "description": "Get notified on this phone or computer even when Game Central isn’t open. Turn it on separately on each device.",
       "thisDevice": "Notifications on this device",
-      "thisDeviceHint": "Not sent while you’re using Magnox somewhere else.",
-      "unsupported": "This browser can’t receive push notifications. On iPhone and iPad, add Magnox to your Home Screen first (Share → Add to Home Screen).",
+      "thisDeviceHint": "Not sent while you’re using Game Central somewhere else.",
+      "unsupported": "This browser can’t receive push notifications. On iPhone and iPad, add Game Central to your Home Screen first (Share → Add to Home Screen).",
       "blocked": "Notifications are blocked for this site in your browser’s settings. Allow them there, then come back.",
       "turnedOn": "Push notifications are on for this device",
       "turnedOff": "Push notifications are off for this device",
@@ -2199,7 +2199,7 @@
     "serverDown": "{name} is down. It stopped responding to status checks.",
     "serverUp": "{name} is back up.",
     "serverUpAfter": "{name} is back up after {duration}.",
-    "systemNotice": "Magnox notice",
+    "systemNotice": "Game Central notice",
     "viewServer": "View server",
     "altLabelVideo": "Description of video {n}",
     "altPlaceholderVideo": "What happens in the video?",
@@ -2309,7 +2309,7 @@
     "roles": "Roles",
     "rolesIn": "Roles in {community}",
     "memberSince": "In {community} since",
-    "joined": "Joined Magnox",
+    "joined": "Joined Game Central",
     "viewProfile": "View full profile"
   },
   "plans": {
@@ -2393,14 +2393,14 @@
   },
   "store": {
     "title": "Store",
-    "eyebrow": "Magnox plans",
+    "eyebrow": "Game Central plans",
     "heading": "Level up your community",
     "intro": "Plans give a community more room and a few perks. Everyone in it benefits, and you can cancel any time.",
     "startFree": "Start for free",
     "choose": "Get {plan}",
     "signInToBuy": "Sign in to buy",
     "notSetUp": "Payments aren't set up on this site yet, so plans can't be bought right now.",
-    "secure": "Payments are handled by Stripe. Magnox never sees your card details.",
+    "secure": "Payments are handled by Stripe. Game Central never sees your card details.",
     "pickTitle": "Get {plan}",
     "pickDescription": "Choose the community to put on {plan} for {price}.",
     "community": "Community",
@@ -2471,7 +2471,7 @@
     "activated": "Thanks! {plan} is now on.",
     "failed": "That didn’t work. Please try again.",
     "compare": "Compare all plans",
-    "gifted": "Magnox has given this community the {plan} plan{until, select, none {, for good} other { until {until}}}."
+    "gifted": "Game Central has given this community the {plan} plan{until, select, none {, for good} other { until {until}}}."
   },
   "presence": {
     "online": "Online",
@@ -2922,11 +2922,11 @@
   },
   "suspended": {
     "title": "This community has been suspended",
-    "body": "It broke Magnox’s rules, so it’s offline for now. If you run it, check your notifications for the reason.",
+    "body": "It broke Game Central’s rules, so it’s offline for now. If you run it, check your notifications for the reason.",
     "explore": "Find other communities"
   },
   "admin": {
-    "title": "Magnox admin",
+    "title": "Game Central admin",
     "navLabel": "Admin",
     "nav": {
       "overview": "Overview",
@@ -2939,7 +2939,7 @@
       "staff": "Staff"
     },
     "overviewTitle": "Overview",
-    "overviewDescription": "The whole of Magnox at a glance.",
+    "overviewDescription": "The whole of Game Central at a glance.",
     "stats": {
       "users": "People",
       "newUsers": "{count} joined in the last day",
@@ -2970,7 +2970,7 @@
       "plus": "Plus",
       "pro": "Pro"
     },
-    "giftedShort": "Given by Magnox",
+    "giftedShort": "Given by Game Central",
     "suspended": "Suspended",
     "archived": "Archived",
     "banned": "Banned",
@@ -3013,8 +3013,8 @@
       "give": "Give plan",
       "update": "Change plan",
       "given": "Plan given",
-      "currentUntil": "Has {plan} from Magnox until {date}.",
-      "currentForever": "Has {plan} from Magnox, for good.",
+      "currentUntil": "Has {plan} from Game Central until {date}.",
+      "currentForever": "Has {plan} from Game Central, for good.",
       "remove": "Take it back",
       "removed": "Plan taken back"
     },
@@ -3031,7 +3031,7 @@
       "lifted": "Community is back online"
     },
     "ban": {
-      "title": "Ban from Magnox",
+      "title": "Ban from Game Central",
       "description": "They’re signed out everywhere and can’t sign in again until the ban ends.",
       "reason": "Reason",
       "length": "For how long",
@@ -3087,7 +3087,7 @@
     },
     "content": {
       "title": "Posts and messages",
-      "description": "Find anything written on Magnox, newest first, and remove what breaks the rules. Removals show in the community’s audit log too.",
+      "description": "Find anything written on Game Central, newest first, and remove what breaks the rules. Removals show in the community’s audit log too.",
       "q": "Words",
       "kind": "Kind",
       "kinds": {
@@ -3117,7 +3117,7 @@
     },
     "staff": {
       "title": "Staff",
-      "description": "The people who help you run Magnox, and what they can do.",
+      "description": "The people who help you run Game Central, and what they can do.",
       "can": {
         "owner": {
           "name": "Owner",
@@ -3178,7 +3178,7 @@
   "legal": {
     "newTitle": "Before you start",
     "updatedTitle": "We’ve updated our terms",
-    "newBody": "Please read and agree to Magnox’s terms to carry on.",
+    "newBody": "Please read and agree to Game Central’s terms to carry on.",
     "updatedBody": "Our Terms of Service or Privacy Policy changed. Please have a look and agree to carry on.",
     "agree": "I’m 13 or older and I agree to the <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
     "tickFirst": "Tick the box to agree first.",
@@ -3190,7 +3190,7 @@
   },
   "developer": {
     "title": "Developer",
-    "description": "Personal API tokens let your own scripts and bots use the Magnox API as you, with exactly your access.",
+    "description": "Personal API tokens let your own scripts and bots use the Game Central API as you, with exactly your access.",
     "newTitle": "New API token",
     "newHint": "Give each script or bot its own token, so you can delete one without breaking the others.",
     "name": "Name",
@@ -3200,7 +3200,7 @@
     "create": "Create token",
     "docsLink": "Read the API docs",
     "createdTitle": "Your new token",
-    "createdHint": "Copy it now and keep it somewhere safe: it won’t be shown again. Anyone with it can use Magnox as you.",
+    "createdHint": "Copy it now and keep it somewhere safe: it won’t be shown again. Anyone with it can use Game Central as you.",
     "copy": "Copy",
     "copied": "Copied",
     "copyFailed": "Couldn’t copy. Select it and copy it yourself.",
@@ -3243,7 +3243,7 @@
     "add": "Add webhook",
     "added": "Added “{name}”",
     "secretTitle": "Signing secret",
-    "secretHint": "Use this to check deliveries really come from Magnox (see the docs). Copy it now: it won’t be shown again.",
+    "secretHint": "Use this to check deliveries really come from Game Central (see the docs). Copy it now: it won’t be shown again.",
     "listTitle": "Webhooks",
     "none": "No webhooks yet.",
     "kindDiscord": "Discord",
@@ -3295,7 +3295,7 @@
   },
   "cookies": {
     "title": "Cookies",
-    "body": "Magnox uses cookies to keep you signed in, check forms aren't sent by bots and remember settings you choose. If you allow it, we'll also remember your time zone so event times show on your clock. No advertising or tracking cookies.",
+    "body": "Game Central uses cookies to keep you signed in, check forms aren't sent by bots and remember settings you choose. If you allow it, we'll also remember your time zone so event times show on your clock. No advertising or tracking cookies.",
     "details": "Cookie details",
     "acceptAll": "Accept all",
     "necessaryOnly": "Necessary only",
@@ -3309,13 +3309,13 @@
     "intro": "Short sound effects for mentions, notifications and voice calls. They're made right in your browser and kept quiet. Turn them off, or pick the ones you like.",
     "general": "Sound effects",
     "enabled": "Play sound effects",
-    "enabledDesc": "Turn this off for silence everywhere on Magnox.",
+    "enabledDesc": "Turn this off for silence everywhere on Game Central.",
     "volume": "Volume",
     "pack": "Sound pack",
     "packDesc": "The style of every sound. Below, you can give single events a sound from another pack.",
     "packs": {
-      "magnox": {
-        "name": "Magnox",
+      "gamecentral": {
+        "name": "Game Central",
         "description": "Bright and clear, with a little shimmer."
       },
       "soft": {
@@ -3379,7 +3379,7 @@
   },
   "feedback": {
     "title": "Feedback",
-    "intro": "Found a bug, have an idea or a request, or a question? Tell the Magnox team. You can follow what happens to it here.",
+    "intro": "Found a bug, have an idea or a request, or a question? Tell the Game Central team. You can follow what happens to it here.",
     "signInFirst": "Sign in to send feedback, so we can reply and let you know what happens.",
     "signIn": "Sign in",
     "sendTitle": "Send feedback",
@@ -3444,11 +3444,11 @@
     "backToFeedback": "Back to feedback",
     "conversation": "Conversation",
     "you": "You",
-    "team": "Magnox team",
+    "team": "Game Central team",
     "sentFrom": "Sent from"
   },
   "staffBadge": {
-    "admin": "Magnox Admin",
-    "moderator": "Magnox Moderator"
+    "admin": "Game Central Admin",
+    "moderator": "Game Central Moderator"
   }
 }

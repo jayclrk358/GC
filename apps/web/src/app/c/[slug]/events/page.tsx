@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { CalendarDays, Plus } from 'lucide-react';
-import { listEventOccurrences, pastEvents, upcomingEvents } from '@magnox/core';
-import { has, Permission, zonedToUtc } from '@magnox/shared';
+import { listEventOccurrences, pastEvents, upcomingEvents } from '@gamecentral/core';
+import { has, Permission, zonedToUtc } from '@gamecentral/shared';
 import { loadCommunity } from '@/lib/community';
 import { getPrefs } from '@/lib/prefs';
 import { getViewerTimeZone } from '@/lib/timezone';

@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
-import { db } from '@magnox/db';
-import { Permission, uuidAtTime } from '@magnox/shared';
+import { db } from '@gamecentral/db';
+import { Permission, uuidAtTime } from '@gamecentral/shared';
 import { requirePerm, type MemberContext } from '../access';
 import { cached } from '../cache';
 

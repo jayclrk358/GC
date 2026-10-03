@@ -19,8 +19,8 @@ describe('profile accounts', () => {
       'https://steamcommunity.com/profiles/76561197960287930',
     );
     expect(kind('steam').url!('gaben')).toBe('https://steamcommunity.com/id/gaben');
-    expect(kind('youtube').url!('@magnox')).toBe('https://www.youtube.com/@magnox');
-    expect(kind('x').url!('magnox')).toBe('https://x.com/magnox');
+    expect(kind('youtube').url!('@gamecentral')).toBe('https://www.youtube.com/@gamecentral');
+    expect(kind('x').url!('gamecentral')).toBe('https://x.com/gamecentral');
     expect(kind('discord').url).toBeUndefined();
   });
 

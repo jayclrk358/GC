@@ -28,7 +28,7 @@ function onDomain(host: string, path: string) {
 test('a community on its own domain', async ({ page }) => {
   await signUp(page, uniqueUser('domains'));
   const { name, slug } = await createCommunity(page);
-  const domain = `play-${Date.now().toString(36)}.magnox-e2e.test`;
+  const domain = `play-${Date.now().toString(36)}.gamecentral-e2e.test`;
 
   // A Pro perk: on Free the form is locked.
   await page.goto(`/c/${slug}/settings/domain`);
@@ -44,7 +44,7 @@ test('a community on its own domain', async ({ page }) => {
   const records = page.locator('dl');
   await expect(records.first()).toContainText('CNAME');
   const txtValue = (await records.nth(1).locator('dd').nth(2).textContent())!.trim();
-  expect(txtValue).toMatch(/^magnox-verify=[0-9a-f]{32}$/);
+  expect(txtValue).toMatch(/^gamecentral-verify=[0-9a-f]{32}$/);
   await expectAccessible(page, 'custom domain settings');
 
   // Before the DNS records exist, the check explains what's missing.
@@ -54,7 +54,7 @@ test('a community on its own domain', async ({ page }) => {
 
   // Add them (to the fixture DNS server), check again, and it's live.
   await page.request.post(`${FIXTURE_CTL}/dns`, {
-    data: { name: `_magnox.${domain}`, type: 'TXT', value: txtValue },
+    data: { name: `_gamecentral.${domain}`, type: 'TXT', value: txtValue },
   });
   await page.request.post(`${FIXTURE_CTL}/dns`, {
     data: { name: domain, type: 'CNAME', value: 'localhost' },

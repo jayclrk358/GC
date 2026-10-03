@@ -4,7 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { Monitor, Moon, Sun } from 'lucide-react';
-import type { Prefs } from '@magnox/shared';
+import type { Prefs } from '@gamecentral/shared';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,

@@ -6,7 +6,7 @@ import StarterKit from '@tiptap/starter-kit';
 import { Placeholder } from '@tiptap/extensions';
 import { useTranslations } from 'next-intl';
 import { Bold, Code, EyeOff, Italic, List, Quote, SquareCode, Strikethrough } from 'lucide-react';
-import { docToText, emptyDoc, isSafeHref, type RichNode } from '@magnox/shared';
+import { docToText, emptyDoc, isSafeHref, type RichNode } from '@gamecentral/shared';
 import { mentionExtension, isSuggesting } from '@/components/rich-text/mentions';
 import { Spoiler } from '@/components/rich-text/extensions';
 import { emojiExtension } from '@/components/rich-text/emoji-suggest';

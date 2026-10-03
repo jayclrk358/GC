@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { listCommunityServers } from '@magnox/core';
-import { protocolsForPicker, SERVER_PROTOCOLS } from '@magnox/shared';
+import { listCommunityServers } from '@gamecentral/core';
+import { protocolsForPicker, SERVER_PROTOCOLS } from '@gamecentral/shared';
 import { loadCommunityForSettings } from '@/lib/community';
 import { PageHeader } from '@/components/ui/misc';
 import { ServerManager } from '@/components/community-settings/server-manager';

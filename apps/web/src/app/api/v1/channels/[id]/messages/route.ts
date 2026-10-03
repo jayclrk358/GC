@@ -1,4 +1,4 @@
-import { apiChannelContext, apiMessages, apiSendMessage } from '@magnox/core';
+import { apiChannelContext, apiMessages, apiSendMessage } from '@gamecentral/core';
 import { apiV1, jsonBody, queryOf } from '@/lib/api-v1';
 
 type Params = { params: Promise<{ id: string }> };

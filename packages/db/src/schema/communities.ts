@@ -12,7 +12,7 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import type { NameStyle, NavConfig, Onboarding, Theme } from '@magnox/shared';
+import type { NameStyle, NavConfig, Onboarding, Theme } from '@gamecentral/shared';
 import { users } from './auth';
 import { games } from './games';
 import { createdAt, tsvector, tz, updatedAt } from './_helpers';
@@ -64,7 +64,7 @@ export const communities = pgTable(
     updatedAt: updatedAt(),
     /** Archived: kept and readable, but read-only, closed to new members and out of Explore. */
     archivedAt: tz('archived_at'),
-    /** Taken offline by Magnox staff for breaking the rules (reversible). */
+    /** Taken offline by Game Central staff for breaking the rules (reversible). */
     suspendedAt: tz('suspended_at'),
     suspendReason: text('suspend_reason'),
     deletedAt: tz('deleted_at'),

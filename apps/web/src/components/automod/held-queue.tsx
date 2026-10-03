@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Check, X } from 'lucide-react';
-import type { HeldPostView } from '@magnox/core';
+import type { HeldPostView } from '@gamecentral/core';
 import { Button } from '@/components/ui/button';
 import { Avatar, Badge } from '@/components/ui/misc';
 import { reviewHeldPostAction } from '@/app/actions/automod';

@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { getCustomDomain } from '@magnox/core';
+import { getCustomDomain } from '@gamecentral/core';
 import { loadCommunityForSettings } from '@/lib/community';
 import { PageHeader } from '@/components/ui/misc';
 import { CustomDomain } from '@/components/community-settings/custom-domain';

@@ -13,8 +13,8 @@ import {
   type PlanId,
   type PlanLimits,
   type PlanPerks,
-} from '@magnox/shared';
-import type { PlanPrices } from '@magnox/core';
+} from '@gamecentral/shared';
+import type { PlanPrices } from '@gamecentral/core';
 import { cn } from '@/lib/utils';
 
 /** Monthly or yearly, as a two-option switch. */

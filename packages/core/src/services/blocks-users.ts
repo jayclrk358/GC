@@ -1,5 +1,5 @@
 import { and, desc, eq } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
+import { db, schema } from '@gamecentral/db';
 import { AppError, notFound, unauthorized } from '../errors';
 import { enforceRateLimit } from '../ratelimit';
 

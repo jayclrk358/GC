@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Lock } from 'lucide-react';
-import type { WikiTreeNode } from '@magnox/core';
+import type { WikiTreeNode } from '@gamecentral/core';
 
 /** Nested page list. Marks the page being read (or edited) with aria-current. */
 export function WikiTree({

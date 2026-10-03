@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
-import { enabledSocialProviders } from '@magnox/auth';
-import { ownedCommunities } from '@magnox/core';
+import { enabledSocialProviders } from '@gamecentral/auth';
+import { ownedCommunities } from '@gamecentral/core';
 import { PageHeader } from '@/components/ui/misc';
 import { AccountForms } from '@/components/settings/account-forms';
 import { DataExport } from '@/components/settings/data-export';

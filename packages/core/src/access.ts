@@ -1,5 +1,5 @@
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
-import { db, schema } from '@magnox/db';
+import { db, schema } from '@gamecentral/db';
 import {
   ALL_PERMISSIONS,
   applyTimeout,
@@ -9,7 +9,7 @@ import {
   isUuid,
   Permission,
   type Overwrite,
-} from '@magnox/shared';
+} from '@gamecentral/shared';
 import { forbidden, notFound, unauthorized } from './errors';
 
 export interface CommunityRef {
@@ -71,7 +71,7 @@ async function loadCommunity(where: { id?: string; slug?: string }): Promise<Com
       visibility: schema.communities.visibility,
       joinMode: schema.communities.joinMode,
       permVersion: schema.communities.permVersion,
-      // Suspended by Magnox staff counts as gone, everywhere (pages, APIs, sockets).
+      // Suspended by Game Central staff counts as gone, everywhere (pages, APIs, sockets).
       deletedAt:
         sql<Date | null>`coalesce(${schema.communities.deletedAt}, ${schema.communities.suspendedAt})`.mapWith(
           schema.communities.deletedAt,
@@ -172,7 +172,7 @@ export async function memberContextFor(
 }
 
 /**
- * Magnox staff stepping into a community to deal with something (removing a post, say): every
+ * Game Central staff stepping into a community to deal with something (removing a post, say): every
  * permission, above every role. Community services then do what they always do on a removal.
  */
 export async function staffContext(communityId: string, staffId: string): Promise<MemberContext> {

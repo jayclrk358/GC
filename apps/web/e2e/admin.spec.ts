@@ -44,11 +44,11 @@ test('admin console: give a plan, suspend a community and ban someone', async ({
   await expectAccessible(page, 'admin community');
   await page.getByRole('button', { name: 'Give plan' }).click();
   await expect(page.getByText('Plan given')).toBeVisible();
-  await expect(page.getByText('Has Pro from Magnox, for good.')).toBeVisible();
+  await expect(page.getByText('Has Pro from Game Central, for good.')).toBeVisible();
 
   await owner.goto(`/c/${slug}/settings/billing`);
   await expect(
-    owner.getByText('Magnox has given this community the Pro plan, for good.'),
+    owner.getByText('Game Central has given this community the Pro plan, for good.'),
   ).toBeVisible();
 
   // Suspend it: its pages say so, and it's gone from Explore.

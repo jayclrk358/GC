@@ -1,5 +1,5 @@
 {
-  "name": "@magnox/realtime",
+  "name": "@gamecentral/realtime",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -9,10 +9,10 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@magnox/auth": "workspace:*",
-    "@magnox/core": "workspace:*",
-    "@magnox/db": "workspace:*",
-    "@magnox/shared": "workspace:*",
+    "@gamecentral/auth": "workspace:*",
+    "@gamecentral/core": "workspace:*",
+    "@gamecentral/db": "workspace:*",
+    "@gamecentral/shared": "workspace:*",
     "@socket.io/redis-adapter": "^8.3.0",
     "better-auth": "^1.7.6",
     "ioredis": "^5.11.1",
