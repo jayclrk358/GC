@@ -138,8 +138,22 @@ jobs:
             $entry = ($test.OuterXml -replace '\s+', ' ')
             Write-Output "::notice title=Certification kit report entry::$($entry.Substring(0, [Math]::Min(3500, $entry.Length)))"
           }
-          $said = (Get-Content $out -ErrorAction SilentlyContinue | Where-Object { $_ -match 'fail|error|version|exit code' } | Select-Object -First 40) -join ' / '
-          if ($said) { Write-Output "::notice title=Certification kit output::$($said.Substring(0, [Math]::Min(3500, $said.Length)))" }
+          $lines = @(Get-Content $out -ErrorAction SilentlyContinue)
+          $at = [Array]::FindIndex([string[]]$lines, [Predicate[string]]{ param($l) $l -match 'failed to install' })
+          if ($at -ge 0) {
+            $around = ($lines[[Math]::Max(0, $at - 30)..$at] | ForEach-Object { $_.Trim() }) -join ' / '
+            Write-Output "::notice title=Certification kit output before the failed install::$($around.Substring([Math]::Max(0, $around.Length - 3500)))"
+          }
+          # The kit's own logs from this run, for what the installer did under the simulated version.
+          $logs = Get-ChildItem $env:LOCALAPPDATA, $env:TEMP, $env:ProgramData -Recurse -File -Include *.log, *.txt, *.xml -ErrorAction SilentlyContinue |
+            Where-Object { $_.LastWriteTime -gt $proc.StartTime -and $_.FullName -match 'cert|wack|appcert|AppCompat|GameCentral|nsis' }
+          Write-Output "::notice title=Certification kit logs::$((($logs | Select-Object -First 15).FullName) -join ' ; ')"
+          $hits = foreach ($log in $logs) {
+            Select-String -Path $log.FullName -Pattern 'HighVersionLie|higher version|exit ?code|GameCentral-Setup' -ErrorAction SilentlyContinue |
+              Select-Object -First 6 | ForEach-Object { "$($log.Name): $($_.Line.Trim())" }
+          }
+          $hits = ($hits | Select-Object -First 25) -join ' / '
+          if ($hits) { Write-Output "::notice title=Certification kit log lines::$($hits.Substring(0, [Math]::Min(3500, $hits.Length)))" }
           Write-Output "::notice title=Certification kit: $overall::$(@($rows).Count - $failed.Count) of $(@($rows).Count) tests passed."
           # Signing needs a code-signing certificate (see the README); anything else failing is ours.
           $ours = @($failed | Where-Object { $_.Test -notmatch 'sign' })
