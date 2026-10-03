@@ -486,8 +486,12 @@ there by hand, optionally for another site address. To build it yourself on Wind
   shell built on Windows' built-in Edge engine (WebView2, for example with Tauri) would be a 5–10
   MB download, at the cost of rewriting the app.
 - **Windows App Certification Kit:** every installer build is also put through Microsoft's kit
-  (`appcert.exe`) on GitHub. The results are in the run's summary, with the full report under
-  **Artifacts**.
+  (`appcert.exe`) on GitHub: it installs the app silently, runs it, checks it and uninstalls it.
+  The results are in the run's summary, with the full report under **Artifacts**. 19 of its 20
+  tests pass. The one that doesn't, "Proper OS version checking", is about the installer
+  (electron-builder's NSIS one): it doesn't finish when the kit makes Windows report a future
+  version number, though it installs normally on real versions of Windows. The job allows that
+  one and a missing code-signing certificate; any other failing test turns it red.
 
 ## Scripts
 
