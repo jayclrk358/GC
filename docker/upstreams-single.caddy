@@ -1,8 +1,0 @@
-# One server: the web app and realtime server run next to Caddy.
-(web_upstream) {
-	reverse_proxy web:3000
-}
-
-(realtime_upstream) {
-	reverse_proxy realtime:3001
-}

@@ -75,18 +75,7 @@ services:
   postgres:
     image: postgres:16-alpine
     # JIT compiles plans for big analytical queries and only slows the short ones this app runs.
-    # Each app process keeps up to 10 connections (DATABASE_POOL_SIZE); more app servers need more
-    # (scripts/linux/cluster.sh raises it).
-    command:
-      [
-        'postgres',
-        '-c',
-        'jit=off',
-        '-c',
-        'shared_buffers=256MB',
-        '-c',
-        'max_connections=${POSTGRES_MAX_CONNECTIONS:-60}',
-      ]
+    command: ['postgres', '-c', 'jit=off', '-c', 'shared_buffers=256MB', '-c', 'max_connections=60']
     shm_size: 256mb
     logging: *logging
     environment:

@@ -84,10 +84,6 @@ export default function PrivacyPolicyPage() {
           <li>
             <strong>Your cookie choice</strong> (<code>mx-cookies</code>), kept for six months.
           </li>
-          <li>
-            <strong>Server routing:</strong> when Magnox runs on several servers, which one you’re
-            using (<code>mx_web</code>, <code>mx_rt</code>), until you close your browser.
-          </li>
         </ul>
         <p>
           <strong>Optional:</strong> your time zone (<code>mx-tz</code>), so event times show on
