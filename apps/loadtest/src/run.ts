@@ -8,6 +8,7 @@
 // Stages are "people:seconds". Point it at a test or staging copy (--base, --realtime), never at
 // a live site: it signs in as the people `seed` made and posts real messages.
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { io, type Socket } from 'socket.io-client';
@@ -63,11 +64,23 @@ const counters = {
 };
 const bump = (m: Map<string, number>, k: string) => m.set(k, (m.get(k) ?? 0) + 1);
 
-/** Messages sent, and how many of the people watching that channel got each one. */
-const sent = new Map<
-  string,
-  { at: number; expected: number; received: number; channelId: string }
->();
+/**
+ * Messages sent, and who had that chat open when each was sent. Someone who leaves the chat (or
+ * whose connection drops) before it reaches them isn't expected to get it any more: the page
+ * fetches what it missed when they come back.
+ */
+interface Sent {
+  at: number;
+  channelId: string;
+  waiting: Set<Person>;
+  expected: number;
+  received: number;
+}
+const sent = new Map<string, Sent>();
+/** The last few seconds' messages per chat, to find the ones someone leaving was still owed. */
+const inFlight = new Map<string, Sent[]>();
+/** Messages that didn't arrive because the connection dropped first. */
+let lostToDrops = 0;
 
 // ── A virtual person ─────────────────────────────────────────────────────────
 
@@ -79,6 +92,8 @@ interface Person {
   socket: Socket | null;
   community: SetupData['communities'][number];
   channel: { id: string; name: string };
+  /** The page they're on, for the router state their next navigation sends. */
+  path: string;
   recent: string[];
   seq: number;
   running: boolean;
@@ -156,26 +171,64 @@ function action(p: Person, label: string, args: unknown[], id: string) {
   });
 }
 
-/**
- * The `_rsc` cache-busting value the browser adds to each navigation (a hash of its headers, which
- * only differ by URL here). Learned once per URL from the redirect Next sends without it.
- */
-const rscKeys = new Map<string, string>();
+/** A page's route segments, the way Next's router names them in its state tree. */
+function segments(url: string): unknown[] {
+  const parts = url.split('?')[0]!.split('/').filter(Boolean);
+  if (parts[0] !== 'c' || !parts[1]) return parts;
+  const out: unknown[] = ['c', ['slug', parts[1], 'd', null]];
+  if (parts[2] === 'chat' && parts[3]) out.push('chat', ['channel', parts[3], 'd', null]);
+  else if (parts[2]) out.push(...parts.slice(2));
+  return out;
+}
 
-/** A client-side navigation: the page's React Server Components payload, not its HTML. */
+/**
+ * The router state a browser sends when it navigates from one page to another: the new page's
+ * segments, marked from where they part from the current page's. The server renders only from
+ * there down, since the browser already has the layouts above.
+ */
+function routerState(from: string, to: string): string {
+  const a = segments(from);
+  const b = segments(to);
+  let diverge = b.findIndex((s, i) => JSON.stringify(s) !== JSON.stringify(a[i]));
+  if (diverge < 0) diverge = b.length;
+  const node = (i: number): unknown[] =>
+    i === b.length
+      ? ['__PAGE__', {}, null, diverge === i ? 'refetch' : null, 4096]
+      : [b[i], { children: node(i + 1) }, null, diverge === i ? 'refetch' : null, 4096];
+  return encodeURIComponent(JSON.stringify(['', { children: node(0) }, null, null, 4112]));
+}
+
+/** Next's `_rsc` cache-busting value: a hash of the headers that change the response. */
+function rscParam(prefetch: string, segment: string, tree: string, nextUrl: string): string {
+  return createHash('sha256')
+    .update([prefetch, segment, tree, nextUrl].join(','))
+    .digest()
+    .subarray(0, 12)
+    .toString('base64url');
+}
+
+/**
+ * A client-side navigation, as the browser makes it: first a prefetch of the page when the pointer
+ * reaches the link (its route tree, then the page up to its loading state), then the page itself.
+ */
 async function navigate(p: Person, label: string, url: string) {
-  const headers = { rsc: '1', 'next-url': url };
-  let key = rscKeys.get(url);
-  if (!key) {
-    const res = await fetch(BASE + url, {
-      redirect: 'manual',
-      headers: { ...headers, cookie: p.cookie, 'x-forwarded-for': p.ip },
-    }).catch(() => null);
-    key = new URL(res?.headers.get('location') ?? '/', BASE).searchParams.get('_rsc') ?? '';
-    await res?.arrayBuffer().catch(() => null);
-    rscKeys.set(url, key);
+  const from = p.path;
+  for (const segment of ['/_tree', undefined]) {
+    const headers: Record<string, string> = {
+      rsc: '1',
+      'next-router-prefetch': '1',
+      'next-url': from,
+    };
+    if (segment) headers['next-router-segment-prefetch'] = segment;
+    const key = rscParam('1', segment ?? '0', '0', from);
+    await request(p, 'prefetch (hover)', `${url}?_rsc=${key}`, { headers });
   }
-  return request(p, label, key ? `${url}?_rsc=${key}` : url, { headers });
+  const tree = routerState(from, url);
+  const res = await request(p, label, `${url}?_rsc=${rscParam('0', '0', tree, from)}`, {
+    headers: { rsc: '1', 'next-router-state-tree': tree, 'next-url': from },
+  });
+  p.path = url;
+  return res;
 }
 
 async function signIn(p: Person): Promise<boolean> {
@@ -200,11 +253,18 @@ function rooms(p: Person): string[] {
   ];
 }
 
-function watch(p: Person, channelId: string, on: boolean) {
+function watch(p: Person, channelId: string, on: boolean, dropped = false) {
   let set = watching.get(channelId);
   if (!set) watching.set(channelId, (set = new Set()));
-  if (on) set.add(p);
-  else set.delete(p);
+  if (on) return void set.add(p);
+  set.delete(p);
+  const recent = (inFlight.get(channelId) ?? []).filter((m) => Date.now() - m.at < 30_000);
+  inFlight.set(channelId, recent);
+  for (const m of recent) {
+    if (!m.waiting.delete(p)) continue;
+    m.expected--;
+    if (dropped) lostToDrops++;
+  }
 }
 
 function connect(p: Person): Promise<void> {
@@ -240,7 +300,7 @@ function connect(p: Person): Promise<void> {
       }
     });
     socket.on('disconnect', (reason) => {
-      watch(p, p.channel.id, false);
+      watch(p, p.channel.id, false, p.running);
       if (p.running) bump(counters.disconnects, reason);
     });
     socket.on('message:new', (payload: { channelId: string; message: { id: string } }) => {
@@ -252,7 +312,7 @@ function connect(p: Person): Promise<void> {
       if (!marker) return;
       stat('delivery').record(Date.now() - Number(marker[2]), true);
       const entry = sent.get(marker[1]!);
-      if (entry) entry.received++;
+      if (entry?.waiting.delete(p)) entry.received++;
     });
   });
 }
@@ -277,9 +337,12 @@ async function sendChat(p: Person) {
   p.socket?.emit('typing', p.channel.id);
   await sleep(800 + random() * 2500);
   const key = `${p.n}-${++p.seq}`;
-  const expected = watching.get(p.channel.id)?.size ?? 0;
   const at = Date.now();
-  sent.set(key, { at, expected, received: 0, channelId: p.channel.id });
+  const waiting = new Set(watching.get(p.channel.id));
+  const entry: Sent = { at, channelId: p.channel.id, waiting, expected: waiting.size, received: 0 };
+  sent.set(key, entry);
+  const recent = (inFlight.get(p.channel.id) ?? []).filter((m) => at - m.at < 30_000);
+  inFlight.set(p.channel.id, [...recent, entry]);
   const res = await action(
     p,
     'send message',
@@ -348,8 +411,16 @@ const BEHAVIOURS: [number, (p: Person) => Promise<unknown>][] = [
   ],
   [3, (p) => request(p, 'api: mentions', `/api/communities/${p.community.id}/mentions?q=lt_1`)],
   [4, (p) => request(p, 'api: profile card', `/api/users/${pick(setup.users).username}/card`)],
+  [2, reload],
 ];
 const TOTAL = BEHAVIOURS.reduce((s, [w]) => s + w, 0);
+
+/** A full page load of the chat they're in (opening it fresh, or refreshing). */
+async function reload(p: Person) {
+  const url = `/c/${p.community.slug}/chat/${p.channel.name}`;
+  await request(p, 'page: chat (load)', url, { expect: 'html' });
+  p.path = url;
+}
 
 async function live(p: Person) {
   p.running = true;
@@ -357,10 +428,15 @@ async function live(p: Person) {
     p.running = false;
     return;
   }
-  await request(p, 'page: home (load)', '/', { expect: 'html' });
-  await request(p, 'page: chat (load)', `/c/${p.community.slug}/chat/${p.channel.name}`, {
-    expect: 'html',
-  });
+  // Half open the site and click through to their chat; half come straight back to it (a
+  // bookmark, or the Windows app reopening where they were).
+  if (random() < 0.5) {
+    await request(p, 'page: home (load)', '/', { expect: 'html' });
+    p.path = '/';
+    await navigate(p, 'page: chat (nav)', `/c/${p.community.slug}/chat/${p.channel.name}`);
+  } else {
+    await reload(p);
+  }
   await request(p, 'api: members', `/api/communities/${p.community.id}/chat/members`);
   await connect(p);
   while (p.running) {
@@ -387,6 +463,8 @@ function stop(p: Person) {
 // ── Watching the servers (this machine only) ─────────────────────────────────
 
 interface Sample {
+  /** The whole machine: percent of all its cores in use. */
+  machine?: number;
   cpu: Record<string, number>;
   rssMb: Record<string, number>;
   dbConnections?: number;
@@ -403,9 +481,29 @@ const PROCESSES: [string, RegExp][] = [
 ];
 let lastTicks = new Map<number, number>();
 let lastAt = Date.now();
+let lastMachine: { busy: number; total: number } | null = null;
+
+function machineBusy(): number | undefined {
+  try {
+    const fields = fs
+      .readFileSync('/proc/stat', 'utf8')
+      .split('\n')[0]!
+      .trim()
+      .split(/\s+/)
+      .slice(1)
+      .map(Number);
+    const total = fields.reduce((a, b) => a + b, 0);
+    const busy = total - fields[3]! - (fields[4] ?? 0);
+    const before = lastMachine;
+    lastMachine = { busy, total };
+    return before ? Math.round(((busy - before.busy) / (total - before.total)) * 100) : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 function sampleProcesses(): Sample {
-  const out: Sample = { cpu: {}, rssMb: {} };
+  const out: Sample = { machine: machineBusy(), cpu: {}, rssMb: {} };
   const now = Date.now();
   const ticks = new Map<number, number>();
   for (const pid of fs.readdirSync('/proc').filter((d) => /^\d+$/.test(d))) {
@@ -455,6 +553,13 @@ function sampleProcesses(): Sample {
 const people: Person[] = [];
 let nextUser = 0;
 
+/** A made-up address of their own (10.x.y.1–254), as a proxy in front would pass on. */
+function addressFor(n: number): string {
+  const host = (n % 254) + 1;
+  const block = Math.floor(n / 254);
+  return `10.${(block >> 8) & 255}.${block & 255}.${host}`;
+}
+
 function newPerson(): Person {
   const n = nextUser++;
   const user = setup.users[n % setup.users.length]!;
@@ -463,11 +568,12 @@ function newPerson(): Person {
   return {
     n,
     user,
-    ip: `10.${(n >> 16) & 255}.${(n >> 8) & 255}.${(n & 255) + 1}`,
+    ip: addressFor(n),
     cookie: '',
     socket: null,
     community,
     channel: community.channels[0]!,
+    path: '/',
     recent: [],
     seq: 0,
     running: false,
@@ -482,13 +588,14 @@ function snapshot(label: string, secs: number) {
   const rows = Object.fromEntries([...series.entries()].sort().map(([k, s]) => [k, s.summary()]));
   const settled = [...sent.values()].filter((m) => Date.now() - m.at > 5000);
   const expected = settled.reduce((s, m) => s + m.expected, 0);
-  const received = settled.reduce((s, m) => s + Math.min(m.received, m.expected), 0);
+  const received = settled.reduce((s, m) => s + m.received, 0);
   const requests = [...series.entries()]
     .filter(([k]) => k !== 'delivery')
     .reduce((s, [, v]) => s + v.times.length, 0);
   const recentSamples = samples.slice(-Math.max(1, Math.floor(secs / 5)));
   const avg = (key: 'cpu' | 'rssMb', kind: string) =>
     round(recentSamples.reduce((s, x) => s + (x[key][kind] ?? 0), 0) / recentSamples.length);
+  const machine = recentSamples.filter((x) => x.machine !== undefined);
   const max = (k: 'dbConnections' | 'redisOps') =>
     Math.max(0, ...recentSamples.map((x) => x[k] ?? 0));
   return {
@@ -502,11 +609,15 @@ function snapshot(label: string, secs: number) {
       expected,
       received,
       rate: expected ? round((received / expected) * 100) : 100,
+      lostToDrops,
     },
     connectErrors: Object.fromEntries(counters.connectErrors),
     disconnects: Object.fromEntries(counters.disconnects),
     servers: MONITOR
       ? {
+          machineCpuPercent: machine.length
+            ? Math.round(machine.reduce((a, x) => a + x.machine!, 0) / machine.length)
+            : undefined,
           cpuPercent: Object.fromEntries(PROCESSES.map(([k]) => [k, avg('cpu', k)])),
           memoryMb: Object.fromEntries(PROCESSES.map(([k]) => [k, avg('rssMb', k)])),
           dbConnectionsMax: max('dbConnections'),
@@ -533,7 +644,8 @@ function print(s: ReturnType<typeof snapshot>) {
   const failures = Object.entries(s.rows).filter(([, r]) => r.failed);
   for (const [name, r] of failures) console.log(`  ${name} failures:`, r.reasons);
   console.log(
-    `  delivery: ${s.delivery.received}/${s.delivery.expected} (${s.delivery.rate}%) of ${s.delivery.messages} messages`,
+    `  delivery: ${s.delivery.received}/${s.delivery.expected} (${s.delivery.rate}%) of ${s.delivery.messages} messages` +
+      (s.delivery.lostToDrops ? `, ${s.delivery.lostToDrops} more missed while disconnected` : ''),
   );
   if (Object.keys(s.connectErrors).length) console.log('  socket connect errors:', s.connectErrors);
   if (Object.keys(s.disconnects).length) console.log('  socket disconnects:', s.disconnects);
@@ -549,6 +661,8 @@ for (const [i, stage] of STAGES.entries()) {
   counters.connectErrors.clear();
   counters.disconnects.clear();
   sent.clear();
+  inFlight.clear();
+  lostToDrops = 0;
   const label = `stage ${i + 1}`;
   console.log(`\n▶ ${label}: going to ${stage.users} people for ${stage.secs}s`);
   const running = () => people.filter((p) => p.running);

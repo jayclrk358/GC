@@ -16,5 +16,8 @@
     "@gamecentral/shared": "workspace:*",
     "drizzle-orm": "^0.45.3",
     "socket.io-client": "^4.8.4"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0"
   }
 }
