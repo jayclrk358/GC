@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/ui/link';
 import { getTranslations } from 'next-intl/server';
 import { Server, X } from 'lucide-react';
 import { browserGames, searchServers } from '@gamecentral/core';

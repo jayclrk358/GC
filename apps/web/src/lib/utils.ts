@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { numberFormat } from './intl-cache';
 
 export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));
@@ -13,5 +14,5 @@ export function initials(name: string): string {
 }
 
 export function formatCount(n: number, locale = 'en'): string {
-  return new Intl.NumberFormat(locale, { notation: 'compact', maximumFractionDigits: 1 }).format(n);
+  return numberFormat(locale, { notation: 'compact', maximumFractionDigits: 1 }).format(n);
 }

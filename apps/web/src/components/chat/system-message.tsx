@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
+import Link from '@/components/ui/link';
 import { useLocale, useTranslations } from 'next-intl';
 import { ServerCrash, ServerCog } from 'lucide-react';
 import { formatDuration, type ServerAlertMeta } from '@gamecentral/shared';

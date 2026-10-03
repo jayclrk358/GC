@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/ui/link';
 import { contactEmail } from '@gamecentral/core';
 import { PRIVACY_UPDATED } from '@gamecentral/shared';
 import { LegalPage, Section } from '@/components/legal/legal-page';

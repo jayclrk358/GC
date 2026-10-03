@@ -40,10 +40,12 @@ RUN useradd --system --uid 1001 gamecentral && mkdir -p /data/media && chown gam
 COPY --from=build --chown=gamecentral /repo/apps/web/.next/standalone ./
 COPY --from=build --chown=gamecentral /repo/apps/web/.next/static ./apps/web/.next/static
 COPY --from=build --chown=gamecentral /repo/apps/web/public ./apps/web/public
+COPY --from=build --chown=gamecentral /repo/apps/web/cluster.mjs ./apps/web/cluster.mjs
 USER gamecentral
 EXPOSE 3000
 HEALTHCHECK --interval=60s --timeout=5s --start-period=30s CMD node -e "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
-CMD ["node", "apps/web/server.js"]
+# One server process per CPU core (WEB_WORKERS), sharing the port: see apps/web/cluster.mjs.
+CMD ["node", "apps/web/cluster.mjs"]
 
 FROM deps AS app
 ENV NODE_ENV=production

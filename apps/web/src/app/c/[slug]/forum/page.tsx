@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/ui/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Hash, Megaphone, MessagesSquare, Settings } from 'lucide-react';
 import { forumChannelStats, listVisibleChannels } from '@gamecentral/core';

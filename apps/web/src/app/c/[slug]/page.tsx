@@ -4,7 +4,7 @@ import { loadCommunity } from '@/lib/community';
 import { BlockList } from '@/components/blocks/block-list';
 import { Alert, EmptyState } from '@/components/ui/misc';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
+import Link from '@/components/ui/link';
 import { LayoutTemplate } from 'lucide-react';
 
 export default async function CommunityHome({

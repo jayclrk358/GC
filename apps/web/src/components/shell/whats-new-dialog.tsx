@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/components/ui/link';
 import { useFormatter, useTranslations } from 'next-intl';
 // The data alone, so the dialog's code stays small.
 import { CHANGELOG } from '@gamecentral/shared/changelog';

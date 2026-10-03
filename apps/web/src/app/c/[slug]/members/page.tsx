@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/ui/link';
 import { getTranslations } from 'next-intl/server';
 import { listMembers, listRoles, roleSummary } from '@gamecentral/core';
 import { planPerks, themeBackdrops } from '@gamecentral/shared';

@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/ui/link';
 import { getTranslations } from 'next-intl/server';
 import { Compass, Gem } from 'lucide-react';
 import { exploreCommunities, featuredCommunities, listGames } from '@gamecentral/core';

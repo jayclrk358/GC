@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/ui/link';
 import { getTranslations } from 'next-intl/server';
 import { Hash, Megaphone, PenSquare } from 'lucide-react';
 import { isMuted, listFlairs, listThreads } from '@gamecentral/core';

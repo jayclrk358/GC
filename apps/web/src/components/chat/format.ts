@@ -1,4 +1,6 @@
 import type { Prefs } from '@gamecentral/shared';
+// Relative rather than @/, so the unit tests (which don't resolve @/) can load this file.
+import { dateFormat } from '../../lib/intl-cache';
 
 /** "3:04 PM" / "15:04", following the reader's time-format preference. */
 export function formatTime(
@@ -6,7 +8,7 @@ export function formatTime(
   timeFormat: Prefs['timeFormat'],
   locale = 'en',
 ): string {
-  return new Intl.DateTimeFormat(locale, {
+  return dateFormat(locale, {
     hour: 'numeric',
     minute: '2-digit',
     hour12: timeFormat === 'auto' ? undefined : timeFormat === '12h',
@@ -24,7 +26,7 @@ export function formatDay(
   const yesterday = new Date(today.getTime() - 86400000);
   if (date.toDateString() === today.toDateString()) return labels.today;
   if (date.toDateString() === yesterday.toDateString()) return labels.yesterday;
-  return new Intl.DateTimeFormat(locale, {
+  return dateFormat(locale, {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
@@ -37,7 +39,7 @@ export function fullDateTime(
   timeFormat: Prefs['timeFormat'],
   locale = 'en',
 ): string {
-  return new Intl.DateTimeFormat(locale, {
+  return dateFormat(locale, {
     dateStyle: 'full',
     timeStyle: 'short',
     hour12: timeFormat === 'auto' ? undefined : timeFormat === '12h',
@@ -57,5 +59,5 @@ export function formatStamp(
   const yesterday = new Date(today.getTime() - 86400000);
   if (date.toDateString() === today.toDateString()) return labels.today(time);
   if (date.toDateString() === yesterday.toDateString()) return labels.yesterday(time);
-  return `${new Intl.DateTimeFormat(locale, { dateStyle: 'short' }).format(date)} ${time}`;
+  return `${dateFormat(locale, { dateStyle: 'short' }).format(date)} ${time}`;
 }

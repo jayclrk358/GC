@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
+import Link from '@/components/ui/link';
 import { useFormatter, useTranslations } from 'next-intl';
 import { HoverCard } from 'radix-ui';
 import { Crown, Gamepad2, Users } from 'lucide-react';

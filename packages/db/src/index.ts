@@ -22,7 +22,10 @@ export const sql =
     onnotice: () => {},
   });
 
-if (process.env.NODE_ENV !== 'production') globalForDb.__mxSql = sql;
+// One pool per process, in production too: Next.js loads this module more than once in a process
+// (once per server layer: pages, route handlers, server actions), and each copy would otherwise
+// open a pool of its own, holding twice the connections DATABASE_POOL_SIZE allows.
+globalForDb.__mxSql = sql;
 
 export const db = drizzle(sql, { schema });
 export type Db = typeof db;

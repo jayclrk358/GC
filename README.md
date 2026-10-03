@@ -129,6 +129,10 @@ keeps the databases off the network and restarts everything after a reboot.
   `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` in `.env`, then `docker compose up -d`. Sign-up,
   sign-in, password resets and server votes then ask for the check.
 - **Update:** `git pull && docker compose up -d --build` (migrations run automatically).
+- **CPU cores:** each Node process uses a single core, so the web container runs one server
+  process per core: at most 4, and at most one per GB of memory less one (a 4 GB server gets 3,
+  a 2 GB one gets 1). Set `WEB_WORKERS` in `.env` to choose (`1` for a single process), then
+  `docker compose up -d`.
 - **Set up before the rename to Game Central?** Run `scripts/linux/move-to-gamecentral.sh` once
   after `git pull` instead: it moves the database, uploads and certificates to the new names
   (keeping the old copies until you remove them) and starts the site again.
@@ -517,6 +521,39 @@ there by hand, optionally for another site address. To build it yourself on Wind
   light, dark and high-contrast modes, and the core flows are driven from the keyboard.
 
 If Playwright can't find its browser, set `PW_CHROMIUM_PATH` to a Chromium binary.
+
+### Load testing
+
+`apps/loadtest` puts many people on the site at once. It signs each one in from an address of
+their own, as behind Caddy, and opens their community's chat over a live connection. Then, at a
+human pace, they chat, react, mark messages read, switch channels, open pages (with the hover
+prefetch a browser makes), scroll back, check notifications, search, look at profiles and
+refresh. It measures every kind of request, how long messages take to reach everyone in the
+chat, dropped connections, and the servers' CPU, memory, database connections and Redis load.
+
+**Point it at a test or staging copy only, never the live site:** it signs in as people it
+creates and posts real messages.
+
+```bash
+pnpm --filter @gamecentral/loadtest seed --users 1000 --communities 20   # once
+pnpm --filter @gamecentral/loadtest load --stages 300:120,500:120,750:120,1000:150
+pnpm --filter @gamecentral/loadtest browsers --browsers 4 --secs 300     # alongside, optional
+```
+
+- **Stages** are `people:seconds`, run one after another. New people arrive over the first
+  third of each stage (at most a minute). `--pace 2` makes everyone twice as busy.
+- **`browsers`** runs a few real (headless) Chrome users in one chat at the same time. They send
+  messages through the composer and time how long each takes to appear for the others, and they
+  count page errors and failed requests.
+- **Elsewhere:** set `--base https://staging.example.com --realtime https://staging.example.com`
+  and `--monitor off` (server stats are read from the machine it runs on). The seed needs that
+  copy's database (`DATABASE_URL`), and the copy needs Turnstile off (empty
+  `TURNSTILE_SITE_KEY`), since scripted sign-ins can't pass the check.
+- Each run writes a report to `apps/loadtest/.data/`.
+- **What one server handles:** on a single 4-core, 16 GB machine running everything (and the
+  load generator), 1,000 people chatting at once got messages sent in about 40 ms typically,
+  with every message delivered and no errors. Rendering pages in the web processes is what
+  runs out first, so more CPU cores means room for more people.
 
 ## Accessibility
 

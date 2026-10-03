@@ -38,11 +38,30 @@ export default tseslint.config(
     },
   },
   {
+    files: ['apps/web/src/**/*.{ts,tsx}'],
+    ignores: ['apps/web/src/components/ui/link.tsx'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'next/link',
+              message:
+                "Use '@/components/ui/link': it fetches pages ahead only when someone's about to open them.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: [
       'packages/db/src/**/*.ts',
       'packages/auth/src/seed-demo.ts',
       'apps/worker/src/**/*.ts',
       'apps/loadtest/src/**/*.ts',
+      'apps/web/cluster.mjs',
       'scripts/**',
     ],
     rules: { 'no-console': 'off' },

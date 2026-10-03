@@ -1,7 +1,9 @@
+import { dateFormat, relativeFormat } from './intl-cache';
+
 export type TimeFormat = 'auto' | '12h' | '24h';
 
 export function formatDate(d: Date | string, locale = 'en'): string {
-  return new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(d));
+  return dateFormat(locale, { dateStyle: 'medium' }).format(new Date(d));
 }
 
 export function formatDateTime(
@@ -9,7 +11,7 @@ export function formatDateTime(
   timeFormat: TimeFormat = 'auto',
   locale = 'en',
 ): string {
-  return new Intl.DateTimeFormat(locale, {
+  return dateFormat(locale, {
     dateStyle: 'medium',
     timeStyle: 'short',
     hour12: timeFormat === 'auto' ? undefined : timeFormat === '12h',
@@ -27,7 +29,7 @@ const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
 
 export function relativeTime(d: Date | string, now = Date.now(), locale = 'en'): string {
   const diff = (new Date(d).getTime() - now) / 1000;
-  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+  const rtf = relativeFormat(locale, { numeric: 'auto' });
   for (const [unit, secs] of UNITS) {
     if (Math.abs(diff) >= secs) return rtf.format(Math.round(diff / secs), unit);
   }

@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
+import Link from '@/components/ui/link';
 import { useTranslations } from 'next-intl';
 import { Check, Copy, ExternalLink, Play, ShieldCheck, ThumbsUp, Users } from 'lucide-react';
 import { isLinkProtocol, type ServerStatus } from '@gamecentral/shared';

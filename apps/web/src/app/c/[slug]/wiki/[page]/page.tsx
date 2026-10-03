@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/ui/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { FilePlus2, History, Lock, Pencil } from 'lucide-react';
 import { canEditWiki, type WikiTreeNode } from '@gamecentral/core';

@@ -10,8 +10,8 @@ const g = globalThis as unknown as { __mxAuth?: ReturnType<typeof make> };
 const make = () => createAuth([nextCookies()]);
 
 /** Better Auth instance for the Next.js app (sets cookies from server actions). */
-export const auth = g.__mxAuth ?? make();
-if (process.env.NODE_ENV !== 'production') g.__mxAuth = auth;
+// Shared by every copy of this module in the process (Next.js loads it once per server layer).
+export const auth = (g.__mxAuth ??= make());
 
 export type SessionData = NonNullable<Awaited<ReturnType<typeof auth.api.getSession>>>;
 export type SessionUser = SessionData['user'];

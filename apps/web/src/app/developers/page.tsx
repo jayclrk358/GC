@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/ui/link';
 import { env } from '@gamecentral/core';
 import { SIGNATURE_HEADER, WEBHOOK_EVENTS } from '@gamecentral/shared';
 

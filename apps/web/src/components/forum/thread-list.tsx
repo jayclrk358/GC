@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/ui/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { BarChart3, CheckCircle2, Lock, MessageSquare, Pin } from 'lucide-react';
 import type { ThreadListItem } from '@gamecentral/core';

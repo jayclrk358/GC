@@ -1,5 +1,5 @@
 import { cache } from 'react';
-import Link from 'next/link';
+import Link from '@/components/ui/link';
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Globe2, ShieldCheck, Users } from 'lucide-react';

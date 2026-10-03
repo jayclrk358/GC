@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/ui/link';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { enabledSocialProviders } from '@gamecentral/auth';

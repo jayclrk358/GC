@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/components/ui/link';
 import { useTranslations } from 'next-intl';
 import { Gem, Sparkles } from 'lucide-react';
 import { planFor, type PaidPlanId, type PlanPerks } from '@gamecentral/shared';

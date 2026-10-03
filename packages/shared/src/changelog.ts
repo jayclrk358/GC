@@ -14,6 +14,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: '2026-10-03-busy-times',
+    date: '2026-10-03',
+    title: 'Faster when it’s busy',
+    items: [
+      'Game Central now stays quick with many more people online at once: chat pages open and messages send far faster at busy times.',
+      'Links are fetched ahead when you point at them, rather than every link on the page at once.',
+    ],
+  },
+  {
     id: '2026-10-03-sounds-and-screens',
     date: '2026-10-03',
     title: 'New sounds, and shared screens full screen',

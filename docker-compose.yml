@@ -145,7 +145,11 @@ services:
       target: web
       args:
         NEXT_PUBLIC_REALTIME_URL: ''
-    environment: *app-env
+    environment:
+      <<: *app-env
+      # Server processes sharing the port (Node uses one CPU core each). Empty: one per core,
+      # as memory allows, up to 4. See apps/web/cluster.mjs.
+      WEB_WORKERS: ${WEB_WORKERS:-}
     volumes: [media:/data/media]
     logging: *logging
     depends_on:

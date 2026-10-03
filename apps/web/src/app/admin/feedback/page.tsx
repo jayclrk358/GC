@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/ui/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { adminFeedbackList } from '@gamecentral/core';
 import { FEEDBACK_KINDS, FEEDBACK_STATUSES } from '@gamecentral/shared';
