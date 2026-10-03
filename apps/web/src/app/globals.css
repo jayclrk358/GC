@@ -58,18 +58,21 @@
     --mx-focus-offset: 2px;
     /* Chart series colour, checked for lightness, chroma and 3:1 contrast on each surface. */
     --mx-chart-1: #5b21b6;
-    /* The wordmark's colours ("GAME", "CENTRAL"), lighter on dark backgrounds. */
+    /* The logo: black on light pages, white on dark ones. Then the wordmark ("GAME", "CENTRAL"). */
+    --mx-logo-mark: #000;
     --mx-logo-ink: #16112a;
     --mx-logo-accent: #6d28d9;
   }
   html[data-scheme='dark'] {
     --mx-chart-1: #9878f5;
+    --mx-logo-mark: #fff;
     --mx-logo-ink: #eef0ff;
     --mx-logo-accent: #a78bfa;
   }
   @media (prefers-color-scheme: dark) {
     html[data-scheme='system'] {
       --mx-chart-1: #9878f5;
+      --mx-logo-mark: #fff;
       --mx-logo-ink: #eef0ff;
       --mx-logo-accent: #a78bfa;
     }
@@ -959,6 +962,7 @@
 @layer mx-prefs {
   html[data-contrast='high'] {
     --mx-chart-1: var(--c-text);
+    --mx-logo-mark: var(--c-text);
     --mx-logo-ink: var(--c-text);
     --mx-logo-accent: var(--c-text);
   }

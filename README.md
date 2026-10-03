@@ -11,8 +11,8 @@ Game Central is built around two ideas: **deep customisation** and **first-class
 
 > Status: under active development. See [Roadmap](#roadmap) for what is done.
 
-The logo files (the icon, and the full logo for light and dark backgrounds, as SVG and PNG) are in
-[`docs/brand`](docs/brand).
+The logo files (the GC logo in black and in white, the app icon, and the logo with the name for
+light and dark backgrounds, as SVG and PNG) are in [`docs/brand`](docs/brand).
 
 ## Highlights
 

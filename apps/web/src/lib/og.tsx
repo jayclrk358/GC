@@ -1,17 +1,15 @@
 import { ImageResponse } from 'next/og';
-import { Mark } from '@/components/shell/logo';
-import { WORDMARK } from '@/components/shell/wordmark-paths';
+import { LOGO, WORDMARK } from '@/components/shell/brand-paths';
 
 export const OG_SIZE = { width: 1200, height: 630 };
 
-/** The Game Central logo, as satori can draw it. */
+/** The Game Central logo and name, in the image's own colours. */
 function Brand({ text, accent }: { text: string; accent: string }) {
   const h = 26;
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-      <svg width={48} height={48} viewBox="0 0 64 64">
-        {/* Satori draws only plain SVG elements here, so the mark is inlined. */}
-        {Mark()}
+      <svg width={48} height={48} viewBox={LOGO.viewBox}>
+        <path d={LOGO.d} fill={text} />
       </svg>
       <svg width={(h * WORDMARK.width) / 100} height={h} viewBox={`0 0 ${WORDMARK.width} 100`}>
         <path d={WORDMARK.game} fill={text} />
@@ -69,9 +67,8 @@ export function shareImage(opts: {
             {initial}
           </div>
         ) : (
-          <svg width={120} height={120} viewBox="0 0 64 64">
-            {/* Satori draws only plain SVG elements here, so the mark is inlined. */}
-            {Mark()}
+          <svg width={120} height={120} viewBox={LOGO.viewBox}>
+            <path d={LOGO.d} fill={c.text} />
           </svg>
         )}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 860 }}>
