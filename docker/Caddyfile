@@ -35,10 +35,11 @@ import /etc/caddy/upstreams-{$CADDY_UPSTREAMS:single}.caddy
 		import realtime_upstream
 	}
 
-	# Voice: LiveKit's signalling (the audio itself goes straight to LiveKit's UDP port).
+	# Voice: LiveKit's signalling (the audio itself goes straight to LiveKit's UDP port). LiveKit
+	# runs next to Caddy, or on an app server when there are several servers.
 	@voice path /rtc /rtc/*
 	handle @voice {
-		reverse_proxy livekit:7880
+		reverse_proxy {$LIVEKIT_UPSTREAM:livekit:7880}
 	}
 
 	handle {

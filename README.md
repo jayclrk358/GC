@@ -200,15 +200,20 @@ Without the keys, voice channels say that voice isn't set up yet.
 ### Several servers (load balancing)
 
 When one server isn't enough, Magnox can spread visitors over several. The server you have now
-becomes the **main server**: it keeps the database, Redis, the worker, voice and Caddy, and runs
-the web app too. **App servers** run more copies of the web app and the realtime server (chat and
-live updates). Caddy on the main server shares visitors out between them all, keeps each visitor
-on the same one (with a cookie), and stops sending anyone to a server that stops answering.
+becomes the **main server**: it keeps the database, Redis, the worker and Caddy, and runs the web
+app too. **App servers** run more copies of the web app and the realtime server (chat and live
+updates). Caddy on the main server shares visitors out between them all, keeps each visitor on the
+same one (with a cookie), and stops sending anyone to a server that stops answering. Voice
+(LiveKit) can stay on the main server or move to an app server.
+
+With two servers, for example, keep the data on the first and give the second the voice calls,
+the heaviest traffic, as well as a share of the visitors:
 
 ```
-visitors ─▶ main server: Caddy ─┬─▶ web app + realtime   (main server)
-            Postgres, Redis,    ├─▶ web app + realtime   (app server 1)
-            worker, LiveKit     └─▶ web app + realtime   (app server 2)
+                VPS 1 (main server)              VPS 2 (app server)
+visitors ─▶     Caddy ──────────────┬──────────▶ web app + realtime
+                web app + realtime ◀┘            LiveKit (voice)  ◀── voice audio
+                Postgres, Redis, worker
 ```
 
 **Before you start:**
@@ -232,17 +237,25 @@ visitors ─▶ main server: Caddy ─┬─▶ web app + realtime   (main serve
    `ssh root@10.0.0.3 docker info` works. For a user other than root, set `CLUSTER_SSH_USER` in
    `.env` (the user must be allowed to run `docker`).
 
-**Set it up**, on the main server in the Magnox folder:
+**Set it up**, on the main server in the Magnox folder. Give this server's private address first,
+then each app server's:
 
 ```bash
-scripts/linux/cluster.sh setup 10.0.0.2 10.0.0.3 10.0.0.4   # this server's private address first, then each app server's
+scripts/linux/cluster.sh setup 10.0.0.2 10.0.0.3                 # two servers, voice stays here
+scripts/linux/cluster.sh setup 10.0.0.2 10.0.0.3 --voice 10.0.0.3  # or: voice on the app server
 scripts/linux/cluster.sh deploy
 ```
+
+With `--voice`, open ports 7881/tcp and 7882/udp on that app server's firewall (and your host's
+firewall panel): the audio goes straight to it, while Caddy on the main server still passes on the
+signalling. You can close those ports on the main server. To move voice back, run `setup` again
+without `--voice`, then `deploy`.
 
 `setup` adds a few settings to `.env`: the list of servers, a Redis password, a higher Postgres
 connection limit, and `docker-compose.cluster.yml`, which publishes Postgres, Redis, LiveKit's
 API and Mailpit's mail port on the private address only. The first deploy restarts Postgres and
-Redis with these settings, so the site is offline for a few seconds.
+Redis with these settings, so the site is offline for a few seconds (and voice calls drop if voice
+moves).
 
 `deploy` builds Magnox once, sends the same build to every app server over SSH, updates the main
 server (migrations run first), then updates the app servers one at a time, waiting for each to
@@ -258,7 +271,8 @@ answer before moving on, while the others keep serving visitors.
   servers.
 - **DNS** doesn't change: it points at the main server, the only one visitors connect to.
 - The main server still holds the data, so the site needs it running. App servers add capacity
-  and keep the site up when one of them fails or restarts.
+  and keep the site up when one of them fails or restarts (with voice on an app server, voice
+  calls stop while it's down).
 
 ## Admin console
 

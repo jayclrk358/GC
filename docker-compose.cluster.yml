@@ -4,7 +4,8 @@
 # This server keeps running everything. Caddy here spreads requests over its own web app and
 # realtime server and those on the app servers (WEB_UPSTREAMS, REALTIME_UPSTREAMS), and the app
 # servers use this server's Postgres, Redis, LiveKit and Mailpit over the private network: those
-# are published on PRIVATE_IP only, never on the public address. Redis gets a password.
+# are published on PRIVATE_IP only, never on the public address. Redis gets a password. Voice
+# (LiveKit) runs here too, unless VOICE_SERVER names an app server to run it.
 x-redis-urls: &redis-urls
   REDIS_QUEUE_URL: ${EXTERNAL_REDIS_QUEUE_URL:-redis://:${REDIS_PASSWORD:?run scripts/linux/cluster.sh setup}@redis-queue:6379/0}
   REDIS_CACHE_URL: ${EXTERNAL_REDIS_CACHE_URL:-redis://:${REDIS_PASSWORD}@redis-cache:6379/0}
@@ -50,7 +51,8 @@ services:
   mailpit:
     ports: !override ['127.0.0.1:8025:8025', '${PRIVATE_IP}:1025:1025']
 
-  # The app servers create voice rooms and tokens through LiveKit's API.
+  # The app servers create voice rooms through LiveKit's API (when voice runs here, not on an app
+  # server).
   livekit:
     ports: !override ['7881:7881', '7882:7882/udp', '${PRIVATE_IP}:7880:7880']
 
@@ -68,3 +70,5 @@ services:
       CADDY_UPSTREAMS: cluster
       WEB_UPSTREAMS: ${WEB_UPSTREAMS:?run scripts/linux/cluster.sh setup}
       REALTIME_UPSTREAMS: ${REALTIME_UPSTREAMS:?run scripts/linux/cluster.sh setup}
+      # Voice signalling: this server's LiveKit, or the app server's in VOICE_SERVER.
+      LIVEKIT_UPSTREAM: ${VOICE_SERVER:-livekit}:7880

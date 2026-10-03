@@ -1,8 +1,8 @@
-# An app server when Magnox runs on several servers: just the web app and realtime server, using
-# the main server's Postgres, Redis and LiveKit over the private network. Set up and updated from
-# the main server by scripts/linux/cluster.sh, which copies this file and a .env here and ships
-# the images it built (so every server runs exactly the same build). See "Several servers" in the
-# README.
+# An app server when Magnox runs on several servers: the web app and realtime server, using the
+# main server's Postgres and Redis over the private network, and on one app server voice too.
+# Set up and updated from the main server by scripts/linux/cluster.sh, which copies this file,
+# docker-compose.yml and a .env here and ships the images it built (so every server runs exactly
+# the same build). See "Several servers" in the README.
 #
 # The ports are published on this server's private address only: Caddy on the main server is
 # the only way in from the internet.
@@ -34,3 +34,11 @@ services:
     command: ['node', '--import', 'tsx', 'apps/realtime/src/index.ts']
     ports: ['${PRIVATE_IP}:3001:3001']
     stop_grace_period: 30s
+
+  # Voice (LiveKit), on the app server chosen with `cluster.sh setup ... --voice <address>` (its
+  # .env turns on the voice profile). The same settings as on a single server, with its API on
+  # the private address for the other servers. Open 7881/tcp and 7882/udp on this server's
+  # firewall: the audio comes straight here.
+  livekit:
+    extends: { file: docker-compose.yml, service: livekit }
+    ports: ['${PRIVATE_IP}:7880:7880']
