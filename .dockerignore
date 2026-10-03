@@ -12,3 +12,5 @@ storage
 screenshots
 docs/screenshots
 apps/desktop
+# The load testing tool: never part of a deployed image.
+apps/loadtest

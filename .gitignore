@@ -23,3 +23,6 @@ apps/desktop/release/
 
 # Server backups (scripts/linux/backup.sh)
 backups/
+
+# Load test users and results (apps/loadtest)
+apps/loadtest/.data/

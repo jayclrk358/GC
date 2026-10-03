@@ -1,0 +1,20 @@
+{
+  "name": "@gamecentral/loadtest",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "seed": "tsx src/setup.ts",
+    "load": "tsx src/run.ts",
+    "browsers": "tsx src/browsers.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@gamecentral/auth": "workspace:*",
+    "@gamecentral/core": "workspace:*",
+    "@gamecentral/db": "workspace:*",
+    "@gamecentral/shared": "workspace:*",
+    "drizzle-orm": "^0.45.3",
+    "socket.io-client": "^4.8.4"
+  }
+}

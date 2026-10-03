@@ -42,6 +42,7 @@ export default tseslint.config(
       'packages/db/src/**/*.ts',
       'packages/auth/src/seed-demo.ts',
       'apps/worker/src/**/*.ts',
+      'apps/loadtest/src/**/*.ts',
       'scripts/**',
     ],
     rules: { 'no-console': 'off' },
