@@ -155,3 +155,58 @@ test('separators, chat backgrounds and voice channels come with Plus', async ({
   await expect(page.getByText("Nobody's here yet. Join to start talking.")).toBeVisible();
   await member.context.close();
 });
+
+test('screen sharing on Pro, watched full screen', async ({ page, browser }) => {
+  test.setTimeout(180_000);
+  const owner = uniqueUser('sharer');
+  await signUp(page, owner, '/new');
+  const { slug } = await createCommunity(page, { template: 'Game server' });
+  await upgradeCommunity(page, slug, 'Pro');
+  await page.goto(`/c/${slug}/settings/channels`);
+  await page.getByRole('button', { name: 'New channel' }).click();
+  const form = page.getByRole('dialog', { name: 'New channel' });
+  await form.getByLabel('Type').click();
+  await page.getByRole('option', { name: 'Voice' }).click();
+  await form.getByLabel('Name').fill('stage');
+  await form.getByRole('button', { name: 'Create' }).click();
+  await expect(page.getByText('#stage created.')).toBeVisible();
+
+  await page.goto(`/c/${slug}/chat/stage`);
+  await page.getByRole('button', { name: 'Join voice' }).click();
+  await expect(
+    page
+      .getByRole('list', { name: /in voice/ })
+      .last()
+      .getByText(`${owner.name} (you)`),
+  ).toBeVisible({ timeout: 20_000 });
+  const viewer = await joinAsMember(browser, slug, 'viewer');
+  await viewer.page.goto(`/c/${slug}/chat/stage`);
+  await viewer.page.getByRole('button', { name: 'Join voice' }).click();
+  await expect(viewer.page.getByRole('list', { name: '2 people in voice' }).last()).toBeVisible({
+    timeout: 20_000,
+  });
+
+  await page
+    .getByRole('group', { name: 'Call controls' })
+    .getByRole('button', { name: 'Share screen' })
+    .click();
+  const screens = viewer.page.getByRole('region', { name: 'Shared screens' });
+  await expect(screens.getByLabel(`${owner.name}'s screen`, { exact: true })).toBeVisible({
+    timeout: 20_000,
+  });
+
+  // It fills the screen, and goes back.
+  const fullScreen = () => viewer.page.evaluate(() => document.fullscreenElement?.tagName ?? null);
+  await screens.getByRole('button', { name: `Show ${owner.name}'s screen full screen` }).click();
+  await expect.poll(fullScreen).toBe('FIGURE');
+  await expect(screens.getByRole('button', { name: 'Exit full screen' })).toBeVisible();
+  await expectAccessible(viewer.page, 'shared screen full screen');
+  await screens.getByRole('button', { name: 'Exit full screen' }).click();
+  await expect.poll(fullScreen).toBeNull();
+  // A double-click does it too.
+  await screens.getByLabel(`${owner.name}'s screen`, { exact: true }).dblclick();
+  await expect.poll(fullScreen).toBe('FIGURE');
+  await screens.getByRole('button', { name: 'Exit full screen' }).click();
+  await expect.poll(fullScreen).toBeNull();
+  await viewer.context.close();
+});

@@ -1,7 +1,7 @@
 {
   "name": "gamecentral-desktop",
   "productName": "Game Central",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Game Central for Windows: the Game Central website in its own window.",
   "author": "Game Central",
   "private": true,

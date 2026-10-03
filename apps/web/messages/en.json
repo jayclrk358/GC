@@ -2511,6 +2511,9 @@
     "empty": "Nobody's here yet. Join to start talking.",
     "screens": "Shared screens",
     "screenOf": "{name}'s screen",
+    "fullScreen": "Full screen",
+    "fullScreenOf": "Show {name}'s screen full screen",
+    "exitFullScreen": "Exit full screen",
     "muteOther": "Mute {name}",
     "removeOther": "Remove {name} from the call",
     "mutedOther": "{name} was muted.",
@@ -3332,19 +3335,19 @@
     "packs": {
       "gamecentral": {
         "name": "Game Central",
-        "description": "Bright and clear, with a little shimmer."
+        "description": "Glassy mallets with a soft room around them."
       },
       "soft": {
         "name": "Soft",
-        "description": "Low, round and quiet."
+        "description": "Mellow felt keys, low and gentle."
       },
       "arcade": {
         "name": "Arcade",
-        "description": "Quick chiptune bleeps."
+        "description": "8-bit blips with a little echo."
       },
       "crystal": {
         "name": "Crystal",
-        "description": "Glassy bells that ring out."
+        "description": "Shimmering bells with a long, airy ring."
       }
     },
     "listen": "Listen to {pack}",
@@ -3466,7 +3469,8 @@
   "changelog": {
     "title": "What’s new",
     "subtitle": "The latest updates to Game Central.",
-    "latest": "Latest"
+    "latest": "Latest",
+    "seeAll": "See all updates"
   },
   "staffBadge": {
     "admin": "Game Central Admin",

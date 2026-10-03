@@ -209,3 +209,28 @@ test('what’s new: the changelog page and the feed the Windows app reads', asyn
   expect(latest.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   await expect(page.getByRole('heading', { level: 2, name: latest.title })).toBeVisible();
 });
+
+test('what’s new: the Windows app opens it in the page', async ({ page }) => {
+  await page.goto('/explore');
+  // What the app does (after an update, or from Help → What's new): the page says it handled it.
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => !window.dispatchEvent(new CustomEvent('gc:whats-new', { cancelable: true })),
+      ),
+    )
+    .toBe(true);
+  const dialog = page.getByRole('dialog', { name: 'What’s new' });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText('Latest', { exact: true })).toBeVisible();
+  await expectAccessible(page, 'what’s new dialog');
+  await dialog.getByRole('button', { name: 'Close' }).last().click();
+  await expect(dialog).toBeHidden();
+  // Again, then on to the whole list.
+  await page.evaluate(() =>
+    window.dispatchEvent(new CustomEvent('gc:whats-new', { cancelable: true })),
+  );
+  await dialog.getByRole('link', { name: 'See all updates' }).click();
+  await expect(page).toHaveURL(/\/changelog$/);
+  await expect(page.getByRole('heading', { level: 1, name: 'What’s new' })).toBeVisible();
+});

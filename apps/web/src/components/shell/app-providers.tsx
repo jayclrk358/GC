@@ -8,6 +8,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { PrefsProvider } from './prefs-provider';
 import { ShortcutsProvider, useShortcut } from './shortcuts-provider';
 import { ShortcutHelp } from './shortcut-help';
+import { WhatsNew } from './whats-new';
 import { NavigationTracker } from '@/components/ui/history-back';
 import { ActivityTracker } from '@/components/presence/presence';
 
@@ -80,6 +81,7 @@ export function AppProviders({
       <ShortcutsProvider>
         <TooltipProvider>
           <GlobalShortcuts signedIn={signedIn}>{children}</GlobalShortcuts>
+          <WhatsNew />
           <Toaster
             position="bottom-right"
             closeButton

@@ -7,8 +7,10 @@ import { toast } from 'sonner';
 import {
   Headphones,
   HeadphoneOff,
+  Maximize2,
   Mic,
   MicOff,
+  Minimize2,
   MonitorOff,
   MonitorUp,
   PhoneOff,
@@ -82,7 +84,7 @@ export function VoiceView({
         {connected && voice.screens.length > 0 && (
           <section aria-label={t('screens')} className="grid gap-3 lg:grid-cols-2">
             {voice.screens.map((s) => (
-              <ScreenTile key={s.id} screen={s} label={t('screenOf', { name: s.name })} />
+              <ScreenTile key={s.id} screen={s} />
             ))}
           </section>
         )}
@@ -232,20 +234,71 @@ function Blocked({ reason, slug }: { reason: VoiceBlock; slug: string }) {
   return <p className="text-sm text-muted">{t(`blocked.${reason}`)}</p>;
 }
 
-/** Someone's shared screen. */
-function ScreenTile({ screen, label }: { screen: VoiceScreen; label: string }) {
-  const ref = React.useRef<HTMLVideoElement>(null);
+/** Whether `el` is showing full screen right now. */
+function useFullScreen(el: React.RefObject<HTMLElement | null>): boolean {
+  return React.useSyncExternalStore(
+    (changed) => {
+      document.addEventListener('fullscreenchange', changed);
+      return () => document.removeEventListener('fullscreenchange', changed);
+    },
+    () => document.fullscreenElement !== null && document.fullscreenElement === el.current,
+    () => false,
+  );
+}
+
+/** Someone's shared screen, which can fill the screen (the button, or a double-click). */
+function ScreenTile({ screen }: { screen: VoiceScreen }) {
+  const t = useTranslations('voice');
+  const frame = React.useRef<HTMLElement>(null);
+  const video = React.useRef<HTMLVideoElement>(null);
+  const full = useFullScreen(frame);
+  const label = t('screenOf', { name: screen.name });
   React.useEffect(() => {
-    const el = ref.current;
+    const el = video.current;
     if (!el) return;
     screen.track.attach(el);
     return () => {
       screen.track.detach(el);
     };
   }, [screen.track]);
+
+  function toggle() {
+    if (full) {
+      void document.exitFullscreen().catch(() => {});
+    } else if (frame.current?.requestFullscreen) {
+      void frame.current.requestFullscreen().catch(() => {});
+    } else {
+      // iPhones only let a video itself go full screen.
+      (video.current as { webkitEnterFullscreen?: () => void } | null)?.webkitEnterFullscreen?.();
+    }
+  }
+
   return (
-    <figure className="overflow-hidden rounded-ui-lg border border-border bg-black">
-      <video ref={ref} aria-label={label} muted playsInline className="aspect-video w-full" />
+    <figure
+      ref={frame}
+      className={cn(
+        'relative flex flex-col overflow-hidden bg-black',
+        full ? 'h-full w-full' : 'rounded-ui-lg border border-border',
+      )}
+    >
+      <video
+        ref={video}
+        aria-label={label}
+        muted
+        playsInline
+        onDoubleClick={toggle}
+        className={cn('w-full', full ? 'min-h-0 flex-1 object-contain' : 'aspect-video')}
+      />
+      <Button
+        size="icon-sm"
+        variant="ghost"
+        aria-label={full ? t('exitFullScreen') : t('fullScreenOf', { name: screen.name })}
+        title={full ? t('exitFullScreen') : t('fullScreen')}
+        onClick={toggle}
+        className="absolute end-2 top-2 bg-black/60 text-white hover:bg-black/80 hover:text-white"
+      >
+        {full ? <Minimize2 aria-hidden /> : <Maximize2 aria-hidden />}
+      </Button>
       <figcaption className="bg-surface-2 px-2 py-1 text-xs text-muted">{label}</figcaption>
     </figure>
   );

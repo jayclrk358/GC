@@ -573,7 +573,6 @@ ipcMain.on('signin:cancel', (e) => {
 
 // ── What's new ──────────────────────────────────────────────────────────────
 
-let whatsNewWindow: BrowserWindow | null = null;
 /** Someone who used the app before this version (a fresh install has nothing to catch up on). */
 const updatedFromEarlier = Boolean(readSettings().bounds) && !readSettings().seenChangelog;
 
@@ -628,47 +627,45 @@ async function showWhatsNewIfUpdated() {
   if (!newest) return;
   const seen = readSettings().seenChangelog;
   if (seen === newest) return;
-  if (seen || updatedFromEarlier) openWhatsNew();
-  else writeSettings({ seenChangelog: newest });
+  if (!seen && !updatedFromEarlier) {
+    writeSettings({ seenChangelog: newest });
+    return;
+  }
+  // The page may still be getting ready: one more try a little later, else next time.
+  const shown =
+    (await askPageToShowWhatsNew()) ||
+    (await new Promise((r) => setTimeout(r, 3000)).then(askPageToShowWhatsNew));
+  if (shown) writeSettings({ seenChangelog: newest });
 }
 
-function openWhatsNew() {
-  if (whatsNewWindow) return whatsNewWindow.focus();
-  const newest = cachedChangelog()[0]?.id;
-  if (newest) writeSettings({ seenChangelog: newest });
-  const win = new BrowserWindow({
-    parent: main ?? undefined,
-    width: 560,
-    height: 640,
-    minWidth: 380,
-    minHeight: 360,
-    show: false,
-    title: 'What’s new',
-    icon: page('icon.png'),
-    backgroundColor: background(),
-    autoHideMenuBar: true,
-    minimizable: false,
-    maximizable: false,
-    webPreferences: { preload: PRELOAD, contextIsolation: true, sandbox: true },
-  });
-  whatsNewWindow = win;
-  win.on('closed', () => (whatsNewWindow = null));
-  win.once('ready-to-show', () => win.show());
-  guard(win.webContents);
-  void win.loadFile(page('whats-new.html'));
+/**
+ * Ask Game Central, in the main window, to show its "What's new" dialog there. True if it did
+ * (the page cancels the event it answers); false on a page without it (offline, or an older site).
+ */
+async function askPageToShowWhatsNew(): Promise<boolean> {
+  const contents = main?.webContents;
+  if (!contents || contents.isDestroyed() || originOf(contents.getURL()) !== appOrigin) {
+    return false;
+  }
+  try {
+    const shown: unknown = await contents.executeJavaScript(
+      "!window.dispatchEvent(new CustomEvent('gc:whats-new', { cancelable: true }))",
+    );
+    return shown === true;
+  } catch {
+    return false;
+  }
 }
 
-ipcMain.handle('changelog:get', async (e) =>
-  fromOwnPage(e) && e.sender === whatsNewWindow?.webContents
-    ? { entries: (await refreshChangelog()) ?? cachedChangelog() }
-    : null,
-);
-
-ipcMain.on('changelog:open', (e) => {
-  if (!fromOwnPage(e) || e.sender !== whatsNewWindow?.webContents) return;
-  void main?.loadURL(`${appOrigin}/changelog`);
-  whatsNewWindow.close();
-});
+/** Help → What's new: the dialog, or the site's whole list if the page can't show it. */
+async function openWhatsNew() {
+  if (await askPageToShowWhatsNew()) {
+    const newest = cachedChangelog()[0]?.id;
+    if (newest) writeSettings({ seenChangelog: newest });
+  } else {
+    void main?.loadURL(`${appOrigin}/changelog`);
+  }
+}
 
 ipcMain.handle('loading:get', (e) =>
   fromOwnPage(e) && e.sender === splash?.webContents
@@ -727,7 +724,7 @@ function buildMenu() {
     {
       label: '&Help',
       submenu: [
-        { label: 'What’s new', click: openWhatsNew },
+        { label: 'What’s new', click: () => void openWhatsNew() },
         { type: 'separator' },
         {
           label: 'Open this page in your browser',

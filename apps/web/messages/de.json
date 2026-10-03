@@ -2511,6 +2511,9 @@
     "empty": "Noch niemand hier. Tritt bei und leg los.",
     "screens": "Geteilte Bildschirme",
     "screenOf": "Bildschirm von {name}",
+    "fullScreen": "Vollbild",
+    "fullScreenOf": "Bildschirm von {name} im Vollbild anzeigen",
+    "exitFullScreen": "Vollbild beenden",
     "muteOther": "{name} stummschalten",
     "removeOther": "{name} aus dem Anruf entfernen",
     "mutedOther": "{name} wurde stummgeschaltet.",
@@ -3332,19 +3335,19 @@
     "packs": {
       "gamecentral": {
         "name": "Game Central",
-        "description": "Hell und klar, mit leichtem Schimmer."
+        "description": "Gläserne Schlägel mit sanftem Raumklang."
       },
       "soft": {
         "name": "Sanft",
-        "description": "Tief, rund und leise."
+        "description": "Weiche Filztasten, tief und sanft."
       },
       "arcade": {
         "name": "Arcade",
-        "description": "Schnelle Chiptune-Piepser."
+        "description": "8-Bit-Pieptöne mit etwas Echo."
       },
       "crystal": {
         "name": "Kristall",
-        "description": "Gläserne Glocken, die nachklingen."
+        "description": "Schimmernde Glocken mit langem, luftigem Nachklang."
       }
     },
     "listen": "{pack} anhören",
@@ -3466,7 +3469,8 @@
   "changelog": {
     "title": "Neuigkeiten",
     "subtitle": "Die neuesten Updates von Game Central.",
-    "latest": "Neu"
+    "latest": "Neu",
+    "seeAll": "Alle Neuigkeiten ansehen"
   },
   "staffBadge": {
     "admin": "Game-Central-Admin",

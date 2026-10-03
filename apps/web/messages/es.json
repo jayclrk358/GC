@@ -2511,6 +2511,9 @@
     "empty": "Todavía no hay nadie. Únete para empezar a hablar.",
     "screens": "Pantallas compartidas",
     "screenOf": "Pantalla de {name}",
+    "fullScreen": "Pantalla completa",
+    "fullScreenOf": "Ver la pantalla de {name} en pantalla completa",
+    "exitFullScreen": "Salir de pantalla completa",
     "muteOther": "Silenciar a {name}",
     "removeOther": "Sacar a {name} de la llamada",
     "mutedOther": "{name} fue silenciado.",
@@ -3332,19 +3335,19 @@
     "packs": {
       "gamecentral": {
         "name": "Game Central",
-        "description": "Claro y brillante, con un leve destello."
+        "description": "Mazos de cristal con una sala suave alrededor."
       },
       "soft": {
         "name": "Suave",
-        "description": "Grave, redondo y discreto."
+        "description": "Teclas de fieltro suaves, graves y delicadas."
       },
       "arcade": {
         "name": "Arcade",
-        "description": "Pitidos rápidos de 8 bits."
+        "description": "Pitidos de 8 bits con un poco de eco."
       },
       "crystal": {
         "name": "Cristal",
-        "description": "Campanas cristalinas que resuenan."
+        "description": "Campanas brillantes con una resonancia larga y etérea."
       }
     },
     "listen": "Escuchar {pack}",
@@ -3466,7 +3469,8 @@
   "changelog": {
     "title": "Novedades",
     "subtitle": "Las últimas actualizaciones de Game Central.",
-    "latest": "Lo último"
+    "latest": "Lo último",
+    "seeAll": "Ver todas las novedades"
   },
   "staffBadge": {
     "admin": "Administrador de Game Central",

@@ -457,8 +457,9 @@ nothing to reinstall. It adds what a desktop app should have:
 - A loading screen with the logo while the site opens, showing the latest update. It remembers
   its size and position, opens only one copy, and shows a "Can't reach Game Central" page that
   retries by itself when the site is down or you're offline.
-- **What's new** (Help → What's new) lists the latest updates, and opens by itself once after each
-  new one. It reads the site's changelog (`/changelog`, below), so it needs no app update.
+- **What's new** (Help → What's new) shows the latest updates in the app's own window, and opens
+  by itself once after each new one. It's the site's changelog (`/changelog`, below), so it needs
+  no app update.
 - **Signing in with Discord, Google or Twitch happens in your own browser**, where you're usually
   signed in to them already, so it's a click or two. The browser then hands the app a session of
   its own through a `gamecentral://` link (the installer registers it). Google, which blocks

@@ -14,6 +14,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: '2026-10-03-sounds-and-screens',
+    date: '2026-10-03',
+    title: 'New sounds, and shared screens full screen',
+    items: [
+      'Every sound pack has been redesigned: richer tones, a soft room echo, and the same volume across packs. Try them in Settings → Sounds.',
+      'A shared screen in a voice channel can fill your screen: use the button on it, or double-click it.',
+      'In the Windows app, What’s new now shows inside the app’s window.',
+    ],
+  },
+  {
     id: '2026-10-03-windows-app-1-1',
     date: '2026-10-03',
     title: 'Sign in through your browser on Windows',
