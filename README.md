@@ -104,7 +104,7 @@ handles HTTPS and serves uploads from a separate, cookie-less address. You need
 `openssl`.
 
 ```bash
-git clone https://github.com/jayclrk358/Magnox.git gamecentral
+git clone https://github.com/jayclrk358/GC.git gamecentral
 cd gamecentral
 scripts/linux/server-env.sh                     # just this machine: https://localhost
 scripts/linux/server-env.sh 192.168.1.50        # or: other devices on your network (your IP)
