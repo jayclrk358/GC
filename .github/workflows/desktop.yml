@@ -42,3 +42,52 @@ jobs:
           path: apps/desktop/release/GameCentral-Setup-*.exe
           if-no-files-found: error
           retention-days: 30
+
+  certify:
+    name: Windows App Certification Kit
+    needs: build
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: GameCentral-Windows-installer
+          path: installer
+      - name: Run the Windows App Certification Kit
+        shell: pwsh
+        run: |
+          $kit = "${env:ProgramFiles(x86)}\Windows Kits\10\App Certification Kit\appcert.exe"
+          if (-not (Test-Path $kit)) { throw "The Windows App Certification Kit isn't installed on this runner." }
+          $setup = (Get-ChildItem installer\GameCentral-Setup-*.exe | Select-Object -First 1).FullName
+          $report = Join-Path $env:RUNNER_TEMP 'wack-report.xml'
+          & $kit reset
+          # Installs the app silently (per user, as the installer does), runs it, checks it, and
+          # uninstalls it again.
+          & $kit test -apptype desktop -setuppath $setup -setupcommandline '/S' -appusage peruser -reportoutputpath $report
+          if ($LASTEXITCODE -ne 0 -or -not (Test-Path $report)) {
+            & $kit /?
+            throw "appcert.exe failed (exit code $LASTEXITCODE)."
+          }
+          Copy-Item $report wack-report.xml
+          [xml]$xml = Get-Content $report
+          $overall = $xml.DocumentElement.GetAttribute('OVERALL_RESULT')
+          $rows = foreach ($test in $xml.SelectNodes('//TEST')) {
+            $result = $test.SelectSingleNode('RESULT').InnerText.Trim()
+            $why = ($test.SelectNodes('MESSAGES/MESSAGE') | ForEach-Object { $_.GetAttribute('TEXT') }) -join ' '
+            [pscustomobject]@{ Result = $result; Test = $test.GetAttribute('NAME'); Details = $why }
+          }
+          $rows | Format-Table -AutoSize -Wrap | Out-String -Width 4096 | Write-Output
+          "## Windows App Certification Kit: $overall" | Out-File $env:GITHUB_STEP_SUMMARY -Append
+          '| Result | Test | Details |' | Out-File $env:GITHUB_STEP_SUMMARY -Append
+          '| --- | --- | --- |' | Out-File $env:GITHUB_STEP_SUMMARY -Append
+          foreach ($row in $rows) {
+            "| $($row.Result) | $($row.Test) | $($row.Details -replace '\|', '/') |" | Out-File $env:GITHUB_STEP_SUMMARY -Append
+          }
+          Write-Output "Overall: $overall"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Windows-App-Certification-Kit-report
+          path: wack-report.xml
+          if-no-files-found: ignore
+          retention-days: 30
