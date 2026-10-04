@@ -292,6 +292,9 @@ importers:
 
   packages/auth:
     dependencies:
+      '@better-auth/utils':
+        specifier: 0.4.2
+        version: 0.4.2
       '@gamecentral/core':
         specifier: workspace:*
         version: link:../core

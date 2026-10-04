@@ -234,6 +234,24 @@ second redirect in the same apps, and put the keys in your local `.env`. Both pr
 In the Windows app (1.1 and later), these sign-ins happen in your own browser and are handed back
 to the app, so Google works there too.
 
+### Two-factor sign-in
+
+Anyone can turn on two-factor authentication under Settings → Security, with any authenticator app
+(Google Authenticator, Microsoft Authenticator, Authy, 1Password and so on). Once it's on, every
+sign-in asks for the 6-digit code, whether it's with a password, Discord, Google or Twitch, or by
+following an email confirmation link. People can tick "Trust this device for 30 days" to skip the
+code on their own computer.
+
+- **Backup codes:** setup gives 10 single-use codes to copy or download. The security page says how
+  many are left, and new ones can be made at any time (the old ones stop working).
+- **Accounts without a password** (made with Discord, Google or Twitch) can use it too: turning it
+  on needs a sign-in in the last 15 minutes, and turning it off or making new backup codes needs a
+  code from the app or a backup code.
+- **Emails:** people are told when two-factor is turned on or off, and when a backup code is used to
+  sign in (with how many are left).
+- **Lost phone and codes:** an admin can turn two-factor off for them from the person's page in the
+  admin console, which also signs them out everywhere. Make sure it's really them first.
+
 ### Payments (Stripe)
 
 Communities can buy the **Plus** or **Pro** plan from `/store` (or Plan & billing in their
@@ -320,7 +338,8 @@ Nobody can change the account of someone at their own level or above. The consol
 - **People:** search by name, username or email; change their display name or username, clear
   their profile text, picture or banner, or mark their email as confirmed; sign someone out
   everywhere, or ban them from Game Central (for a set time or for good), which also signs them out.
-  Admins can also delete an account, optionally with everything it wrote.
+  Admins can also turn off someone's two-factor sign-in (when they've lost their phone and backup
+  codes) and delete an account, optionally with everything it wrote.
 - **Posts and messages:** find anything written on Game Central by words, author or community, and
   remove what breaks the rules (with a reason). Removals show in the community's audit log too.
 - **Reports:** open reports from every community, to step in where a community doesn't.

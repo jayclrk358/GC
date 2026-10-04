@@ -7,16 +7,20 @@ import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { authClient } from '@/lib/auth-client';
+import Link from '@/components/ui/link';
 import { safeNext } from '@/lib/safe-redirect';
+import { twoFactorError } from '@/lib/two-factor-errors';
 import { syncPrefsFromAccount } from '@/app/actions/prefs';
 import { FormError } from './form-error';
 
 export function TwoFactorForm({ next }: { next: string }) {
   const t = useTranslations('auth');
+  const te = useTranslations('security.errors');
   const router = useRouter();
   const [backup, setBackup] = React.useState(false);
   const [trust, setTrust] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [expired, setExpired] = React.useState(false);
   const [pending, setPending] = React.useState(false);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -29,7 +33,12 @@ export function TwoFactorForm({ next }: { next: string }) {
       : await authClient.twoFactor.verifyTotp({ code, trustDevice: trust });
     if (res.error) {
       setPending(false);
-      setError(res.error.message ?? 'Invalid code');
+      // Ten minutes are up, or too many wrong codes: only signing in again starts a new try.
+      const code = res.error.code;
+      setExpired(
+        code === 'INVALID_TWO_FACTOR_COOKIE' || code === 'TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE',
+      );
+      setError(twoFactorError(te, res.error));
       return;
     }
     await syncPrefsFromAccount();
@@ -40,7 +49,19 @@ export function TwoFactorForm({ next }: { next: string }) {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <FormError message={error} />
-      <Field label={backup ? t('backupCode') : t('code')} required>
+      {expired && (
+        <Link
+          href={`/sign-in?next=${encodeURIComponent(safeNext(next))}`}
+          className="font-semibold text-primary underline-offset-2 hover:underline"
+        >
+          {t('signInAgain')}
+        </Link>
+      )}
+      <Field
+        label={backup ? t('backupCode') : t('code')}
+        description={backup ? t('backupCodeHint') : undefined}
+        required
+      >
         {(p) => (
           <Input
             {...p}

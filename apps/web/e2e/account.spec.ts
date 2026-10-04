@@ -129,7 +129,11 @@ test('download your data, then delete your account', async ({ page, browser }) =
   await member.page.getByLabel('Email or username').fill(member.user.email);
   await member.page.getByLabel('Password').fill(PASSWORD);
   await member.page.getByRole('button', { name: 'Sign in' }).click();
-  await expect(member.page.getByRole('alert')).toBeVisible();
+  // The error itself: Next.js keeps an empty alert of its own on every page (it announces page
+  // changes), which a bare getByRole('alert') would find first.
+  await expect(
+    member.page.getByRole('alert').filter({ hasText: 'Invalid email or password' }),
+  ).toBeVisible();
   await page.goto(`/c/${slug}/chat/lounge`);
   await expect(composer(page)).toBeVisible();
   await expect(said).toHaveCount(0);

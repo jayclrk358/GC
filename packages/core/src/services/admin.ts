@@ -478,6 +478,7 @@ export async function adminUser(userId: string | null, id: string) {
     email: user.email,
     emailVerified: user.emailVerified,
     role: user.role,
+    twoFactorEnabled: Boolean(user.twoFactorEnabled),
     banned: Boolean(user.banned),
     banReason: user.banReason,
     banExpires: user.banExpires,
@@ -542,6 +543,28 @@ export async function revokeSessions(userId: string | null, targetId: string) {
   await db.delete(schema.sessions).where(eq(schema.sessions.userId, targetId));
   await markSessionsRevoked(targetId);
   await record(admin, 'user.sessions.revoke', { type: 'user', id: targetId });
+}
+
+/**
+ * Turn off someone's two-factor sign-in, when they've lost their authenticator app and their
+ * backup codes. Admins only (not moderators): it leaves the account with just its password or
+ * sign-in provider. Their sessions end too, in case it's someone else asking for the reset.
+ */
+export async function resetTwoFactor(userId: string | null, targetId: string) {
+  const admin = await requireAdmin(userId, 'suspend');
+  await assertOutranks(admin, targetId);
+  await db.transaction(async (tx) => {
+    const [row] = await tx
+      .update(schema.users)
+      .set({ twoFactorEnabled: false })
+      .where(eq(schema.users.id, targetId))
+      .returning({ id: schema.users.id });
+    if (!row) throw notFound('Person');
+    await tx.delete(schema.twoFactors).where(eq(schema.twoFactors.userId, targetId));
+    await tx.delete(schema.sessions).where(eq(schema.sessions.userId, targetId));
+  });
+  await markSessionsRevoked(targetId);
+  await record(admin, 'user.2fa.reset', { type: 'user', id: targetId });
 }
 
 // ── Reports and the log ─────────────────────────────────────────────────────

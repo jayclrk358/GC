@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CopyButton } from './copy-button';
+import { CopyButton } from '@/components/ui/copy-button';
 
 export interface CodeSample {
   /** curl, js or python: which tab to show is remembered across the page. */

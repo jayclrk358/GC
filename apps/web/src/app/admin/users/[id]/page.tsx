@@ -9,6 +9,7 @@ import { Alert, Badge, PageHeader } from '@/components/ui/misc';
 import { UserActions } from '@/components/admin/user-actions';
 import { DeleteUser } from '@/components/admin/delete-user';
 import { UserEdit } from '@/components/admin/user-edit';
+import { TwoFactorReset } from '@/components/admin/two-factor-reset';
 
 export const metadata = { title: 'Person' };
 
@@ -74,6 +75,8 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
         </dd>
         <dt className="text-muted">{t('signedIn')}</dt>
         <dd>{t('sessionsCount', { count: u.sessions })}</dd>
+        <dt className="text-muted">{t('twoFactor.title')}</dt>
+        <dd>{u.twoFactorEnabled ? t('twoFactor.on') : t('twoFactor.off')}</dd>
         <dt className="text-muted">{t('reported')}</dt>
         <dd>{t('timesCount', { count: u.timesReported })}</dd>
       </dl>
@@ -91,6 +94,9 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
             emailVerified={u.emailVerified}
           />
           <UserActions userId={u.id} banned={u.banned} />
+          {u.twoFactorEnabled && staffCan(viewer.role, 'suspend') && (
+            <TwoFactorReset userId={u.id} />
+          )}
           {staffCan(viewer.role, 'suspend') && (
             <DeleteUser userId={u.id} handle={u.username ?? u.email} />
           )}

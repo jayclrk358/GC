@@ -13,6 +13,7 @@ import { renderEmail, sendMail } from '@gamecentral/core/mail';
 import { cacheRedis } from '@gamecentral/core/redis';
 import { DEFAULT_PREFS } from '@gamecentral/shared';
 import { desktopHandoff } from './desktop-handoff';
+import { twoFactorEverywhere, type TwoFactorEvent } from './two-factor-everywhere';
 import { clampName, userInputProblem } from './user-input';
 
 export const USERNAME_RE = /^[a-zA-Z0-9_.]{3,24}$/;
@@ -46,6 +47,27 @@ function socialProviders() {
 export function enabledSocialProviders(): string[] {
   return Object.keys(socialProviders());
 }
+
+const TWO_FACTOR_EMAILS: Record<
+  TwoFactorEvent,
+  (name: string, left: number) => { subject: string; heading: string; body: string }
+> = {
+  on: (name) => ({
+    subject: 'Two-factor authentication is on',
+    heading: 'Two-factor authentication is on',
+    body: `Hi ${name}, two-factor authentication is now on for your Game Central account, so signing in asks for a code from your authenticator app. If this wasn't you, change your password and sign out everywhere from your security settings.`,
+  }),
+  off: (name) => ({
+    subject: 'Two-factor authentication was turned off',
+    heading: 'Two-factor authentication was turned off',
+    body: `Hi ${name}, two-factor authentication was just turned off for your Game Central account. If this wasn't you, change your password, sign out everywhere and turn it back on from your security settings.`,
+  }),
+  'backup-code-used': (name, left) => ({
+    subject: 'A backup code was used to sign in',
+    heading: 'A backup code was used to sign in',
+    body: `Hi ${name}, one of your backup codes was just used to sign in to your Game Central account. You have ${left} left. If you've lost your authenticator app, make new codes from your security settings. If this wasn't you, change your password and sign out everywhere.`,
+  }),
+};
 
 function createAuth<P extends BetterAuthPlugin[]>(extraPlugins: P) {
   const e = env();
@@ -95,6 +117,7 @@ function createAuth<P extends BetterAuthPlugin[]>(extraPlugins: P) {
         '/change-email': { window: 3600, max: 5 },
         '/send-verification-email': { window: 3600, max: 5 },
         '/two-factor/verify-totp': { window: 60, max: 10 },
+        '/two-factor/verify-backup-code': { window: 60, max: 10 },
       },
     },
     emailAndPassword: {
@@ -204,7 +227,22 @@ function createAuth<P extends BetterAuthPlugin[]>(extraPlugins: P) {
         maxUsernameLength: 24,
         usernameValidator: (name) => USERNAME_RE.test(name),
       }),
-      twoFactor({ issuer: 'Game Central' }),
+      // Accounts made with Discord, Google or Twitch have no password: two-factor-everywhere
+      // asks them for a code or a recent sign-in instead.
+      twoFactor({ issuer: 'Game Central', allowPasswordless: true }),
+      twoFactorEverywhere({
+        notify: async (event, user, { backupCodesLeft = 0 }) => {
+          const mail = TWO_FACTOR_EMAILS[event](user.name, backupCodesLeft);
+          const { text, html } = renderEmail({
+            heading: mail.heading,
+            body: mail.body,
+            action: { label: 'Security settings', url: `${e.APP_URL}/settings/security` },
+          });
+          await sendMail({ to: user.email, subject: mail.subject, text, html }).catch((err) =>
+            logger('auth').warn({ err, userId: user.id, event }, 'two-factor email failed'),
+          );
+        },
+      }),
       admin({ defaultRole: 'user', adminRoles: ['admin'] }),
       // Signing in to the Windows app through the browser (see desktop-handoff.ts).
       desktopHandoff(),

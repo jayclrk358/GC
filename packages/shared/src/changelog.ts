@@ -14,6 +14,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: '2026-10-04-two-factor',
+    date: '2026-10-04',
+    title: 'Two-factor sign-in, everywhere',
+    items: [
+      'With two-factor on, signing in asks for the code from your authenticator app every time, including when you sign in with Discord, Google or Twitch.',
+      'Accounts made with Discord, Google or Twitch can turn on two-factor too, with no password needed.',
+      'A clearer setup in Settings → Security: scan, type the code, then copy or download your backup codes. You can see how many backup codes you have left and make new ones.',
+      'We email you when two-factor is turned on or off, or a backup code is used to sign in.',
+    ],
+  },
+  {
     id: '2026-10-04-scrollbars',
     date: '2026-10-04',
     title: 'Scrollbars that match',

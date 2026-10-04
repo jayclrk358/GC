@@ -15,7 +15,7 @@ import { curlSample, jsSample, pySample, responseSample } from '@/lib/api-sample
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { CodeTabs } from '@/components/developer/code-tabs';
-import { CopyButton } from '@/components/developer/copy-button';
+import { CopyButton } from '@/components/ui/copy-button';
 
 export const metadata = {
   title: 'Developers',

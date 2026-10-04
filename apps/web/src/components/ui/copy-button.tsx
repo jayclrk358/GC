@@ -4,14 +4,18 @@ import * as React from 'react';
 import { Check, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-/** Copies `text`, and says so (to screen readers too). The docs page is English only. */
+/** Copies `text`, and says so (to screen readers too). English unless given translations. */
 export function CopyButton({
   text,
   label = 'Copy',
+  copiedLabel = 'Copied',
+  failedLabel = 'Couldn’t copy. Select it instead.',
   className,
 }: {
   text: string;
   label?: string;
+  copiedLabel?: string;
+  failedLabel?: string;
   className?: string;
 }) {
   const [state, setState] = React.useState<'idle' | 'copied' | 'failed'>('idle');
@@ -41,14 +45,10 @@ export function CopyButton({
         ) : (
           <Copy aria-hidden className="size-3.5" />
         )}
-        {state === 'copied' ? 'Copied' : label}
+        {state === 'copied' ? copiedLabel : label}
       </button>
       <span role="status" className="sr-only">
-        {state === 'copied'
-          ? 'Copied'
-          : state === 'failed'
-            ? 'Couldn’t copy. Select it instead.'
-            : ''}
+        {state === 'copied' ? copiedLabel : state === 'failed' ? failedLabel : ''}
       </span>
     </>
   );

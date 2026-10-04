@@ -12,6 +12,7 @@ import {
   setStaffRole,
   giftPlan,
   removePlanGift,
+  resetTwoFactor,
   revokeSessions,
   suspendCommunity,
   unbanUser,
@@ -74,6 +75,15 @@ export async function revokeSessionsAction(userId: string) {
     await revokeSessions(await me(), userId);
     await endSessions(userId);
     // Again now that no copy of their sessions is left (a socket may have reconnected meanwhile).
+    disconnectUser(userId);
+    revalidatePath('/admin', 'layout');
+  });
+}
+
+export async function resetTwoFactorAction(userId: string) {
+  return runAction(async () => {
+    await resetTwoFactor(await me(), userId);
+    await endSessions(userId);
     disconnectUser(userId);
     revalidatePath('/admin', 'layout');
   });

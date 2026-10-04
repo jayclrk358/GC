@@ -12,6 +12,7 @@
     "seed:demo": "tsx src/seed-demo.ts"
   },
   "dependencies": {
+    "@better-auth/utils": "0.4.2",
     "@gamecentral/core": "workspace:*",
     "@gamecentral/db": "workspace:*",
     "@gamecentral/shared": "workspace:*",
