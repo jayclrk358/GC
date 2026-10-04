@@ -14,6 +14,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: '2026-10-04-scrollbars',
+    date: '2026-10-04',
+    title: 'Scrollbars that match',
+    items: [
+      'Scrollbars are slimmer and take on the colours of the theme you’re in, a community’s own included, and stay easy to see in high contrast mode.',
+    ],
+  },
+  {
     id: '2026-10-04-developer-api',
     date: '2026-10-04',
     title: 'A bigger API, and new developer docs',

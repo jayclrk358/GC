@@ -293,9 +293,11 @@ function DocsNav() {
               <ul>
                 {g.endpoints.map((e) => (
                   <li key={e.id}>
-                    <a href={`#${e.id}`} className={navLink}>
-                      <MethodBadge method={e.method} small />
-                      <span className="truncate">{e.title}</span>
+                    <a href={`#${e.id}`} className={cn(navLink, 'items-start')}>
+                      <span className="pt-0.5">
+                        <MethodBadge method={e.method} small />
+                      </span>
+                      <span className="min-w-0">{e.title}</span>
                     </a>
                   </li>
                 ))}
@@ -329,7 +331,7 @@ export default function DevelopersPage() {
   const base = `${site}/api/v1`;
   const me = ENDPOINTS.find((e) => e.id === 'get-me')!;
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:py-10 lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-10">
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:py-10 lg:grid lg:grid-cols-[16.5rem_minmax(0,1fr)] lg:gap-10">
       <nav
         aria-label="Developer docs"
         className="hidden lg:sticky lg:top-20 lg:block lg:max-h-[calc(100vh-6rem)] lg:self-start lg:overflow-y-auto lg:pe-2"

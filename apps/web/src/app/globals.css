@@ -200,6 +200,72 @@
     background: color-mix(in srgb, var(--c-primary) 30%, transparent);
   }
 
+  /*
+   * Scrollbars: slim, rounded and in the theme's colours (a community's own included). The thumb
+   * is the muted text colour at 80%, which keeps it 3:1 or better against the page in any theme a
+   * community can pick (their muted text must be 4.5:1); it firms up on hover and takes the
+   * primary colour while dragged. Only with a mouse or trackpad: touch screens keep their own
+   * overlay scrollbars. Windows High Contrast keeps the system's.
+   */
+  @media (pointer: fine) and (forced-colors: none) {
+    /* Firefox: the standard properties (Chromium would let them switch off the rest). */
+    @supports not selector(::-webkit-scrollbar) {
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: color-mix(in srgb, var(--c-text-muted) 80%, transparent) transparent;
+      }
+      html[data-contrast='high'] * {
+        scrollbar-width: auto;
+        scrollbar-color: var(--c-text) var(--c-surface-2);
+      }
+    }
+
+    /* Chrome, Edge, Safari and the Windows app. */
+    ::-webkit-scrollbar {
+      width: 12px;
+      height: 12px;
+    }
+    ::-webkit-scrollbar-track,
+    ::-webkit-scrollbar-corner {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      min-height: 2.5rem;
+      min-width: 2.5rem;
+      border: 3px solid transparent;
+      border-radius: 9999px;
+      background-color: color-mix(in srgb, var(--c-text-muted) 80%, transparent);
+      background-clip: padding-box;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      border-width: 2px;
+      background-color: var(--c-text-muted);
+    }
+    ::-webkit-scrollbar-thumb:active {
+      border-width: 2px;
+      background-color: var(--c-primary);
+    }
+    ::-webkit-scrollbar-button {
+      display: none;
+    }
+
+    /* High contrast: the full text colour on a track you can see, and wider. */
+    html[data-contrast='high'] ::-webkit-scrollbar {
+      width: 14px;
+      height: 14px;
+    }
+    html[data-contrast='high'] ::-webkit-scrollbar-track {
+      background: var(--c-surface-2);
+    }
+    html[data-contrast='high'] ::-webkit-scrollbar-thumb {
+      border-width: 2px;
+      background-color: var(--c-text);
+    }
+    html[data-contrast='high'] ::-webkit-scrollbar-thumb:active {
+      background-color: var(--c-primary);
+    }
+  }
+
   [hidden] {
     display: none !important;
   }
