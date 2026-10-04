@@ -41,6 +41,7 @@ test('pages fit a phone screen', async ({ page }) => {
     `/u/${user.username}`,
     '/settings/accessibility',
     '/settings/profile',
+    '/developers',
   ]) {
     await page.goto(url);
     await expectNoSidewaysScroll(page, url);

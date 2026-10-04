@@ -384,10 +384,17 @@ The Windows app shows the same list. To add one, put an entry at the top of `CHA
 ## API and webhooks
 
 - **Public API:** people make personal tokens in Settings → Developer; scripts and bots then call
-  `/api/v1` with `Authorization: Bearer mx_…`, acting as that person with exactly their access
-  (communities, channels, chat messages, forum threads, events, game servers). Tokens read only,
-  unless the person lets one post chat messages. Each token gets 120 requests a minute. The docs
-  are at **/developers** (linked in the footer).
+  `/api/v1` with `Authorization: Bearer mx_…`, acting as that person with exactly their access.
+  29 endpoints cover profiles, the community directory, members and roles, chat (send, edit,
+  delete, react, pins), forums (threads and replies), wikis, events (and answering them), the
+  server browser and player history. Tokens read only, unless the person lets one post and make
+  changes. Each token gets 120 requests a minute. The docs are at **/developers** (linked in the
+  footer), and `/api/v1/openapi.json` describes the API for Postman, Insomnia and code
+  generators.
+- **Adding an endpoint:** write the service in `packages/core/src/services/public-api.ts`, the
+  route under `apps/web/src/app/api/v1`, and describe it in `apps/web/src/lib/api-docs.ts`
+  (that drives the docs page and the OpenAPI file). A unit test fails until the description and
+  the routes match, and the e2e test checks real responses have the documented fields.
 - **Webhooks:** community managers add them under Settings → Integrations. A Discord webhook URL
   gets readable messages in that Discord channel (announcements, new events, server down/up and
   so on, never pinging anyone); any other `https://` address gets signed JSON. Only content from

@@ -14,6 +14,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: '2026-10-04-developer-api',
+    date: '2026-10-04',
+    title: 'A bigger API, and new developer docs',
+    items: [
+      'The API has grown from 9 endpoints to 29: profiles, the community directory, members and roles, editing, deleting and reacting to messages, pins, forum threads and replies, wiki pages, answering events, the server browser and player history.',
+      'The developer docs have been rebuilt, with examples in curl, JavaScript and Python for every endpoint and an OpenAPI file for Postman and code generators.',
+      'API tokens that can post can now also make changes: reply, react, edit or delete your messages and answer events.',
+    ],
+  },
+  {
     id: '2026-10-03-busy-times',
     date: '2026-10-03',
     title: 'Faster when it’s busy',

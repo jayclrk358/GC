@@ -22,7 +22,11 @@ export async function apiV1<T>(
   try {
     const caller = await authenticateApiToken(req.headers.get('authorization'));
     if (opts.write && !caller.scopes.includes('write')) {
-      return errorResponse(403, 'forbidden', 'This token can only read. Make one that can post.');
+      return errorResponse(
+        403,
+        'forbidden',
+        'This token can only read. Make one that can post and make changes.',
+      );
     }
     return Response.json(
       { data: await fn(caller) },
