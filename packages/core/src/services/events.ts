@@ -58,6 +58,33 @@ export interface EventOccurrenceView {
   going: number;
   maybe: number;
   mine: RsvpStatus | null;
+  /** The start of the description, for a preview. */
+  summary: string;
+  /** The first few people going (to show their faces). */
+  goingPreview: EventFace[];
+}
+
+export interface EventFace {
+  id: string;
+  name: string;
+  image: string | null;
+}
+
+/** How many faces each date shows. */
+const FACES = 5;
+
+/** The first paragraph of a description, cut to a line or two. */
+export function eventSummary(description: string, max = 160): string {
+  const first =
+    description
+      .trim()
+      .split(/\n\s*\n/)[0]
+      ?.replace(/\s+/g, ' ')
+      .trim() ?? '';
+  if (first.length <= max) return first;
+  const cut = first.slice(0, max);
+  const space = cut.lastIndexOf(' ');
+  return `${(space > max * 0.6 ? cut.slice(0, space) : cut).replace(/[\s.,;:–-]+$/, '')}…`;
 }
 
 /** "Fri, 3 Oct 2026, 20:00 BST" in the event's own zone (for notifications and emails). */
@@ -163,6 +190,53 @@ async function rsvpSummary(
   return out;
 }
 
+/** The first people to say they're going to each date (in the order they said so). */
+async function goingFaces(
+  ctx: MemberContext,
+  pairs: { eventId: string; start: Date }[],
+): Promise<Map<string, EventFace[]>> {
+  const out = new Map<string, EventFace[]>();
+  if (!pairs.length) return out;
+  const r = schema.eventRsvps;
+  const times = pairs.map((p) => p.start.getTime());
+  const ranked = db
+    .select({
+      eventId: r.eventId,
+      occurrence: r.occurrence,
+      id: r.userId,
+      name: sql<string>`coalesce(nullif(${schema.members.nickname}, ''), ${schema.users.name})`.as(
+        'name',
+      ),
+      image: schema.users.image,
+      n: sql<number>`row_number() over (partition by ${r.eventId}, ${r.occurrence} order by ${r.createdAt})`.as(
+        'n',
+      ),
+    })
+    .from(r)
+    .innerJoin(schema.users, eq(schema.users.id, r.userId))
+    .leftJoin(
+      schema.members,
+      and(eq(schema.members.communityId, ctx.community.id), eq(schema.members.userId, r.userId)),
+    )
+    .where(
+      and(
+        inArray(r.eventId, [...new Set(pairs.map((p) => p.eventId))]),
+        gte(r.occurrence, new Date(Math.min(...times))),
+        lte(r.occurrence, new Date(Math.max(...times))),
+        eq(r.status, 'going'),
+      ),
+    )
+    .as('ranked');
+  const rows = await db.select().from(ranked).where(lte(ranked.n, FACES));
+  for (const row of rows) {
+    const k = `${row.eventId}:${row.occurrence.getTime()}`;
+    const list = out.get(k) ?? [];
+    list.push({ id: row.id, name: row.name, image: row.image });
+    out.set(k, list);
+  }
+  return out;
+}
+
 /** Every date of the community's events between two times, in order. */
 export async function listEventOccurrences(
   ctx: MemberContext,
@@ -198,12 +272,16 @@ export async function listEventOccurrences(
   }
   list.sort((a, b) => a.start.getTime() - b.start.getTime());
   list = range.newestFirst ? list.slice(-limit).reverse() : list.slice(0, limit);
-  const rsvps = await rsvpSummary(
-    list.map((o) => ({ eventId: o.event.id, start: o.start })),
-    ctx.isMember ? ctx.userId : null,
+  const pairs = list.map((o) => ({ eventId: o.event.id, start: o.start }));
+  const rsvps = await rsvpSummary(pairs, ctx.isMember ? ctx.userId : null);
+  // Faces only where someone's going.
+  const faces = await goingFaces(
+    ctx,
+    pairs.filter((p) => rsvps.get(`${p.eventId}:${p.start.getTime()}`)?.going),
   );
   return list.map(({ event, start, end }) => {
-    const r = rsvps.get(`${event.id}:${start.getTime()}`);
+    const k = `${event.id}:${start.getTime()}`;
+    const r = rsvps.get(k);
     return {
       eventId: event.id,
       start: start.toISOString(),
@@ -217,6 +295,8 @@ export async function listEventOccurrences(
       going: r?.going ?? 0,
       maybe: r?.maybe ?? 0,
       mine: r?.mine ?? null,
+      summary: eventSummary(event.description),
+      goingPreview: faces.get(k) ?? [],
     };
   });
 }

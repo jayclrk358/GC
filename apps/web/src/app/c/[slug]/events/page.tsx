@@ -1,6 +1,6 @@
 import Link from '@/components/ui/link';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { CalendarDays, Plus } from 'lucide-react';
+import { CalendarDays, CalendarRange, History, ListOrdered, Plus } from 'lucide-react';
 import { listEventOccurrences, pastEvents, upcomingEvents } from '@gamecentral/core';
 import { has, Permission, zonedToUtc } from '@gamecentral/shared';
 import { loadCommunity } from '@/lib/community';
@@ -41,6 +41,7 @@ export default async function EventsPage({
   const timeZone = zone ?? 'UTC';
   const clock = { timeZone, locale, timeFormat: prefs.timeFormat };
   const canManage = has(ctx.base, Permission.MANAGE_EVENTS);
+  const canAnswer = ctx.isMember && has(ctx.base, Permission.RSVP_EVENTS);
   const today = dayKey(new Date(), timeZone);
   // Within ten years either way: further out there's nothing to show, only dates to work out
   // (and near the end of what JavaScript dates can hold, that fails).
@@ -78,7 +79,13 @@ export default async function EventsPage({
   } else {
     const occurrences = view === 'past' ? await pastEvents(ctx, 50) : await upcomingEvents(ctx, 50);
     body = occurrences.length ? (
-      <EventList occurrences={occurrences} slug={slug} clock={clock} />
+      <EventList
+        occurrences={occurrences}
+        slug={slug}
+        clock={clock}
+        feature={view === 'upcoming'}
+        rsvp={view === 'upcoming' && canAnswer ? { communityId: community.id } : null}
+      />
     ) : (
       <EmptyState
         icon={<CalendarDays />}
@@ -98,10 +105,10 @@ export default async function EventsPage({
   }
 
   const feed = feedUrl(community, ctx.userId, ctx.isMember);
-  const tabs: { view: View; label: string; href: string }[] = [
-    { view: 'upcoming', label: t('upcoming'), href: base },
-    { view: 'past', label: t('past'), href: `${base}?view=past` },
-    { view: 'month', label: t('month'), href: `${base}?view=month` },
+  const tabs: { view: View; label: string; href: string; Icon: typeof History }[] = [
+    { view: 'upcoming', label: t('upcoming'), href: base, Icon: ListOrdered },
+    { view: 'past', label: t('past'), href: `${base}?view=past`, Icon: History },
+    { view: 'month', label: t('month'), href: `${base}?view=month`, Icon: CalendarRange },
   ];
   const zoneLabel = timeZone.replaceAll('_', ' ');
 
@@ -125,20 +132,21 @@ export default async function EventsPage({
         </div>
       </div>
       <nav aria-label={t('viewsLabel')}>
-        <ul className="flex gap-1 border-b border-border">
-          {tabs.map((tab) => (
-            <li key={tab.view}>
+        <ul className="inline-flex gap-1 rounded-ui border border-border bg-surface-2 p-1">
+          {tabs.map(({ view: v, label, href, Icon }) => (
+            <li key={v}>
               <Link
-                href={tab.href}
-                aria-current={tab.view === view ? 'page' : undefined}
+                href={href}
+                aria-current={v === view ? 'page' : undefined}
                 className={cn(
-                  '-mb-px inline-block border-b-2 px-3 py-2 text-sm font-semibold',
-                  tab.view === view
-                    ? 'border-primary text-fg'
-                    : 'border-transparent text-muted hover:text-fg',
+                  'inline-flex items-center gap-1.5 rounded-ui-sm px-3 py-1.5 text-sm font-semibold transition-colors',
+                  v === view
+                    ? 'bg-surface text-fg shadow-sm ring-1 ring-border'
+                    : 'text-muted hover:bg-surface/60 hover:text-fg',
                 )}
               >
-                {tab.label}
+                <Icon aria-hidden className="size-4" />
+                {label}
               </Link>
             </li>
           ))}

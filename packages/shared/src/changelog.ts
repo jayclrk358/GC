@@ -14,6 +14,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: '2026-10-04-events-look',
+    date: '2026-10-04',
+    title: 'Events, redesigned',
+    items: [
+      'The next event leads the list, with how long until it starts (or that it’s on now), who’s going and buttons to answer right there.',
+      'The rest read like an agenda, a day at a time, with faces of the people going and how full each one is. Later dates of a repeating event take a single line, so one weekly event no longer fills the page.',
+      'Event pages have a bigger header, answering and other dates in a side panel, and everyone going laid out as cards.',
+      'The month calendar shows events as coloured tags with their times, and all-day events as solid bars.',
+    ],
+  },
+  {
     id: '2026-10-04-two-factor',
     date: '2026-10-04',
     title: 'Two-factor sign-in, everywhere',

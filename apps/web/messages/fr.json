@@ -2698,7 +2698,14 @@
       "create": "Créer l’événement",
       "saved": "Événement enregistré.",
       "created": "Événement créé."
-    }
+    },
+    "allDay": "Toute la journée",
+    "happeningNow": "En ce moment",
+    "endedShort": "Terminé",
+    "startsIn": "Commence {when}",
+    "nextUp": "À venir",
+    "beFirst": "Personne n’a encore dit venir. Lancez-vous !",
+    "maybeHeading": "Peut-être ({count})"
   },
   "applications": {
     "title": "Postuler pour rejoindre {name}",

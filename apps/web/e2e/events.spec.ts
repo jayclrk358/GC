@@ -96,6 +96,15 @@ test('events: schedule a repeating event, answer it, fill it up and call off a d
   await page.goto(`/c/${slug}/events`);
   await expect(page.getByRole('link', { name: 'Raid night' }).first()).toBeVisible();
   await expect(page.getByText("You're going")).toBeVisible();
+  // The next date leads, saying when it starts, and can be answered from the list.
+  const next = page.getByRole('region', { name: 'Raid night', exact: true });
+  await expect(next.getByText(/^Starts in \d+ days$/)).toBeVisible();
+  await expect(
+    next.getByRole('group', { name: 'Will you go to Raid night?' }).getByRole('button', {
+      name: 'Going',
+    }),
+  ).toHaveAttribute('aria-pressed', 'true');
+  await expectAccessible(page, 'events list');
   await page.getByRole('link', { name: 'Month' }).click();
   await expect(page.getByRole('table')).toBeVisible();
   const monthOf = date.slice(0, 7);

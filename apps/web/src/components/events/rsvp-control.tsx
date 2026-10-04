@@ -7,7 +7,9 @@ import { toast } from 'sonner';
 import { Check, HelpCircle, X } from 'lucide-react';
 import type { RsvpStatus } from '@gamecentral/shared';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { rsvpAction } from '@/app/actions/events';
+import { PlacesBar } from './event-bits';
 
 const ICONS = { going: Check, maybe: HelpCircle, declined: X } as const;
 
@@ -19,6 +21,7 @@ export function RsvpControl({
   initial,
   capacity,
   compact = false,
+  stacked = false,
   label,
 }: {
   communityId: string;
@@ -28,6 +31,8 @@ export function RsvpControl({
   initial: { going: number; maybe: number; mine: RsvpStatus | null };
   capacity: number;
   compact?: boolean;
+  /** Buttons sharing the width (in a narrow card). */
+  stacked?: boolean;
   /** What the buttons are for, e.g. the event's name in a list. */
   label?: string;
 }) {
@@ -59,7 +64,7 @@ export function RsvpControl({
       <div
         role="group"
         aria-label={label ? t('answerFor', { name: label }) : t('answerLabel')}
-        className="flex flex-wrap gap-2"
+        className={cn(stacked ? 'grid grid-cols-3 gap-2' : 'flex flex-wrap gap-2')}
       >
         {(['going', 'maybe', 'declined'] as const).map((s) => {
           const Icon = ICONS[s];
@@ -70,6 +75,9 @@ export function RsvpControl({
               type="button"
               size="sm"
               variant={on ? 'primary' : 'outline'}
+              className={cn(
+                stacked && 'h-auto min-h-10 flex-col gap-1 px-1 py-2 whitespace-normal',
+              )}
               aria-pressed={on}
               loading={pending === s}
               disabled={pending !== null || (s === 'going' && full)}
@@ -80,6 +88,11 @@ export function RsvpControl({
           );
         })}
       </div>
+      {!compact && capacity > 0 && (
+        <span className="mt-1 block">
+          <PlacesBar taken={state.going} capacity={capacity} />
+        </span>
+      )}
       {!compact && (
         <p className="text-sm text-muted" aria-live="polite">
           {t('going', { count: state.going })} · {t('maybeCount', { count: state.maybe })}

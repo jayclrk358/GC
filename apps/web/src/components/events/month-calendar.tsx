@@ -106,18 +106,18 @@ export async function MonthCalendar({
           </Link>
         </nav>
       </div>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto rounded-ui-lg border border-border bg-surface">
         <table
           aria-labelledby="calendar-title"
           className="w-full min-w-[44rem] table-fixed border-collapse"
         >
           <thead>
-            <tr>
+            <tr className="bg-surface-2/70">
               {weekdays.map((d) => (
                 <th
                   key={d.toISOString()}
                   scope="col"
-                  className="pb-2 text-start text-sm font-semibold text-muted"
+                  className="px-2 py-2 text-start text-xs font-semibold tracking-wide text-muted uppercase"
                 >
                   <abbr title={long.format(d)} className="no-underline">
                     {short.format(d)}
@@ -129,24 +129,31 @@ export async function MonthCalendar({
           <tbody>
             {monthGrid(month).map((week) => (
               <tr key={week[0]!.key}>
-                {week.map((cell) => {
+                {week.map((cell, i) => {
                   const items = byDay.get(cell.key) ?? [];
                   const isToday = cell.key === today;
+                  const past = cell.key < today;
                   const date = new Date(`${cell.key}T12:00:00Z`);
                   return (
                     <td
                       key={cell.key}
                       aria-current={isToday ? 'date' : undefined}
                       className={cn(
-                        'h-28 border border-border p-1.5 align-top',
-                        cell.inMonth ? 'bg-surface' : 'bg-surface-2/60 text-muted',
+                        'h-28 border-t border-border p-1.5 align-top',
+                        i > 0 && 'border-s',
+                        !cell.inMonth
+                          ? 'bg-surface-2 text-muted'
+                          : isToday
+                            ? 'bg-primary/8'
+                            : i >= 5 && 'bg-surface-2/45',
                       )}
                     >
                       <div className="flex h-full flex-col gap-1">
                         <span
                           className={cn(
-                            'inline-flex size-7 items-center justify-center self-start rounded-full text-sm font-semibold',
+                            'inline-flex size-7 items-center justify-center self-start rounded-full text-sm font-semibold tabular-nums',
                             isToday && 'bg-primary text-on-primary',
+                            !isToday && past && cell.inMonth && 'text-muted',
                           )}
                         >
                           <span aria-hidden>{cell.day}</span>
@@ -159,12 +166,32 @@ export async function MonthCalendar({
                             <li key={`${o.eventId}:${o.start}`} className="min-w-0">
                               <Link
                                 href={occurrenceHref(slug, o)}
-                                className="block truncate rounded px-1 py-0.5 text-xs font-medium text-fg hover:bg-primary/12 focus-visible:bg-primary/12"
+                                className={cn(
+                                  'flex min-h-6 min-w-0 items-center gap-1 rounded-ui-sm px-1.5 py-1 text-xs font-medium transition-colors',
+                                  o.allDay
+                                    ? 'bg-primary text-on-primary hover:bg-primary/85'
+                                    : 'bg-primary/10 text-fg hover:bg-primary/20 focus-visible:bg-primary/20',
+                                  cell.key < today && 'opacity-70',
+                                )}
                               >
                                 {!o.allDay && (
-                                  <span className="text-muted">{formatClock(o.start, clock)} </span>
+                                  <span
+                                    aria-hidden
+                                    className={cn(
+                                      'size-1.5 shrink-0 rounded-full',
+                                      o.mine === 'going' ? 'bg-success' : 'bg-primary',
+                                    )}
+                                  />
                                 )}
-                                {o.title}
+                                {!o.allDay && (
+                                  <span className="shrink-0 font-semibold tabular-nums">
+                                    {formatClock(o.start, clock)}
+                                  </span>
+                                )}
+                                <span className="truncate">{o.title}</span>
+                                {o.mine === 'going' && (
+                                  <span className="sr-only">, {t('youreGoing')}</span>
+                                )}
                               </Link>
                             </li>
                           ))}
